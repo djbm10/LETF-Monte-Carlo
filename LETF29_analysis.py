@@ -3971,8 +3971,7 @@ class BlockBootstrapReturns:
                           rng: np.random.Generator,
                           desired_sign: int = None,
                           momentum_bias: float = 0.0,
-                          fallback_cols: int = 5,
-                          target_spy_return: float = None) -> np.ndarray:
+                          fallback_cols: int = 5) -> np.ndarray:
         """
         Sample a block from a specific pool with momentum bias.
         Same logic as sample_block but works on any pool.
@@ -3984,8 +3983,6 @@ class BlockBootstrapReturns:
             desired_sign: +1 for bull, -1 for bear, None for random
             momentum_bias: probability to pick same-sign block
             fallback_cols: number of columns if synthetic fallback is needed
-            target_spy_return: Optional SPY block return target used to keep
-                Pool B (tech blocks) macro-coherent with Pool A (economy blocks)
 
         Returns:
             block_data array (shape varies by pool: 4 cols for pool A, 5 for pool B)
@@ -4001,25 +3998,15 @@ class BlockBootstrapReturns:
                                         synthetic[:, 3], synthetic[:, 4]])
             return synthetic
 
-        candidate_blocks = blocks
-        if desired_sign is not None:
-            signed = [b for b in blocks
-                      if (b[1] >= 0 and desired_sign >= 0)
-                      or (b[1] < 0 and desired_sign < 0)]
-            if signed and momentum_bias > 0 and rng.random() < momentum_bias:
-                candidate_blocks = signed
+        if desired_sign is not None and momentum_bias > 0:
+            same_sign = [b for b in blocks
+                         if (b[1] >= 0 and desired_sign >= 0)
+                         or (b[1] < 0 and desired_sign < 0)]
+            if same_sign and rng.random() < momentum_bias:
+                return same_sign[rng.integers(0, len(same_sign))][0].copy()
 
-        if target_spy_return is not None and len(candidate_blocks) > 5:
-            # Keep tech blocks macro-consistent with economy blocks by selecting
-            # from nearest SPY-return neighbors.
-            block_returns = np.array([b[1] for b in candidate_blocks])
-            distances = np.abs(block_returns - target_spy_return)
-            nearest_count = max(3, int(0.20 * len(candidate_blocks)))
-            nearest_idx = np.argpartition(distances, nearest_count - 1)[:nearest_count]
-            candidate_blocks = [candidate_blocks[i] for i in nearest_idx]
-
-        idx = rng.integers(0, len(candidate_blocks))
-        return candidate_blocks[idx][0].copy()
+        idx = rng.integers(0, len(blocks))
+        return blocks[idx][0].copy()
 
     def _generate_synthetic_block(self, regime: int, rng: np.random.Generator) -> np.ndarray:
         """
@@ -4079,19 +4066,18 @@ class BlockBootstrapReturns:
         """
         if rng is None:
             rng = np.random.default_rng()
+
         # ================================================================
-        # SYNCHRONIZED BLOCK LOOP: economy + tech sampled together
-        # This keeps macro conditions (SPY/VIX/IRX) aligned with tech outcomes.
+        # POOL A LOOP: Economy track (SPY, VIX, IRX)
+        # Draws from 1950-2025 history (4-column blocks)
+        # Pool A columns: [SPY=0, TLT=1, VIX=2, IRX=3]
         # ================================================================
         spy_returns = np.zeros(n_days)
         vix_series = np.zeros(n_days)
         irx_series = np.zeros(n_days)
-        qqq_returns = np.zeros(n_days)
-        tlt_returns = np.zeros(n_days)
 
         current_day = 0
         last_return_a = None
-        last_return_b = None
 
         while current_day < n_days:
             remaining = n_days - current_day
@@ -4099,12 +4085,15 @@ class BlockBootstrapReturns:
 
             block_regime_path = regime_path[current_day:current_day + block_len]
             regime = int(np.median(block_regime_path))
+
+            desired_sign = None
+            if last_return_a is not None:
+                desired_sign = 1 if last_return_a >= 0 else -1
             bias = BOOTSTRAP_MOMENTUM_BIAS_BY_REGIME.get(regime, 0.52)
 
-            desired_sign_a = 1 if (last_return_a is not None and last_return_a >= 0) else (-1 if last_return_a is not None else None)
             block_a = self._sample_from_pool(
                 self.pool_a, regime, rng,
-                desired_sign=desired_sign_a,
+                desired_sign=desired_sign,
                 momentum_bias=bias,
                 fallback_cols=4
             )
@@ -4115,35 +4104,60 @@ class BlockBootstrapReturns:
                 start = rng.integers(0, max_start + 1)
                 block_a = block_a[start:start + block_len]
 
-            spy_block_return = np.prod(1 + block_a[:, 0]) - 1
-
-            desired_sign_b = 1 if (last_return_b is not None and last_return_b >= 0) else (-1 if last_return_b is not None else None)
-            block_b = self._sample_from_pool(
-                self.pool_b, regime, rng,
-                desired_sign=desired_sign_b,
-                momentum_bias=bias,
-                fallback_cols=5,
-                target_spy_return=spy_block_return
-            )
-
-            if block_len < len(block_b):
-                max_start = len(block_b) - block_len
-                start = rng.integers(0, max_start + 1)
-                block_b = block_b[start:start + block_len]
-
             # Pool A columns: SPY=0, TLT=1, VIX=2, IRX=3
             spy_returns[current_day:current_day + block_len] = block_a[:, 0]
             vix_series[current_day:current_day + block_len] = block_a[:, 2]
             irx_series[current_day:current_day + block_len] = block_a[:, 3]
 
+            last_return_a = np.prod(1 + block_a[:, 0]) - 1  # SPY momentum
+
+            current_day += block_len
+
+        # ================================================================
+        # POOL B LOOP: Tech track (QQQ, TLT)
+        # Draws from 1999-2025 history (5-column blocks)
+        # Pool B columns: [SPY=0, QQQ=1, TLT=2, VIX=3, IRX=4]
+        # ================================================================
+        qqq_returns = np.zeros(n_days)
+        tlt_returns = np.zeros(n_days)
+
+        current_day = 0
+        last_return_b = None
+
+        while current_day < n_days:
+            remaining = n_days - current_day
+            block_len = self._draw_block_len(remaining, rng)
+
+            block_regime_path = regime_path[current_day:current_day + block_len]
+            regime = int(np.median(block_regime_path))
+
+            desired_sign = None
+            if last_return_b is not None:
+                desired_sign = 1 if last_return_b >= 0 else -1
+            bias = BOOTSTRAP_MOMENTUM_BIAS_BY_REGIME.get(regime, 0.52)
+
+            block_b = self._sample_from_pool(
+                self.pool_b, regime, rng,
+                desired_sign=desired_sign,
+                momentum_bias=bias,
+                fallback_cols=5
+            )
+
+            # Random sub-section
+            if block_len < len(block_b):
+                max_start = len(block_b) - block_len
+                start = rng.integers(0, max_start + 1)
+                block_b = block_b[start:start + block_len]
+
             # Pool B columns: SPY=0, QQQ=1, TLT=2, VIX=3, IRX=4
             qqq_returns[current_day:current_day + block_len] = block_b[:, 1]
             tlt_returns[current_day:current_day + block_len] = block_b[:, 2]
 
-            last_return_a = spy_block_return
-            last_return_b = np.prod(1 + block_b[:, 1]) - 1
+            last_return_b = np.prod(1 + block_b[:, 1]) - 1  # QQQ momentum
+
             current_day += block_len
 
+        # ================================================================
         # SHARED NOISE: Cholesky-correlated Student-t
         # Applied to ALL assets together to add variation and restore
         # cross-asset correlations (especially SPY-QQQ and QQQ-TLT)

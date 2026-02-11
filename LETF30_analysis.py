@@ -5158,6 +5158,8 @@ def validate_simulation_layers(sim_df: pd.DataFrame) -> Dict[str, float]:
         'rows': float(len(sim_df)),
         'nan_returns': float(sim_df.filter(regex='_Ret$').isna().sum().sum()) if len(sim_df) > 0 else 0.0,
         'nan_prices': float(sim_df.filter(regex='_Price$').isna().sum().sum()) if len(sim_df) > 0 else 0.0,
+        'nonfinite_returns': float((~np.isfinite(sim_df.filter(regex='_Ret$').to_numpy())).sum()) if len(sim_df) > 0 else 0.0,
+        'nonfinite_prices': float((~np.isfinite(sim_df.filter(regex='_Price$').to_numpy())).sum()) if len(sim_df) > 0 else 0.0,
         'min_price': float(sim_df.filter(regex='_Price$').min().min()) if len(sim_df) > 0 else float('nan'),
         'min_vix': float(sim_df['VIX'].min()) if 'VIX' in sim_df.columns and len(sim_df) > 0 else float('nan'),
         'max_vix': float(sim_df['VIX'].max()) if 'VIX' in sim_df.columns and len(sim_df) > 0 else float('nan')
@@ -5166,6 +5168,8 @@ def validate_simulation_layers(sim_df: pd.DataFrame) -> Dict[str, float]:
         checks['rows'] > 0
         and checks['nan_returns'] == 0
         and checks['nan_prices'] == 0
+        and checks['nonfinite_returns'] == 0
+        and checks['nonfinite_prices'] == 0
         and np.isfinite(checks['min_price'])
         and checks['min_price'] > 0.0
         and np.isfinite(checks['min_vix'])
@@ -5566,23 +5570,23 @@ def simulate_single_path_fixed(args):
     # Get generated VIX path if available (extract for actual sim period)
     generated_vix_full = fat_tailed_returns_full.get('VIX', None)
     if generated_vix_full is not None:
-        bootstrap_vix = generated_vix_full[start_offset:start_offset + sim_days]
+        generated_vix = generated_vix_full[start_offset:start_offset + sim_days]
     else:
-        bootstrap_vix = None
+        generated_vix = None
     
     # Use randomized initial VIX instead of always starting at vix_base[regime]
     vix[0] = initial_vix if RANDOMIZE_INITIAL_VIX else vix_base[actual_start_regime]
 
     # Institutional mode: single authoritative VIX source from return generator.
-    if SIM_ENGINE_MODE == 'institutional_v1' and bootstrap_vix is not None:
-        vix = bootstrap_vix.copy()
+    if SIM_ENGINE_MODE == 'institutional_v1' and generated_vix is not None:
+        vix = generated_vix.copy()
     else:
-        use_bootstrap_blend = (SIM_ENGINE_MODE == 'legacy_hybrid' and bootstrap_vix is not None and USE_BLOCK_BOOTSTRAP)
+        use_bootstrap_blend = (SIM_ENGINE_MODE == 'legacy_hybrid' and generated_vix is not None and USE_BLOCK_BOOTSTRAP)
 
         if use_bootstrap_blend:
         # Blend bootstrap VIX with AR(1) dynamics
         # This preserves historical VIX patterns while maintaining consistency
-            vix[0] = bootstrap_vix[0]
+            vix[0] = generated_vix[0]
         
             regime_vols = {r: regime_params[r]['daily_std'] for r in range(N_REGIMES)}
         
@@ -5590,7 +5594,7 @@ def simulate_single_path_fixed(args):
                 regime = regime_path[t]
             
             # Historical VIX value from bootstrap
-                hist_vix = bootstrap_vix[t]
+                hist_vix = generated_vix[t]
             
                 regime_vix = (vix_dynamics or {}).get(regime, {})
                 phi = regime_vix.get('phi', 0.88)

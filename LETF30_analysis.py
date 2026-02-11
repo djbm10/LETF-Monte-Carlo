@@ -1825,7 +1825,8 @@ def monte_carlo_tax_regimes(
     st_cf_in: float,
     lt_cf_in: float,
     elections: TaxpayerElections,
-    n_samples: int = 1000
+    n_samples: int = 1000,
+    seed: Optional[int] = None
 ) -> Dict:
     """
     Monte Carlo over TAX INTERPRETATIONS.
@@ -1837,9 +1838,11 @@ def monte_carlo_tax_regimes(
     samples = []
     regime_results = defaultdict(list)
     
+    rng = np.random.default_rng(seed)
+
     for _ in range(n_samples):
         # Sample regime
-        regime = np.random.choice(TAX_REGIMES, p=[r.probability for r in TAX_REGIMES])
+        regime = rng.choice(TAX_REGIMES, p=[r.probability for r in TAX_REGIMES])
         
         # Run FULL engine under this regime
         base_result = compute_capital_gains(
@@ -2795,12 +2798,114 @@ def nearest_psd_matrix(corr_matrix):
     
     return corr_psd
 
-def infer_regime_from_vix(vix_series):
+def compute_high_vol_probability(vix_series, realized_vol=None, term_spread=None, smoothing=0.94):
     """
-    Infer regime from VIX: <25 = Low Vol (0), >=25 = High Vol (1)
+    Probabilistic high-volatility regime score in [0, 1].
+
+    Uses a smooth logistic model on VIX, realized volatility, and term structure,
+    then applies EWMA smoothing to reduce brittle day-to-day flips.
+    """
+    vix = np.asarray(vix_series, dtype=float)
+    n = len(vix)
+
+    if realized_vol is None:
+        rv = pd.Series(vix).rolling(20, min_periods=5).std().fillna(method='bfill').fillna(0).values / 100.0
+    else:
+        rv = np.asarray(realized_vol, dtype=float)
+        rv = pd.Series(rv).fillna(method='ffill').fillna(method='bfill').fillna(np.nanmedian(rv)).values
+
+    if term_spread is None:
+        ts = np.zeros(n)
+    else:
+        ts = np.asarray(term_spread, dtype=float)
+        ts = pd.Series(ts).fillna(method='ffill').fillna(method='bfill').fillna(0.0).values
+
+    # Logistic score: higher VIX, higher realized vol, and flatter/inverted curve
+    # imply higher stress probability.
+    logit = (
+        -4.0
+        + 0.22 * (np.nan_to_num(vix, nan=20.0) - 20.0)
+        + 6.5 * (np.nan_to_num(rv, nan=0.18) - 0.18)
+        + 0.10 * np.clip(-ts, -5, 5)
+    )
+    raw_p = 1.0 / (1.0 + np.exp(-np.clip(logit, -20, 20)))
+
+    smoothed_p = np.zeros(n)
+    if n > 0:
+        smoothed_p[0] = raw_p[0]
+    for i in range(1, n):
+        smoothed_p[i] = smoothing * smoothed_p[i - 1] + (1 - smoothing) * raw_p[i]
+
+    return np.clip(smoothed_p, 0.001, 0.999)
+
+
+def infer_regime_from_vix(vix_series, realized_vol=None, term_spread=None, hysteresis=0.08):
+    """
+    Infer regime using probabilistic stress score with hysteresis.
+
+    This avoids brittle single-threshold switching at VIX=25 by combining VIX,
+    realized vol, and optional term-structure information.
+
     Used when validating against historical data or when regime_path is missing.
     """
-    return np.where(vix_series < 25, 0, 1)
+    p_high = compute_high_vol_probability(
+        vix_series=vix_series,
+        realized_vol=realized_vol,
+        term_spread=term_spread
+    )
+
+    enter_high = 0.50 + hysteresis / 2
+    exit_high = 0.50 - hysteresis / 2
+
+    regimes = np.zeros(len(p_high), dtype=int)
+    if len(p_high) == 0:
+        return regimes
+
+    current = 1 if p_high[0] >= 0.50 else 0
+    regimes[0] = current
+    for i in range(1, len(p_high)):
+        if current == 0 and p_high[i] >= enter_high:
+            current = 1
+        elif current == 1 and p_high[i] <= exit_high:
+            current = 0
+        regimes[i] = current
+
+    return regimes
+
+
+def fill_missing_with_dynamic_factor(df: pd.DataFrame, target_col: str, factor_col: str,
+                                     default_beta: float, seed: int = 1234) -> pd.Series:
+    """Fill missing returns using overlap-calibrated dynamic beta + residual sampling."""
+    if target_col not in df.columns:
+        df[target_col] = np.nan
+
+    target = df[target_col].copy()
+    factor = df[factor_col].copy()
+
+    valid = target.notna() & factor.notna()
+    if valid.sum() < 40:
+        return target.fillna(default_beta * factor)
+
+    cov = target.rolling(252, min_periods=40).cov(factor)
+    var = factor.rolling(252, min_periods=40).var()
+    beta = (cov / var.replace(0, np.nan)).replace([np.inf, -np.inf], np.nan)
+    beta = beta.clip(-3.0, 3.0).fillna(method='ffill').fillna(method='bfill').fillna(default_beta)
+
+    alpha = (target - beta * factor).rolling(252, min_periods=40).mean()
+    alpha = alpha.fillna(method='ffill').fillna(method='bfill').fillna(0.0)
+
+    fitted = alpha + beta * factor
+    residuals = (target - fitted)[valid].dropna().values
+    missing = target.isna() & factor.notna()
+
+    if len(residuals) > 20 and missing.any():
+        rng = np.random.default_rng(seed)
+        sampled_resid = rng.choice(residuals, size=missing.sum(), replace=True)
+        target.loc[missing] = fitted.loc[missing].values + sampled_resid
+    else:
+        target.loc[missing] = fitted.loc[missing]
+
+    return target
 
 
 # ============================================================================
@@ -3247,16 +3352,23 @@ def fetch_historical_data():
     print(f"\n  PHASE 4: Filling Missing Data for Older Periods")
     print("  " + "-"*50)
     
-    # NASDAQ (didn't exist before 1971)
-    if 'NASDAQ_Ret' not in df.columns or df['NASDAQ_Ret'].isna().any():
-        # Approximate NASDAQ as 1.25x S&P 500 (historical beta)
-        df['NASDAQ_Ret'] = df['NASDAQ_Ret'].fillna(df['SPY_Ret'] * 1.25)
-        print("  ✓ NASDAQ approximated for pre-1971 period (1.25x SPY)")
-    
-    # QQQ (didn't exist before 1999)
-    if 'QQQ_Ret' not in df.columns or df['QQQ_Ret'].isna().any():
-        df['QQQ_Ret'] = df['QQQ_Ret'].fillna(df['NASDAQ_Ret'])
-        print("  ✓ QQQ approximated for pre-1999 period")
+    # NASDAQ (didn't exist before 1971): dynamic factor model vs SPY
+    if 'NASDAQ_Ret' not in df.columns:
+        df['NASDAQ_Ret'] = np.nan
+    if df['NASDAQ_Ret'].isna().any():
+        df['NASDAQ_Ret'] = fill_missing_with_dynamic_factor(
+            df, target_col='NASDAQ_Ret', factor_col='SPY_Ret', default_beta=1.25, seed=1101
+        )
+        print("  ✓ NASDAQ filled via overlap-calibrated dynamic factor model")
+
+    # QQQ (didn't exist before 1999): dynamic factor model vs NASDAQ
+    if 'QQQ_Ret' not in df.columns:
+        df['QQQ_Ret'] = np.nan
+    if df['QQQ_Ret'].isna().any():
+        df['QQQ_Ret'] = fill_missing_with_dynamic_factor(
+            df, target_col='QQQ_Ret', factor_col='NASDAQ_Ret', default_beta=1.0, seed=1102
+        )
+        print("  ✓ QQQ filled via overlap-calibrated dynamic factor model")
     
     # VIX (didn't exist before 1990)
     if 'VIX' not in df.columns or df['VIX'].isna().any():
@@ -3265,22 +3377,31 @@ def fetch_historical_data():
         print("  ✓ VIX approximated using rolling volatility for pre-1990")
     
     # Interest rates
-    if 'IRX' not in df.columns or df['IRX'].isna().any():
-        # Use Fama-French RF if available, else default
+    if 'IRX' not in df.columns:
+        df['IRX'] = np.nan
+    if df['IRX'].isna().any():
+        # Prefer Fama-French RF, then infer from TNX slope, then smooth backfill.
         if 'RF' in df.columns:
-            df['IRX'] = df['IRX'].fillna(df['RF'] * 252 * 100)  # Convert daily to annual %
-        df['IRX'] = df['IRX'].fillna(4.5)
-        print("  ✓ Interest rates filled from RF or default")
+            df['IRX'] = df['IRX'].fillna(df['RF'] * 252 * 100)
+        if 'TNX' in df.columns:
+            inferred_irx = (0.55 * df['TNX']).clip(lower=0.0)
+            df['IRX'] = df['IRX'].fillna(inferred_irx)
+        df['IRX'] = df['IRX'].interpolate(limit_direction='both').fillna(method='ffill').fillna(3.0)
+        print("  ✓ Interest rates filled from RF/term-structure interpolation")
     
     if 'Cash_Ret' not in df.columns:
         df['Cash_Ret'] = df['IRX'] / 100 / 252
     
     # Treasury returns
-    if 'TLT_Ret' not in df.columns or df['TLT_Ret'].isna().any():
-        # Approximate: negative correlation to stocks + risk-free return
+    if 'TLT_Ret' not in df.columns:
+        df['TLT_Ret'] = np.nan
+    if df['TLT_Ret'].isna().any():
+        tlt_filled = fill_missing_with_dynamic_factor(
+            df, target_col='TLT_Ret', factor_col='SPY_Ret', default_beta=-0.20, seed=1103
+        )
         rf_daily = df['IRX'] / 100 / 252
-        df['TLT_Ret'] = df['TLT_Ret'].fillna(df['SPY_Ret'] * -0.25 + rf_daily)
-        print("  ✓ Treasury returns approximated for older periods")
+        df['TLT_Ret'] = tlt_filled.fillna(rf_daily)
+        print("  ✓ Treasury returns filled via dynamic factor model + carry")
     
     # NASDAQ
     if '^IXIC' in data['Close'].columns:
@@ -3322,6 +3443,22 @@ def fetch_historical_data():
         else:
             df['TLT_Ret'] = df['SPY_Ret'] * -0.3
     
+    # Final harmonization pass (after direct ticker overwrite blocks above)
+    # IMPORTANT: only fill missing values here so real observed returns are never replaced.
+    nasdaq_filled = fill_missing_with_dynamic_factor(
+        df, target_col='NASDAQ_Ret', factor_col='SPY_Ret', default_beta=1.25, seed=1201
+    )
+    qqq_filled = fill_missing_with_dynamic_factor(
+        df, target_col='QQQ_Ret', factor_col='NASDAQ_Ret', default_beta=1.0, seed=1202
+    )
+    tlt_filled = fill_missing_with_dynamic_factor(
+        df, target_col='TLT_Ret', factor_col='SPY_Ret', default_beta=-0.20, seed=1203
+    )
+
+    df['NASDAQ_Ret'] = df['NASDAQ_Ret'].where(df['NASDAQ_Ret'].notna(), nasdaq_filled)
+    df['QQQ_Ret'] = df['QQQ_Ret'].where(df['QQQ_Ret'].notna(), qqq_filled)
+    df['TLT_Ret'] = df['TLT_Ret'].where(df['TLT_Ret'].notna(), tlt_filled)
+
     # ========================================================================
     # STEP 5: Verify data quality
     # ========================================================================
@@ -3399,7 +3536,7 @@ def fetch_historical_data():
         tracking_error_base = config['tracking_error_base']
         df_param = config['tracking_error_df']
         
-        np.random.seed(42 + ord(asset_id[0]))
+        te_rng = np.random.default_rng(42 + ord(asset_id[0]))
         
         # VIX-scaled tracking error (higher vol = worse tracking)
         vix_multiplier = (df['VIX'] / 20.0) ** 1.5  # Non-linear in crisis
@@ -3410,7 +3547,7 @@ def fetch_historical_data():
         
         for i in range(1, len(df)):
             # Fat-tailed innovation
-            innovation = student_t.rvs(df=df_param) * tracking_error_base * vix_multiplier.iloc[i]
+            innovation = student_t.rvs(df=df_param, random_state=te_rng) * tracking_error_base * vix_multiplier.iloc[i]
             
             # Also scales with return magnitude (liquidity impact)
             if not pd.isna(underlying_ret.iloc[i]):
@@ -3558,15 +3695,25 @@ def calibrate_regime_model_volatility(df):
     
     print(f"  Fitting {N_REGIMES}-regime model to VIX levels...")
     
-    # Use VIX as the regime indicator (this is economically justified)
+    # Use probabilistic VIX/realized-vol/term-structure regime indicator.
     vix_series = df['VIX'].values
+    realized_vol = df['SPY_Ret'].rolling(20, min_periods=5).std().fillna(method='bfill').fillna(0) * np.sqrt(252)
+    term_spread = None
+    if 'TNX' in df.columns and 'IRX' in df.columns:
+        term_spread = (df['TNX'] - df['IRX']).values
     
-    # Simple threshold-based regime detection
-    # Low vol: VIX < 25
-    # High vol: VIX >= 25
-    regimes = infer_regime_from_vix(vix_series)
+    regimes = infer_regime_from_vix(
+        vix_series=vix_series,
+        realized_vol=realized_vol.values,
+        term_spread=term_spread
+    )
+    p_high_vol = compute_high_vol_probability(
+        vix_series=vix_series,
+        realized_vol=realized_vol.values,
+        term_spread=term_spread
+    )
     
-    print(f"\n  Regime assignment: VIX < 25 = Low Vol, VIX >= 25 = High Vol")
+    print(f"\n  Regime assignment: probabilistic stress score + hysteresis")
     
     # Extract parameters
     regime_params = {}
@@ -3597,13 +3744,37 @@ def calibrate_regime_model_volatility(df):
         next_state = regimes[i + 1]
         transitions[current, next_state] += 1
     
-    transition_matrix = transitions / transitions.sum(axis=1, keepdims=True)
+    row_sums = transitions.sum(axis=1, keepdims=True)
+    row_sums[row_sums == 0] = 1.0
+    transition_matrix = transitions / row_sums
     
     # Compute average durations
     for i in range(N_REGIMES):
         persistence = transition_matrix[i, i]
         avg_duration = 1.0 / (1.0 - persistence) if persistence < 1.0 else np.inf
         regime_params[i]['avg_duration_days'] = avg_duration
+
+    # Empirical spell lengths for semi-Markov regime memory
+    duration_samples = {i: [] for i in range(N_REGIMES)}
+    if len(regimes) > 0:
+        run_regime = int(regimes[0])
+        run_length = 1
+        for r in regimes[1:]:
+            r = int(r)
+            if r == run_regime:
+                run_length += 1
+            else:
+                duration_samples[run_regime].append(run_length)
+                run_regime = r
+                run_length = 1
+        duration_samples[run_regime].append(run_length)
+
+    for i in range(N_REGIMES):
+        samples = duration_samples[i]
+        if len(samples) == 0:
+            samples = [int(max(1, MIN_REGIME_DURATION[i]))]
+        regime_params[i]['duration_median_days'] = float(np.median(samples))
+        regime_params[i]['duration_p90_days'] = float(np.percentile(samples, 90))
     
     # Steady state
     eigenvalues, eigenvectors = np.linalg.eig(transition_matrix.T)
@@ -3621,6 +3792,7 @@ def calibrate_regime_model_volatility(df):
         print(f"  Avg VIX:       {params['avg_vix']:.2f}")
         print(f"  Frequency:     {params['frequency']*100:5.2f}% (steady: {steady_state[i]*100:.2f}%)")
         print(f"  Avg Duration:  {params['avg_duration_days']:.0f} days")
+        print(f"  Spell Length:  med={params['duration_median_days']:.0f}d p90={params['duration_p90_days']:.0f}d")
     
     print(f"\nTransition Matrix:")
     print(f"        Low Vol  High Vol")
@@ -3636,12 +3808,17 @@ def calibrate_regime_model_volatility(df):
     print(f"\n  Expected SPY Return: {expected_return*100:.2f}%")
     print(f"  (Note: Similar across regimes - only vol changes!)")
     
+    vix_dynamics = calibrate_vix_dynamics(df, regimes)
+
     result = {
         'regime_params': regime_params,
         'transition_matrix': transition_matrix,
         'steady_state': steady_state,
         'expected_return': expected_return,
-        'regimes_historical': regimes
+        'regimes_historical': regimes,
+        'duration_samples': duration_samples,
+        'regime_probability_high': p_high_vol,
+        'vix_dynamics': vix_dynamics
     }
     
     save_cache(result, REGIME_MODEL_CACHE)
@@ -3784,6 +3961,82 @@ def get_default_correlation_for_regime_time_varying(regime):
 def get_default_correlations_time_varying():
     """Return default correlations for all regimes"""
     return {regime: get_default_correlation_for_regime_time_varying(regime) for regime in range(N_REGIMES)}
+
+
+def calibrate_vix_dynamics(df: pd.DataFrame, regimes: np.ndarray) -> Dict[int, Dict[str, float]]:
+    """
+    Calibrate regime-conditional VIX dynamics from historical data.
+
+    Estimates persistence, innovation scale, and jump sensitivity to equity shocks
+    by regime, then stores diagnostics (skew/kurtosis).
+    """
+    vix = df['VIX'].astype(float).values
+    spy = df['SPY_Ret'].astype(float).values
+
+    dynamics = {}
+    for regime in range(N_REGIMES):
+        idx = np.where(regimes == regime)[0]
+        if len(idx) < 80:
+            dynamics[regime] = {
+                'phi': 0.90,
+                'noise_std': 1.25,
+                'jump_threshold_sigma': 2.0,
+                'jump_scale': 6.0,
+                'target_vix': 15.0 if regime == 0 else 35.0,
+                'residual_skew': 0.0,
+                'residual_kurtosis': 3.0
+            }
+            continue
+
+        vix_reg = vix[idx]
+        spy_reg = spy[idx]
+        target_vix = float(np.nanmedian(vix_reg))
+
+        vix_prev = vix_reg[:-1]
+        vix_next = vix_reg[1:]
+        valid = np.isfinite(vix_prev) & np.isfinite(vix_next)
+        if valid.sum() < 30:
+            phi = 0.90
+            noise_std = 1.25
+            residual = np.zeros(10)
+        else:
+            x = vix_prev[valid] - target_vix
+            y = vix_next[valid] - target_vix
+            denom = np.dot(x, x)
+            phi = 0.90 if denom <= 0 else float(np.dot(x, y) / denom)
+            phi = float(np.clip(phi, 0.70, 0.985))
+            residual = y - phi * x
+            noise_std = float(np.nanstd(residual))
+            noise_std = float(np.clip(noise_std, 0.5, 4.0))
+
+        shock_sigma = np.nanstd(spy_reg)
+        shock_sigma = shock_sigma if shock_sigma > 0 else 0.01
+        shock_z = np.abs(spy_reg) / shock_sigma
+        jump_threshold = float(np.nanpercentile(shock_z, 90))
+        jump_threshold = float(np.clip(jump_threshold, 1.5, 3.5))
+
+        vix_diff = np.diff(vix_reg)
+        shock_excess = np.maximum(0, shock_z[1:] - jump_threshold)
+        valid_jump = np.isfinite(vix_diff) & np.isfinite(shock_excess)
+        if valid_jump.sum() > 20 and np.any(shock_excess[valid_jump] > 0):
+            xj = shock_excess[valid_jump]
+            yj = np.maximum(0, vix_diff[valid_jump])
+            jump_scale = float(np.dot(xj, yj) / (np.dot(xj, xj) + 1e-8))
+        else:
+            jump_scale = 6.0 if regime == 0 else 9.0
+        jump_scale = float(np.clip(jump_scale, 2.0, 15.0))
+
+        dynamics[regime] = {
+            'phi': phi,
+            'noise_std': noise_std,
+            'jump_threshold_sigma': jump_threshold,
+            'jump_scale': jump_scale,
+            'target_vix': target_vix,
+            'residual_skew': float(stats.skew(residual, nan_policy='omit')) if len(residual) > 3 else 0.0,
+            'residual_kurtosis': float(stats.kurtosis(residual, fisher=False, nan_policy='omit')) if len(residual) > 3 else 3.0
+        }
+
+    return dynamics
 
 
 # ============================================================================
@@ -4274,6 +4527,7 @@ def create_bootstrap_sampler(df: pd.DataFrame) -> BlockBootstrapReturns:
 def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
                                 regime_params: Dict, 
                                 bootstrap_sampler: BlockBootstrapReturns = None,
+                                vix_dynamics: Dict[int, Dict[str, float]] = None,
                                 seed: int = None) -> Dict[str, np.ndarray]:
     """
     Generate returns with fat tails using block bootstrap + Student-t noise.
@@ -4370,10 +4624,15 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
         # VIX
         vix_series[mask] = vix_base[regime_id]
     
-    # Add VIX dynamics (AR(1) with shocks)
+    # Add VIX dynamics (regime-calibrated AR(1) with shocks)
     for t in range(1, n_days):
         regime = regime_path[t]
-        target_vix = vix_base[regime]
+        regime_vix = (vix_dynamics or {}).get(regime, {})
+        target_vix = regime_vix.get('target_vix', vix_base[regime])
+        phi = regime_vix.get('phi', 0.88)
+        noise_std = regime_vix.get('noise_std', 1.5)
+        jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
+        jump_scale = regime_vix.get('jump_scale', 8.0)
         
         # VIX jumps on large equity moves
         if regime_params[regime]['daily_std'] > 0:
@@ -4381,12 +4640,12 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
         else:
             equity_shock = 0
         
-        vix_jump = 8.0 * max(0, equity_shock - 2.0)
+        vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
         
-        vix_series[t] = (0.88 * vix_series[t-1] + 
-                        0.12 * target_vix + 
+        vix_series[t] = (phi * vix_series[t-1] + 
+                        (1 - phi) * target_vix + 
                         vix_jump + 
-                        rng.normal(0, 1.5))
+                        rng.normal(0, noise_std))
         vix_series[t] = max(10, vix_series[t])
     
     # Generate IRX for parametric fallback
@@ -4397,7 +4656,7 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
         mask = regime_path == regime_id
         n_regime_days = mask.sum()
         if n_regime_days > 0:
-            irx_series[mask] = irx_base_map[regime_id] + np.random.normal(0, 0.5, n_regime_days)
+            irx_series[mask] = irx_base_map[regime_id] + rng.normal(0, 0.5, n_regime_days)
     irx_series = np.clip(irx_series, 0.0, 15.0)
     
     return {
@@ -4441,7 +4700,7 @@ def compute_letf_return_correct(underlying_return, leverage, realized_vol_daily,
     return net_return
 
 def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_returns,
-                               base_te, df_param, seed=None):
+                               base_te, df_param, seed=None, rng=None):
     """
     FIX #2: Tracking error with AR(1) autocorrelation and fat tails.
     
@@ -4451,8 +4710,8 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
     - VIX scaling (non-linear in crisis)
     - Liquidity impact (scales with move size)
     """
-    if seed is not None:
-        np.random.seed(seed)
+    if rng is None:
+        rng = np.random.default_rng(seed)
     
     te_series = np.zeros(n_days)
     rho = 0.3  # Autocorrelation
@@ -4465,12 +4724,16 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
         
         # Scale by regime (tracking gets much worse in high vol)
         regime_multiplier = 1.0 if regime == 0 else 5.0
+
+        # Asymmetric microstructure stress: downside moves produce larger slippage.
+        downside_asymmetry = 1.30 if underlying_returns[i] < 0 else 0.90
         
         # Fat-tailed innovation
-        innovation = student_t.rvs(df=df_param) * base_te * vix_multiplier * regime_multiplier
+        innovation = student_t.rvs(df=df_param, random_state=rng) * base_te * vix_multiplier * regime_multiplier
         
         # Liquidity impact (wider spreads on large moves)
         move_multiplier = 1 + 10 * abs(underlying_returns[i])
+        move_multiplier *= downside_asymmetry
         innovation *= move_multiplier
         
         # AR(1) process
@@ -4694,12 +4957,14 @@ def simulate_single_path_fixed(args):
     """
     sim_id, sim_years, regime_model, correlation_matrices, strategies = args
     
-    np.random.seed(sim_id + 50000)
+    rng = np.random.default_rng(sim_id + 50000)
     
     sim_days = int(sim_years * 252)
     
     regime_params = regime_model['regime_params']
     transition_matrix = regime_model['transition_matrix']
+    duration_samples = regime_model.get('duration_samples', None)
+    vix_dynamics = regime_model.get('vix_dynamics', None)
     
     # ========================================================================
     # RANDOMIZED START CONDITIONS
@@ -4748,26 +5013,35 @@ def simulate_single_path_fixed(args):
     # ========================================================================
     
     regime_path_full = np.zeros(total_days_to_generate, dtype=int)
-    regime_path_full[0] = start_regime  # Use randomized starting regime!
-    days_in_current_regime = 0
-    
-    for t in range(1, total_days_to_generate):
-        days_in_current_regime += 1
-        current_regime = regime_path_full[t-1]
-        
-        # Check minimum duration
-        if days_in_current_regime < MIN_REGIME_DURATION[current_regime]:
-            regime_path_full[t] = current_regime
-            continue
-        
-        # Allow transition
-        transition_probs = transition_matrix[current_regime]
-        new_regime = np.random.choice(N_REGIMES, p=transition_probs)
-        
-        if new_regime != current_regime:
-            days_in_current_regime = 0
-        
-        regime_path_full[t] = new_regime
+    t = 0
+    current_regime = int(start_regime)
+
+    while t < total_days_to_generate:
+        # Semi-Markov duration memory: sample spell length from empirical history.
+        if duration_samples is not None and len(duration_samples.get(current_regime, [])) > 0:
+            sampled_duration = int(rng.choice(duration_samples[current_regime]))
+        else:
+            persistence = float(transition_matrix[current_regime, current_regime])
+            persistence = min(max(persistence, 1e-6), 1 - 1e-6)
+            sampled_duration = int(np.ceil(rng.geometric(1.0 - persistence)))
+
+        sampled_duration = max(sampled_duration, int(MIN_REGIME_DURATION[current_regime]))
+        end_t = min(total_days_to_generate, t + sampled_duration)
+        regime_path_full[t:end_t] = current_regime
+        t = end_t
+
+        if t >= total_days_to_generate:
+            break
+
+        # Transition to next regime after the spell ends (cannot stay in same regime).
+        transition_probs = transition_matrix[current_regime].astype(float).copy()
+        transition_probs[current_regime] = 0.0
+        total_prob = transition_probs.sum()
+        if total_prob <= 0:
+            current_regime = int(1 - current_regime)
+        else:
+            transition_probs /= total_prob
+            current_regime = int(rng.choice(N_REGIMES, p=transition_probs))
     
     # Extract the actual simulation period (after offset)
     regime_path = regime_path_full[start_offset:start_offset + sim_days]
@@ -4796,6 +5070,7 @@ def simulate_single_path_fixed(args):
         regime_path=regime_path_full,
         regime_params=regime_params,
         bootstrap_sampler=bootstrap_sampler,
+        vix_dynamics=vix_dynamics,
         seed=sim_id + 50000
     )
     
@@ -4850,8 +5125,15 @@ def simulate_single_path_fixed(args):
             # Historical VIX value from bootstrap
             hist_vix = bootstrap_vix[t]
             
+            regime_vix = (vix_dynamics or {}).get(regime, {})
+            phi = regime_vix.get('phi', 0.88)
+            noise_std = regime_vix.get('noise_std', 1.0)
+            jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
+            jump_scale = regime_vix.get('jump_scale', 8.0)
+            target_vix = regime_vix.get('target_vix', vix_base[regime])
+
             # AR(1) component
-            ar1_vix = 0.88 * vix[t-1] + 0.12 * vix_base[regime]
+            ar1_vix = phi * vix[t-1] + (1 - phi) * target_vix
             
             # Detect equity shock for VIX spike
             expected_std = regime_vols[regime]
@@ -4860,10 +5142,10 @@ def simulate_single_path_fixed(args):
             else:
                 equity_shock = 0
             
-            vix_jump = 8.0 * max(0, equity_shock - 2.0)
+            vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
             
             # Blend: 60% historical, 40% AR(1) + shock
-            vix[t] = 0.6 * hist_vix + 0.4 * (ar1_vix + vix_jump) + np.random.normal(0, 1.0)
+            vix[t] = 0.6 * hist_vix + 0.4 * (ar1_vix + vix_jump) + rng.normal(0, noise_std)
             vix[t] = max(10, vix[t])
     else:
         # Original AR(1) dynamics (fallback)
@@ -4873,7 +5155,12 @@ def simulate_single_path_fixed(args):
         
         for t in range(1, sim_days):
             regime = regime_path[t]
-            target_vix = vix_base[regime]
+            regime_vix = (vix_dynamics or {}).get(regime, {})
+            phi = regime_vix.get('phi', 0.88)
+            noise_std = regime_vix.get('noise_std', 1.5)
+            jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
+            jump_scale = regime_vix.get('jump_scale', 8.0)
+            target_vix = regime_vix.get('target_vix', vix_base[regime])
             
             expected_std = regime_vols[regime]
             if expected_std > 0:
@@ -4881,9 +5168,9 @@ def simulate_single_path_fixed(args):
             else:
                 equity_shock = 0
             
-            vix_jump = 8.0 * max(0, equity_shock - 2.0)
+            vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
             
-            vix[t] = 0.88 * vix[t-1] + 0.12 * target_vix + vix_jump + np.random.normal(0, 1.5)
+            vix[t] = phi * vix[t-1] + (1 - phi) * target_vix + vix_jump + rng.normal(0, noise_std)
             vix[t] = max(10, vix[t])
     
     # ========================================================================
@@ -4976,7 +5263,7 @@ def simulate_single_path_fixed(args):
             underlying,
             config['tracking_error_base'],
             config['tracking_error_df'],
-            seed=sim_id + ord(asset[0])
+            rng=np.random.default_rng(sim_id + ord(asset[0]))
         )
         
         # Multiplicative tracking error
@@ -5138,8 +5425,16 @@ def run_strategy_fixed(df, strategy_id, regime_path, correlation_matrices,
     # ========================================================================
     if regime_path is None or len(regime_path) != len(df):
         if 'VIX' in df.columns:
-            # Infer regime from VIX (same logic as calibration)
-            regime_path = infer_regime_from_vix(df['VIX'].values)
+            # Infer regime from probabilistic stress model (same logic as calibration)
+            realized_vol = df['SPY_Ret'].rolling(20, min_periods=5).std().fillna(method='bfill').fillna(0) * np.sqrt(252)
+            term_spread = None
+            if 'TNX' in df.columns and 'IRX' in df.columns:
+                term_spread = (df['TNX'] - df['IRX']).values
+            regime_path = infer_regime_from_vix(
+                vix_series=df['VIX'].values,
+                realized_vol=realized_vol.values,
+                term_spread=term_spread
+            )
         else:
             # Fallback if no VIX
             regime_path = np.zeros(len(df), dtype=int)
@@ -6463,12 +6758,12 @@ def validate_zero_drift_vol_drag():
     print(f"    Drift:        0% (zero drift)")
     print(f"    Duration:     {n_days} days (1 year)")
     
-    np.random.seed(42)
+    rng = np.random.default_rng(42)
     sim_returns = []
     
     for _ in range(n_sims):
         # Generate zero-drift returns
-        daily_returns = np.random.normal(0, daily_std, n_days)
+        daily_returns = rng.normal(0, daily_std, n_days)
         
         # For daily-rebalanced LETF: just leverage the returns
         # Volatility drag emerges from GEOMETRIC compounding, not a daily subtraction
@@ -6537,13 +6832,13 @@ def validate_flat_market_decay():
     all_passed = True
     
     for leverage in [2.0, 3.0]:
-        np.random.seed(42 + int(leverage))
+        rng = np.random.default_rng(42 + int(leverage))
         
         sim_returns = []
         
         for _ in range(n_sims):
             # Generate returns with zero mean
-            daily_returns = np.random.normal(0, daily_std, n_days)
+            daily_returns = rng.normal(0, daily_std, n_days)
             
             # Daily-rebalanced LETF: leverage the returns
             # Volatility drag emerges from geometric compounding
@@ -8311,8 +8606,7 @@ def simulate_income_trajectory(base_income, years, num_simulations=50,
             'mean': Average trajectory
             'all_paths': All simulated paths (for analysis)
     """
-    if seed is not None:
-        np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     
     # ========================================================================
     # CAREER STAGE PARAMETERS
@@ -8370,13 +8664,13 @@ def simulate_income_trajectory(base_income, years, num_simulations=50,
             annual_growth = params['base_growth']
             
             # Add random volatility (bonuses, cost of living adjustments, etc.)
-            random_variation = np.random.normal(0, params['growth_volatility'])
+            random_variation = rng.normal(0, params['growth_volatility'])
             annual_growth += random_variation
             
             # ================================================================
             # CAREER EVENTS (mutually exclusive)
             # ================================================================
-            event_roll = np.random.random()
+            event_roll = rng.random()
             
             if recovering_from_layoff > 0:
                 # In recovery mode - accelerated catch-up growth
@@ -8391,12 +8685,12 @@ def simulate_income_trajectory(base_income, years, num_simulations=50,
                 
             elif event_roll < params['layoff_rate'] + params['promotion_rate']:
                 # PROMOTION - significant raise
-                promotion_raise = np.random.uniform(*params['promotion_boost'])
+                promotion_raise = rng.uniform(*params['promotion_boost'])
                 annual_growth += promotion_raise
                 
             elif event_roll < params['layoff_rate'] + params['promotion_rate'] + params['job_change_rate']:
                 # JOB CHANGE - often leads to higher pay
-                job_change_raise = np.random.uniform(*params['job_change_boost'])
+                job_change_raise = rng.uniform(*params['job_change_boost'])
                 annual_growth += job_change_raise
             
             # Apply growth
@@ -8888,7 +9182,7 @@ def process_trades_with_wired_engine(
         retirement_income_pct = 0.50
     
     # Generate income path for entire simulation horizon
-    np.random.seed(42)  # Reproducible but realistic variance
+    rng_income = np.random.default_rng(42)  # Reproducible but realistic variance
     income_path = [base_ordinary_income]
     
     in_recovery = 0  # Tracks years since setback
@@ -8923,23 +9217,23 @@ def process_trades_with_wired_engine(
             base_growth = 0.04
             
             # Random annual variation (market conditions, performance)
-            random_variation = np.random.normal(0, 0.08)
+            random_variation = rng_income.normal(0, 0.08)
             
             # Career events (mutually exclusive, checked in priority order)
             career_event_growth = 0
             
             # Setback (layoff, demotion, industry downturn)
-            if np.random.random() < 0.03 and in_recovery == 0:
-                career_event_growth = np.random.uniform(-0.20, -0.10)
+            if rng_income.random() < 0.03 and in_recovery == 0:
+                career_event_growth = rng_income.uniform(-0.20, -0.10)
                 in_recovery = 2  # Will recover over next 2 years
                 
             # Job change to better company
-            elif np.random.random() < 0.10:
-                career_event_growth = np.random.uniform(0.10, 0.30)
+            elif rng_income.random() < 0.10:
+                career_event_growth = rng_income.uniform(0.10, 0.30)
                 
             # Promotion
-            elif np.random.random() < 0.25:
-                career_event_growth = np.random.uniform(0.15, 0.25)
+            elif rng_income.random() < 0.25:
+                career_event_growth = rng_income.uniform(0.15, 0.25)
             
             # Recovery growth after setback
             recovery_growth = 0

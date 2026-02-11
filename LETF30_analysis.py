@@ -2582,6 +2582,16 @@ BOOTSTRAP_WEIGHT = 0.80
 # Set to False to revert to old behavior for comparison
 USE_BLOCK_BOOTSTRAP = True
 
+# Simulation engine mode:
+# - 'legacy_hybrid': existing block-bootstrap + calibrated overlays
+# - 'institutional_v1': latent-state-style joint multivariate t core
+SIM_ENGINE_MODE = 'institutional_v1'
+
+# Structural model caches (institutional_v1)
+JOINT_RETURN_MODEL_CACHE = CACHE_DIR / "joint_return_model.pkl"
+FUNDING_MODEL_CACHE = CACHE_DIR / "funding_spread_model.pkl"
+TRACKING_RESIDUAL_CACHE = CACHE_DIR / "tracking_residual_model.pkl"
+
 # Cache for bootstrap data (processed historical returns by regime)
 BOOTSTRAP_CACHE = CACHE_DIR / "bootstrap_data.pkl"
 
@@ -4039,6 +4049,199 @@ def calibrate_vix_dynamics(df: pd.DataFrame, regimes: np.ndarray) -> Dict[int, D
     return dynamics
 
 
+def calibrate_joint_return_model(df: pd.DataFrame, regimes: np.ndarray) -> Dict:
+    """
+    Calibrate regime-conditional multivariate Student-t return model.
+
+    Assets modeled jointly: SPY, QQQ, TLT.
+    """
+    cached = load_cache(JOINT_RETURN_MODEL_CACHE)
+    if cached is not None:
+        return cached
+
+    assets = ['SPY_Ret', 'QQQ_Ret', 'TLT_Ret']
+    model = {'assets': assets, 'regimes': {}}
+
+    for regime in range(N_REGIMES):
+        mask = regimes == regime
+        reg_df = df.loc[mask, assets].dropna()
+
+        if len(reg_df) < 80:
+            # Fallback conservative defaults
+            mu = np.array([0.08/252, 0.10/252, 0.03/252], dtype=float)
+            vol = np.array([0.16, 0.24, 0.12], dtype=float) if regime == 0 else np.array([0.28, 0.42, 0.16], dtype=float)
+            corr = np.array([
+                [1.0, 0.90 if regime == 0 else 0.96, -0.20 if regime == 0 else -0.05],
+                [0.90 if regime == 0 else 0.96, 1.0, -0.18 if regime == 0 else -0.03],
+                [-0.20 if regime == 0 else -0.05, -0.18 if regime == 0 else -0.03, 1.0]
+            ])
+            cov = np.outer(vol / np.sqrt(252), vol / np.sqrt(252)) * corr
+            nu = 5.0 if regime == 0 else 4.0
+        else:
+            arr = reg_df.values
+            mu = np.nanmean(arr, axis=0)
+            cov = np.cov(arr, rowvar=False)
+            cov = nearest_psd_matrix(cov / np.outer(np.sqrt(np.diag(cov)), np.sqrt(np.diag(cov)))) * np.outer(np.sqrt(np.diag(cov)), np.sqrt(np.diag(cov)))
+
+            # Tail heaviness estimate from average excess kurtosis.
+            k = np.nanmean([stats.kurtosis(reg_df[c], fisher=False, nan_policy='omit') for c in assets])
+            if np.isfinite(k) and k > 3.05:
+                nu = float(np.clip(4 + 6 / (k - 3 + 1e-6), 3.2, 12.0))
+            else:
+                nu = 8.0
+
+        model['regimes'][regime] = {
+            'mu': mu,
+            'cov': cov,
+            'nu': nu
+        }
+
+    save_cache(model, JOINT_RETURN_MODEL_CACHE)
+    return model
+
+
+def simulate_joint_returns_t(n_days: int, regime_path: np.ndarray, joint_model: Dict,
+                             rng: np.random.Generator) -> Dict[str, np.ndarray]:
+    """Simulate regime-conditional multivariate Student-t asset returns."""
+    assets = joint_model['assets']
+    out = {a: np.zeros(n_days) for a in assets}
+
+    for t in range(n_days):
+        regime = int(regime_path[t])
+        p = joint_model['regimes'][regime]
+        mu = np.asarray(p['mu'], dtype=float)
+        cov = np.asarray(p['cov'], dtype=float)
+        nu = float(p['nu'])
+
+        # Multivariate t: x = mu + z / sqrt(u/nu), z~N(0,cov), u~ChiSq(nu)
+        z = rng.multivariate_normal(mean=np.zeros(len(mu)), cov=cov)
+        u = rng.chisquare(df=nu)
+        scale = np.sqrt(nu / max(u, 1e-12))
+        x = mu + z * scale
+
+        for i, a in enumerate(assets):
+            out[a][t] = x[i]
+
+    return out
+
+
+def calibrate_funding_spread_model(df: pd.DataFrame) -> Dict[str, float]:
+    """Calibrate a simple stress-linked borrow spread model."""
+    cached = load_cache(FUNDING_MODEL_CACHE)
+    if cached is not None:
+        return cached
+
+    # Proxy target spread from observed short rate environment:
+    # low base + stress loading. This is a practical approximation.
+    vix = df['VIX'].fillna(method='ffill').fillna(method='bfill').fillna(20.0).values
+    term_spread = np.zeros(len(df))
+    if 'TNX' in df.columns and 'IRX' in df.columns:
+        term_spread = (df['TNX'] - df['IRX']).fillna(0.0).values
+
+    stress = np.maximum(vix - 20.0, 0.0)
+    inv_curve = np.maximum(-term_spread, 0.0)
+
+    # Coefficients chosen to match broad ranges: ~0.5% normal, 1-2% high vol, 3%+ stress.
+    model = {
+        'base': 0.0045,
+        'beta_vix': 0.00045,
+        'beta_inv_curve': 0.0018,
+        'min_spread': 0.0035,
+        'max_spread': 0.0400
+    }
+
+    # Basic centering to avoid excessive average spreads.
+    avg_spread = model['base'] + model['beta_vix'] * np.nanmean(stress) + model['beta_inv_curve'] * np.nanmean(inv_curve)
+    if np.isfinite(avg_spread) and avg_spread > 0.012:
+        model['base'] *= 0.75
+
+    save_cache(model, FUNDING_MODEL_CACHE)
+    return model
+
+
+def predict_borrow_spread_series(df: pd.DataFrame, funding_model: Dict[str, float]) -> np.ndarray:
+    """Predict annual borrow spread (decimal) from stress covariates."""
+    vix = df['VIX'].fillna(method='ffill').fillna(method='bfill').fillna(20.0).values
+    stress = np.maximum(vix - 20.0, 0.0)
+
+    inv_curve = np.zeros(len(df))
+    if 'TNX' in df.columns and 'IRX' in df.columns:
+        inv_curve = np.maximum(-(df['TNX'] - df['IRX']).fillna(0.0).values, 0.0)
+
+    spread = (
+        funding_model['base']
+        + funding_model['beta_vix'] * stress
+        + funding_model['beta_inv_curve'] * inv_curve
+    )
+    return np.clip(spread, funding_model['min_spread'], funding_model['max_spread'])
+
+
+def calibrate_tracking_residual_model(df: pd.DataFrame) -> Dict:
+    """
+    Calibrate ETF tracking residual dynamics from observed post-inception returns.
+    """
+    cached = load_cache(TRACKING_RESIDUAL_CACHE)
+    if cached is not None:
+        return cached
+
+    model = {}
+    for asset in ['TQQQ', 'UPRO', 'SSO']:
+        ret_col = f'{asset}_Real_Ret'
+        if ret_col not in df.columns:
+            continue
+
+        real = df[ret_col]
+        if asset == 'TQQQ':
+            idx = df.get('QQQ_Ret', df['SPY_Ret'])
+        else:
+            idx = df['SPY_Ret']
+
+        leverage = ASSETS[asset]['leverage']
+        rf = df.get('IRX', pd.Series(4.5, index=df.index)).fillna(4.5).values / 100.0
+        spread_proxy = 0.0075
+        financing_daily = (leverage - 1.0) * (rf + spread_proxy) / 252.0
+        expense_daily = ASSETS[asset]['expense_ratio'] / 252.0
+
+        expected = leverage * idx.values - financing_daily - expense_daily
+        residual = (real.values - expected)
+        mask = np.isfinite(residual) & np.isfinite(df['VIX'].values)
+
+        if mask.sum() < 120:
+            model[asset] = {
+                'rho': 0.25,
+                'base_scale': ASSETS[asset]['tracking_error_base'],
+                'downside_mult': 1.25,
+                'df': ASSETS[asset]['tracking_error_df']
+            }
+            continue
+
+        r = residual[mask]
+        r_prev = r[:-1]
+        r_next = r[1:]
+        denom = np.dot(r_prev, r_prev)
+        rho = 0.25 if denom <= 0 else float(np.dot(r_prev, r_next) / denom)
+        rho = float(np.clip(rho, 0.0, 0.7))
+
+        innov = r_next - rho * r_prev
+        scale = float(np.nanstd(innov))
+        scale = float(np.clip(scale, ASSETS[asset]['tracking_error_base'] * 0.5,
+                              ASSETS[asset]['tracking_error_base'] * 8.0))
+
+        downside = np.nanmean(np.abs(innov[innov < 0])) if np.any(innov < 0) else scale
+        upside = np.nanmean(np.abs(innov[innov >= 0])) if np.any(innov >= 0) else scale
+        downside_mult = float(np.clip((downside / max(upside, 1e-9)), 1.0, 2.0))
+
+        model[asset] = {
+            'rho': rho,
+            'base_scale': scale,
+            'downside_mult': downside_mult,
+            'df': ASSETS[asset]['tracking_error_df']
+        }
+
+    save_cache(model, TRACKING_RESIDUAL_CACHE)
+    return model
+
+
 # ============================================================================
 # BLOCK BOOTSTRAP WITH FAT-TAILED RETURNS
 # ============================================================================
@@ -4528,6 +4731,8 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
                                 regime_params: Dict, 
                                 bootstrap_sampler: BlockBootstrapReturns = None,
                                 vix_dynamics: Dict[int, Dict[str, float]] = None,
+                                joint_return_model: Dict = None,
+                                sim_engine_mode: str = 'legacy_hybrid',
                                 seed: int = None) -> Dict[str, np.ndarray]:
     """
     Generate returns with fat tails using block bootstrap + Student-t noise.
@@ -4550,7 +4755,59 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
     rng = np.random.default_rng(seed)
     
     # ========================================================================
-    # METHOD 1: Block Bootstrap (preferred - uses real historical data)
+    # METHOD 1: Institutional v1 joint regime-conditional multivariate t model
+    # ========================================================================
+    if sim_engine_mode == 'institutional_v1' and joint_return_model is not None:
+        joint = simulate_joint_returns_t(
+            n_days=n_days,
+            regime_path=regime_path,
+            joint_model=joint_return_model,
+            rng=rng
+        )
+
+        spy_returns = joint['SPY_Ret']
+        qqq_returns = joint['QQQ_Ret']
+        tlt_returns = joint['TLT_Ret']
+        vix_series = np.zeros(n_days)
+
+        vix_base = {0: 15, 1: 35}
+        if n_days > 0:
+            vix_series[0] = vix_base[int(regime_path[0])]
+
+        for t in range(1, n_days):
+            regime = int(regime_path[t])
+            regime_vix = (vix_dynamics or {}).get(regime, {})
+            target_vix = regime_vix.get('target_vix', vix_base[regime])
+            phi = regime_vix.get('phi', 0.88)
+            noise_std = regime_vix.get('noise_std', 1.5)
+            jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
+            jump_scale = regime_vix.get('jump_scale', 8.0)
+
+            expected_std = max(regime_params[regime].get('daily_std', 0.01), 1e-4)
+            equity_shock = abs(spy_returns[t]) / expected_std
+            vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
+            vix_series[t] = phi * vix_series[t-1] + (1 - phi) * target_vix + vix_jump + rng.normal(0, noise_std)
+            vix_series[t] = max(10, vix_series[t])
+
+        # Institutional mode can still output an IRX proxy for downstream compatibility.
+        irx_series = np.zeros(n_days)
+        for regime_id in range(N_REGIMES):
+            mask = regime_path == regime_id
+            if mask.sum() > 0:
+                base = 3.5 if regime_id == 0 else 1.5
+                irx_series[mask] = base + rng.normal(0, 0.4, mask.sum())
+        irx_series = np.clip(irx_series, 0.0, 15.0)
+
+        return {
+            'SPY_Ret': spy_returns,
+            'QQQ_Ret': qqq_returns,
+            'TLT_Ret': tlt_returns,
+            'VIX': vix_series,
+            'IRX': irx_series
+        }
+
+    # ========================================================================
+    # METHOD 2: Block Bootstrap (preferred legacy mode - uses historical data)
     # ========================================================================
     if bootstrap_sampler is not None and USE_BLOCK_BOOTSTRAP:
         return bootstrap_sampler.sample_returns(
@@ -4562,7 +4819,7 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
         )
     
     # ========================================================================
-    # METHOD 2: Parametric Student-t (fallback when no historical data)
+    # METHOD 3: Parametric Student-t (fallback when no historical data)
     # ========================================================================
     
     # This is similar to the old method but uses Student-t instead of Normal
@@ -4700,7 +4957,8 @@ def compute_letf_return_correct(underlying_return, leverage, realized_vol_daily,
     return net_return
 
 def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_returns,
-                               base_te, df_param, seed=None, rng=None):
+                               base_te, df_param, seed=None, rng=None,
+                               rho=0.3, downside_asymmetry=1.30):
     """
     FIX #2: Tracking error with AR(1) autocorrelation and fat tails.
     
@@ -4714,7 +4972,6 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
         rng = np.random.default_rng(seed)
     
     te_series = np.zeros(n_days)
-    rho = 0.3  # Autocorrelation
     
     for i in range(1, n_days):
         regime = regime_path[i]
@@ -4726,14 +4983,14 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
         regime_multiplier = 1.0 if regime == 0 else 5.0
 
         # Asymmetric microstructure stress: downside moves produce larger slippage.
-        downside_asymmetry = 1.30 if underlying_returns[i] < 0 else 0.90
+        downside_scale = downside_asymmetry if underlying_returns[i] < 0 else 0.90
         
         # Fat-tailed innovation
         innovation = student_t.rvs(df=df_param, random_state=rng) * base_te * vix_multiplier * regime_multiplier
         
         # Liquidity impact (wider spreads on large moves)
         move_multiplier = 1 + 10 * abs(underlying_returns[i])
-        move_multiplier *= downside_asymmetry
+        move_multiplier *= downside_scale
         innovation *= move_multiplier
         
         # AR(1) process
@@ -4965,6 +5222,9 @@ def simulate_single_path_fixed(args):
     transition_matrix = regime_model['transition_matrix']
     duration_samples = regime_model.get('duration_samples', None)
     vix_dynamics = regime_model.get('vix_dynamics', None)
+    joint_return_model = regime_model.get('joint_return_model', None)
+    funding_model = regime_model.get('funding_model', None)
+    tracking_residual_model = regime_model.get('tracking_residual_model', None)
     
     # ========================================================================
     # RANDOMIZED START CONDITIONS
@@ -5071,6 +5331,8 @@ def simulate_single_path_fixed(args):
         regime_params=regime_params,
         bootstrap_sampler=bootstrap_sampler,
         vix_dynamics=vix_dynamics,
+        joint_return_model=joint_return_model,
+        sim_engine_mode=SIM_ENGINE_MODE,
         seed=sim_id + 50000
     )
     
@@ -5112,7 +5374,9 @@ def simulate_single_path_fixed(args):
     # Use randomized initial VIX instead of always starting at vix_base[regime]
     vix[0] = initial_vix if RANDOMIZE_INITIAL_VIX else vix_base[actual_start_regime]
     
-    if bootstrap_vix is not None and USE_BLOCK_BOOTSTRAP:
+    use_bootstrap_blend = (SIM_ENGINE_MODE == 'legacy_hybrid' and bootstrap_vix is not None and USE_BLOCK_BOOTSTRAP)
+
+    if use_bootstrap_blend:
         # Blend bootstrap VIX with AR(1) dynamics
         # This preserves historical VIX patterns while maintaining consistency
         vix[0] = bootstrap_vix[0]
@@ -5192,6 +5456,14 @@ def simulate_single_path_fixed(args):
         # This means borrow costs naturally match the interest rate 
         # environment of the sampled historical period.
         daily_borrow_costs = np.zeros(sim_days)
+
+        spread_pred_series = None
+        if SIM_ENGINE_MODE == 'institutional_v1' and funding_model is not None:
+            spread_df = pd.DataFrame({'VIX': vix})
+            if irx_bootstrapped is not None:
+                spread_df['IRX'] = irx_bootstrapped
+            spread_pred_series = predict_borrow_spread_series(spread_df, funding_model)
+
         for t in range(sim_days):
             if irx_bootstrapped is not None:
                 # IRX is in percentage points (e.g., 4.5), convert to decimal (0.045)
@@ -5202,8 +5474,10 @@ def simulate_single_path_fixed(args):
                 # Fallback: use old fixed regime-based rates
                 regime = regime_path[t]
                 risk_free_rate = INTEREST_RATE_BY_REGIME[regime]
+
+            spread_for_day = spread_pred_series[t] if spread_pred_series is not None else borrow_spread
             daily_borrow_costs[t] = calculate_daily_borrow_cost(
-                leverage, risk_free_rate, borrow_spread
+                leverage, risk_free_rate, spread_for_day
             )
         
         # Get underlying returns
@@ -5256,14 +5530,17 @@ def simulate_single_path_fixed(args):
             )
         
         # FIX #2: Add tracking error (multiplicative, AR(1), fat tails)
+        te_params = (tracking_residual_model or {}).get(asset, {})
         tracking_errors = generate_tracking_error_ar1(
             sim_days,
             regime_path,
             vix,
             underlying,
-            config['tracking_error_base'],
-            config['tracking_error_df'],
-            rng=np.random.default_rng(sim_id + ord(asset[0]))
+            te_params.get('base_scale', config['tracking_error_base']),
+            te_params.get('df', config['tracking_error_df']),
+            rng=np.random.default_rng(sim_id + ord(asset[0])),
+            rho=te_params.get('rho', 0.3),
+            downside_asymmetry=te_params.get('downside_mult', 1.30)
         )
         
         # Multiplicative tracking error
@@ -6659,6 +6936,8 @@ def parallel_monte_carlo_fixed(strategy_ids, time_horizon, regime_model, correla
     print(f"\n{'='*80}")
     print(f"MONTE CARLO: {NUM_SIMULATIONS:,} sims × {time_horizon}Y")
     print(f"{'='*80}")
+
+    regime_model = regime_model.copy()  # local mutable copy for worker payload enrichments
     
     # ========================================================================
     # CREATE BOOTSTRAP SAMPLER (if historical data provided)
@@ -6668,7 +6947,6 @@ def parallel_monte_carlo_fixed(strategy_ids, time_horizon, regime_model, correla
         bootstrap_sampler = create_bootstrap_sampler(historical_df)
         
         # Add to regime_model so it's passed to simulation workers
-        regime_model = regime_model.copy()  # Don't modify original
         regime_model['bootstrap_sampler'] = bootstrap_sampler
         
         print(f"  ✓ Bootstrap sampler ready (block size: {BOOTSTRAP_BLOCK_SIZE} days)")
@@ -6676,6 +6954,10 @@ def parallel_monte_carlo_fixed(strategy_ids, time_horizon, regime_model, correla
         print(f"  ✓ Bootstrap weight: {BOOTSTRAP_WEIGHT*100:.0f}% historical + {(1-BOOTSTRAP_WEIGHT)*100:.0f}% noise")
     else:
         print(f"\n  Using parametric Student-t returns (no historical data for bootstrap)")
+
+    print(f"\n  Simulation engine mode: {SIM_ENGINE_MODE}")
+    if SIM_ENGINE_MODE == 'institutional_v1':
+        print("  ✓ Institutional v1: joint multivariate t returns + state-linked funding + calibrated residual TE")
     
     # ========================================================================
     # RANDOMIZED START DATE CONFIGURATION
@@ -9722,6 +10004,16 @@ def main():
     # Calibrate regime model
     print("\nCalibrating regime model...")
     regime_model = calibrate_regime_model_volatility(df)
+
+    # Institutional model components (roadmap Phase 1-3)
+    print("Calibrating joint return model...")
+    regime_model['joint_return_model'] = calibrate_joint_return_model(df, regime_model['regimes_historical'])
+
+    print("Calibrating funding spread model...")
+    regime_model['funding_model'] = calibrate_funding_spread_model(df)
+
+    print("Calibrating tracking residual model...")
+    regime_model['tracking_residual_model'] = calibrate_tracking_residual_model(df)
     
     # Calibrate correlations
     print("Calibrating correlations...")

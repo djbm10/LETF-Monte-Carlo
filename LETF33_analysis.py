@@ -1828,9 +1828,6 @@ def monte_carlo_tax_regimes(
     n_samples: int = 1000,
     seed: Optional[int] = None
 ) -> Dict:
-    n_samples: int = 1000,
-    seed: Optional[int] = None
-) -> Dict:
     """
     Monte Carlo over TAX INTERPRETATIONS.
     
@@ -1841,11 +1838,6 @@ def monte_carlo_tax_regimes(
     samples = []
     regime_results = defaultdict(list)
     
-    rng = np.random.default_rng(seed)
-
-    for _ in range(n_samples):
-        # Sample regime
-        regime = rng.choice(TAX_REGIMES, p=[r.probability for r in TAX_REGIMES])
     rng = np.random.default_rng(seed)
 
     for _ in range(n_samples):
@@ -2937,120 +2929,6 @@ def fill_missing_with_dynamic_factor(df: pd.DataFrame, target_col: str, factor_c
 
     return target
     return corr_psd
-
-def compute_high_vol_probability(vix_series, realized_vol=None, term_spread=None, smoothing=0.94):
-    """
-    Probabilistic high-volatility regime score in [0, 1].
-
-    Uses a smooth logistic model on VIX, realized volatility, and term structure,
-    then applies EWMA smoothing to reduce brittle day-to-day flips.
-    """
-    vix = np.asarray(vix_series, dtype=float)
-    n = len(vix)
-
-    if realized_vol is None:
-        rv = pd.Series(vix).rolling(20, min_periods=5).std().fillna(method='bfill').fillna(0).values / 100.0
-    else:
-        rv = np.asarray(realized_vol, dtype=float)
-        rv = pd.Series(rv).fillna(method='ffill').fillna(method='bfill').fillna(np.nanmedian(rv)).values
-
-    if term_spread is None:
-        ts = np.zeros(n)
-    else:
-        ts = np.asarray(term_spread, dtype=float)
-        ts = pd.Series(ts).fillna(method='ffill').fillna(method='bfill').fillna(0.0).values
-
-    # Logistic score: higher VIX, higher realized vol, and flatter/inverted curve
-    # imply higher stress probability.
-    logit = (
-        -4.0
-        + 0.22 * (np.nan_to_num(vix, nan=20.0) - 20.0)
-        + 6.5 * (np.nan_to_num(rv, nan=0.18) - 0.18)
-        + 0.10 * np.clip(-ts, -5, 5)
-    )
-    raw_p = 1.0 / (1.0 + np.exp(-np.clip(logit, -20, 20)))
-
-    smoothed_p = np.zeros(n)
-    if n > 0:
-        smoothed_p[0] = raw_p[0]
-    for i in range(1, n):
-        smoothed_p[i] = smoothing * smoothed_p[i - 1] + (1 - smoothing) * raw_p[i]
-
-    return np.clip(smoothed_p, 0.001, 0.999)
-
-
-def infer_regime_from_vix(vix_series, realized_vol=None, term_spread=None, hysteresis=0.08):
-    """
-    Infer regime using probabilistic stress score with hysteresis.
-
-    This avoids brittle single-threshold switching at VIX=25 by combining VIX,
-    realized vol, and optional term-structure information.
-
-    Used when validating against historical data or when regime_path is missing.
-    """
-    p_high = compute_high_vol_probability(
-        vix_series=vix_series,
-        realized_vol=realized_vol,
-        term_spread=term_spread
-    )
-
-    enter_high = 0.50 + hysteresis / 2
-    exit_high = 0.50 - hysteresis / 2
-
-    regimes = np.zeros(len(p_high), dtype=int)
-    if len(p_high) == 0:
-        return regimes
-
-    current = 1 if p_high[0] >= 0.50 else 0
-    regimes[0] = current
-    for i in range(1, len(p_high)):
-        if current == 0 and p_high[i] >= enter_high:
-            current = 1
-        elif current == 1 and p_high[i] <= exit_high:
-            current = 0
-        regimes[i] = current
-
-    return regimes
-
-
-def fill_missing_with_dynamic_factor(df: pd.DataFrame, target_col: str, factor_col: str,
-                                     default_beta: float, seed: int = 1234) -> pd.Series:
-    """Fill missing returns using overlap-calibrated dynamic beta + residual sampling."""
-    if target_col not in df.columns:
-        df[target_col] = np.nan
-
-    target = df[target_col].copy()
-    factor = df[factor_col].copy()
-
-    valid = target.notna() & factor.notna()
-    if valid.sum() < 40:
-        return target.fillna(default_beta * factor)
-
-    cov = target.rolling(252, min_periods=40).cov(factor)
-    var = factor.rolling(252, min_periods=40).var()
-    beta = (cov / var.replace(0, np.nan)).replace([np.inf, -np.inf], np.nan)
-    beta = beta.clip(-3.0, 3.0).fillna(method='ffill').fillna(method='bfill').fillna(default_beta)
-
-    alpha = (target - beta * factor).rolling(252, min_periods=40).mean()
-    alpha = alpha.fillna(method='ffill').fillna(method='bfill').fillna(0.0)
-
-    fitted = alpha + beta * factor
-    residuals = (target - fitted)[valid].dropna().values
-    missing = target.isna() & factor.notna()
-
-    if len(residuals) > 20 and missing.any():
-        rng = np.random.default_rng(seed)
-        sampled_resid = rng.choice(residuals, size=missing.sum(), replace=True)
-        target.loc[missing] = fitted.loc[missing].values + sampled_resid
-    else:
-        target.loc[missing] = fitted.loc[missing]
-
-    return target
-
-
-# ============================================================================
-# DYNAMIC BORROWING COST CALCULATION
-# ============================================================================
 
 def calculate_daily_borrow_cost(leverage: float, risk_free_rate: float, 
                                  spread: float) -> float:
@@ -4717,886 +4595,6 @@ def calibrate_tracking_residual_model(df: pd.DataFrame,
     return model
 
 
-def calibrate_vix_dynamics(df: pd.DataFrame, regimes: np.ndarray) -> Dict[int, Dict[str, float]]:
-    """
-    Calibrate regime-conditional VIX dynamics from historical data.
-
-    Estimates persistence, innovation scale, and jump sensitivity to equity shocks
-    by regime, then stores diagnostics (skew/kurtosis).
-    """
-    vix = df['VIX'].astype(float).values
-    spy = df['SPY_Ret'].astype(float).values
-
-    dynamics = {}
-    for regime in range(N_REGIMES):
-        idx = np.where(regimes == regime)[0]
-        if len(idx) < 80:
-            dynamics[regime] = {
-                'phi': 0.90,
-                'noise_std': 1.25,
-                'jump_threshold_sigma': 2.0,
-                'jump_scale': 6.0,
-                'target_vix': 15.0 if regime == 0 else 35.0,
-                'residual_skew': 0.0,
-                'residual_kurtosis': 3.0
-            }
-            continue
-
-        vix_reg = vix[idx]
-        spy_reg = spy[idx]
-        target_vix = float(np.nanmedian(vix_reg))
-
-        vix_prev = vix_reg[:-1]
-        vix_next = vix_reg[1:]
-        valid = np.isfinite(vix_prev) & np.isfinite(vix_next)
-        if valid.sum() < 30:
-            phi = 0.90
-            noise_std = 1.25
-            residual = np.zeros(10)
-        else:
-            x = vix_prev[valid] - target_vix
-            y = vix_next[valid] - target_vix
-            denom = np.dot(x, x)
-            phi = 0.90 if denom <= 0 else float(np.dot(x, y) / denom)
-            phi = float(np.clip(phi, 0.70, 0.985))
-            residual = y - phi * x
-            noise_std = float(np.nanstd(residual))
-            noise_std = float(np.clip(noise_std, 0.5, 4.0))
-
-        shock_sigma = np.nanstd(spy_reg)
-        shock_sigma = shock_sigma if shock_sigma > 0 else 0.01
-        shock_z = np.abs(spy_reg) / shock_sigma
-        jump_threshold = float(np.nanpercentile(shock_z, 90))
-        jump_threshold = float(np.clip(jump_threshold, 1.5, 3.5))
-
-        vix_diff = np.diff(vix_reg)
-        shock_excess = np.maximum(0, shock_z[1:] - jump_threshold)
-        valid_jump = np.isfinite(vix_diff) & np.isfinite(shock_excess)
-        if valid_jump.sum() > 20 and np.any(shock_excess[valid_jump] > 0):
-            xj = shock_excess[valid_jump]
-            yj = np.maximum(0, vix_diff[valid_jump])
-            jump_scale = float(np.dot(xj, yj) / (np.dot(xj, xj) + 1e-8))
-        else:
-            jump_scale = 6.0 if regime == 0 else 9.0
-        jump_scale = float(np.clip(jump_scale, 2.0, 15.0))
-
-        dynamics[regime] = {
-            'phi': phi,
-            'noise_std': noise_std,
-            'jump_threshold_sigma': jump_threshold,
-            'jump_scale': jump_scale,
-            'target_vix': target_vix,
-            'residual_skew': float(stats.skew(residual, nan_policy='omit')) if len(residual) > 3 else 0.0,
-            'residual_kurtosis': float(stats.kurtosis(residual, fisher=False, nan_policy='omit')) if len(residual) > 3 else 3.0
-        }
-
-    return dynamics
-
-
-def calibrate_joint_return_model(df: pd.DataFrame, regimes: np.ndarray) -> Dict:
-    """
-    Calibrate regime-conditional multivariate Student-t return model.
-
-    Assets modeled jointly: SPY, QQQ, TLT.
-    """
-    cached = load_cache(JOINT_RETURN_MODEL_CACHE)
-    if cached is not None:
-        return cached
-
-    assets = ['SPY_Ret', 'QQQ_Ret', 'TLT_Ret']
-    model = {'assets': assets, 'regimes': {}}
-
-    for regime in range(N_REGIMES):
-        mask = regimes == regime
-        reg_df = df.loc[mask, assets].dropna()
-
-        if len(reg_df) < 80:
-            # Fallback conservative defaults
-            mu = np.array([0.08/252, 0.10/252, 0.03/252], dtype=float)
-            vol = np.array([0.16, 0.24, 0.12], dtype=float) if regime == 0 else np.array([0.28, 0.42, 0.16], dtype=float)
-            corr = np.array([
-                [1.0, 0.90 if regime == 0 else 0.96, -0.20 if regime == 0 else -0.05],
-                [0.90 if regime == 0 else 0.96, 1.0, -0.18 if regime == 0 else -0.03],
-                [-0.20 if regime == 0 else -0.05, -0.18 if regime == 0 else -0.03, 1.0]
-            ])
-            cov = np.outer(vol / np.sqrt(252), vol / np.sqrt(252)) * corr
-            nu = 5.0 if regime == 0 else 4.0
-        else:
-            arr = reg_df.values
-            mu = np.nanmean(arr, axis=0)
-            cov = np.cov(arr, rowvar=False)
-            cov = nearest_psd_matrix(cov / np.outer(np.sqrt(np.diag(cov)), np.sqrt(np.diag(cov)))) * np.outer(np.sqrt(np.diag(cov)), np.sqrt(np.diag(cov)))
-
-            # Tail heaviness estimate from average excess kurtosis.
-            k = np.nanmean([stats.kurtosis(reg_df[c], fisher=False, nan_policy='omit') for c in assets])
-            if np.isfinite(k) and k > 3.05:
-                nu = float(np.clip(4 + 6 / (k - 3 + 1e-6), 3.2, 12.0))
-            else:
-                nu = 8.0
-
-        model['regimes'][regime] = {
-            'mu': mu,
-            'cov': cov,
-            'nu': nu
-        }
-
-    save_cache(model, JOINT_RETURN_MODEL_CACHE)
-    return model
-
-
-def simulate_joint_returns_t(n_days: int, regime_path: np.ndarray, joint_model: Dict,
-                             rng: np.random.Generator) -> Dict[str, np.ndarray]:
-    """Simulate regime-conditional multivariate Student-t asset returns."""
-    assets = joint_model['assets']
-    out = {a: np.zeros(n_days) for a in assets}
-
-    for t in range(n_days):
-        regime = int(regime_path[t])
-        p = joint_model['regimes'][regime]
-        mu = np.asarray(p['mu'], dtype=float)
-        cov = np.asarray(p['cov'], dtype=float)
-        nu = float(p['nu'])
-
-        # Multivariate t: x = mu + z / sqrt(u/nu), z~N(0,cov), u~ChiSq(nu)
-        z = rng.multivariate_normal(mean=np.zeros(len(mu)), cov=cov)
-        u = rng.chisquare(df=nu)
-        scale = np.sqrt(nu / max(u, 1e-12))
-        x = mu + z * scale
-
-        for i, a in enumerate(assets):
-            out[a][t] = x[i]
-
-    return out
-
-
-def calibrate_funding_spread_model(df: pd.DataFrame) -> Dict[str, float]:
-    """Calibrate a simple stress-linked borrow spread model."""
-    cached = load_cache(FUNDING_MODEL_CACHE)
-    if cached is not None:
-        return cached
-
-    # Proxy target spread from observed short rate environment:
-    # low base + stress loading. This is a practical approximation.
-    vix = df['VIX'].fillna(method='ffill').fillna(method='bfill').fillna(20.0).values
-    term_spread = np.zeros(len(df))
-    if 'TNX' in df.columns and 'IRX' in df.columns:
-        term_spread = (df['TNX'] - df['IRX']).fillna(0.0).values
-
-    stress = np.maximum(vix - 20.0, 0.0)
-    inv_curve = np.maximum(-term_spread, 0.0)
-
-    # Coefficients chosen to match broad ranges: ~0.5% normal, 1-2% high vol, 3%+ stress.
-    model = {
-        'base': 0.0045,
-        'beta_vix': 0.00045,
-        'beta_inv_curve': 0.0018,
-        'beta_liquidity': 0.0012,
-        'beta_credit': 0.0018,
-        'min_spread': 0.0035,
-        'max_spread': 0.0400
-    }
-
-    # Basic centering to avoid excessive average spreads.
-    avg_spread = model['base'] + model['beta_vix'] * np.nanmean(stress) + model['beta_inv_curve'] * np.nanmean(inv_curve)
-    if np.isfinite(avg_spread) and avg_spread > 0.012:
-        model['base'] *= 0.75
-
-    save_cache(model, FUNDING_MODEL_CACHE)
-    return model
-
-
-def calibrate_stress_state_model(df: pd.DataFrame, regimes: np.ndarray) -> Dict:
-    """
-    Calibrate latent stress channels used by institutional_v1:
-    - liquidity stress
-    - credit stress
-    - crisis jump intensity
-    """
-    cached = load_cache(STRESS_STATE_CACHE)
-    if cached is not None:
-        return cached
-
-    # Build simple proxies from available columns.
-    vix = df['VIX'].fillna(method='ffill').fillna(method='bfill').fillna(20.0).values
-    rv = (df['SPY_Ret'].rolling(20, min_periods=5).std().fillna(method='bfill').fillna(0.15 / np.sqrt(252)).values * np.sqrt(252))
-
-    if 'TNX' in df.columns and 'IRX' in df.columns:
-        credit_proxy = np.maximum(-(df['TNX'] - df['IRX']).fillna(0.0).values, 0.0)
-    else:
-        credit_proxy = np.maximum(vix - 20.0, 0.0) / 20.0
-
-    liquidity_proxy = np.maximum(vix - 18.0, 0.0) / 25.0 + np.maximum(rv - 0.18, 0.0)
-
-    model = {'regimes': {}}
-    for regime in range(N_REGIMES):
-        mask = regimes == regime
-        if mask.sum() < 60:
-            model['regimes'][regime] = {
-                'liq_mu': 0.10 if regime == 0 else 0.35,
-                'liq_phi': 0.90,
-                'liq_sigma': 0.08,
-                'credit_mu': 0.05 if regime == 0 else 0.25,
-                'credit_phi': 0.88,
-                'credit_sigma': 0.07,
-                'jump_base_prob': 0.01 if regime == 0 else 0.04,
-                'jump_scale': 0.04 if regime == 0 else 0.08
-            }
-            continue
-
-        liq = liquidity_proxy[mask]
-        cred = credit_proxy[mask]
-
-        liq_mu = float(np.nanmedian(liq))
-        cred_mu = float(np.nanmedian(cred))
-
-        def ar1_params(series, default_phi=0.9, default_sigma=0.08):
-            s = pd.Series(series).replace([np.inf, -np.inf], np.nan).dropna().values
-            if len(s) < 20:
-                return default_phi, default_sigma
-            x = s[:-1] - np.nanmedian(s)
-            y = s[1:] - np.nanmedian(s)
-            denom = np.dot(x, x)
-            phi = default_phi if denom <= 0 else float(np.dot(x, y) / denom)
-            phi = float(np.clip(phi, 0.50, 0.98))
-            sigma = float(np.nanstd(y - phi * x))
-            sigma = float(np.clip(sigma, 0.01, 0.30))
-            return phi, sigma
-
-        liq_phi, liq_sigma = ar1_params(liq, default_phi=0.90, default_sigma=0.08)
-        cred_phi, cred_sigma = ar1_params(cred, default_phi=0.88, default_sigma=0.07)
-
-        jump_base_prob = float(np.clip(0.005 + 0.06 * np.nanmean(np.maximum(rv[mask] - 0.20, 0.0)), 0.003, 0.12))
-        jump_scale = float(np.clip(0.03 + 0.20 * np.nanmean(np.maximum(rv[mask] - 0.22, 0.0)), 0.03, 0.18))
-
-        model['regimes'][regime] = {
-            'liq_mu': liq_mu,
-            'liq_phi': liq_phi,
-            'liq_sigma': liq_sigma,
-            'credit_mu': cred_mu,
-            'credit_phi': cred_phi,
-            'credit_sigma': cred_sigma,
-            'jump_base_prob': jump_base_prob,
-            'jump_scale': jump_scale
-        }
-
-    save_cache(model, STRESS_STATE_CACHE)
-    return model
-
-
-def simulate_latent_stress_state(n_days: int, regime_path: np.ndarray,
-                                 stress_model: Dict, vix_series: np.ndarray,
-                                 rng: np.random.Generator) -> Dict[str, np.ndarray]:
-    """Simulate latent liquidity/credit stress channels and jump process."""
-    liquidity = np.zeros(n_days)
-    credit = np.zeros(n_days)
-    jump = np.zeros(n_days)
-
-    if n_days == 0:
-        return {'liquidity': liquidity, 'credit': credit, 'jump': jump}
-
-    first_reg = int(regime_path[0])
-    p0 = stress_model['regimes'].get(first_reg, {})
-    liquidity[0] = float(p0.get('liq_mu', 0.1))
-    credit[0] = float(p0.get('credit_mu', 0.05))
-
-    for t in range(1, n_days):
-        reg = int(regime_path[t])
-        p = stress_model['regimes'].get(reg, {})
-
-        liq_mu = p.get('liq_mu', 0.1)
-        liq_phi = p.get('liq_phi', 0.9)
-        liq_sigma = p.get('liq_sigma', 0.08)
-        credit_mu = p.get('credit_mu', 0.05)
-        credit_phi = p.get('credit_phi', 0.88)
-        credit_sigma = p.get('credit_sigma', 0.07)
-
-        liquidity[t] = liq_mu + liq_phi * (liquidity[t-1] - liq_mu) + rng.normal(0, liq_sigma)
-        credit[t] = credit_mu + credit_phi * (credit[t-1] - credit_mu) + rng.normal(0, credit_sigma)
-
-        liquidity[t] = float(np.clip(liquidity[t], 0.0, 3.0))
-        credit[t] = float(np.clip(credit[t], 0.0, 3.0))
-
-        base_prob = p.get('jump_base_prob', 0.01)
-        jump_scale = p.get('jump_scale', 0.04)
-        vix_amp = max((vix_series[t] - 25.0) / 30.0, 0.0)
-        jump_prob = float(np.clip(base_prob + 0.15 * vix_amp + 0.05 * liquidity[t], 0.0, 0.35))
-        if rng.random() < jump_prob:
-            jump[t] = abs(rng.standard_t(df=4)) * jump_scale
-
-    return {'liquidity': liquidity, 'credit': credit, 'jump': jump}
-
-
-def predict_borrow_spread_series(df: pd.DataFrame, funding_model: Dict[str, float],
-                                 stress_state: Optional[Dict[str, np.ndarray]] = None) -> np.ndarray:
-    """Predict annual borrow spread (decimal) from stress covariates."""
-    vix = df['VIX'].fillna(method='ffill').fillna(method='bfill').fillna(20.0).values
-    stress = np.maximum(vix - 20.0, 0.0)
-
-    inv_curve = np.zeros(len(df))
-    if 'TNX' in df.columns and 'IRX' in df.columns:
-        inv_curve = np.maximum(-(df['TNX'] - df['IRX']).fillna(0.0).values, 0.0)
-
-    spread = (
-        funding_model['base']
-        + funding_model['beta_vix'] * stress
-        + funding_model['beta_inv_curve'] * inv_curve
-    )
-
-    if stress_state is not None:
-        liq = np.asarray(stress_state.get('liquidity', np.zeros(len(spread))), dtype=float)
-        cred = np.asarray(stress_state.get('credit', np.zeros(len(spread))), dtype=float)
-        spread += (
-            funding_model.get('beta_liquidity', 0.0012) * np.clip(liq, 0, 3)
-            + funding_model.get('beta_credit', 0.0018) * np.clip(cred, 0, 3)
-        )
-
-    return np.clip(spread, funding_model['min_spread'], funding_model['max_spread'])
-
-
-def calibrate_tracking_residual_model(df: pd.DataFrame,
-                                      funding_model: Optional[Dict[str, float]] = None) -> Dict:
-    """
-    Calibrate ETF tracking residual dynamics from observed post-inception returns.
-    """
-    cached = load_cache(TRACKING_RESIDUAL_CACHE)
-    if cached is not None:
-        return cached
-
-    model = {}
-    for asset in ['TQQQ', 'UPRO', 'SSO']:
-        ret_col = f'{asset}_Real_Ret'
-        if ret_col not in df.columns:
-            continue
-
-        real = df[ret_col]
-        if asset == 'TQQQ':
-            idx = df.get('QQQ_Ret', df['SPY_Ret'])
-        else:
-            idx = df['SPY_Ret']
-
-        leverage = ASSETS[asset]['leverage']
-        rf = df.get('IRX', pd.Series(4.5, index=df.index)).fillna(4.5).values / 100.0
-
-        if funding_model is not None:
-            spread_df = pd.DataFrame({'VIX': df['VIX'].values}, index=df.index)
-            if 'IRX' in df.columns:
-                spread_df['IRX'] = df['IRX'].values
-
-            # Historical stress channels are optional at calibration-time;
-            # if unavailable, the model still uses VIX/curve-linked spread dynamics.
-            spread_series = predict_borrow_spread_series(spread_df, funding_model, stress_state=None)
-        else:
-            spread_series = np.full(len(df), 0.0075)
-
-        financing_daily = (leverage - 1.0) * (rf + spread_series) / 252.0
-        expense_daily = ASSETS[asset]['expense_ratio'] / 252.0
-
-        expected = leverage * idx.values - financing_daily - expense_daily
-        residual = (real.values - expected)
-        mask = np.isfinite(residual) & np.isfinite(df['VIX'].values)
-
-        if mask.sum() < 120:
-            model[asset] = {
-                'rho': 0.25,
-                'base_scale': ASSETS[asset]['tracking_error_base'],
-                'downside_mult': 1.25,
-                'df': ASSETS[asset]['tracking_error_df']
-            }
-            continue
-
-        r = residual[mask]
-        r_prev = r[:-1]
-        r_next = r[1:]
-        denom = np.dot(r_prev, r_prev)
-        rho = 0.25 if denom <= 0 else float(np.dot(r_prev, r_next) / denom)
-        rho = float(np.clip(rho, 0.0, 0.7))
-
-        innov = r_next - rho * r_prev
-        scale = float(np.nanstd(innov))
-        scale = float(np.clip(scale, ASSETS[asset]['tracking_error_base'] * 0.5,
-                              ASSETS[asset]['tracking_error_base'] * 8.0))
-
-        downside = np.nanmean(np.abs(innov[innov < 0])) if np.any(innov < 0) else scale
-        upside = np.nanmean(np.abs(innov[innov >= 0])) if np.any(innov >= 0) else scale
-        downside_mult = float(np.clip((downside / max(upside, 1e-9)), 1.0, 2.0))
-
-        model[asset] = {
-            'rho': rho,
-            'base_scale': scale,
-            'downside_mult': downside_mult,
-            'df': ASSETS[asset]['tracking_error_df']
-        }
-
-    save_cache(model, TRACKING_RESIDUAL_CACHE)
-    return model
-
-
-# ============================================================================
-# BLOCK BOOTSTRAP WITH FAT-TAILED RETURNS
-# ============================================================================
-# 
-# This module implements realistic return generation using:
-# 1. Block bootstrap from historical data (preserves fat tails & clustering)
-# 2. Student-t noise for additional variation (heavier tails than Gaussian)
-#
-# Why this matters:
-# - Normal distributions underestimate extreme events by 10-100x
-# - Real markets have "volatility clustering" - bad days follow bad days
-# - Block bootstrap preserves these patterns from actual history
-
-class BlockBootstrapReturns:
-    """
-    Generate realistic returns by sampling blocks from historical data.
-    
-    Instead of generating synthetic returns from a normal distribution,
-    this class samples contiguous blocks from actual historical returns.
-    This preserves:
-    - Fat tails (crashes and rallies that actually happened)
-    - Volatility clustering (bad days tend to follow bad days)
-    - Serial correlation (momentum and mean reversion)
-    
-    Usage:
-        # Initialize with historical data
-        bootstrap = BlockBootstrapReturns(historical_df, block_size=20)
-        
-        # Generate returns for a simulation
-        returns = bootstrap.sample_returns(n_days=252, regime_path=regime_path)
-    """
-    
-    def __init__(self, df: pd.DataFrame, block_size: int = 20):
-        """
-        Initialize the bootstrap sampler with historical data.
-        
-        Args:
-            df: DataFrame with columns 'SPY_Ret', 'VIX', and optionally 
-                'QQQ_Ret', 'TLT_Ret', 'Data_Source'
-            block_size: Number of consecutive days in each block
-        """
-        self.block_size = block_size
-        self.df = df.copy()
-        
-        # Separate returns by regime (inferred from VIX)
-        # Low vol: VIX < 25
-        # High vol: VIX >= 25
-        self.regime_blocks = self._create_regime_blocks()
-        
-        print(f"  📊 BlockBootstrapReturns initialized:")
-        print(f"     Block size: {block_size} days (max, variable length in use)")
-        print(f"     Pool A (economy): Low vol={len(self.pool_a[0])}, High vol={len(self.pool_a[1])}")
-        print(f"     Pool B (tech):    Low vol={len(self.pool_b[0])}, High vol={len(self.pool_b[1])}")
-    
-    def _create_regime_blocks(self) -> Dict[int, List]:
-        """
-        Build TWO synchronized block pools from historical data.
-
-        Pool A (self.pool_a): 1950-2025
-          4 columns: [SPY, TLT, VIX, IRX]
-          Represents "The Economy" — broad equity, bond, vol, and rate history.
-          Used for SPY/SSO benchmark strategies.
-
-        Pool B (self.pool_b): 1999-2025
-          5 columns: [SPY, QQQ, TLT, VIX, IRX]
-          Represents "The Tech Sector" — real QQQ with all cross-correlations.
-          Used for TQQQ and mixed strategies.
-
-        Both pools use overlapping blocks (stride=21 days) for diversity.
-        Each entry is a 2-tuple: (block_data, block_return_spy)
-        where block_return_spy is the cumulative SPY return over the block,
-        used for momentum-based block selection.
-
-        Returns:
-            Dict mapping regime_id -> list of pool B entries
-            (kept as self.regime_blocks for backward compatibility)
-        """
-        # Pool A: broad history, no QQQ needed
-        self.pool_a = {0: [], 1: []}
-
-        # Pool B: tech era, all assets including real QQQ
-        self.pool_b = {0: [], 1: []}
-
-        # Extract raw arrays
-        vix = self.df['VIX'].values
-        spy_ret = self.df['SPY_Ret'].values
-        dates = self.df.index
-
-        if 'QQQ_Ret' in self.df.columns:
-            qqq_ret = self.df['QQQ_Ret'].values
-        else:
-            qqq_ret = spy_ret * 1.25
-
-        if 'TLT_Ret' in self.df.columns:
-            tlt_ret = self.df['TLT_Ret'].values
-        else:
-            tlt_ret = spy_ret * -0.25
-
-        if 'IRX' in self.df.columns:
-            irx = self.df['IRX'].values
-        else:
-            irx = np.full(len(self.df), 4.5)
-
-        # Real QQQ starts March 10, 1999
-        REAL_QQQ_CUTOFF = pd.Timestamp('1999-03-10')
-        has_real_qqq = dates >= REAL_QQQ_CUTOFF
-
-        n_days = len(self.df)
-        block_size = self.block_size
-
-        # Overlapping blocks: stride of 21 days (1 month)
-        BLOCK_STRIDE = 21
-
-        pool_a_count = {0: 0, 1: 0}
-        pool_b_count = {0: 0, 1: 0}
-
-        for start_idx in range(0, n_days - block_size + 1, BLOCK_STRIDE):
-            end_idx = start_idx + block_size
-
-            # Regime from VIX majority
-            block_vix = vix[start_idx:end_idx]
-            regime = 0 if np.nanmedian(block_vix) < 25 else 1
-
-            # Skip if too many NaN SPY values
-            block_spy = spy_ret[start_idx:end_idx]
-            if np.isnan(block_spy).sum() > block_size // 4:
-                continue
-
-            block_tlt = tlt_ret[start_idx:end_idx]
-            block_irx = irx[start_idx:end_idx]
-
-            # SPY cumulative return for momentum selection
-            block_return_spy = np.prod(1 + np.nan_to_num(block_spy, nan=0)) - 1
-
-            # ---- Pool A: 4 columns [SPY, TLT, VIX, IRX] ----
-            # ALL blocks go into pool A (1950-2025)
-            block_a = np.column_stack([
-                np.nan_to_num(block_spy, nan=0),
-                np.nan_to_num(block_tlt, nan=0),
-                np.nan_to_num(block_vix, nan=20),
-                np.nan_to_num(block_irx, nan=4.5)
-            ])
-            self.pool_a[regime].append((block_a, block_return_spy))
-            pool_a_count[regime] += 1
-
-            # ---- Pool B: 5 columns [SPY, QQQ, TLT, VIX, IRX] ----
-            # Only blocks with REAL QQQ data (1999+) go into pool B
-            block_has_real_qqq = has_real_qqq[start_idx:end_idx].all()
-
-            if block_has_real_qqq:
-                block_qqq = qqq_ret[start_idx:end_idx]
-                block_b = np.column_stack([
-                    np.nan_to_num(block_spy, nan=0),
-                    np.nan_to_num(block_qqq, nan=0),
-                    np.nan_to_num(block_tlt, nan=0),
-                    np.nan_to_num(block_vix, nan=20),
-                    np.nan_to_num(block_irx, nan=4.5)
-                ])
-                self.pool_b[regime].append((block_b, block_return_spy))
-                pool_b_count[regime] += 1
-
-        print(f"     Pool A (economy): Low vol={pool_a_count[0]}, High vol={pool_a_count[1]}")
-        print(f"     Pool B (tech):    Low vol={pool_b_count[0]}, High vol={pool_b_count[1]}")
-
-        # For backward compatibility, regime_blocks points to pool B
-        # (sample_block draws from pool B by default for TQQQ strategies)
-        return self.pool_b
-
-    
-    def sample_block(self, regime: int, rng: np.random.Generator = None,
-                     desired_sign: int = None, momentum_bias: float = 0.0) -> np.ndarray:
-        """
-        Sample a single block of returns for the given regime.
-
-        Args:
-            regime: 0 for low vol, 1 for high vol
-            rng: Random number generator (for reproducibility)
-            desired_sign: +1 for bull, -1 for bear, None for random
-            momentum_bias: probability to pick same‑sign block
-
-        Returns:
-            Array of shape (block_size, 5) with columns [SPY, QQQ, TLT, VIX, IRX]
-        """
-        if rng is None:
-            rng = np.random.default_rng()
-
-        blocks = self.regime_blocks[regime]
-
-        if len(blocks) == 0:
-            return self._generate_synthetic_block(regime, rng)
-
-        if desired_sign is not None and momentum_bias > 0:
-            same_sign = [b for b in blocks if (b[1] >= 0 and desired_sign >= 0) or (b[1] < 0 and desired_sign < 0)]
-            if same_sign and rng.random() < momentum_bias:
-                return same_sign[rng.integers(0, len(same_sign))][0].copy()
-
-        idx = rng.integers(0, len(blocks))
-        return blocks[idx][0].copy()
-
-    def _sample_from_pool(self, pool: Dict[int, List], regime: int,
-                          rng: np.random.Generator,
-                          desired_sign: int = None,
-                          momentum_bias: float = 0.0,
-                          fallback_cols: int = 5,
-                          target_spy_return: float = None) -> np.ndarray:
-        """
-        Sample a block from a specific pool with momentum bias.
-        Same logic as sample_block but works on any pool.
-
-        Args:
-            pool: Dict mapping regime_id -> list of (block_data, block_return) tuples
-            regime: 0 for low vol, 1 for high vol
-            rng: Random number generator
-            desired_sign: +1 for bull, -1 for bear, None for random
-            momentum_bias: probability to pick same-sign block
-            fallback_cols: number of columns if synthetic fallback is needed
-            target_spy_return: Optional SPY block return target used to keep
-                Pool B (tech blocks) macro-coherent with Pool A (economy blocks)
-
-        Returns:
-            block_data array (shape varies by pool: 4 cols for pool A, 5 for pool B)
-        """
-        blocks = pool[regime]
-
-        if len(blocks) == 0:
-            # Fallback: generate synthetic block, trim columns if needed
-            synthetic = self._generate_synthetic_block(regime, rng)
-            if fallback_cols == 4:
-                # Pool A format: drop QQQ column (index 1)
-                return np.column_stack([synthetic[:, 0], synthetic[:, 2],
-                                        synthetic[:, 3], synthetic[:, 4]])
-            return synthetic
-
-        candidate_blocks = blocks
-        if desired_sign is not None:
-            signed = [b for b in blocks
-                      if (b[1] >= 0 and desired_sign >= 0)
-                      or (b[1] < 0 and desired_sign < 0)]
-            if signed and momentum_bias > 0 and rng.random() < momentum_bias:
-                candidate_blocks = signed
-
-        if target_spy_return is not None and len(candidate_blocks) > 5:
-            # Keep tech blocks macro-consistent with economy blocks using
-            # Gaussian kernel weighting. Blocks with similar SPY returns
-            # are much more likely to be picked, but ALL blocks remain
-            # eligible — preserving genuine SPY-QQQ divergence events.
-            #
-            # How it works:
-            #   1. Compute how far each block's SPY return is from the target
-            #   2. Convert distances to probabilities using a bell curve
-            #   3. Blocks near the target get high probability
-            #   4. Distant blocks get low (but nonzero) probability
-            #
-            # The bandwidth (sigma) controls how "soft" the filter is:
-            #   Small sigma → tight filter (like the old 20% cutoff)
-            #   Large sigma → loose filter (approaches uniform random)
-            #   We use the standard deviation of all block returns as sigma,
-            #   which means "one sigma away = about 60% as likely as exact match"
-            block_returns = np.array([b[1] for b in candidate_blocks])
-            distances = block_returns - target_spy_return
-
-            # Bandwidth = standard deviation of block returns in this pool/regime
-            sigma = np.std(block_returns)
-            if sigma < 1e-8:
-                sigma = 0.05  # Fallback: ~5% per block period
-
-            # Gaussian kernel: weight = exp(-0.5 * (distance/sigma)^2)
-            weights = np.exp(-0.5 * (distances / sigma) ** 2)
-
-            # Normalize to probabilities that sum to 1
-            weights = weights / weights.sum()
-
-            # Pick a block using these weighted probabilities
-            chosen_idx = rng.choice(len(candidate_blocks), p=weights)
-            return candidate_blocks[chosen_idx][0].copy()
-
-        idx = rng.integers(0, len(candidate_blocks))
-        return candidate_blocks[idx][0].copy()
-
-    def _generate_synthetic_block(self, regime: int, rng: np.random.Generator) -> np.ndarray:
-        """
-        Generate a synthetic block when no historical data is available.
-        Uses Student-t distribution for fat tails.
-        
-        CALIBRATED to match historical+synthetic distribution extremes.
-        """
-        block_size = self.block_size
-        
-        # Regime-dependent parameters
-        # CALIBRATED: Increased high-vol regime volatility to match historical extremes
-        if regime == 0:  # Low vol
-            daily_std = 0.011  # ~17.5% annual vol (slightly increased)
-            vix_base = 15
-            irx_base = 3.5     # Long-run average T-bill rate
-        else:  # High vol (crisis periods)
-            daily_std = 0.035  # ~55% annual vol (increased from 0.025/40%)
-            vix_base = 40      # Higher VIX during crises
-            irx_base = 1.5     # Fed typically cuts in crises
-        
-        # Generate fat-tailed returns using Student-t
-        spy_ret = rng.standard_t(df=STUDENT_T_DF, size=block_size) * daily_std
-        qqq_ret = spy_ret * 1.25  # NASDAQ more volatile
-        tlt_ret = -spy_ret * 0.25  # Treasuries inversely correlated
-        vix = np.full(block_size, vix_base) + rng.normal(0, 3, block_size)
-        irx = np.full(block_size, irx_base) + rng.normal(0, 0.5, block_size)
-        irx = np.clip(irx, 0.0, 15.0)  # Rates can't go below 0 or above 15%
-        
-        return np.column_stack([spy_ret, qqq_ret, tlt_ret, vix, irx])
-    
-
-    def _draw_block_len(self, remaining: int, rng: np.random.Generator) -> int:
-        # Geometric length gives many short blocks, some long blocks
-        p = 1.0 / BOOTSTRAP_BLOCK_MEAN
-        length = rng.geometric(p)
-        length = int(np.clip(length, BOOTSTRAP_BLOCK_MIN, BOOTSTRAP_BLOCK_MAX))
-        return min(length, remaining)
-
-    def sample_returns(self, n_days: int, regime_path: np.ndarray,
-                       rng: np.random.Generator = None,
-                       add_student_t_noise: bool = True,
-                       bootstrap_weight: float = 0.85) -> Dict[str, np.ndarray]:
-        """
-        Generate return series using TWO synchronized block pools.
-
-        Pool A (1950-2025, 4 cols): provides SPY, VIX, IRX
-        Pool B (1999-2025, 5 cols): provides QQQ and TLT
-
-        Two independent block-stitching loops run in parallel, each with
-        its own momentum tracking. Then one shared Cholesky noise blend
-        is applied across all assets to add variation and restore
-        cross-asset correlation.
-
-        Returns:
-            Dict with keys 'SPY_Ret', 'QQQ_Ret', 'TLT_Ret', 'VIX', 'IRX'
-        """
-        if rng is None:
-            rng = np.random.default_rng()
-        # ================================================================
-        # SYNCHRONIZED BLOCK LOOP: economy + tech sampled together
-        # This keeps macro conditions (SPY/VIX/IRX) aligned with tech outcomes.
-        # ================================================================
-        spy_returns = np.zeros(n_days)
-        vix_series = np.zeros(n_days)
-        irx_series = np.zeros(n_days)
-        qqq_returns = np.zeros(n_days)
-        tlt_returns = np.zeros(n_days)
-
-        current_day = 0
-        last_return_a = None
-        last_return_b = None
-
-        while current_day < n_days:
-            remaining = n_days - current_day
-            block_len = self._draw_block_len(remaining, rng)
-
-            block_regime_path = regime_path[current_day:current_day + block_len]
-            regime = int(np.median(block_regime_path))
-            bias = BOOTSTRAP_MOMENTUM_BIAS_BY_REGIME.get(regime, 0.52)
-
-            desired_sign_a = 1 if (last_return_a is not None and last_return_a >= 0) else (-1 if last_return_a is not None else None)
-            block_a = self._sample_from_pool(
-                self.pool_a, regime, rng,
-                desired_sign=desired_sign_a,
-                momentum_bias=bias,
-                fallback_cols=4
-            )
-
-            # Random sub-section (not always prefix)
-            if block_len < len(block_a):
-                max_start = len(block_a) - block_len
-                start = rng.integers(0, max_start + 1)
-                block_a = block_a[start:start + block_len]
-
-            spy_block_return = np.prod(1 + block_a[:, 0]) - 1
-
-            desired_sign_b = 1 if (last_return_b is not None and last_return_b >= 0) else (-1 if last_return_b is not None else None)
-            block_b = self._sample_from_pool(
-                self.pool_b, regime, rng,
-                desired_sign=desired_sign_b,
-                momentum_bias=bias,
-                fallback_cols=5,
-                target_spy_return=spy_block_return
-            )
-
-            if block_len < len(block_b):
-                max_start = len(block_b) - block_len
-                start = rng.integers(0, max_start + 1)
-                block_b = block_b[start:start + block_len]
-
-            # Pool A columns: SPY=0, TLT=1, VIX=2, IRX=3
-            spy_returns[current_day:current_day + block_len] = block_a[:, 0]
-            vix_series[current_day:current_day + block_len] = block_a[:, 2]
-            irx_series[current_day:current_day + block_len] = block_a[:, 3]
-
-            # Pool B columns: SPY=0, QQQ=1, TLT=2, VIX=3, IRX=4
-            qqq_returns[current_day:current_day + block_len] = block_b[:, 1]
-            tlt_returns[current_day:current_day + block_len] = block_b[:, 2]
-
-            last_return_a = spy_block_return
-            last_return_b = np.prod(1 + block_b[:, 1]) - 1
-            current_day += block_len
-
-        # SHARED NOISE: Cholesky-correlated Student-t
-        # Applied to ALL assets together to add variation and restore
-        # cross-asset correlations (especially SPY-QQQ and QQQ-TLT)
-        # ================================================================
-        if add_student_t_noise and bootstrap_weight < 1.0:
-            noise_weight = 1.0 - bootstrap_weight
-
-            noise_scale_spy = np.where(regime_path == 0, 0.007, 0.022)
-            noise_scale_qqq = noise_scale_spy * 1.35
-            noise_scale_tlt = noise_scale_spy * 0.5
-
-            independent_noise = rng.standard_t(
-                df=STUDENT_T_DF, size=(n_days, 3)
-            )
-
-            corr_low_vol = np.array([
-                [1.000, 0.835, -0.207],
-                [0.835, 1.000, -0.150],
-                [-0.207, -0.150, 1.000]
-            ])
-            corr_high_vol = np.array([
-                [1.000, 0.950, -0.447],
-                [0.950, 1.000, -0.400],
-                [-0.447, -0.400, 1.000]
-            ])
-
-            chol_low = np.linalg.cholesky(corr_low_vol)
-            chol_high = np.linalg.cholesky(corr_high_vol)
-
-            correlated_noise = np.zeros((n_days, 3))
-            for t in range(n_days):
-                chol = chol_low if regime_path[t] == 0 else chol_high
-                correlated_noise[t] = chol @ independent_noise[t]
-
-            spy_noise = correlated_noise[:, 0] * noise_scale_spy
-            qqq_noise = correlated_noise[:, 1] * noise_scale_qqq
-            tlt_noise = correlated_noise[:, 2] * noise_scale_tlt
-
-            # Mean-preserving blend: add bootstrap mean to noise so that
-            # E[blend] = w_b * mu + w_n * (0 + mu) = mu (drift preserved).
-            # Without this, the zero-mean noise dilutes expected returns
-            # by (1 - bootstrap_weight), costing ~1.6%/yr on SPY at w_b=0.80.
-            #
-            # We use the GLOBAL mean (not per-regime) because the daily mean
-            # (~0.03%) is tiny vs noise scales (0.7-2.2%), so it doesn't
-            # distort the noise distribution. Per-regime correction actually
-            # causes worse Sharpe ratio distortion (21% vs 7%) because
-            # regime-specific means are large relative to regime-specific
-            # noise scales.
-            spy_mean = np.mean(spy_returns)
-
-            spy_returns = bootstrap_weight * spy_returns + noise_weight * (spy_noise + spy_mean)
-            qqq_returns = bootstrap_weight * qqq_returns + noise_weight * qqq_noise
-            tlt_returns = bootstrap_weight * tlt_returns + noise_weight * tlt_noise
-
-        return {
-            'SPY_Ret': spy_returns,
-            'QQQ_Ret': qqq_returns,
-            'TLT_Ret': tlt_returns,
-            'VIX': vix_series,
-            'IRX': irx_series
-        }
-
-
 def create_bootstrap_sampler(df: pd.DataFrame) -> BlockBootstrapReturns:
     """
     Create and cache the block bootstrap sampler.
@@ -5616,13 +4614,6 @@ def create_bootstrap_sampler(df: pd.DataFrame) -> BlockBootstrapReturns:
     return sampler
 
 
-def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
-                                regime_params: Dict, 
-                                bootstrap_sampler: BlockBootstrapReturns = None,
-                                vix_dynamics: Dict[int, Dict[str, float]] = None,
-                                joint_return_model: Dict = None,
-                                sim_engine_mode: str = 'legacy_hybrid',
-                                seed: int = None) -> Dict[str, np.ndarray]:
 def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
                                 regime_params: Dict, 
                                 bootstrap_sampler: BlockBootstrapReturns = None,
@@ -5706,62 +4697,6 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
     # METHOD 2: Block Bootstrap (preferred legacy mode - uses historical data)
     # ========================================================================
     if bootstrap_sampler is not None and USE_BLOCK_BOOTSTRAP:
-    # ========================================================================
-    # METHOD 1: Institutional v1 joint regime-conditional multivariate t model
-    # ========================================================================
-    if sim_engine_mode == 'institutional_v1' and joint_return_model is not None:
-        joint = simulate_joint_returns_t(
-            n_days=n_days,
-            regime_path=regime_path,
-            joint_model=joint_return_model,
-            rng=rng
-        )
-
-        spy_returns = joint['SPY_Ret']
-        qqq_returns = joint['QQQ_Ret']
-        tlt_returns = joint['TLT_Ret']
-        vix_series = np.zeros(n_days)
-
-        vix_base = {0: 15, 1: 35}
-        if n_days > 0:
-            vix_series[0] = vix_base[int(regime_path[0])]
-
-        for t in range(1, n_days):
-            regime = int(regime_path[t])
-            regime_vix = (vix_dynamics or {}).get(regime, {})
-            target_vix = regime_vix.get('target_vix', vix_base[regime])
-            phi = regime_vix.get('phi', 0.88)
-            noise_std = regime_vix.get('noise_std', 1.5)
-            jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
-            jump_scale = regime_vix.get('jump_scale', 8.0)
-
-            expected_std = max(regime_params[regime].get('daily_std', 0.01), 1e-4)
-            equity_shock = abs(spy_returns[t]) / expected_std
-            vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
-            vix_series[t] = phi * vix_series[t-1] + (1 - phi) * target_vix + vix_jump + rng.normal(0, noise_std)
-            vix_series[t] = max(10, vix_series[t])
-
-        # Institutional mode can still output an IRX proxy for downstream compatibility.
-        irx_series = np.zeros(n_days)
-        for regime_id in range(N_REGIMES):
-            mask = regime_path == regime_id
-            if mask.sum() > 0:
-                base = 3.5 if regime_id == 0 else 1.5
-                irx_series[mask] = base + rng.normal(0, 0.4, mask.sum())
-        irx_series = np.clip(irx_series, 0.0, 15.0)
-
-        return {
-            'SPY_Ret': spy_returns,
-            'QQQ_Ret': qqq_returns,
-            'TLT_Ret': tlt_returns,
-            'VIX': vix_series,
-            'IRX': irx_series
-        }
-
-    # ========================================================================
-    # METHOD 2: Block Bootstrap (preferred legacy mode - uses historical data)
-    # ========================================================================
-    if bootstrap_sampler is not None and USE_BLOCK_BOOTSTRAP:
         return bootstrap_sampler.sample_returns(
             n_days=n_days,
             regime_path=regime_path,
@@ -5771,7 +4706,6 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
         )
     
     # ========================================================================
-    # METHOD 3: Parametric Student-t (fallback when no historical data)
     # METHOD 3: Parametric Student-t (fallback when no historical data)
     # ========================================================================
     
@@ -5930,14 +4864,9 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
                                base_te, df_param, seed=None, rng=None,
                                rho=0.3, downside_asymmetry=1.30,
                                liquidity_series=None):
-def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_returns,
-                               base_te, df_param, seed=None, rng=None,
-                               rho=0.3, downside_asymmetry=1.30,
-                               liquidity_series=None):
-                               base_te, df_param, seed=None, rng=None):
     """
     FIX #2: Tracking error with AR(1) autocorrelation and fat tails.
-    
+
     This captures:
     - Persistence (positions don't reset instantly)
     - Fat tails (t-distribution)
@@ -5946,19 +4875,15 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
     """
     if rng is None:
         rng = np.random.default_rng(seed)
-    
+
     te_series = np.zeros(n_days)
-    if rng is None:
-        rng = np.random.default_rng(seed)
-    
-    te_series = np.zeros(n_days)
-    
+
     for i in range(1, n_days):
         regime = regime_path[i]
-        
+
         # VIX multiplier (non-linear in high vol)
         vix_multiplier = (vix_series[i] / 20.0) ** 1.5
-        
+
         # Scale by regime (tracking gets much worse in high vol)
         regime_multiplier = 1.0 if regime == 0 else 5.0
 
@@ -5970,45 +4895,18 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
 
         # Asymmetric microstructure stress: downside moves produce larger slippage.
         downside_scale = downside_asymmetry if underlying_returns[i] < 0 else 0.90
-        
+
         # Fat-tailed innovation
         innovation = student_t.rvs(df=df_param, random_state=rng) * base_te * vix_multiplier * regime_multiplier * liq_mult
-        
+
         # Liquidity impact (wider spreads on large moves)
         move_multiplier = 1 + 10 * abs(underlying_returns[i])
         move_multiplier *= downside_scale
-        # Scale by regime (tracking gets much worse in high vol)
-        regime_multiplier = 1.0 if regime == 0 else 5.0
-
-        # Liquidity stress amplification (institutional mode optional)
-        if liquidity_series is not None and i < len(liquidity_series):
-            liq_mult = 1.0 + 0.20 * np.clip(liquidity_series[i], 0.0, 3.0)
-        else:
-            liq_mult = 1.0
-
-        # Asymmetric microstructure stress: downside moves produce larger slippage.
-        downside_scale = downside_asymmetry if underlying_returns[i] < 0 else 0.90
-        
-        # Fat-tailed innovation
-        innovation = student_t.rvs(df=df_param, random_state=rng) * base_te * vix_multiplier * regime_multiplier * liq_mult
-        
-        # Liquidity impact (wider spreads on large moves)
-        move_multiplier = 1 + 10 * abs(underlying_returns[i])
-        move_multiplier *= downside_scale
-        # Asymmetric microstructure stress: downside moves produce larger slippage.
-        downside_asymmetry = 1.30 if underlying_returns[i] < 0 else 0.90
-        
-        # Fat-tailed innovation
-        innovation = student_t.rvs(df=df_param, random_state=rng) * base_te * vix_multiplier * regime_multiplier
-        
-        # Liquidity impact (wider spreads on large moves)
-        move_multiplier = 1 + 10 * abs(underlying_returns[i])
-        move_multiplier *= downside_asymmetry
         innovation *= move_multiplier
-        
+
         # AR(1) process
         te_series[i] = rho * te_series[i-1] + innovation
-    
+
     return te_series
 
 
@@ -6060,58 +4958,6 @@ def build_simulation_metadata(sim_id: int, regime_path: np.ndarray,
         }
     return meta
 
-
-def validate_simulation_layers(sim_df: pd.DataFrame) -> Dict[str, float]:
-    """Basic layer integrity checks for generated simulation paths."""
-    checks = {
-        'rows': float(len(sim_df)),
-        'nan_returns': float(sim_df.filter(regex='_Ret$').isna().sum().sum()) if len(sim_df) > 0 else 0.0,
-        'nan_prices': float(sim_df.filter(regex='_Price$').isna().sum().sum()) if len(sim_df) > 0 else 0.0,
-        'nonfinite_returns': float((~np.isfinite(sim_df.filter(regex='_Ret$').to_numpy())).sum()) if len(sim_df) > 0 else 0.0,
-        'nonfinite_prices': float((~np.isfinite(sim_df.filter(regex='_Price$').to_numpy())).sum()) if len(sim_df) > 0 else 0.0,
-        'min_price': float(sim_df.filter(regex='_Price$').min().min()) if len(sim_df) > 0 else float('nan'),
-        'min_vix': float(sim_df['VIX'].min()) if 'VIX' in sim_df.columns and len(sim_df) > 0 else float('nan'),
-        'max_vix': float(sim_df['VIX'].max()) if 'VIX' in sim_df.columns and len(sim_df) > 0 else float('nan')
-    }
-    checks['is_valid'] = bool(
-        checks['rows'] > 0
-        and checks['nan_returns'] == 0
-        and checks['nan_prices'] == 0
-        and checks['nonfinite_returns'] == 0
-        and checks['nonfinite_prices'] == 0
-        and np.isfinite(checks['min_price'])
-        and checks['min_price'] > 0.0
-        and np.isfinite(checks['min_vix'])
-        and np.isfinite(checks['max_vix'])
-        and checks['min_vix'] >= 5.0
-        and checks['max_vix'] <= 120.0
-    )
-    return checks
-
-
-def build_simulation_metadata(sim_id: int, regime_path: np.ndarray,
-                              start_conditions: Dict, stress_state: Optional[Dict],
-                              layer_checks: Dict[str, float]) -> Dict:
-    """Attach reproducible simulation metadata for auditing/diagnostics."""
-    regime_counts = {int(r): int((regime_path == r).sum()) for r in np.unique(regime_path)}
-    meta = {
-        'model_version': SIM_ENGINE_MODE,
-        'sim_id': int(sim_id),
-        'regime_counts': regime_counts,
-        'start_method': start_conditions.get('start_method'),
-        'layer_checks': layer_checks
-    }
-    if stress_state is not None:
-        meta['stress_summary'] = {
-            'liq_mean': float(np.nanmean(stress_state.get('liquidity', np.array([0.0])))),
-            'credit_mean': float(np.nanmean(stress_state.get('credit', np.array([0.0])))),
-            'jump_days': int(np.sum((stress_state.get('jump', np.array([])) > 0).astype(int)))
-        }
-    return meta
-
-# ============================================================================
-# RANDOMIZED START DATE HELPERS
-# ============================================================================
 
 def select_random_start_regime(rng: np.random.Generator = None) -> int:
     """
@@ -6538,143 +5384,6 @@ def simulate_single_path_fixed(args):
     # Use randomized initial VIX instead of always starting at vix_base[regime]
     vix[0] = initial_vix if RANDOMIZE_INITIAL_VIX else vix_base[actual_start_regime]
 
-    # Institutional mode: single authoritative VIX source from return generator.
-    if SIM_ENGINE_MODE == 'institutional_v1' and generated_vix is not None:
-        vix = generated_vix.copy()
-    else:
-        use_bootstrap_blend = (SIM_ENGINE_MODE == 'legacy_hybrid' and generated_vix is not None and USE_BLOCK_BOOTSTRAP)
-
-        if use_bootstrap_blend:
-        # Blend bootstrap VIX with AR(1) dynamics
-        # This preserves historical VIX patterns while maintaining consistency
-            vix[0] = generated_vix[0]
-        
-            regime_vols = {r: regime_params[r]['daily_std'] for r in range(N_REGIMES)}
-        
-            for t in range(1, sim_days):
-                regime = regime_path[t]
-            
-            # Historical VIX value from bootstrap
-                hist_vix = generated_vix[t]
-            
-                regime_vix = (vix_dynamics or {}).get(regime, {})
-                phi = regime_vix.get('phi', 0.88)
-                noise_std = regime_vix.get('noise_std', 1.0)
-                jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
-                jump_scale = regime_vix.get('jump_scale', 8.0)
-                target_vix = regime_vix.get('target_vix', vix_base[regime])
-
-            # AR(1) component
-                ar1_vix = phi * vix[t-1] + (1 - phi) * target_vix
-            
-            # Detect equity shock for VIX spike
-                expected_std = regime_vols[regime]
-                if expected_std > 0:
-                    equity_shock = abs(spy_returns[t]) / expected_std
-                else:
-                    equity_shock = 0
-            
-                vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
-            
-            # Blend: 60% historical, 40% AR(1) + shock
-                vix[t] = 0.6 * hist_vix + 0.4 * (ar1_vix + vix_jump) + rng.normal(0, noise_std)
-                vix[t] = max(10, vix[t])
-        else:
-            # Original AR(1) dynamics (fallback)
-            vix[0] = vix_base[regime_path[0]]
-        
-            regime_vols = {r: regime_params[r]['daily_std'] for r in range(N_REGIMES)}
-        
-            for t in range(1, sim_days):
-                regime = regime_path[t]
-                regime_vix = (vix_dynamics or {}).get(regime, {})
-                phi = regime_vix.get('phi', 0.88)
-                noise_std = regime_vix.get('noise_std', 1.5)
-                jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
-                jump_scale = regime_vix.get('jump_scale', 8.0)
-                target_vix = regime_vix.get('target_vix', vix_base[regime])
-            
-                expected_std = regime_vols[regime]
-                if expected_std > 0:
-                    equity_shock = abs(spy_returns[t]) / expected_std
-                else:
-                    equity_shock = 0
-            
-                vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
-            
-                vix[t] = phi * vix[t-1] + (1 - phi) * target_vix + vix_jump + rng.normal(0, noise_std)
-                vix[t] = max(10, vix[t])
-
-    # Institutional stress-state channels (liquidity/credit/jumps)
-    stress_state = None
-    if SIM_ENGINE_MODE == 'institutional_v1' and stress_state_model is not None:
-        stress_state = simulate_latent_stress_state(
-            n_days=sim_days,
-            regime_path=regime_path,
-            stress_model=stress_state_model,
-            vix_series=vix,
-            rng=rng
-        )
-
-        # Apply stress-state jump overlay to underlying index path only in institutional mode.
-        if 'jump' in stress_state and len(spy_returns) == len(stress_state['jump']):
-            jump = stress_state['jump']
-            spy_returns = spy_returns - jump
-            if qqq_returns_raw is not None and len(qqq_returns_raw) == len(jump):
-                qqq_returns_raw = qqq_returns_raw - 1.35 * jump
-
-        # Guard against invalid compounded paths from extreme jumps.
-        spy_returns = np.clip(spy_returns, -0.95, 3.0)
-        if qqq_returns_raw is not None:
-            qqq_returns_raw = np.clip(qqq_returns_raw, -0.95, 4.0)
-    # Get generated VIX path if available (extract for actual sim period)
-    generated_vix_full = fat_tailed_returns_full.get('VIX', None)
-    if generated_vix_full is not None:
-        generated_vix = generated_vix_full[start_offset:start_offset + sim_days]
-    else:
-        generated_vix = None
-    
-    # Use randomized initial VIX instead of always starting at vix_base[regime]
-    vix[0] = initial_vix if RANDOMIZE_INITIAL_VIX else vix_base[actual_start_regime]
-
-    # Institutional mode: single authoritative VIX source from return generator.
-    if SIM_ENGINE_MODE == 'institutional_v1' and generated_vix is not None:
-        vix = generated_vix.copy()
-    else:
-        use_bootstrap_blend = (SIM_ENGINE_MODE == 'legacy_hybrid' and generated_vix is not None and USE_BLOCK_BOOTSTRAP)
-
-        if use_bootstrap_blend:
-        # Blend bootstrap VIX with AR(1) dynamics
-        # This preserves historical VIX patterns while maintaining consistency
-            vix[0] = generated_vix[0]
-        
-            regime_vols = {r: regime_params[r]['daily_std'] for r in range(N_REGIMES)}
-        
-            for t in range(1, sim_days):
-                regime = regime_path[t]
-            
-            # Historical VIX value from bootstrap
-                hist_vix = generated_vix[t]
-            
-                regime_vix = (vix_dynamics or {}).get(regime, {})
-                phi = regime_vix.get('phi', 0.88)
-                noise_std = regime_vix.get('noise_std', 1.0)
-                jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
-                jump_scale = regime_vix.get('jump_scale', 8.0)
-                target_vix = regime_vix.get('target_vix', vix_base[regime])
-
-            # AR(1) component
-                ar1_vix = phi * vix[t-1] + (1 - phi) * target_vix
-    # Get bootstrap VIX if available (extract for actual sim period)
-    bootstrap_vix_full = fat_tailed_returns_full.get('VIX', None)
-    if bootstrap_vix_full is not None:
-        bootstrap_vix = bootstrap_vix_full[start_offset:start_offset + sim_days]
-    else:
-        bootstrap_vix = None
-    
-    # Use randomized initial VIX instead of always starting at vix_base[regime]
-    vix[0] = initial_vix if RANDOMIZE_INITIAL_VIX else vix_base[actual_start_regime]
-    
     if bootstrap_vix is not None and USE_BLOCK_BOOTSTRAP:
         # Blend bootstrap VIX with AR(1) dynamics
         # This preserves historical VIX patterns while maintaining consistency
@@ -6699,42 +5408,42 @@ def simulate_single_path_fixed(args):
             ar1_vix = phi * vix[t-1] + (1 - phi) * target_vix
             
             # Detect equity shock for VIX spike
-                expected_std = regime_vols[regime]
-                if expected_std > 0:
-                    equity_shock = abs(spy_returns[t]) / expected_std
-                else:
-                    equity_shock = 0
-            
-                vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
-            
+            expected_std = regime_vols[regime]
+            if expected_std > 0:
+                equity_shock = abs(spy_returns[t]) / expected_std
+            else:
+                equity_shock = 0
+
+            vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
+
             # Blend: 60% historical, 40% AR(1) + shock
-                vix[t] = 0.6 * hist_vix + 0.4 * (ar1_vix + vix_jump) + rng.normal(0, noise_std)
-                vix[t] = max(10, vix[t])
-        else:
-            # Original AR(1) dynamics (fallback)
-            vix[0] = vix_base[regime_path[0]]
+            vix[t] = 0.6 * hist_vix + 0.4 * (ar1_vix + vix_jump) + rng.normal(0, noise_std)
+            vix[t] = max(10, vix[t])
+    else:
+        # Original AR(1) dynamics (fallback)
+        vix[0] = vix_base[regime_path[0]]
         
-            regime_vols = {r: regime_params[r]['daily_std'] for r in range(N_REGIMES)}
+        regime_vols = {r: regime_params[r]['daily_std'] for r in range(N_REGIMES)}
         
-            for t in range(1, sim_days):
-                regime = regime_path[t]
-                regime_vix = (vix_dynamics or {}).get(regime, {})
-                phi = regime_vix.get('phi', 0.88)
-                noise_std = regime_vix.get('noise_std', 1.5)
-                jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
-                jump_scale = regime_vix.get('jump_scale', 8.0)
-                target_vix = regime_vix.get('target_vix', vix_base[regime])
-            
-                expected_std = regime_vols[regime]
-                if expected_std > 0:
-                    equity_shock = abs(spy_returns[t]) / expected_std
-                else:
-                    equity_shock = 0
-            
-                vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
-            
-                vix[t] = phi * vix[t-1] + (1 - phi) * target_vix + vix_jump + rng.normal(0, noise_std)
-                vix[t] = max(10, vix[t])
+        for t in range(1, sim_days):
+            regime = regime_path[t]
+            regime_vix = (vix_dynamics or {}).get(regime, {})
+            phi = regime_vix.get('phi', 0.88)
+            noise_std = regime_vix.get('noise_std', 1.5)
+            jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
+            jump_scale = regime_vix.get('jump_scale', 8.0)
+            target_vix = regime_vix.get('target_vix', vix_base[regime])
+        
+            expected_std = regime_vols[regime]
+            if expected_std > 0:
+                equity_shock = abs(spy_returns[t]) / expected_std
+            else:
+                equity_shock = 0
+        
+            vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
+        
+            vix[t] = phi * vix[t-1] + (1 - phi) * target_vix + vix_jump + rng.normal(0, noise_std)
+            vix[t] = max(10, vix[t])
 
     # Institutional stress-state channels (liquidity/credit/jumps)
     stress_state = None
@@ -6822,21 +5531,6 @@ def simulate_single_path_fixed(args):
 
         for t in range(sim_days):
             if irx_bootstrapped is not None:
-        daily_borrow_costs = np.zeros(sim_days)
-
-        spread_pred_series = None
-        if SIM_ENGINE_MODE == 'institutional_v1' and funding_model is not None:
-            spread_df = pd.DataFrame({'VIX': vix})
-            if irx_bootstrapped is not None:
-                spread_df['IRX'] = irx_bootstrapped
-            spread_pred_series = predict_borrow_spread_series(
-                spread_df,
-                funding_model,
-                stress_state=stress_state
-            )
-
-        for t in range(sim_days):
-            if irx_bootstrapped is not None:
                 # IRX is in percentage points (e.g., 4.5), convert to decimal (0.045)
                 risk_free_rate = irx_bootstrapped[t] / 100.0
                 # Clip to reasonable range (rates can't go negative in our model)
@@ -6850,16 +5544,7 @@ def simulate_single_path_fixed(args):
             daily_borrow_costs[t] = calculate_daily_borrow_cost(
                 leverage, risk_free_rate, spread_for_day
             )
-            else:
-                # Fallback: use old fixed regime-based rates
-                regime = regime_path[t]
-                risk_free_rate = INTEREST_RATE_BY_REGIME[regime]
 
-            spread_for_day = spread_pred_series[t] if spread_pred_series is not None else borrow_spread
-            daily_borrow_costs[t] = calculate_daily_borrow_cost(
-                leverage, risk_free_rate, spread_for_day
-            )
-        
         # Get underlying returns
         # UPGRADE: Use bootstrap returns for QQQ and TLT when available
         if asset == 'TQQQ':
@@ -6931,7 +5616,7 @@ def simulate_single_path_fixed(args):
             rng=np.random.default_rng(sim_id + ord(asset[0])),
             rho=te_params.get('rho', 0.3),
             downside_asymmetry=te_downside,
-            liquidity_series=te_liquidity
+            liquidity_series=te_liquidity,
         )
         te_params = (tracking_residual_model or {}).get(asset, {})
         if stress_state is not None and 'liquidity' in stress_state:
@@ -6954,10 +5639,7 @@ def simulate_single_path_fixed(args):
             rng=np.random.default_rng(sim_id + ord(asset[0])),
             rho=te_params.get('rho', 0.3),
             downside_asymmetry=te_downside,
-            liquidity_series=te_liquidity
-            config['tracking_error_base'],
-            config['tracking_error_df'],
-            rng=np.random.default_rng(sim_id + ord(asset[0]))
+            liquidity_series=te_liquidity,
         )
         
         # Multiplicative tracking error
@@ -7065,10 +5747,6 @@ def simulate_single_path_fixed(args):
                 'Trades_Per_Year': trades_per_year,
                 'Regime_Path': regime_path.tolist(),
                 'Trade_Journal': trade_data,
-                'Trade_List': trade_list,  # Full trade list for precise tax calc
-                'Model_Metadata': sim_df.attrs.get('simulation_metadata', None),
-                # NEW: Track start conditions for analysis
-                'Start_Conditions': {
                 'Trade_List': trade_list,  # Full trade list for precise tax calc
                 'Model_Metadata': sim_df.attrs.get('simulation_metadata', None),
                 # NEW: Track start conditions for analysis

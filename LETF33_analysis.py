@@ -6602,7 +6602,22 @@ def simulate_single_path_fixed(args):
         borrow_spread = config.get('borrow_spread', 0.0)
         
         # Calculate time-varying borrowing cost
-        # USE BOOTSTRAPPED IRX instead of fixed regime-based rates.
+        # USE BOOTSTRAPPED IRX instead of fixed regime-based rates!
+        # This means borrow costs naturally match the interest rate 
+        # environment of the sampled historical period.
+        daily_borrow_costs = np.zeros(sim_days)
+
+        spread_pred_series = None
+        if SIM_ENGINE_MODE == 'institutional_v1' and funding_model is not None:
+            spread_df = pd.DataFrame({'VIX': vix})
+            if irx_bootstrapped is not None:
+                spread_df['IRX'] = irx_bootstrapped
+            spread_pred_series = predict_borrow_spread_series(
+                spread_df,
+                funding_model,
+                stress_state=stress_state
+            )
+
         daily_borrow_costs = np.zeros(sim_days)
 
         spread_pred_series = None
@@ -6682,6 +6697,29 @@ def simulate_single_path_fixed(args):
             )
         
         # FIX #2: Add tracking error (multiplicative, AR(1), fat tails)
+        te_params = (tracking_residual_model or {}).get(asset, {})
+        if stress_state is not None and 'liquidity' in stress_state:
+            liq_avg = float(np.nanmean(stress_state['liquidity']))
+            te_downside = te_params.get('downside_mult', 1.30) * (1.0 + 0.15 * liq_avg)
+            te_scale = te_params.get('base_scale', config['tracking_error_base']) * (1.0 + 0.10 * liq_avg)
+            te_liquidity = stress_state['liquidity']
+        else:
+            te_downside = te_params.get('downside_mult', 1.30)
+            te_scale = te_params.get('base_scale', config['tracking_error_base'])
+            te_liquidity = None
+
+        tracking_errors = generate_tracking_error_ar1(
+            sim_days,
+            regime_path,
+            vix,
+            underlying,
+            te_scale,
+            te_params.get('df', config['tracking_error_df']),
+            rng=np.random.default_rng(sim_id + ord(asset[0])),
+            rho=te_params.get('rho', 0.3),
+            downside_asymmetry=te_downside,
+            liquidity_series=te_liquidity
+        )
         te_params = (tracking_residual_model or {}).get(asset, {})
         if stress_state is not None and 'liquidity' in stress_state:
             liq_avg = float(np.nanmean(stress_state['liquidity']))

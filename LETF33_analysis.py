@@ -5701,7 +5701,6 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
     
     # ========================================================================
     # METHOD 3: Parametric Student-t (fallback when no historical data)
-    # METHOD 3: Parametric Student-t (fallback when no historical data)
     # ========================================================================
     
     # This is similar to the old method but uses Student-t instead of Normal
@@ -5772,15 +5771,6 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
         noise_std = regime_vix.get('noise_std', 1.5)
         jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
         jump_scale = regime_vix.get('jump_scale', 8.0)
-    # Add VIX dynamics (regime-calibrated AR(1) with shocks)
-    for t in range(1, n_days):
-        regime = regime_path[t]
-        regime_vix = (vix_dynamics or {}).get(regime, {})
-        target_vix = regime_vix.get('target_vix', vix_base[regime])
-        phi = regime_vix.get('phi', 0.88)
-        noise_std = regime_vix.get('noise_std', 1.5)
-        jump_threshold = regime_vix.get('jump_threshold_sigma', 2.0)
-        jump_scale = regime_vix.get('jump_scale', 8.0)
         
         # VIX jumps on large equity moves
         if regime_params[regime]['daily_std'] > 0:
@@ -5789,17 +5779,10 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
             equity_shock = 0
         
         vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
-        
-        vix_series[t] = (phi * vix_series[t-1] + 
-                        (1 - phi) * target_vix + 
-                        vix_jump + 
-                        rng.normal(0, noise_std))
-        vix_series[t] = max(10, vix_series[t])
-        vix_jump = jump_scale * max(0, equity_shock - jump_threshold)
-        
-        vix_series[t] = (phi * vix_series[t-1] + 
-                        (1 - phi) * target_vix + 
-                        vix_jump + 
+
+        vix_series[t] = (phi * vix_series[t-1] +
+                        (1 - phi) * target_vix +
+                        vix_jump +
                         rng.normal(0, noise_std))
         vix_series[t] = max(10, vix_series[t])
     
@@ -5811,7 +5794,6 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
         mask = regime_path == regime_id
         n_regime_days = mask.sum()
         if n_regime_days > 0:
-            irx_series[mask] = irx_base_map[regime_id] + rng.normal(0, 0.5, n_regime_days)
             irx_series[mask] = irx_base_map[regime_id] + rng.normal(0, 0.5, n_regime_days)
     irx_series = np.clip(irx_series, 0.0, 15.0)
     
@@ -5852,8 +5834,9 @@ def compute_letf_return_correct(underlying_return, leverage, realized_vol_daily,
     # expense_ratio is annual → divide by 252
     # daily_borrow_cost is already daily → use directly
     net_return = gross_return - expense_ratio/252 - daily_borrow_cost
-    
-    return net_return
+
+    # NAV cannot lose more than 100% in one day; cap to preserve positive gross factor.
+    return np.clip(net_return, -0.999999, 10.0)
 
 def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_returns,
                                base_te, df_param, seed=None, rng=None,
@@ -6763,7 +6746,8 @@ def simulate_single_path_fixed(args):
         
         # Multiplicative tracking error
         final_returns = (1 + leveraged_returns_before_te) * (1 + tracking_errors) - 1
-        
+        final_returns = np.clip(final_returns, -0.999999, 10.0)
+
         asset_returns[asset] = final_returns
     
     # ========================================================================
@@ -6782,11 +6766,15 @@ def simulate_single_path_fixed(args):
 
     # CREATE PRICE SERIES FOR ALL ASSETS (needed by strategies)
     for asset in assets_order:
-        sim_df[f'{asset}_Price'] = (1 + sim_df[f'{asset}_Ret'].fillna(0)).cumprod() * 100
+        gross = 1.0 + sim_df[f'{asset}_Ret'].fillna(0.0).to_numpy()
+        gross = np.clip(gross, 1e-12, np.inf)
+        sim_df[f'{asset}_Price'] = np.cumprod(gross) * 100.0
 
     # Add TLT price and returns (unleveraged version of TMF)
     sim_df['TLT_Ret'] = sim_df['TMF_Ret'] / 3.0  # Unlever TMF to get TLT
-    sim_df['TLT_Price'] = (1 + sim_df['TLT_Ret'].fillna(0)).cumprod() * 100
+    tlt_gross = 1.0 + sim_df['TLT_Ret'].fillna(0.0).to_numpy()
+    tlt_gross = np.clip(tlt_gross, 1e-12, np.inf)
+    sim_df['TLT_Price'] = np.cumprod(tlt_gross) * 100.0
 
     sim_df['VIX'] = vix
     if stress_state is not None:

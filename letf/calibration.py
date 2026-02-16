@@ -681,11 +681,11 @@ def calibrate_funding_spread_model(df: pd.DataFrame, bypass_cache: bool = False)
     pred_finite = predicted[np.isfinite(predicted)]
     if pred_finite.size > 10:
         min_spread = float(max(np.nanpercentile(pred_finite, 1.0), 0.0025))
-        max_spread = float(min(np.nanpercentile(pred_finite, 99.5), 0.0600))
+        max_spread = float(min(np.nanpercentile(pred_finite, 99.5), 0.0300))
         if max_spread <= min_spread:
             max_spread = min_spread + 0.005
     else:
-        min_spread, max_spread = 0.0030, 0.0450
+        min_spread, max_spread = 0.0030, 0.0300
 
     model = {
         'base': float(max(beta[0], 0.0015)),
@@ -736,7 +736,7 @@ def calibrate_stress_state_model(df: pd.DataFrame, regimes: np.ndarray) -> Dict:
                 'credit_phi': 0.88,
                 'credit_sigma': 0.07,
                 'jump_base_prob': 0.001 if regime == 0 else 0.004,
-                'jump_scale': 0.003 if regime == 0 else 0.006
+                'jump_scale': 0.002 if regime == 0 else 0.004
             }
             continue
 
@@ -763,7 +763,7 @@ def calibrate_stress_state_model(df: pd.DataFrame, regimes: np.ndarray) -> Dict:
         cred_phi, cred_sigma = ar1_params(cred, default_phi=0.88, default_sigma=0.07)
 
         jump_base_prob = float(np.clip(0.0005 + 0.008 * np.nanmean(np.maximum(rv[mask] - 0.20, 0.0)), 0.0005, 0.01))
-        jump_scale = float(np.clip(0.0017 + 0.010 * np.nanmean(np.maximum(rv[mask] - 0.22, 0.0)), 0.0017, 0.009))
+        jump_scale = float(np.clip(0.0011 + 0.0065 * np.nanmean(np.maximum(rv[mask] - 0.22, 0.0)), 0.0011, 0.006))
 
         model['regimes'][regime] = {
             'liq_mu': liq_mu,

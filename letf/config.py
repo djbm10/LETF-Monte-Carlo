@@ -149,7 +149,7 @@ CASH_RATE_BY_REGIME = {
 
 # Monte Carlo parameters
 N_WORKERS = max(1, multiprocessing.cpu_count() - 2)
-NUM_SIMULATIONS = 50
+NUM_SIMULATIONS = 200
 
 # Variance reduction techniques (NEW - for improved accuracy)
 USE_ANTITHETIC_VARIATES = True   # 30-50% variance reduction, minimal cost

@@ -50,7 +50,7 @@ def run():
     )
     from letf.validation import run_validation_tests
     from letf.mc_runner import parallel_monte_carlo_fixed
-    from letf.reporting import create_summary_statistics
+    from letf.reporting import create_summary_statistics, get_tax_config_interactive
     from letf.historical import (
         compare_simulated_vs_historical,
         compare_simulated_vs_synthetic_historical,
@@ -92,6 +92,12 @@ def run():
     df = fetch_historical_data()
     print(f"\n  Data loaded: {df.index[0].date()} to {df.index[-1].date()}")
     print(f"  Total days: {len(df):,} ({len(df)/252:.2f} years)")
+
+    # ========================================================================
+    # STEP 2b: Tax & Income Configuration
+    # ========================================================================
+    _step("Tax configuration")
+    tax_config = get_tax_config_interactive()
 
     _step("Calibrate regime model")
     print("\nCalibrating regime model...")
@@ -156,7 +162,7 @@ def run():
         )
 
         _step(f"Summary stats {horizon}Y")
-        create_summary_statistics(mc_results, horizon)
+        create_summary_statistics(mc_results, horizon, tax_config=tax_config)
 
         _step(f"Historical comparison {horizon}Y")
         compare_simulated_vs_historical(df, mc_results, horizon)

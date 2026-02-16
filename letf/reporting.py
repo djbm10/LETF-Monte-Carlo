@@ -296,14 +296,16 @@ WARNING: DO NOT PLAN RETIREMENT ON THIS
     return scenarios.get(p, "")
 
 
-def create_summary_statistics(mc_results, time_horizon):
+def create_summary_statistics(mc_results, time_horizon, tax_config=None):
     """NEW: Percentile-based analysis with tax customization - Option A Format"""
     from letf.integration import process_trades_with_wired_engine
     from letf.tax.engine import TaxpayerElections
 
-    # Get tax config (ask once)
+    # Use provided tax_config, or fall back to interactive prompt
     global TAX_CONFIG
-    if 'TAX_CONFIG' not in globals():
+    if tax_config is not None:
+        TAX_CONFIG = tax_config
+    elif 'TAX_CONFIG' not in globals():
         TAX_CONFIG = get_tax_config_interactive()
 
     # ========================================================================

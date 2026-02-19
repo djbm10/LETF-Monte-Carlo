@@ -6,7 +6,7 @@ LETF ULTIMATE v7.0 - PERCENTILE ANALYSIS (CORRECTED)
 ✅ Tax drag calculated and shown
 ✅ Interactive state/income/filing configuration
 ✅ Market scenario explanations
-✅ Complete LETF simulation (19 strategies)
+✅ Complete LETF simulation (21 strategies, S1-S21 including QLD/UPRO Roth B&H)
 ✅ Proper tax integration
 
 4,604 lines - Complete and syntax-checked.
@@ -2018,7 +2018,7 @@ class TradeJournal:
         from dataclasses import asdict
         return [asdict(trade) for trade in self.trades]
 
-ROTH_IDS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+ROTH_IDS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S20', 'S21']
 TAXABLE_IDS = ['S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19']
 
 
@@ -2395,6 +2395,18 @@ ASSETS = {
         'tracking_error_base': 0.00015,
         'tracking_error_df': 5,
         'borrow_spread': 0.0060,  # 0.60% spread (S&P 500 is more liquid, cheaper to borrow)
+    },
+    'QLD': {
+        'name': '2x NASDAQ-100',
+        'inception': '2006-06-21',
+        'leverage': 2.0,
+        'expense_ratio': 0.0095,
+        'underlying': 'QQQ',
+        'proxy_index': '^IXIC',
+        'beta_to_spy': 1.2,
+        'tracking_error_base': 0.00015,
+        'tracking_error_df': 5,
+        'borrow_spread': 0.0060,  # 0.60% spread (2x funds get better rates)
     },
     'SSO': {
         'name': '2x S&P 500',
@@ -2913,6 +2925,8 @@ STRATEGIES = {
         'trend_sma': 100,
         'rebalance_threshold': 0.05  # Only rebalance if >5% change
     },
+    'S20': {'name': 'QLD Buy Hold', 'type': 'benchmark', 'asset': 'QLD'},
+    'S21': {'name': 'UPRO Buy Hold', 'type': 'benchmark', 'asset': 'UPRO'},
 }
 
 print(f"\n{'='*80}")
@@ -3425,7 +3439,7 @@ def fetch_historical_data():
     print("  " + "-"*50)
     
     print("  Downloading market data from Yahoo Finance...")
-    tickers = ['^GSPC', '^IXIC', '^VIX', '^IRX', '^TNX', 'TLT', 'QQQ', 'TQQQ', 'UPRO', 'SSO']
+    tickers = ['^GSPC', '^IXIC', '^VIX', '^IRX', '^TNX', 'TLT', 'QQQ', 'TQQQ', 'UPRO', 'SSO', 'QLD']
     
     try:
         data = yf.download(tickers, start=YFINANCE_START_DATE, end=DATA_END_DATE, 
@@ -3478,6 +3492,9 @@ def fetch_historical_data():
             yf_df['SSO_Real_Price'] = data['Close']['SSO']
             yf_df['SSO_Real_Ret'] = yf_df['SSO_Real_Price'].pct_change()
 
+        if 'QLD' in data['Close'].columns:
+            yf_df['QLD_Real_Price'] = data['Close']['QLD']
+            yf_df['QLD_Real_Ret'] = yf_df['QLD_Real_Price'].pct_change()
 
         # VIX
         if '^VIX' in data['Close'].columns:
@@ -9184,7 +9201,7 @@ def create_summary_statistics(mc_results, time_horizon):
     print(f"{'Rank':<5} {'ID':<5} {'Strategy':<18} {'Win%':>8} {'p10':>7} {'p25':>7} {'p40':>8} {'Median$':>9} {'CAGR':>8} {'p60':>7} {'p75':>7} {'p90':>7}| {'MaxDD':>9} {'Trd/Y':>7}")
     print("-"*100)
     
-    roth_ids = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+    roth_ids = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S20', 'S21']
     roth_data = []
     
     for sid in roth_ids:
@@ -10712,7 +10729,7 @@ if __name__ == "__main__":
     print(f"  ✓ Analysis Start Date: {ANALYSIS_START_DATE}")
     print("  ✓ Tax Engine: v6.0 with proper marginal rates")
     print("  ✓ Golden Tests: 6/6 passing")
-    print("  ✓ LETF Strategies: 19 (S1-S19)")
+    print("  ✓ LETF Strategies: 21 (S1-S21, including QLD/UPRO Roth B&H)")
     print("  ✓ Regime Model: Volatility-based switching")
     print("  ✓ Trade Tracking: FIFO with wash sales")
     print("  ✓ Tax Calculation: Progressive brackets")

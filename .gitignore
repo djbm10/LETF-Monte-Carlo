@@ -1,0 +1,55 @@
+# System / shell
+.bash_history
+.bash_logout
+.bashrc
+.profile
+.motd_shown
+.sudo_as_admin_successful
+=13.0
+
+# Sensitive
+.ssh/
+.gitconfig
+
+# Claude
+.claude.json
+.claude.json.backup.*
+.claude/
+
+# Conda / Python
+anaconda3/
+.conda/
+__pycache__/
+*.pyc
+*.pyo
+Anaconda3-*.sh
+
+# System config
+.config/
+.local/
+.cache/
+.landscape/
+.streamlit/
+
+# Windows artifacts
+*.Zone.Identifier
+
+# Old cache directories
+corrected_cache/
+corrected_cache_v7/
+corrected_cache_v8_fixed/
+corrected_cache_v9/
+final_corrected_cache/
+improved_cache_v9/
+improved_cache_v91/
+institutional_cache/
+institutional_cache_v9/
+multi_asset_cache/
+tqqq_improved_cache/
+tqqq_realistic_cache/
+ultimate_cache/
+ultimate_cache_v4/
+ultra_advanced_cache/
+
+# Output
+results.pdf

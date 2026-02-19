@@ -1,0 +1,46 @@
+{
+  "zero_drift_test": {
+    "test_passed": true,
+    "expected_drag": -0.10124999999999999,
+    "actual_drag": -0.09558688396333692,
+    "error_pct": 0.5663116036663072
+  },
+  "flat_market_test": {
+    "2.0x": {
+      "expected": -0.045,
+      "actual_median": -0.033888299060428395,
+      "actual_mean": 0.008279869645967886,
+      "actual_std": 0.3086229764248495,
+      "error": 0.011111700939571603,
+      "passed": true
+    },
+    "3.0x": {
+      "expected": -0.10124999999999999,
+      "actual_median": -0.10015284362069216,
+      "actual_mean": 0.0013142852775728908,
+      "actual_std": 0.48800882490272324,
+      "error": 0.001097156379307837,
+      "passed": true
+    },
+    "all_passed": true
+  },
+  "institutional_sanity": {
+    "transition_matrix_finite": true,
+    "transition_matrix_row_stochastic": true,
+    "transition_matrix_nonnegative": true,
+    "te_seed_collision_free": false,
+    "tracking_model_params_valid": true,
+    "funding_vix_activates": false,
+    "funding_inv_curve_activates": false,
+    "funding_liquidity_activates": true,
+    "funding_credit_activates": false,
+    "all_passed": false
+  },
+  "rolling_oos": {
+    "splits_run": 3,
+    "funding_mae_mean": 0.0003333333333333335,
+    "tracking_residual_std_mean": 0.00509981300200189,
+    "funding_beta_vix_drift": 0.0,
+    "sufficient_data": true
+  }
+}

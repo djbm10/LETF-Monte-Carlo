@@ -156,7 +156,7 @@ def compute_letf_return_correct(underlying_return, leverage, realized_vol_daily,
 
 def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_returns,
                                base_te, df_param, seed=None, rng=None,
-                               rho=0.3, downside_asymmetry=1.15,
+                               rho=0.3, downside_asymmetry=1.05,
                                liquidity_series=None, clip_limit=None):
     """Tracking residual process calibrated with AR(1), fat tails, downside/liquidity asymmetry.
     [Partially vectorized for better performance]
@@ -164,17 +164,20 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
     if rng is None:
         rng = np.random.default_rng(seed)
 
-    # Vectorize multiplier calculations (faster than per-iteration)
-    # REDUCED multipliers to prevent excessive tracking error amplification
-    vix_multipliers = np.maximum((vix_series / 20.0) ** 1.5, 0.1)
-    regime_multipliers = np.where(regime_path == 0, 1.0, 1.5)  # Reduced from 2.5 to 1.5
+    # Multipliers scaled for EXECUTION NOISE ONLY (Option A: explicit friction model
+    # handles borrow costs + expenses; TE represents bid-ask slippage and rebalance timing).
+    # All multipliers are near-unity to avoid re-introducing friction through the TE channel.
+    vix_multipliers = np.clip((vix_series / 20.0) ** 0.5, 0.5, 1.5)
+    regime_multipliers = np.where(regime_path == 0, 1.0, 1.15)
 
+    # Liquidity effects on funding are already modeled via predict_borrow_spread_series.
+    # Only apply minimal execution-noise widening from liquidity stress.
     liq_mults = np.ones(n_days)
     if liquidity_series is not None:
-        liq_mults += 0.20 * np.clip(liquidity_series[:n_days], 0.0, 3.0)
+        liq_mults += 0.05 * np.clip(liquidity_series[:n_days], 0.0, 3.0)
 
-    downside_scales = np.where(underlying_returns < 0, downside_asymmetry, 0.95)
-    move_multipliers = (1.0 + 5.0 * np.abs(underlying_returns)) * downside_scales  # Reduced from 10.0 to 5.0
+    downside_scales = np.where(underlying_returns < 0, downside_asymmetry, 0.98)
+    move_multipliers = (1.0 + 0.3 * np.abs(underlying_returns)) * downside_scales
 
     # AR(1) loop (cannot be vectorized due to sequential dependency)
     te_series = np.zeros(n_days)
@@ -383,13 +386,18 @@ def simulate_etf_returns_from_layers(asset: str,
     ])
 
     te_params = (tracking_residual_model or {}).get(asset, {})
-    te_scale = te_params.get('base_scale', config['tracking_error_base'])
-    te_downside = te_params.get('downside_mult', 1.30)
+    # Use config-level tracking_error_base (execution noise only, ~2 bps).
+    # The calibrated base_scale (~16 bps) embeds friction already captured
+    # by explicit borrow cost + expense ratio, causing double-counting.
+    te_scale = config['tracking_error_base']
+    # Cap downside_mult: calibrated values can reach 2.0 because the residual
+    # absorbs friction asymmetry.  Under Option A (explicit friction + minimal TE),
+    # only genuine execution-noise asymmetry should remain (≤1.10).
+    te_downside = min(te_params.get('downside_mult', 1.05), 1.10)
 
-    liquidity = None if stress_state is None else stress_state.get('liquidity', None)
-    if liquidity is not None:
-        te_scale *= (1 + 0.10 * float(np.nanmean(liquidity)))
-        te_downside *= (1 + 0.15 * float(np.nanmean(liquidity)))
+    # Liquidity effects on funding costs are already modeled via
+    # predict_borrow_spread_series; passing liquidity to TE would double-count.
+    liquidity = None
 
     tracking_errors = generate_tracking_error_ar1(
         len(underlying),

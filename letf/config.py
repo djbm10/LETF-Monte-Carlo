@@ -232,13 +232,11 @@ BOOTSTRAP_MOMENTUM_BIAS_BY_REGIME = {
 # Degrees of freedom for Student-t noise
 # Lower = fatter tails, more extreme events
 #
-# CALIBRATED to match historical+synthetic TQQQ distribution:
-#   - Historical P5 = -51.7% requires very fat tails
-#   - Historical P95 = +40.0% requires extreme upside
-#
-# df=4 gives fatter tails than df=5, closer to historical extremes
-# (df=3 would be even more extreme but may overfit to Great Depression)
-STUDENT_T_DF = 4
+# df=5 gives excess kurtosis ~6, matching empirical daily equity returns (3-5).
+# With GARCH dynamics already producing time-varying heavy tails,
+# df=5 avoids compounding tail thickness through two independent channels.
+# df=4 had undefined kurtosis of squared returns and over-represented extremes.
+STUDENT_T_DF = 5
 
 # How much of the return comes from bootstrap vs Student-t noise
 #

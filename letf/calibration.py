@@ -735,8 +735,8 @@ def calibrate_stress_state_model(df: pd.DataFrame, regimes: np.ndarray) -> Dict:
                 'credit_mu': 0.05 if regime == 0 else 0.25,
                 'credit_phi': 0.88,
                 'credit_sigma': 0.07,
-                'jump_base_prob': 0.001 if regime == 0 else 0.004,
-                'jump_scale': 0.002 if regime == 0 else 0.004
+                'jump_base_prob': 0.0002 if regime == 0 else 0.001,
+                'jump_scale': 0.0005 if regime == 0 else 0.002
             }
             continue
 
@@ -762,8 +762,12 @@ def calibrate_stress_state_model(df: pd.DataFrame, regimes: np.ndarray) -> Dict:
         liq_phi, liq_sigma = ar1_params(liq, default_phi=0.90, default_sigma=0.08)
         cred_phi, cred_sigma = ar1_params(cred, default_phi=0.88, default_sigma=0.07)
 
-        jump_base_prob = float(np.clip(0.0005 + 0.008 * np.nanmean(np.maximum(rv[mask] - 0.20, 0.0)), 0.0005, 0.01))
-        jump_scale = float(np.clip(0.0011 + 0.0065 * np.nanmean(np.maximum(rv[mask] - 0.22, 0.0)), 0.0011, 0.006))
+        # Jump parameters calibrated jointly with Student-t(df=5) + GARCH:
+        # Since fat tails are already represented by the return distribution,
+        # jumps model only distinct structural events (flash crashes, circuit breakers).
+        # Reduced intensity to avoid double-counting tail risk.
+        jump_base_prob = float(np.clip(0.0002 + 0.003 * np.nanmean(np.maximum(rv[mask] - 0.25, 0.0)), 0.0002, 0.003))
+        jump_scale = float(np.clip(0.0005 + 0.002 * np.nanmean(np.maximum(rv[mask] - 0.25, 0.0)), 0.0005, 0.0025))
 
         model['regimes'][regime] = {
             'liq_mu': liq_mu,
@@ -814,11 +818,14 @@ def simulate_latent_stress_state(n_days: int, regime_path: np.ndarray,
         credit[t] = float(np.clip(credit[t], 0.0, 3.0))
 
         base_prob = p.get('jump_base_prob', 0.001)
-        jump_scale = p.get('jump_scale', 0.010)
+        jump_scale = p.get('jump_scale', 0.005)
         vix_amp = max((vix_series[t] - 25.0) / 30.0, 0.0)
-        jump_prob = float(np.clip(base_prob + 0.015 * vix_amp + 0.005 * liquidity[t], 0.0, 0.03))
+        # Capped at 1% daily probability (was 3%); VIX and liquidity loadings
+        # halved to avoid over-representing jumps when Student-t + GARCH
+        # already produce fat-tailed moves.
+        jump_prob = float(np.clip(base_prob + 0.008 * vix_amp + 0.003 * liquidity[t], 0.0, 0.01))
         if rng.random() < jump_prob:
-            jump[t] = abs(rng.standard_t(df=4)) * jump_scale
+            jump[t] = abs(rng.standard_t(df=5)) * jump_scale
 
     return {'liquidity': liquidity, 'credit': credit, 'jump': jump}
 

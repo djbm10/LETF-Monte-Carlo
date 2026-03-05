@@ -1,0 +1,11 @@
+{
+  "canonical_hash": null,
+  "driver_return_hash": "e9672f7b10199fe64303a4318e8a91bf404750afdeda3c29a3d0b97276879a00",
+  "driver_return_hash_date_end": "2026-02-18",
+  "driver_return_hash_date_start": "2015-01-02",
+  "driver_return_hash_n": 2798,
+  "engine_code_hash": "d7c8cbb1c5ac5ed9",
+  "python_version": "3.12.12 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 20:16:04) [GCC 11.2.0]",
+  "timestamp": "2026-03-01T16:36:38.311040Z",
+  "validation_pass": false
+}

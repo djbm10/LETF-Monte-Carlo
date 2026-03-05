@@ -4,6 +4,11 @@ from typing import Dict, List, Optional
 from letf import config as cfg
 from letf.utils import save_cache, load_cache
 
+# Reference tail severity: 95th-percentile of |daily SPY returns| in calm periods.
+# Used to normalise per-block tail scores so that crisis_downweighting is
+# scale-invariant.  Empirically ~2.5% for S&P 500 over the post-war era.
+REF_TAIL_SEVERITY: float = 0.025
+
 
 class BlockBootstrapReturns:
     """
@@ -61,9 +66,14 @@ class BlockBootstrapReturns:
           Used for TQQQ and mixed strategies.
 
         Both pools use overlapping blocks (stride=21 days) for diversity.
-        Each entry is a 2-tuple: (block_data, block_return_spy)
-        where block_return_spy is the cumulative SPY return over the block,
-        used for momentum-based block selection.
+        Each entry is a 3-tuple: (block_data, block_return_spy, tail_severity)
+          block_data        – raw return/VIX array
+          block_return_spy  – cumulative SPY return used for momentum selection
+          tail_severity     – normalised extremity score used for crisis-chain
+                              dampening; see _sample_from_pool()
+
+        tail_severity = 95th-pct |daily SPY return| in this block / REF_TAIL_SEVERITY
+        A calm block has tail_severity ≈ 0.4-1.0; a 2008-class block ≈ 2-4.
 
         Returns:
             Dict mapping regime_id -> list of pool B entries
@@ -124,17 +134,26 @@ class BlockBootstrapReturns:
             block_irx = irx[start_idx:end_idx]
 
             # SPY cumulative return for momentum selection
-            block_return_spy = np.prod(1 + np.nan_to_num(block_spy, nan=0)) - 1
+            block_spy_clean = np.nan_to_num(block_spy, nan=0)
+            block_return_spy = np.prod(1 + block_spy_clean) - 1
+
+            # Tail severity: 95th-pct of |daily SPY returns| normalised by
+            # REF_TAIL_SEVERITY.  Used in crisis-chain dampening so that the
+            # most extreme historical sub-periods are down-weighted when too
+            # many crisis blocks have been concatenated consecutively.
+            tail_severity = float(
+                np.percentile(np.abs(block_spy_clean), 95) / REF_TAIL_SEVERITY
+            )
 
             # ---- Pool A: 4 columns [SPY, TLT, VIX, IRX] ----
             # ALL blocks go into pool A (1950-2025)
             block_a = np.column_stack([
-                np.nan_to_num(block_spy, nan=0),
+                block_spy_clean,
                 np.nan_to_num(block_tlt, nan=0),
                 np.nan_to_num(block_vix, nan=20),
                 np.nan_to_num(block_irx, nan=4.5)
             ])
-            self.pool_a[regime].append((block_a, block_return_spy))
+            self.pool_a[regime].append((block_a, block_return_spy, tail_severity))
             pool_a_count[regime] += 1
 
             # ---- Pool B: 5 columns [SPY, QQQ, TLT, VIX, IRX] ----
@@ -144,13 +163,13 @@ class BlockBootstrapReturns:
             if block_has_real_qqq:
                 block_qqq = qqq_ret[start_idx:end_idx]
                 block_b = np.column_stack([
-                    np.nan_to_num(block_spy, nan=0),
+                    block_spy_clean,
                     np.nan_to_num(block_qqq, nan=0),
                     np.nan_to_num(block_tlt, nan=0),
                     np.nan_to_num(block_vix, nan=20),
                     np.nan_to_num(block_irx, nan=4.5)
                 ])
-                self.pool_b[regime].append((block_b, block_return_spy))
+                self.pool_b[regime].append((block_b, block_return_spy, tail_severity))
                 pool_b_count[regime] += 1
 
         print(f"     Pool A (economy): Low vol={pool_a_count[0]}, High vol={pool_a_count[1]}")
@@ -173,6 +192,9 @@ class BlockBootstrapReturns:
 
         Returns:
             Array of shape (block_size, 5) with columns [SPY, QQQ, TLT, VIX, IRX]
+
+        Note: Pool entries are 3-tuples (data, return_spy, tail_severity).
+              This method accesses [0] and [1], so 3-tuples are fully compatible.
         """
         if rng is None:
             rng = np.random.default_rng()
@@ -195,20 +217,31 @@ class BlockBootstrapReturns:
                           desired_sign: int = None,
                           momentum_bias: float = 0.0,
                           fallback_cols: int = 5,
-                          target_spy_return: float = None) -> np.ndarray:
+                          target_spy_return: float = None,
+                          crisis_chain_count: int = 0,
+                          effective_max_crisis_chain: int = -1) -> np.ndarray:
         """
-        Sample a block from a specific pool with momentum bias.
-        Same logic as sample_block but works on any pool.
+        Sample a block from a specific pool with momentum bias and optional
+        crisis-chain tail dampening.
+
+        Pool entries are 3-tuples: (block_data, block_return_spy, tail_severity).
+        The tail_severity element (index 2) is used for crisis-chain dampening
+        but does not affect existing code that accesses only [0] and [1].
 
         Args:
-            pool: Dict mapping regime_id -> list of (block_data, block_return) tuples
-            regime: 0 for low vol, 1 for high vol
-            rng: Random number generator
-            desired_sign: +1 for bull, -1 for bear, None for random
-            momentum_bias: probability to pick same-sign block
-            fallback_cols: number of columns if synthetic fallback is needed
+            pool: Dict mapping regime_id -> list of
+                  (block_data, block_return_spy, tail_severity) tuples.
+            regime: 0 for low vol, 1 for high vol.
+            rng: Random number generator.
+            desired_sign: +1 for bull, -1 for bear, None for random.
+            momentum_bias: probability to pick same-sign block.
+            fallback_cols: number of columns if synthetic fallback is needed.
             target_spy_return: Optional SPY block return target used to keep
-                Pool B (tech blocks) macro-coherent with Pool A (economy blocks)
+                Pool B (tech blocks) macro-coherent with Pool A (economy blocks).
+            crisis_chain_count: Number of consecutive crisis-regime blocks drawn
+                so far.  When > cfg.BOOTSTRAP_MAX_CRISIS_CHAIN, extreme blocks
+                (high tail_severity) are down-weighted to reduce tail clustering.
+                0 = no dampening.
 
         Returns:
             block_data array (shape varies by pool: 4 cols for pool A, 5 for pool B)
@@ -231,6 +264,63 @@ class BlockBootstrapReturns:
                       or (b[1] < 0 and desired_sign < 0)]
             if signed and momentum_bias > 0 and rng.random() < momentum_bias:
                 candidate_blocks = signed
+
+        # ── Crisis-chain tail dampening ───────────────────────────────────
+        # After BOOTSTRAP_MAX_CRISIS_CHAIN consecutive crisis blocks, start
+        # down-weighting the most extreme historical sub-periods.  This reduces
+        # unrealistic tail clustering without removing extreme blocks from the pool.
+        #
+        # How it works:
+        #   1. If crisis_chain_count <= MAX_CRISIS_CHAIN: no dampening (uniform).
+        #   2. Otherwise: compute a suppress_factor that grows with chain length.
+        #      For each block, weight = max(min_weight, 1 − suppress_factor
+        #                                    × max(0, tail_severity − threshold))
+        #   3. Normalise weights and sample proportionally.
+        #
+        # The min_weight floor (0.10) ensures extreme blocks are never fully
+        # excluded — just made much less likely.  This preserves realistic rare
+        # extremes while breaking artificial crisis-on-crisis stacking.
+        # effective_max_crisis_chain: -1 means "use cfg default"
+        max_chain    = (cfg.BOOTSTRAP_MAX_CRISIS_CHAIN
+                        if effective_max_crisis_chain < 0
+                        else effective_max_crisis_chain)
+        downweight   = cfg.BOOTSTRAP_EXTREME_DOWNWEIGHT
+        threshold    = cfg.BOOTSTRAP_EXTREME_TAIL_THRESHOLD
+
+        apply_dampening = (
+            max_chain > 0
+            and crisis_chain_count > max_chain
+            and len(candidate_blocks) > 5
+        )
+
+        if apply_dampening:
+            # suppress_factor scales up to 1.0 as crisis chain extends
+            excess           = crisis_chain_count - max_chain
+            suppress_factor  = min(1.0, excess / max(max_chain, 1))
+
+            tail_severities = np.array(
+                [b[2] if len(b) > 2 else 1.0 for b in candidate_blocks],
+                dtype=float
+            )
+            # Weight reduction only for blocks above the severity threshold
+            excess_severity = np.maximum(0.0, tail_severities - threshold)
+            weights = np.maximum(
+                0.10,                                          # min weight floor
+                1.0 - suppress_factor * downweight * excess_severity
+            )
+
+            # Also blend in Gaussian SPY-coherence weighting if requested
+            if target_spy_return is not None:
+                block_returns = np.array([b[1] for b in candidate_blocks])
+                sigma = np.std(block_returns)
+                if sigma < 1e-8:
+                    sigma = 0.05
+                gauss_w = np.exp(-0.5 * ((block_returns - target_spy_return) / sigma) ** 2)
+                weights = weights * gauss_w  # element-wise product, then normalise
+
+            weights = weights / weights.sum()
+            chosen_idx = rng.choice(len(candidate_blocks), p=weights)
+            return candidate_blocks[chosen_idx][0].copy()
 
         if target_spy_return is not None and len(candidate_blocks) > 5:
             # Keep tech blocks macro-consistent with economy blocks using
@@ -310,7 +400,8 @@ class BlockBootstrapReturns:
     def sample_returns(self, n_days: int, regime_path: np.ndarray,
                        rng: np.random.Generator = None,
                        add_student_t_noise: bool = True,
-                       bootstrap_weight: float = 0.85) -> Dict[str, np.ndarray]:
+                       bootstrap_weight: float = 0.85,
+                       max_crisis_chain: Optional[int] = None) -> Dict[str, np.ndarray]:
         """
         Generate return series using TWO synchronized block pools.
 
@@ -322,11 +413,30 @@ class BlockBootstrapReturns:
         is applied across all assets to add variation and restore
         cross-asset correlation.
 
+        Args:
+            n_days:           Number of trading days to generate.
+            regime_path:      Integer array (0=low vol, 1=high vol).
+            rng:              Random number generator.
+            add_student_t_noise: Whether to blend correlated noise.
+            bootstrap_weight: Fraction of return from historical blocks.
+            max_crisis_chain: Override for cfg.BOOTSTRAP_MAX_CRISIS_CHAIN.
+                              Pass 0 to disable crisis-chain dampening (old
+                              behaviour), useful for before/after comparison.
+                              None (default) → use cfg value.
+
         Returns:
             Dict with keys 'SPY_Ret', 'QQQ_Ret', 'TLT_Ret', 'VIX', 'IRX'
         """
         if rng is None:
             rng = np.random.default_rng()
+
+        # Resolve max_crisis_chain: None → use global config
+        _max_crisis_chain = (
+            cfg.BOOTSTRAP_MAX_CRISIS_CHAIN
+            if max_crisis_chain is None
+            else int(max_crisis_chain)
+        )
+
         # ================================================================
         # SYNCHRONIZED BLOCK LOOP: economy + tech sampled together
         # This keeps macro conditions (SPY/VIX/IRX) aligned with tech outcomes.
@@ -340,6 +450,9 @@ class BlockBootstrapReturns:
         current_day = 0
         last_return_a = None
         last_return_b = None
+        # Track consecutive high-vol blocks for crisis-chain dampening.
+        # Reset to 0 whenever a low-vol block is drawn.
+        consecutive_crisis = 0
 
         while current_day < n_days:
             remaining = n_days - current_day
@@ -349,12 +462,21 @@ class BlockBootstrapReturns:
             regime = int(np.median(block_regime_path))
             bias = cfg.BOOTSTRAP_MOMENTUM_BIAS_BY_REGIME.get(regime, 0.52)
 
+            # Update crisis chain counter BEFORE sampling so the count
+            # reflects the current run length when we select this block.
+            if regime == 1:
+                consecutive_crisis += 1
+            else:
+                consecutive_crisis = 0
+
             desired_sign_a = 1 if (last_return_a is not None and last_return_a >= 0) else (-1 if last_return_a is not None else None)
             block_a = self._sample_from_pool(
                 self.pool_a, regime, rng,
                 desired_sign=desired_sign_a,
                 momentum_bias=bias,
-                fallback_cols=4
+                fallback_cols=4,
+                crisis_chain_count=consecutive_crisis,
+                effective_max_crisis_chain=_max_crisis_chain,
             )
 
             # Random sub-section (not always prefix)
@@ -371,13 +493,25 @@ class BlockBootstrapReturns:
                 desired_sign=desired_sign_b,
                 momentum_bias=bias,
                 fallback_cols=5,
-                target_spy_return=spy_block_return
+                target_spy_return=spy_block_return,
+                crisis_chain_count=consecutive_crisis,
+                effective_max_crisis_chain=_max_crisis_chain,
             )
 
             if block_len < len(block_b):
                 max_start = len(block_b) - block_len
                 start = rng.integers(0, max_start + 1)
                 block_b = block_b[start:start + block_len]
+
+            # Safety clamp: pool blocks may be shorter than block_len when
+            # 'remaining' ≈ block_size (e.g. remaining=43, pool max=42).
+            # Without this, the assignment slice is larger than the block array.
+            # Take a prefix of both blocks so current_day advances by the
+            # shorter length; the while-loop handles the leftover days.
+            if len(block_a) != block_len or len(block_b) != block_len:
+                block_len = min(block_len, len(block_a), len(block_b))
+                block_a = block_a[:block_len]
+                block_b = block_b[:block_len]
 
             # Pool A columns: SPY=0, TLT=1, VIX=2, IRX=3
             spy_returns[current_day:current_day + block_len] = block_a[:, 0]

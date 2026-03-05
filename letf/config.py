@@ -229,6 +229,26 @@ BOOTSTRAP_MOMENTUM_BIAS_BY_REGIME = {
     1: 0.505   # high vol: near-random continuation
 }
 
+# ── Crisis-chain dampening ───────────────────────────────────────────────────
+# After BOOTSTRAP_MAX_CRISIS_CHAIN consecutive high-vol blocks, start blending
+# in low-vol pool blocks and down-weighting the most extreme crisis blocks.
+# This prevents unrealistic tail clustering from crisis-block concatenation
+# without removing crisis blocks from the pool entirely.
+#
+# Set to 0 to disable (reverts to old behavior, useful for before/after comparison).
+BOOTSTRAP_MAX_CRISIS_CHAIN = 4
+
+# Down-weight factor applied per unit of tail severity above threshold.
+# Higher → stronger suppression of the most extreme crisis blocks.
+# 0.60 means a block 2× above threshold gets weight ≈ 1 - 0.60 = 0.40.
+BOOTSTRAP_EXTREME_DOWNWEIGHT = 0.60
+
+# Normalized tail severity above which to apply down-weighting.
+# tail_severity = 95th-pct |return| in the block / REF_TAIL_SEVERITY.
+# REF_TAIL_SEVERITY ≈ 0.025 (95th-pct daily |SPY return| in calm periods).
+# A typical calm block has tail_severity ≈ 0.5-1.0; a 2008-class block ≈ 2-4.
+BOOTSTRAP_EXTREME_TAIL_THRESHOLD = 1.8
+
 # Degrees of freedom for Student-t noise
 # Lower = fatter tails, more extreme events
 #
@@ -290,7 +310,17 @@ TRACKING_RESIDUAL_CACHE = CACHE_DIR / "tracking_residual_model.pkl"
 STRESS_STATE_CACHE = CACHE_DIR / "stress_state_model.pkl"
 
 # Cache for bootstrap data (processed historical returns by regime)
-BOOTSTRAP_CACHE = CACHE_DIR / "bootstrap_data.pkl"
+# v2: stores 3-tuples (block_data, block_return_spy, tail_severity) instead of 2-tuples
+BOOTSTRAP_CACHE = CACHE_DIR / "bootstrap_data_v2.pkl"
+
+# ── Forward realism verbosity ────────────────────────────────────────────────
+# 0 = silent, 1 = composite score summary, 2 = full per-component breakdown
+FORWARD_REALISM_VERBOSITY = 1
+
+# Show a before/after realism comparison in main() after bootstrap creation.
+# Runs ~50 quick paths with max_crisis_chain=0 vs BOOTSTRAP_MAX_CRISIS_CHAIN.
+# Adds ~5-10 seconds to startup; deterministic with a fixed seed.
+SHOW_BOOTSTRAP_BEFORE_AFTER = False
 
 
 # ============================================================================

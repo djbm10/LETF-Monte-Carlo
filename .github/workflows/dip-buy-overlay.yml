@@ -1,0 +1,20 @@
+name: TQQQ dip-buy overlay screen
+on:
+  push:
+    branches: ['research/nasdaq1985-isolated']
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas
+      - run: mkdir -p results && PYTHONPATH=. python research/dip_buy_overlay_screen.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dip-buy-overlay-screen
+          path: results/dip_buy_overlay_screen.csv

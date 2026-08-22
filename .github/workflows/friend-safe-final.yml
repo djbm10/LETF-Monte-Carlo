@@ -2,6 +2,7 @@ name: Friend safe final
 on:
   push:
     branches: ['research/true-dip-tournament']
+  pull_request:
   workflow_dispatch:
 jobs:
   run:

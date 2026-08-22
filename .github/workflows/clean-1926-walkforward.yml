@@ -8,6 +8,12 @@ on:
     paths:
       - research/clean_1926_walkforward.py
       - .github/workflows/clean-1926-walkforward.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - research/clean_1926_walkforward.py
+      - .github/workflows/clean-1926-walkforward.yml
 
 jobs:
   evaluate:

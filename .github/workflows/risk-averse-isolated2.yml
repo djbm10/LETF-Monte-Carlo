@@ -1,0 +1,22 @@
+name: Risk averse isolated
+on:
+  push:
+    branches: ['research/risk-averse-isolated2']
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/risk_averse_final.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: risk-averse-isolated
+          path: |
+            results/risk_averse_final.csv
+            results/risk_averse_ranking.csv

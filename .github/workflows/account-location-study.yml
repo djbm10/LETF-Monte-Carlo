@@ -1,0 +1,32 @@
+name: Account location study
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/clean-1926-walkforward]
+    paths:
+      - research/account_location_study.py
+      - .github/workflows/account-location-study.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - research/account_location_study.py
+      - .github/workflows/account-location-study.yml
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas yfinance
+      - run: python -m py_compile research/account_location_study.py
+      - run: PYTHONPATH=. python research/account_location_study.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: account-location-study
+          path: results/account_location_study
+          if-no-files-found: error

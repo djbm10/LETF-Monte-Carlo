@@ -39,7 +39,7 @@ jobs:
             --seed 20260821 \
             --output results/clean_1926_walkforward
       - name: Run all-strategy historical screen
-        run: python research/final_strategy_screen.py --output results/final_strategy_screen
+        run: PYTHONPATH=. python research/final_strategy_screen.py --output results/final_strategy_screen
       - name: Upload scored outputs
         uses: actions/upload-artifact@v4
         with:

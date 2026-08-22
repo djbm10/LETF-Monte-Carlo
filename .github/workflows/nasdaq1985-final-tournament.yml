@@ -1,0 +1,21 @@
+name: Nasdaq 1985 final tournament
+on:
+  push:
+    branches: [ 'research/nasdaq1985-final-tournament' ]
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: python -m py_compile research/nasdaq1985_final_tournament.py
+      - run: PYTHONPATH=. python research/nasdaq1985_final_tournament.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nasdaq1985-final-tournament
+          path: results/nasdaq1985_final_tournament

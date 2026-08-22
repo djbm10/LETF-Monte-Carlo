@@ -1,0 +1,19 @@
+name: Friend crisis windows
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/friend_crisis_windows.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: friend-crisis-windows
+          path: results/friend_crisis_windows.csv

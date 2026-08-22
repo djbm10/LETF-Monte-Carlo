@@ -12,14 +12,13 @@ def load():
  return m.to_numpy(),s.to_numpy(),rf.to_numpy(),idx
 @njit(cache=True,parallel=True)
 def sim(M,S,R):
- b,N=M.shape; K=len(H); Z=len(NAMES); term=np.empty((b,Z,K)); mdd=np.empty((b,Z,K)); hds=H*TD
+ b,N=M.shape; K=len(H); Z=4; term=np.empty((b,Z,K)); mdd=np.empty((b,Z,K)); hds=H*TD
  for p in prange(b):
   qpx=np.empty(N); spx=np.empty(N); tqpx=np.empty(N); tqret=np.empty(N); qpx[0]=spx[0]=tqpx[0]=1.; tqret[0]=0.
   for t in range(1,N):
    qpx[t]=qpx[t-1]*max(1.+M[p,t],1e-12); spx[t]=spx[t-1]*max(1.+S[p,t],1e-12); tqret[t]=3*M[p,t]-2*R[p,t]-(.0088+2*.0065)/TD; tqpx[t]=tqpx[t-1]*max(1.+tqret[t],1e-12)
   cs=np.zeros(N+1); cq=np.zeros(N+1); ctv=np.zeros(N+1); ctv2=np.zeros(N+1)
   for t in range(N): cs[t+1]=cs[t]+spx[t]; cq[t+1]=cq[t]+qpx[t]; ctv[t+1]=ctv[t]+tqret[t]; ctv2[t+1]=ctv2[t]+tqret[t]*tqret[t]
-  # rolling max deque for TQQQ price
   dq=np.empty(N,np.int64); head=0; tail=0; rollmax=np.empty(N)
   for t in range(N):
    while head<tail and dq[head]<=t-252: head+=1
@@ -61,7 +60,7 @@ def boot(m,s,r,dates,b,n,rng,sc):
  if sc.get('rate_floor',0): R=np.maximum(R,sc['rate_floor']/TD)
  cp=sc.get('crashes_per_year',0.)
  if cp:
-  mask=rng.random(M.shape)<cp/TD; shock=rng.uniform(.08,.18,M.shape); M=np.where(mask,M-shock,M);S=np.where(mask,S-shock,M*0+S)
+  mask=rng.random(M.shape)<cp/TD; shock=rng.uniform(.08,.18,M.shape); M=np.where(mask,M-shock,M); S=np.where(mask,S-shock,S)
  return M,S,R
 def main():
  m,s,r,d=load(); total=WARM+50*TD; rng=np.random.default_rng(2260822); rows=[]; sim(np.zeros((1,total)),np.zeros((1,total)),np.zeros((1,total)))

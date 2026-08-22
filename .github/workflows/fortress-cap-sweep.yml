@@ -1,0 +1,23 @@
+name: Fortress cap sweep
+on:
+  push:
+    branches: ['research/fortress-cap-sweep']
+  pull_request:
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/fortress_cap_sweep.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fortress-cap-sweep
+          path: |
+            results/fortress_cap_sweep.csv
+            results/fortress_cap_ranking.csv

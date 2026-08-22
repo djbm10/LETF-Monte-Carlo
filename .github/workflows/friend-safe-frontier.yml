@@ -1,0 +1,22 @@
+name: Friend safe frontier
+on:
+  push:
+    branches: ['research/true-dip-hostile-isolated']
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/friend_safe_frontier.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: friend-safe-frontier
+          path: |
+            results/friend_safe_frontier.csv
+            results/friend_safe_ranking.csv

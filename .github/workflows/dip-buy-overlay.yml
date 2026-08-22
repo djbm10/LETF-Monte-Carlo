@@ -1,5 +1,6 @@
 name: TQQQ dip-buy overlay screen
 on:
+  pull_request:
   push:
     branches: ['research/nasdaq1985-isolated']
   workflow_dispatch:

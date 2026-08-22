@@ -1,0 +1,40 @@
+name: Final LETF strategy screen
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/clean-1926-walkforward
+    paths:
+      - research/final_strategy_screen.py
+      - .github/workflows/final-strategy-screen.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - research/final_strategy_screen.py
+      - .github/workflows/final-strategy-screen.yml
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scipy pandas-datareader yfinance numba
+      - name: Compile screen
+        run: python -m py_compile research/final_strategy_screen.py
+      - name: Run all-strategy historical screen
+        run: python research/final_strategy_screen.py --output results/final_strategy_screen
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-strategy-screen
+          path: results/final_strategy_screen
+          if-no-files-found: error

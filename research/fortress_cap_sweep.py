@@ -12,7 +12,7 @@ def load():
  q=read('synthetic-qqq.tsv');rr=read('short-rates.tsv','Rate');q=q[q.index>=pd.Timestamp('1985-01-31')];rf=rr.reindex(q.index).ffill().bfill()/100/TD;m=q.pct_change().fillna(0)+.002/TD;m.loc[m.index<pd.Timestamp('1999-03-10')]+=.007/TD;return m.to_numpy(),rf.to_numpy(),q.index
 @njit(cache=True,parallel=True)
 def sim(M,R):
- b,N=M.shape;Z=len(NAMES);K=len(H);term=np.empty((b,Z,K));mdd=np.empty((b,Z,K));hd=H*TD
+ b,N=M.shape;Z=8;K=len(H);term=np.empty((b,Z,K));mdd=np.empty((b,Z,K));hd=H*TD
  for p in prange(b):
   px=np.empty(N);px[0]=1.
   for t in range(1,N):px[t]=px[t-1]*max(1+M[p,t],1e-12)

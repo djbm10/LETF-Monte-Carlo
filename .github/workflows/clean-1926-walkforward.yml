@@ -1,0 +1,39 @@
+name: Clean 1926 LETF walk-forward
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/clean-1926-walkforward
+    paths:
+      - research/clean_1926_walkforward.py
+      - .github/workflows/clean-1926-walkforward.yml
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install research dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scipy pandas-datareader yfinance numba
+      - name: Self-test
+        run: python research/clean_1926_walkforward.py --self-test
+      - name: Run 10,000-path corrected evaluation
+        run: |
+          python research/clean_1926_walkforward.py \
+            --paths 10000 \
+            --seed 20260821 \
+            --output results/clean_1926_walkforward
+      - name: Upload scored outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: clean-1926-walkforward-results
+          path: results/clean_1926_walkforward
+          if-no-files-found: error

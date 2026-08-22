@@ -7,12 +7,14 @@ on:
       - research/clean-1926-walkforward
     paths:
       - research/clean_1926_walkforward.py
+      - research/final_strategy_screen.py
       - .github/workflows/clean-1926-walkforward.yml
   pull_request:
     branches:
       - main
     paths:
       - research/clean_1926_walkforward.py
+      - research/final_strategy_screen.py
       - .github/workflows/clean-1926-walkforward.yml
 
 jobs:
@@ -36,9 +38,13 @@ jobs:
             --paths 10000 \
             --seed 20260821 \
             --output results/clean_1926_walkforward
+      - name: Run all-strategy historical screen
+        run: python research/final_strategy_screen.py --output results/final_strategy_screen
       - name: Upload scored outputs
         uses: actions/upload-artifact@v4
         with:
           name: clean-1926-walkforward-results
-          path: results/clean_1926_walkforward
+          path: |
+            results/clean_1926_walkforward
+            results/final_strategy_screen
           if-no-files-found: error

@@ -31,7 +31,7 @@ jobs:
       - name: Compile screen
         run: python -m py_compile research/final_strategy_screen.py
       - name: Run all-strategy historical screen
-        run: python research/final_strategy_screen.py --output results/final_strategy_screen
+        run: PYTHONPATH=. python research/final_strategy_screen.py --output results/final_strategy_screen
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:

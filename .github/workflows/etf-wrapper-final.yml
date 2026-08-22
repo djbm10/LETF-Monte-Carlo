@@ -1,0 +1,20 @@
+name: Leveraged ETF wrapper final screen
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: PYTHONPATH=. python research/etf_wrapper_final_screen.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: etf-wrapper-final
+          path: results/etf_wrapper_final

@@ -3,7 +3,7 @@ import math
 import numpy as np, pandas as pd
 from numba import njit
 import research.nasdaq1985_final_tournament as n
-TD=252;PATHS=10000;WARM=300;H=np.array([5,10,20,30,40,50],dtype=np.int64)
+TD=252;PATHS=3000;WARM=300;H=np.array([5,10,20,30,40,50],dtype=np.int64)
 NAMES=['NDX_1x','S9_base','DIP10_rebound3_b20_h10','DIP5_rebound5_b20_h60','DIP5_cross20_b20_h60']
 
 @njit(cache=True)

@@ -1,0 +1,22 @@
+name: Dip hostile 3k sensitivity
+on:
+  push:
+    branches: ['research/dip-hostile-3k']
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/confirmed_dip_hostile_fast.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dip-hostile-3k
+          path: |
+            results/confirmed_dip_hostile_fast.csv
+            results/confirmed_dip_hostile_fast_ranking.csv

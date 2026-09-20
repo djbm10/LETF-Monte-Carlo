@@ -1,0 +1,20 @@
+name: Crisis event study
+on:
+  push:
+    branches: ['research/nasdaq1985-isolated']
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/crisis_event_study.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crisis-event-study
+          path: results/crisis_event_study.csv

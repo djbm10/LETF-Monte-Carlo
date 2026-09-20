@@ -1,0 +1,22 @@
+name: Confirmed dip v2 fast
+on:
+  push:
+    branches: ['research/nasdaq1985-isolated']
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && python research/confirmed_dip_v2_fast.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: confirmed-dip-v2-fast
+          path: |
+            results/confirmed_dip_v2_fast_all.csv
+            results/confirmed_dip_v2_fast_shortlist.csv

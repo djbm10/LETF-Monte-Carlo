@@ -8,6 +8,7 @@ on:
       - research/actual_futures_continuous_validation_20260921.py
       - research/bottleneck_winner_tournament.py
       - research/optionmetrics_leaps_backtest.py
+      - research/wrds_extract_bottleneck_leaps.py
       - research/fixtures/optionmetrics_public_sample_20050915.csv
       - .github/workflows/bottleneck-leaps-futures.yml
   pull_request:
@@ -42,7 +43,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas pyarrow
-      - run: python -m py_compile research/bottleneck_winner_tournament.py
+      - run: python -m py_compile research/bottleneck_winner_tournament.py research/wrds_extract_bottleneck_leaps.py
       - run: python research/bottleneck_winner_tournament.py --download-tnic-smoke --out results/bottleneck_winner_tournament
       - uses: actions/upload-artifact@v4
         with:

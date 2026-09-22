@@ -8,6 +8,7 @@ on:
     paths:
       - research/actual_futures_continuous_validation_20260921.py
       - research/discrete_actual_futures_validation_20260921.py
+      - research/cme_datamine_settlement_backtest.py
       - research/bottleneck_winner_tournament.py
       - research/bottleneck_winner_selftest.py
       - research/optionmetrics_leaps_backtest.py
@@ -34,7 +35,7 @@ jobs:
       - name: Install
         run: pip install numpy pandas pyarrow yfinance
       - name: Compile
-        run: python -m py_compile research/actual_futures_continuous_validation_20260921.py research/discrete_actual_futures_validation_20260921.py research/bottleneck_winner_tournament.py research/bottleneck_winner_selftest.py research/optionmetrics_leaps_backtest.py research/wrds_extract_bottleneck_leaps.py
+        run: python -m py_compile research/actual_futures_continuous_validation_20260921.py research/discrete_actual_futures_validation_20260921.py research/cme_datamine_settlement_backtest.py research/bottleneck_winner_tournament.py research/bottleneck_winner_selftest.py research/optionmetrics_leaps_backtest.py research/wrds_extract_bottleneck_leaps.py
       - name: PIT self-test
         run: python research/bottleneck_winner_selftest.py
       - name: TNIC acquisition

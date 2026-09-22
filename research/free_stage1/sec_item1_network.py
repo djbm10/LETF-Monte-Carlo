@@ -366,10 +366,6 @@ def build_network(
         )
     edge_df = pd.DataFrame(edges)
     metric_df = pd.DataFrame(metrics)
-    if all_metrics:
-        combined = pd.concat(all_metrics, ignore_index=True).sort_values(["formation_date", "cik"])
-        combined.to_csv(args.out / "network_metrics_all.csv", index=False)
-
     manifest = {
         "formation_date": str(formation_date.date()),
         "n_firms": n,
@@ -445,6 +441,10 @@ def main() -> None:
             edges.to_parquet(args.out / f"network_edges_{stamp}.parquet", index=False)
             all_metrics.append(metrics)
             manifests.append(manifest)
+
+    if all_metrics:
+        combined = pd.concat(all_metrics, ignore_index=True).sort_values(["formation_date", "cik"])
+        combined.to_csv(args.out / "network_metrics_all.csv", index=False)
 
     manifest = {
         "source": "SEC EDGAR original 10-K submissions",

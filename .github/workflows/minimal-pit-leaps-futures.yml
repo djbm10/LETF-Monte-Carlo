@@ -1,0 +1,40 @@
+name: Minimal PIT LEAPS futures validation
+
+on:
+  push:
+    branches:
+      - research/pit-leaps-futures-minimal
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install numpy pandas pyarrow yfinance
+      - name: Compile
+        run: python -m py_compile research/actual_futures_continuous_validation_20260921.py research/discrete_actual_futures_validation_20260921.py research/bottleneck_winner_tournament.py research/bottleneck_winner_selftest.py research/optionmetrics_leaps_backtest.py research/wrds_extract_bottleneck_leaps.py
+      - name: PIT self-test
+        run: python research/bottleneck_winner_selftest.py
+      - name: TNIC acquisition
+        run: python research/bottleneck_winner_tournament.py --download-tnic-smoke --out results/bottleneck_winner_tournament
+      - name: Real OptionMetrics sample smoke
+        run: python research/optionmetrics_leaps_backtest.py --input research/fixtures/optionmetrics_public_sample_20050915.csv --out results/optionmetrics_real_sample --smoke-only
+      - name: Corrected continuous futures
+        run: python research/actual_futures_continuous_validation_20260921.py
+      - name: Corrected discrete futures
+        run: python research/discrete_actual_futures_validation_20260921.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: minimal-pit-leaps-futures-validation
+          path: |
+            results/bottleneck_winner_tournament
+            results/optionmetrics_real_sample
+            results/actual_futures_continuous_validation_20260921
+            results/discrete_actual_futures_validation_20260921
+          if-no-files-found: error

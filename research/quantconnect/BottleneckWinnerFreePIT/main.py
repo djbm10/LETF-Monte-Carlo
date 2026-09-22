@@ -87,6 +87,9 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
         self._latest_feature_rows = {}
         self._selection_date = None
 
+        self.spy = self.add_equity("SPY", Resolution.DAILY).symbol
+        self.set_benchmark(self.spy)
+
         self.universe_settings.resolution = Resolution.DAILY
         self.universe_settings.data_normalization_mode = DataNormalizationMode.ADJUSTED
         self.add_universe(self._select_fundamentals)
@@ -94,11 +97,9 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
         # Rebalance after universe selection at the market open.
         self.schedule.on(
             self.date_rules.every_day(),
-            self.time_rules.after_market_open("SPY", 1),
+            self.time_rules.after_market_open(self.spy, 1),
             self._rebalance_if_pending,
         )
-        self.spy = self.add_equity("SPY", Resolution.DAILY).symbol
-        self.set_benchmark(self.spy)
 
         self.debug(
             f"FREE_DISCOVERY model={self.model_name} top_n={self.top_n} "
@@ -281,7 +282,11 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
             momentum12 -= 1
         high52 = self._safe_div(p_now, max(px[-252:] if len(px) >= 252 else px))
 
-        cik = getattr(f.symbol, "cik", None)
+        cik = None
+        try:
+            cik = str(f.company_reference.cik).strip().zfill(10)
+        except Exception:
+            pass
         net = self._network_asof(cik, self.time.date()) if cik else None
         scarcity = net["text_scarcity_raw"] if net else float("nan")
 

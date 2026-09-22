@@ -85,10 +85,7 @@ class RealHistoricalLeaps(QCAlgorithm):
         # treatment explicit for options.
         if security.type == SecurityType.OPTION:
             security.set_fill_model(LatestPriceFillModel())
-            if self.slippage > 0:
-                security.set_slippage_model(ConstantSlippageModel(self.slippage))
-            else:
-                security.set_slippage_model(NullSlippageModel.INSTANCE)
+            security.set_slippage_model(ConstantSlippageModel(self.slippage))
 
     def _needs_roll(self):
         if self.contract is None:
@@ -148,11 +145,7 @@ class RealHistoricalLeaps(QCAlgorithm):
         self.add_option_contract(contract.symbol, Resolution.DAILY)
         security = self.securities[contract.symbol]
         security.set_fill_model(LatestPriceFillModel())
-        security.set_slippage_model(
-            ConstantSlippageModel(self.slippage)
-            if self.slippage > 0
-            else NullSlippageModel.INSTANCE
-        )
+        security.set_slippage_model(ConstantSlippageModel(self.slippage))
 
         ask = float(contract.ask_price)
         if ask <= 0:

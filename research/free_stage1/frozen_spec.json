@@ -1,0 +1,121 @@
+{
+  "version": "free-pit-stage1-2026-09-22",
+  "status": "FROZEN_BEFORE_RESULTS",
+  "bottleneck": {
+    "start": "2009-01-01",
+    "train": [
+      "2009-01-01",
+      "2014-12-31"
+    ],
+    "validation": [
+      "2015-01-01",
+      "2019-12-31"
+    ],
+    "holdout": [
+      "2020-01-01",
+      "2023-12-31"
+    ],
+    "rebalance": "quarterly",
+    "portfolio_sizes": [
+      10,
+      20,
+      40
+    ],
+    "one_way_cost_bps": 15,
+    "min_price": 5,
+    "min_dollar_volume": 1000000,
+    "momentum_lookback_months": [
+      6,
+      12
+    ],
+    "network": {
+      "source": "SEC 10-K Item 1 business descriptions",
+      "id": "CIK",
+      "information_timestamp": "filing_date",
+      "baseline_method": "TF-IDF cosine similarity",
+      "target_related_pair_density": 0.0205,
+      "optional_method": "doc2vec/embedding sensitivity only; must not replace frozen baseline after results"
+    },
+    "models": {
+      "momentum": {
+        "momentum12": 0.7,
+        "high52": 0.3
+      },
+      "quality_momentum": {
+        "momentum12": 0.35,
+        "high52": 0.15,
+        "quality": 0.3,
+        "dilution": 0.2
+      },
+      "bottleneck_core": {
+        "demand_accel": 0.35,
+        "pricing_power": 0.3,
+        "competitive_scarcity": 0.35
+      },
+      "bottleneck_momentum": {
+        "demand_accel": 0.2,
+        "pricing_power": 0.15,
+        "competitive_scarcity": 0.2,
+        "momentum12": 0.3,
+        "high52": 0.15
+      },
+      "bottleneck_full": {
+        "demand_accel": 0.15,
+        "pricing_power": 0.1,
+        "competitive_scarcity": 0.15,
+        "quality": 0.15,
+        "dilution": 0.1,
+        "valuation": 0.1,
+        "momentum12": 0.15,
+        "high52": 0.1
+      }
+    }
+  },
+  "leaps": {
+    "start": "2012-01-01",
+    "underlyings": [
+      "SPY",
+      "QQQ"
+    ],
+    "deltas": [
+      0.7,
+      0.8,
+      0.9
+    ],
+    "target_dte": [
+      365,
+      548,
+      730
+    ],
+    "premium_allocations": [
+      0.25,
+      0.5,
+      1
+    ],
+    "roll_months": 6,
+    "force_roll_dte": 180,
+    "min_open_interest": 100,
+    "use_quote_data": true,
+    "buy_side": "ask",
+    "sell_side": "bid",
+    "slippage_bps_sensitivity": [
+      0,
+      5,
+      10
+    ],
+    "evidence_label": "FREE_DISCOVERY"
+  },
+  "stage2": {
+    "freeze_before_vendor_replication": true,
+    "bottleneck": [
+      "CRSP",
+      "Compustat PIT/Snapshot",
+      "CCM historical links",
+      "TNIC/ETNIC"
+    ],
+    "leaps": [
+      "OptionMetrics IvyDB US"
+    ],
+    "parameter_changes_after_replication": false
+  }
+}

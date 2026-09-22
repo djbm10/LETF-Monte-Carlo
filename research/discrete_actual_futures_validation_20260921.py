@@ -51,7 +51,7 @@ def simulate(name,px,cap,fee,band,margin_rate,cash_yield=True):
   if i%63==0 and n:
    wealth-=2*n*fee;roll_sides+=2*n
   exposure=n*notional/max(wealth,1e-12)
-  day=(float(irx.iloc[i]) if cash_yield else 0.) + exposure*(float(ret.iloc[i])-float(irx.iloc[i]))
+  day=(float(irx.iloc[i]) if cash_yield else 0.) + exposure*float(ret.iloc[i])
   wealth*=max(1+day,0)
   peak=max(peak,wealth);mdd=min(mdd,wealth/peak-1);days_in+=int(n>0);zero_days+=int(n==0)
  years=(len(px)-1)/TD
@@ -82,7 +82,7 @@ def main():
   "important_caveat":"Yahoo Finance continuous futures are not exchange settlement-grade continuous series; roll methodology is undocumented. NQ/ES pre-micro histories are counterfactual micro-sized implementations using actual large-contract continuous returns and the later micro multiplier.",
   "actual_micro_histories":"MNQ and MES rows labeled actual_contract_history=True begin at micro contract launch-era data in 2019.",
   "signal":"prior-day 200DMA + prior-day 20d realized futures vol; 35% target vol above trend, zero below; cap 3x.",
-  "costs":"explicit per-side fees plus quarterly 2-side roll proxy; fully collateralized cash earns ^IRX; margin fractions are scenario constraints, not broker quotes."
+  "costs":"explicit per-side fees plus quarterly 2-side roll proxy; portfolio collateral earns ^IRX and futures P/L is added separately; margin fractions are scenario constraints, not broker quotes."
  },indent=2))
  print(robust.to_string(index=False))
  print(best[["series","starting_capital","cagr","max_dd","band","margin_fraction_of_notional","fee_per_side","pct_days_with_contract"]].to_string(index=False))

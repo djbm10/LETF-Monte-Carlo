@@ -11,6 +11,7 @@ on:
       - research/final_strategy_screen.py
       - research/aggressive_strategy_extensive_20260921.py
       - research/actual_futures_continuous_validation_20260921.py
+      - research/discrete_actual_futures_validation_20260921.py
       - research/bottleneck_winner_tournament.py
       - research/bottleneck_winner_selftest.py
       - research/optionmetrics_leaps_backtest.py
@@ -90,7 +91,7 @@ jobs:
       - name: Install
         run: pip install numpy pandas pyarrow yfinance
       - name: Compile research modules
-        run: python -m py_compile research/actual_futures_continuous_validation_20260921.py research/bottleneck_winner_tournament.py research/bottleneck_winner_selftest.py research/optionmetrics_leaps_backtest.py research/wrds_extract_bottleneck_leaps.py
+        run: python -m py_compile research/actual_futures_continuous_validation_20260921.py research/discrete_actual_futures_validation_20260921.py research/bottleneck_winner_tournament.py research/bottleneck_winner_selftest.py research/optionmetrics_leaps_backtest.py research/wrds_extract_bottleneck_leaps.py
       - name: Run PIT leakage self-test
         run: python research/bottleneck_winner_selftest.py
       - name: Run TNIC acquisition smoke
@@ -99,6 +100,8 @@ jobs:
         run: python research/optionmetrics_leaps_backtest.py --input research/fixtures/optionmetrics_public_sample_20050915.csv --out results/optionmetrics_real_sample --smoke-only
       - name: Run actual futures-derived continuous validation
         run: python research/actual_futures_continuous_validation_20260921.py
+      - name: Run discrete actual futures implementation validation
+        run: python research/discrete_actual_futures_validation_20260921.py
       - uses: actions/upload-artifact@v4
         with:
           name: bottleneck-leaps-futures-research
@@ -106,4 +109,5 @@ jobs:
             results/bottleneck_winner_tournament
             results/optionmetrics_real_sample
             results/actual_futures_continuous_validation_20260921
+            results/discrete_actual_futures_validation_20260921
           if-no-files-found: error

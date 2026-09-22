@@ -1,0 +1,31 @@
+name: Bottleneck / LEAPS / actual futures research
+
+on:
+  push:
+    branches:
+      - research/bottleneck-winner-leaps-futures
+    paths:
+      - research/actual_futures_continuous_validation_20260921.py
+      - research/bottleneck_winner_tournament.py
+      - research/optionmetrics_leaps_backtest.py
+      - research/fixtures/optionmetrics_public_sample.csv
+      - .github/workflows/bottleneck-leaps-futures.yml
+  workflow_dispatch:
+
+jobs:
+  actual_futures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas yfinance
+      - run: python -m py_compile research/actual_futures_continuous_validation_20260921.py
+      - run: python research/actual_futures_continuous_validation_20260921.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: actual-futures-continuous-validation-20260921
+          path: results/actual_futures_continuous_validation_20260921
+          if-no-files-found: error

@@ -8,8 +8,11 @@ on:
       - research/actual_futures_continuous_validation_20260921.py
       - research/bottleneck_winner_tournament.py
       - research/optionmetrics_leaps_backtest.py
-      - research/fixtures/optionmetrics_public_sample.csv
+      - research/fixtures/optionmetrics_public_sample_20050915.csv
       - .github/workflows/bottleneck-leaps-futures.yml
+  pull_request:
+    branches:
+      - research/clean-1926-walkforward
   workflow_dispatch:
 
 jobs:
@@ -28,4 +31,39 @@ jobs:
         with:
           name: actual-futures-continuous-validation-20260921
           path: results/actual_futures_continuous_validation_20260921
+          if-no-files-found: error
+
+  tnic_and_bottleneck_engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas pyarrow
+      - run: python -m py_compile research/bottleneck_winner_tournament.py
+      - run: python research/bottleneck_winner_tournament.py --download-tnic-smoke --out results/bottleneck_winner_tournament
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bottleneck-winner-tnic-smoke
+          path: results/bottleneck_winner_tournament
+          if-no-files-found: error
+
+  optionmetrics_real_sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas
+      - run: python -m py_compile research/optionmetrics_leaps_backtest.py
+      - run: |
+          python research/optionmetrics_leaps_backtest.py             --input research/fixtures/optionmetrics_public_sample_20050915.csv             --out results/optionmetrics_real_sample             --smoke-only
+      - uses: actions/upload-artifact@v4
+        with:
+          name: optionmetrics-real-published-sample-smoke
+          path: results/optionmetrics_real_sample
           if-no-files-found: error

@@ -1,6 +1,13 @@
 name: Free PIT Stage 1 validation
 
 on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+    paths:
+      - research/free_stage1/**
+      - research/quantconnect/**
+      - .github/workflows/free-pit-stage1.yml
   pull_request:
     branches:
       - main

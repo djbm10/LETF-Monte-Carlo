@@ -12,6 +12,7 @@ on:
       - research/aggressive_strategy_extensive_20260921.py
       - research/actual_futures_continuous_validation_20260921.py
       - research/bottleneck_winner_tournament.py
+      - research/bottleneck_winner_selftest.py
       - research/optionmetrics_leaps_backtest.py
       - research/wrds_extract_bottleneck_leaps.py
       - research/fixtures/optionmetrics_public_sample_20050915.csv
@@ -89,7 +90,9 @@ jobs:
       - name: Install
         run: pip install numpy pandas pyarrow yfinance
       - name: Compile research modules
-        run: python -m py_compile research/actual_futures_continuous_validation_20260921.py research/bottleneck_winner_tournament.py research/optionmetrics_leaps_backtest.py research/wrds_extract_bottleneck_leaps.py
+        run: python -m py_compile research/actual_futures_continuous_validation_20260921.py research/bottleneck_winner_tournament.py research/bottleneck_winner_selftest.py research/optionmetrics_leaps_backtest.py research/wrds_extract_bottleneck_leaps.py
+      - name: Run PIT leakage self-test
+        run: python research/bottleneck_winner_selftest.py
       - name: Run TNIC acquisition smoke
         run: python research/bottleneck_winner_tournament.py --download-tnic-smoke --out results/bottleneck_winner_tournament
       - name: Test published real OptionMetrics sample

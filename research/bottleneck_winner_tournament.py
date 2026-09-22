@@ -89,8 +89,8 @@ def prepare_crsp(crsp):
  c["me"]=pd.to_numeric(c.me,errors="coerce").abs()
  c=c[(c.me>0)&c.ret.notna()].sort_values(["permno","date"])
  g=c.groupby("permno",group_keys=False)
- c["mom12_1"]=g.ret.apply(lambda s:(1+s).rolling(11,min_periods=9).apply(np.prod,raw=True)-1).shift(1)
- c["mom6_1"]=g.ret.apply(lambda s:(1+s).rolling(5,min_periods=4).apply(np.prod,raw=True)-1).shift(1)
+ c["mom12_1"]=g.ret.transform(lambda s:((1+s).rolling(11,min_periods=9).apply(np.prod,raw=True)-1).shift(1))
+ c["mom6_1"]=g.ret.transform(lambda s:((1+s).rolling(5,min_periods=4).apply(np.prod,raw=True)-1).shift(1))
  c["price_idx"]=g.ret.transform(lambda s:(1+s).cumprod())
  c["high12"]=g.price_idx.transform(lambda s:s.rolling(12,min_periods=9).max())
  c["high_ratio"]=c.price_idx/c.high12

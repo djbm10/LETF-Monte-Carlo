@@ -7,6 +7,12 @@ on:
     paths:
       - research/aggressive_strategy_extensive_20260921.py
       - .github/workflows/aggressive-strategy-extensive-20260921.yml
+  pull_request:
+    branches:
+      - research/clean-1926-walkforward
+    paths:
+      - research/aggressive_strategy_extensive_20260921.py
+      - .github/workflows/aggressive-strategy-extensive-20260921.yml
   workflow_dispatch:
 
 permissions:
@@ -31,7 +37,7 @@ jobs:
         run: python -m py_compile research/aggressive_strategy_extensive_20260921.py
       - name: Run historical and 11-regime Monte Carlo
         run: |
-          python research/aggressive_strategy_extensive_20260921.py             --paths 2500             --seed 20260921             --output results/aggressive_strategy_extensive_20260921
+          python research/aggressive_strategy_extensive_20260921.py --paths 2500 --seed 20260921 --output results/aggressive_strategy_extensive_20260921
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -39,6 +45,7 @@ jobs:
           path: results/aggressive_strategy_extensive_20260921
           if-no-files-found: error
       - name: Persist results to research branch
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

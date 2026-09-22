@@ -1,0 +1,28 @@
+name: Free PIT Stage 1 validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - research/free_stage1/**
+      - research/quantconnect/**
+      - .github/workflows/free-pit-stage1.yml
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install numpy pandas scipy scikit-learn beautifulsoup4 requests pyarrow
+      - name: Compile
+        run: |
+          python -m py_compile             research/free_stage1/sec_item1_network.py             research/free_stage1/sec_fsd_pit.py             research/free_stage1/selftest_free_pit.py             research/quantconnect/BottleneckWinnerFreePIT/main.py             research/quantconnect/RealHistoricalLeaps/main.py
+      - name: Synthetic PIT tests
+        run: python research/free_stage1/selftest_free_pit.py

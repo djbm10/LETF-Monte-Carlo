@@ -1,0 +1,21 @@
+name: S9 self-financing validation
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas yfinance
+      - run: python -m py_compile research/s9_self_financing_validation.py
+      - run: PYTHONPATH=. python research/s9_self_financing_validation.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s9-self-financing
+          path: results/s9_self_financing

@@ -1,0 +1,29 @@
+name: Taxable S9 variants
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/clean-1926-walkforward]
+    paths:
+      - research/taxable_s9_variants.py
+      - .github/workflows/taxable-s9-variants.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - research/taxable_s9_variants.py
+      - .github/workflows/taxable-s9-variants.yml
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install numpy pandas yfinance
+      - run: python -m py_compile research/taxable_s9_variants.py
+      - run: PYTHONPATH=. python research/taxable_s9_variants.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: taxable-s9-variants
+          path: results/taxable_s9_variants
+          if-no-files-found: error

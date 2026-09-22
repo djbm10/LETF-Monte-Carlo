@@ -1,0 +1,29 @@
+name: Hostile ensemble compare
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/clean-1926-walkforward]
+    paths:
+      - research/hostile_ensemble_compare.py
+      - .github/workflows/hostile-ensemble-compare.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - research/hostile_ensemble_compare.py
+      - .github/workflows/hostile-ensemble-compare.yml
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install numpy pandas numba
+      - run: python -m py_compile research/hostile_ensemble_compare.py
+      - run: PYTHONPATH=. python research/hostile_ensemble_compare.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hostile-ensemble-compare
+          path: results/hostile_ensemble_compare
+          if-no-files-found: error

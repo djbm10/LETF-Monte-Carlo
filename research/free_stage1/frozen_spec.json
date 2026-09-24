@@ -1,5 +1,5 @@
 {
-  "version": "free-pit-stage1-2026-09-23-r4",
+  "version": "free-pit-stage1-2026-09-23-r5",
   "status": "FROZEN_BEFORE_RESULTS",
   "bottleneck": {
     "start": "2009-01-01",
@@ -116,7 +116,7 @@
       "quality": "SEC fcf_margin minus SEC leverage; fall back to operating_margin minus leverage when FCF margin is unavailable",
       "dilution": "negative SEC share_growth_yoy",
       "competitive_scarcity": "SEC Item 1 TF-IDF text_scarcity_raw from latest network snapshot available at formation",
-      "valuation": "negative log(1 + contemporaneous QuantConnect market_cap / SEC as-filed revenue)",
+      "valuation": "negative log(1 + contemporaneous QuantConnect market_cap / annualized SEC as-filed revenue); qtrs=4 revenue used directly, qtrs=1 revenue multiplied by 4; other flow-period lengths are rejected",
       "momentum12": "252-trading-day adjusted-price return",
       "high52": "current adjusted price divided by maximum adjusted price over the latest 252 trading observations"
     }
@@ -192,6 +192,9 @@
     "2026-09-23: switched Bottleneck accounting factor values from QuantConnect/Morningstar financial statements to the SEC as-filed formation-date panel; QuantConnect remains the historical tradable-universe/CIK/market-return engine. This implements the intended SEC -> QuantConnect free-PIT architecture before any return results were observed.",
     "2026-09-23: removed the early-sample 200-day substitute for the 12-month momentum/52-week-high signals; both now require 252 trading observations before a name can be scored.",
     "2026-09-23: Item 1 extraction now preserves only Item 1/1A/1B/2 boundary rows found inside HTML tables and discards other table text, addressing modern inline-XBRL section headings without contaminating the TF-IDF corpus.",
-    "2026-09-23: changed LEAPS execution from same-daily-slice market orders to next-session Market-On-Open orders. Contract selection occurs only after the daily chain is known; execution uses the next session's quote-side open plus frozen slippage. Contract/entry-date state is now set only on confirmed fills."
+    "2026-09-23: changed LEAPS execution from same-daily-slice market orders to next-session Market-On-Open orders. Contract selection occurs only after the daily chain is known; execution uses the next session's quote-side open plus frozen slippage. Contract/entry-date state is now set only on confirmed fills.",
+    "2026-09-23: SEC flow facts are now strict on period length: 10-K/20-F/40-F require qtrs=4 and 10-Q requires qtrs=1. YTD values are not silently substituted for single-quarter flows.",
+    "2026-09-23: valuation now annualizes qtrs=1 SEC revenue by 4 before comparing it with contemporaneous market cap; qtrs=4 annual revenue is used directly. This removes the prior 10-K/10-Q scale mismatch.",
+    "2026-09-23: Bottleneck price history now records every daily fundamental-universe observation before applying today's eligibility screen, and a 252-daily-bar warm-up primes the 2009 start. Momentum no longer measures 252 'eligible days' when liquidity eligibility is intermittent."
   ]
 }

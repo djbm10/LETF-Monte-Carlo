@@ -1,5 +1,5 @@
 {
-  "version": "free-pit-stage1-2026-09-23-r5",
+  "version": "free-pit-stage1-2026-09-23-r6",
   "status": "FROZEN_BEFORE_RESULTS",
   "bottleneck": {
     "start": "2009-01-01",
@@ -168,7 +168,8 @@
       "underlying price/portfolio value/premium budget",
       "actual filled order symbol/direction/quantity/price/fee"
     ],
-    "execution_timing": "select from completed daily chain; submit equity-option Market-On-Open order for the next regular session"
+    "execution_timing": "select from completed daily chain; submit equity-option Market-On-Open order for the next regular session",
+    "roll_execution": "when a roll is due, sell the existing LEAPS at the next regular-session open; select the replacement from that day's completed chain; buy the replacement at the following regular-session open"
   },
   "stage2": {
     "freeze_before_vendor_replication": true,
@@ -195,6 +196,7 @@
     "2026-09-23: changed LEAPS execution from same-daily-slice market orders to next-session Market-On-Open orders. Contract selection occurs only after the daily chain is known; execution uses the next session's quote-side open plus frozen slippage. Contract/entry-date state is now set only on confirmed fills.",
     "2026-09-23: SEC flow facts are now strict on period length: 10-K/20-F/40-F require qtrs=4 and 10-Q requires qtrs=1. YTD values are not silently substituted for single-quarter flows.",
     "2026-09-23: valuation now annualizes qtrs=1 SEC revenue by 4 before comparing it with contemporaneous market cap; qtrs=4 annual revenue is used directly. This removes the prior 10-K/10-Q scale mismatch.",
-    "2026-09-23: Bottleneck price history now records every daily fundamental-universe observation before applying today's eligibility screen, and a 252-daily-bar warm-up primes the 2009 start. Momentum no longer measures 252 'eligible days' when liquidity eligibility is intermittent."
+    "2026-09-23: Bottleneck price history now records every daily fundamental-universe observation before applying today's eligibility screen, and a 252-daily-bar warm-up primes the 2009 start. Momentum no longer measures 252 'eligible days' when liquidity eligibility is intermittent.",
+    "2026-09-23: LEAPS rolls are now sequenced rather than submitting the exit and replacement entry to the same opening auction. The old contract exits next open, the replacement is selected from that day's completed chain, and the new contract enters the following open. This introduces a conservative one-session gap and removes ambiguous buying-power/order sequencing at 100% premium allocation."
   ]
 }

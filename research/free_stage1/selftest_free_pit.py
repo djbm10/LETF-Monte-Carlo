@@ -109,6 +109,23 @@ def test_sec_formation_panel():
     assert q2.revenue == 110.0
     assert (out.information_date <= out.formation_date).all()
 
+
+def test_frozen_source_invariants():
+    bottleneck = (HERE.parent / "quantconnect" / "BottleneckWinnerFreePIT" / "main.py").read_text()
+    leaps = (HERE.parent / "quantconnect" / "RealHistoricalLeaps" / "main.py").read_text()
+
+    # Stage-1 accounting factors must be sourced from the SEC formation panel.
+    assert "fundamentals_url" in bottleneck
+    assert "_sec_fundamental_asof" in bottleneck
+    assert ".financial_statements" not in bottleneck
+    assert "income_statement" not in bottleneck
+
+    # Daily-chain selections must execute on the following session's open,
+    # never as an immediate same-close market order.
+    assert "market_on_open_order" in leaps
+    assert "self.market_order(" not in leaps
+    assert "ENTRY_SELECTION_FOR_NEXT_OPEN" in leaps
+
 def test_sec_fsd():
     sub=pd.DataFrame([{
         "adsh":"0001","cik":"0000320193","name":"Example","form":"10-K",
@@ -162,5 +179,6 @@ if __name__=="__main__":
     test_item1_table_heading()
     test_network()
     test_sec_formation_panel()
+    test_frozen_source_invariants()
     test_sec_fsd()
     print("FREE PIT SELFTEST PASS")

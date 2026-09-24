@@ -18,11 +18,12 @@ class RealHistoricalLeaps(QCAlgorithm):
 
     Execution:
     - daily option-chain / quote data
-    - buy calls with actual available historical contracts
+    - select calls only after the daily chain is known
     - require positive bid/ask and minimum OI
     - target delta and maturity jointly
-    - market orders use quote-side fills through LatestPriceFillModel:
-      ask-side for buys, bid-side for sells, plus configured slippage
+    - submit Market-On-Open orders for the next session, avoiding same-close
+      execution on the quote used to select the contract
+    - LatestPriceFillModel uses next-session quote-side open fills plus configured slippage
     - remaining capital is held in BIL as a T-bill collateral proxy
     - roll every six calendar months or when DTE < 180
 
@@ -70,7 +71,10 @@ class RealHistoricalLeaps(QCAlgorithm):
 
         self.contract = None
         self.entry_date = None
-        self.pending_entry = True
+        self.pending_entry_symbol = None
+        self.pending_entry_order_id = None
+        self.pending_exit_symbol = None
+        self.pending_exit_order_id = None
         self.roll_count = 0
         self.entry_count = 0
         self.no_chain_days = 0
@@ -136,16 +140,22 @@ class RealHistoricalLeaps(QCAlgorithm):
 
         return min(candidates, key=score)[0]
 
-    def _exit_current(self):
-        if self.contract is None:
-            return
-        if self.portfolio[self.contract].invested:
-            self.liquidate(self.contract, tag="LEAPS roll/exit")
-        self.contract = None
-        self.entry_date = None
+    def _queue_exit_current(self):
+        if self.contract is None or not self.portfolio[self.contract].invested:
+            return None
+        qty = -int(self.portfolio[self.contract].quantity)
+        if qty == 0:
+            return None
+        ticket = self.market_on_open_order(
+            self.contract, qty, tag="LEAPS roll/exit next open"
+        )
+        self.pending_exit_symbol = self.contract
+        self.pending_exit_order_id = ticket.order_id
+        return ticket
 
-    def _enter(self, contract):
-        # Explicitly subscribe to selected contract before ordering.
+    def _queue_entry(self, contract):
+        # Subscribe before submitting the next-session MOO order so the fill
+        # model can consume the next daily QuoteBar and use its ask open.
         self.add_option_contract(contract.symbol, Resolution.DAILY)
         security = self.securities[contract.symbol]
         security.set_fill_model(LatestPriceFillModel())
@@ -153,22 +163,23 @@ class RealHistoricalLeaps(QCAlgorithm):
 
         ask = float(contract.ask_price)
         if ask <= 0:
-            return False
+            return None
 
         budget = self.portfolio.total_portfolio_value * self.allocation
         quantity = int(budget // (ask * 100.0))
         if quantity < 1:
-            return False
+            return None
 
-        # Leave a small cushion so modeled slippage/fees don't create accidental leverage.
+        # Cushion is pre-specified execution headroom for overnight price gaps,
+        # slippage, and fees. It is not tuned from backtest outcomes.
         while quantity > 0 and quantity * ask * 100.0 > budget * 0.995:
             quantity -= 1
         if quantity < 1:
-            return False
+            return None
 
         self.selection_audit.append({
             "decision_time": str(self.time),
-            "event": "ENTRY_SELECTION",
+            "event": "ENTRY_SELECTION_FOR_NEXT_OPEN",
             "underlying": str(self.underlying),
             "contract": str(contract.symbol),
             "expiry": str(contract.expiry.date()),
@@ -187,25 +198,28 @@ class RealHistoricalLeaps(QCAlgorithm):
             "allocation": self.allocation,
             "slippage_bps": self.slippage * 10000.0,
         })
-        self.market_order(contract.symbol, quantity, tag="LEAPS entry")
-        self.contract = contract.symbol
-        self.entry_date = self.time.date()
-        self.entry_count += 1
 
-        # Invest non-premium capital in a short-Treasury proxy.
-        if self.allocation < 1.0:
-            self.set_holdings(self.bill, 1.0 - self.allocation, tag="cash collateral proxy")
-        else:
-            if self.portfolio[self.bill].invested:
-                self.liquidate(self.bill)
+        ticket = self.market_on_open_order(
+            contract.symbol, quantity, tag="LEAPS entry next open"
+        )
+        self.pending_entry_symbol = contract.symbol
+        self.pending_entry_order_id = ticket.order_id
+
+        # Re-target the collateral sleeve for the same next-session open.
+        target_bill = 1.0 - self.allocation
+        bill_qty = self.calculate_order_quantity(self.bill, target_bill)
+        if bill_qty:
+            self.market_on_open_order(
+                self.bill, bill_qty, tag="cash collateral proxy next open"
+            )
 
         self.debug(
-            f"{self.time.date()} ENTER {contract.symbol} "
+            f"{self.time.date()} QUEUE {contract.symbol} FOR NEXT OPEN "
             f"dte={(contract.expiry.date()-self.time.date()).days} "
             f"delta={float(contract.greeks.delta):.3f} "
             f"bid={contract.bid_price:.2f} ask={contract.ask_price:.2f} qty={quantity}"
         )
-        return True
+        return ticket
 
     def on_data(self, slice: Slice):
         chain = slice.option_chains.get(self.canonical)
@@ -213,23 +227,49 @@ class RealHistoricalLeaps(QCAlgorithm):
             self.no_chain_days += 1
             return
 
-        if not self._needs_roll():
+        # An entry/exit already scheduled for the next open must resolve before
+        # another daily close can create overlapping orders.
+        if self.pending_entry_order_id is not None or self.pending_exit_order_id is not None:
             return
 
-        if self.contract is not None:
-            self._exit_current()
-            self.roll_count += 1
+        if not self._needs_roll():
+            return
 
         selected = self._select_contract(chain)
         if selected is None:
             self.no_candidate_days += 1
             return
 
-        self._enter(selected)
+        exit_ticket = None
+        if self.contract is not None and self.portfolio[self.contract].invested:
+            exit_ticket = self._queue_exit_current()
+
+        entry_ticket = self._queue_entry(selected)
+        if entry_ticket is None:
+            if exit_ticket is not None:
+                exit_ticket.cancel("replacement entry could not be created")
+                self.pending_exit_symbol = None
+                self.pending_exit_order_id = None
+            self.no_candidate_days += 1
+            return
 
     def on_order_event(self, order_event: OrderEvent):
+        if order_event.status in (OrderStatus.INVALID, OrderStatus.CANCELED):
+            if order_event.order_id == self.pending_entry_order_id:
+                self.pending_entry_symbol = None
+                self.pending_entry_order_id = None
+            if order_event.order_id == self.pending_exit_order_id:
+                self.pending_exit_symbol = None
+                self.pending_exit_order_id = None
+            self.debug(
+                f"{self.time} ORDER_{order_event.status} "
+                f"id={order_event.order_id} symbol={order_event.symbol}"
+            )
+            return
+
         if order_event.status != OrderStatus.FILLED:
             return
+
         fee_amount = float("nan")
         fee_currency = ""
         try:
@@ -247,6 +287,18 @@ class RealHistoricalLeaps(QCAlgorithm):
             "fee_amount": fee_amount,
             "fee_currency": fee_currency,
         })
+
+        if order_event.order_id == self.pending_exit_order_id:
+            self.pending_exit_symbol = None
+            self.pending_exit_order_id = None
+            self.roll_count += 1
+
+        if order_event.order_id == self.pending_entry_order_id:
+            self.contract = self.pending_entry_symbol
+            self.entry_date = self.time.date()
+            self.entry_count += 1
+            self.pending_entry_symbol = None
+            self.pending_entry_order_id = None
 
     def _save_csv(self, stem, rows):
         if not rows:

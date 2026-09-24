@@ -16,6 +16,7 @@ Primary free implementation:
    - accounting factor values are taken from the filing as submitted.
    - SEC filing date is the information timestamp.
    - amended annual/quarterly filings are admitted only from their amendment filing date; earlier formation dates retain the earlier filing.
+   - sparse amendments overlay the prior filing for the same reporting period: changed facts override; unchanged missing facts carry forward.
    - a compact CIK-native formation panel is built before backtesting; every row enforces `information_date <= snapshot_date`.
 2. **SEC EDGAR 10-K Item 1 text**
    - construct a CIK-native TF-IDF competitor network from business descriptions.

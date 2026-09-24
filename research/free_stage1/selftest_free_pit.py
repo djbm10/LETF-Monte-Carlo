@@ -73,6 +73,21 @@ def test_sec_fsd():
     assert r.assets==3500
     assert r.filed==pd.Timestamp("2022-10-28")
 
+    # Regression: CIK must survive YoY derivation across pandas versions.
+    older=c.copy()
+    older["adsh"]="0000"
+    older["filed"]=pd.Timestamp("2021-10-29")
+    older["period"]=pd.Timestamp("2021-09-25")
+    older["revenue"]=900.0
+    older["gross_profit"]=360.0
+    older["shares"]=150.0
+    panel=pd.concat([older,c],ignore_index=True)
+    d=fsd.derive_features(panel)
+    assert "cik" in d.columns
+    assert d.cik.nunique()==1
+    latest=d.sort_values("filed").iloc[-1]
+    assert abs(latest.revenue_growth_yoy-(1000/900-1)) < 1e-12
+
 
 if __name__=="__main__":
     test_network()

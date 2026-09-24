@@ -100,10 +100,23 @@ def load_quarter(zip_path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
         .str.replace("<NA>", "", regex=False)
         .str.zfill(10)
     )
-    sub["filed"] = pd.to_datetime(sub["filed"].astype(str), errors="coerce", format="%Y%m%d")
-    sub["period"] = pd.to_datetime(sub["period"].astype(str), errors="coerce", format="%Y%m%d")
+    # SEC integer-like date fields can be inferred as floats when a quarter
+    # contains blanks (for example "20230930.0"). Converting those directly
+    # to strings makes every such date NaT. Normalize through nullable Int64
+    # first so live files remain parseable across pandas versions.
+    def parse_yyyymmdd(series: pd.Series) -> pd.Series:
+        normalized = (
+            pd.to_numeric(series, errors="coerce")
+            .astype("Int64")
+            .astype(str)
+            .replace("<NA>", np.nan)
+        )
+        return pd.to_datetime(normalized, errors="coerce", format="%Y%m%d")
 
-    num["ddate"] = pd.to_datetime(num["ddate"].astype(str), errors="coerce", format="%Y%m%d")
+    sub["filed"] = parse_yyyymmdd(sub["filed"])
+    sub["period"] = parse_yyyymmdd(sub["period"])
+
+    num["ddate"] = parse_yyyymmdd(num["ddate"])
     num["value"] = pd.to_numeric(num["value"], errors="coerce")
     return sub, num
 
@@ -155,12 +168,23 @@ def canonicalize_quarter(sub: pd.DataFrame, num: pd.DataFrame) -> pd.DataFrame:
 
     merged = n.merge(s, on="adsh", how="inner")
     if merged.empty:
-        return pd.DataFrame()
+        raise ValueError(
+            "SEC canonicalization produced no joined alias facts: "
+            f"sub_rows={len(sub)} kept_forms={len(s)} num_rows={len(num)} "
+            f"alias_rows={len(n)}"
+        )
 
     # Keep facts applying to the filing's principal reporting period as closely as possible.
     # Instantaneous facts should usually match period exactly. Flow facts may start earlier.
     merged["period_gap_days"] = (merged.ddate - merged.period).dt.days.abs()
+    before_period_filter = len(merged)
     merged = merged[merged.period_gap_days <= 10]
+    if merged.empty:
+        raise ValueError(
+            "SEC canonicalization lost every row at principal-period filter: "
+            f"joined_rows={before_period_filter} valid_ddate={int(n.ddate.notna().sum())} "
+            f"valid_period={int(s.period.notna().sum())}"
+        )
 
     rows = []
     group_cols = ["adsh", "cik", "name", "form", "filed", "period"]

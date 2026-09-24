@@ -52,6 +52,7 @@ Use QuantConnect/AlgoSeek US Equity Options:
 - daily option-universe Greeks/IV
 - open interest
 - quote bars so buys/sells incorporate bid/ask
+- select contracts from the completed daily chain and execute with next-session Market-On-Open orders, preventing same-close selection/fill leakage
 
 Frozen LEAPS grid:
 - underlying: SPY and QQQ first
@@ -60,7 +61,7 @@ Frozen LEAPS grid:
 - premium allocation: 25%, 50%, 100%
 - roll every 6 months or when DTE < 180
 - minimum open interest: 100 by default
-- enter with market order only when a valid quote is present; LEAN's option fill model uses ask-side quote data for buys and bid-side for sells when QuoteBars are available
+- select only when a valid quote is present; queue the trade for the next regular-session open; LEAN's LatestPriceFillModel uses the next QuoteBar ask open for buys and bid open for sells, with the frozen slippage sensitivity layered on top
 - benchmarks: underlying buy-and-hold, S9/35-0 research outputs, and later futures
 
 Stage 2 replicates the frozen design on OptionMetrics IvyDB US (1996+) without changing parameters.

@@ -29,6 +29,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install smoke-runner dependency
+        run: pip install requests
+
       - name: Download validated live SEC smoke bundle
         shell: bash
         run: |

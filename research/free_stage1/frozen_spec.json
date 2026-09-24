@@ -36,7 +36,9 @@
       "target_related_pair_density": 0.0205,
       "optional_method": "doc2vec/embedding sensitivity only; must not replace frozen baseline after results",
       "max_item1_age_days": 550,
-      "staleness_rule": "At each formation date, exclude 10-K Item 1 text filed more than 550 days earlier so inactive/dead filers do not persist indefinitely in the competitor cross-section."
+      "staleness_rule": "At each formation date, exclude 10-K Item 1 text filed more than 550 days earlier so inactive/dead filers do not persist indefinitely in the competitor cross-section.",
+      "acquisition_start": "2007-01-01",
+      "formation_start": "2009-03-31"
     },
     "models": {
       "momentum": {
@@ -211,6 +213,7 @@
     "2026-09-23: sparse SEC amendments now overlay the prior filing for the same CIK/form-family/reporting period. Amendment-supplied facts win; missing raw facts carry forward from the earlier filing, while the amendment retains its later information timestamp.",
     "2026-09-23: added a smoke-only min_cross_section parameter. Full Stage-1 runs remain frozen at 20; min_cross_section=10 is permitted only for tiny cloud integration bundles and must not be interpreted as a performance specification.",
     "2026-09-23: fixed Bottleneck network input loader arity so network_object_key and network_url both route through the same validated CSV loader. This is a pre-return integration fix only; no factor, universe, portfolio, cost, or sample parameter changed.",
-    "2026-09-23: added a 550-day maximum age for SEC 10-K Item 1 text at each network formation date. Without a staleness rule, a filer that stopped submitting 10-Ks years earlier could remain in every later competition network and distort scarcity for active firms. This is a pre-return network-universe semantics correction; no factor weight, portfolio size, cost, holdout, or return result changed."
+    "2026-09-23: added a 550-day maximum age for SEC 10-K Item 1 text at each network formation date. Without a staleness rule, a filer that stopped submitting 10-Ks years earlier could remain in every later competition network and distort scarcity for active firms. This is a pre-return network-universe semantics correction; no factor weight, portfolio size, cost, holdout, or return result changed.",
+    "2026-09-23: network filing acquisition now starts in 2007 while portfolio/network formation remains 2009 onward. This supplies the up-to-550-day Item 1 lookback needed for early-2009 snapshots and does not introduce pre-2009 portfolio returns."
   ]
 }

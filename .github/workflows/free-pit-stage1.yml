@@ -35,6 +35,7 @@ jobs:
             research/free_stage1/sec_fsd_pit.py \
             research/free_stage1/sec_formation_features.py \
             research/free_stage1/selftest_free_pit.py \
+            research/free_stage1/quantconnect_cloud_smoke.py \
             research/quantconnect/BottleneckWinnerFreePIT/main.py \
             research/quantconnect/RealHistoricalLeaps/main.py
       - name: Synthetic PIT tests

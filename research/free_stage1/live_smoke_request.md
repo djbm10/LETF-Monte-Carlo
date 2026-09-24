@@ -50,3 +50,7 @@ Final live re-run requested after the sparse-amendment overlay test was correcte
 ## Final exact-head data validation
 
 Re-run requested after sparse-amendment carry-forward CI passed and its semantics were frozen/documented. No research parameters or return outputs changed.
+
+## Stale-filer exclusion exact-head validation
+
+Re-run requested after freezing a 550-day maximum Item 1 filing age at each network formation date. The rule prevents dead/inactive filers from persisting indefinitely in later competitor networks. The 2023-only smoke bundle should be behaviorally unchanged, but this exact-head run validates the corrected full-build semantics before any return analysis.

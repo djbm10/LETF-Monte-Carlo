@@ -268,10 +268,20 @@ def fetch_item1_rows(
     return pd.DataFrame(rows)
 
 
-def latest_asof(filings: pd.DataFrame, formation_date: pd.Timestamp) -> pd.DataFrame:
+def latest_asof(
+    filings: pd.DataFrame,
+    formation_date: pd.Timestamp,
+    max_age_days: int = 550,
+) -> pd.DataFrame:
     f = filings.copy()
     f["filing_date"] = pd.to_datetime(f.filing_date)
-    f = f[(f.filing_date <= formation_date) & f.item1.notna() & (f.word_count >= 250)]
+    min_filing_date = formation_date - pd.Timedelta(days=max_age_days)
+    f = f[
+        (f.filing_date <= formation_date)
+        & (f.filing_date >= min_filing_date)
+        & f.item1.notna()
+        & (f.word_count >= 250)
+    ]
     if f.empty:
         return f
     return (
@@ -417,6 +427,12 @@ def main() -> None:
     ap.add_argument("--max-filings", type=int)
     ap.add_argument("--formation-dates")
     ap.add_argument("--pair-density", type=float, default=DEFAULT_PAIR_DENSITY)
+    ap.add_argument(
+        "--max-item1-age-days",
+        type=int,
+        default=550,
+        help="Exclude stale 10-K business descriptions older than this at formation.",
+    )
     ap.add_argument("--rps", type=float, default=4.0)
     ap.add_argument("--out", type=Path, default=Path("results/free_stage1/sec_item1_network"))
     args = ap.parse_args()
@@ -446,7 +462,11 @@ def main() -> None:
     all_metrics = []
     if args.formation_dates:
         for fd in parse_formation_dates(args.formation_dates):
-            sample = latest_asof(filings, fd)
+            sample = latest_asof(
+                filings,
+                fd,
+                max_age_days=args.max_item1_age_days,
+            )
             if len(sample) < 10:
                 print(f"{fd.date()}: only {len(sample)} firms; skipping network")
                 continue
@@ -471,12 +491,14 @@ def main() -> None:
         "item1_rows": int(len(filings)),
         "item1_success": int(filings.item1.notna().sum()),
         "pair_density_default": DEFAULT_PAIR_DENSITY,
+        "max_item1_age_days": int(args.max_item1_age_days),
         "network_runs": manifests,
         "evidence_label": "FREE_DISCOVERY",
         "warnings": [
             "Item 1 extraction is heuristic and must be quality-audited on a stratified sample.",
             "This is a CIK-native TNIC-like free clone, not the published Hoberg-Phillips TNIC/ETNIC dataset.",
             "Do not use a filing before its filing_date.",
+            "Exclude Item 1 descriptions older than max_item1_age_days so inactive/dead filers do not persist indefinitely in later networks.",
         ],
     }
     (args.out / "manifest.json").write_text(json.dumps(manifest, indent=2))

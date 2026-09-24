@@ -10,3 +10,8 @@ Requested: 2026-09-23.
 ## Revalidation
 
 Re-run requested after preserving table text in Item 1 extraction to close known coverage holes in modern inline-XBRL 10-Ks (Amazon/Verizon/Exxon in the prior 18-name smoke). No research specification or portfolio parameter changed.
+
+
+## Boundary-only table preservation
+
+Re-run requested after narrowing the Item 1 parser fix: preserve only table rows containing Item 1/1A/1B/2 boundaries, while continuing to discard other table text from the TF-IDF corpus. This is a pre-return data-extraction correction only; no research or portfolio parameter changed.

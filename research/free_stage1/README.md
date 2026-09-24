@@ -60,6 +60,7 @@ Frozen LEAPS grid:
 - target DTE: 365, 548, 730
 - premium allocation: 25%, 50%, 100%
 - roll every 6 months or when DTE < 180
+- roll sequencing is conservative: sell the old LEAPS at the next open, choose the replacement from that day's completed chain, and buy it at the following open (one-session gap)
 - minimum open interest: 100 by default
 - select only when a valid quote is present; queue the trade for the next regular-session open; LEAN's LatestPriceFillModel uses the next QuoteBar ask open for buys and bid open for sells, with the frozen slippage sensitivity layered on top
 - benchmarks: underlying buy-and-hold, S9/35-0 research outputs, and later futures

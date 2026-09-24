@@ -135,7 +135,21 @@
       5,
       10
     ],
-    "evidence_label": "FREE_DISCOVERY"
+    "evidence_label": "FREE_DISCOVERY",
+    "cost_model": {
+      "bid_ask": "LatestPriceFillModel using quote-side fills",
+      "brokerage_fees": "Interactive Brokers brokerage model retained",
+      "additional_slippage_bps_sensitivity": [
+        0,
+        5,
+        10
+      ]
+    },
+    "audit_output": [
+      "selected contract/expiry/strike/DTE/delta/bid/ask/open_interest/quantity",
+      "underlying price/portfolio value/premium budget",
+      "actual filled order symbol/direction/quantity/price/fee"
+    ]
   },
   "stage2": {
     "freeze_before_vendor_replication": true,
@@ -154,6 +168,7 @@
     "2026-09-23: removed undocumented utilities/financials SIC exclusions from QuantConnect Bottleneck universe; frozen universe has no sector exclusion.",
     "2026-09-23: specified 15 bps one-way equity transaction cost as all-in ConstantSlippageModel execution drag per buy/sell side with zero separate commission for the Bottleneck tournament.",
     "2026-09-23: specified quarterly formation as the first trading day of Jan/Apr/Jul/Oct in the daily QuantConnect implementation.",
-    "2026-09-23: required per-rebalance selected-name/signal audit export to Object Store."
+    "2026-09-23: required per-rebalance selected-name/signal audit export to Object Store.",
+    "2026-09-23: LEAPS security initialization changed from replacement to additive initialization so IBKR brokerage fee/buying-power/settlement defaults are preserved while 0/5/10 bps option slippage is layered on top; selection and actual fill audits are persisted."
   ]
 }

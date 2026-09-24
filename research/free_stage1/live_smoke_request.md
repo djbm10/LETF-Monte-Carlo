@@ -15,3 +15,8 @@ Re-run requested after preserving table text in Item 1 extraction to close known
 ## Boundary-only table preservation
 
 Re-run requested after narrowing the Item 1 parser fix: preserve only table rows containing Item 1/1A/1B/2 boundaries, while continuing to discard other table text from the TF-IDF corpus. This is a pre-return data-extraction correction only; no research or portfolio parameter changed.
+
+
+## SEC-first final pre-return revalidation
+
+Re-run requested after the SEC formation-feature builder, SEC-first Bottleneck scoring integration, exact 252-observation momentum rule, and corrected boundary-row regex all passed synthetic CI. This validates the live acquisition layer on the same code generation before any backtest returns are inspected.

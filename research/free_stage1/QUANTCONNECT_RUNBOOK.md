@@ -43,6 +43,14 @@ Make `sec_formation_features.csv` available to the QuantConnect Bottleneck proje
 
 Accounting factor values come from this SEC file. Do not substitute Morningstar financial-statement values for the frozen Stage-1 scoring run.
 
+SEC flow-period invariant:
+- annual filings use only qtrs=4 flow facts
+- quarterly filings use only qtrs=1 flow facts
+- valuation annualizes qtrs=1 revenue by 4 and uses qtrs=4 revenue directly
+- other flow-period lengths are treated as missing, not silently substituted
+
+The Bottleneck algorithm also runs a 252-daily-bar warm-up before 2009-01-01 and records price history before applying the current-day eligibility screen.
+
 ## Network data
 
 Generate CIK-native network data from SEC filings with:

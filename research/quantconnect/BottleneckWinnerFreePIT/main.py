@@ -33,6 +33,7 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
         top_n=10|20|40
         start=2009-01-01
         end=2023-12-31
+        min_cross_section=20  # frozen full-run default; may be 10 for tiny smoke bundles only
     """
 
     MODEL_WEIGHTS = {
@@ -83,6 +84,9 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
         self.top_n = int(self.get_parameter("top_n") or "20")
         if self.top_n not in (10, 20, 40):
             raise ValueError("top_n must be 10, 20, or 40")
+        self.min_cross_section = int(self.get_parameter("min_cross_section") or "20")
+        if self.min_cross_section < 10:
+            raise ValueError("min_cross_section must be >= 10")
 
         self.sec_fundamentals = self._load_sec_fundamentals(
             self.get_parameter("fundamentals_url"),
@@ -128,6 +132,7 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
 
         self.debug(
             f"FREE_DISCOVERY model={self.model_name} top_n={self.top_n} "
+            f"min_cross_section={self.min_cross_section} "
             f"sec_fund_rows={sum(len(v) for v in self.sec_fundamentals.values())} "
             f"network_rows={sum(len(v) for v in self.network.values())}"
         )
@@ -404,10 +409,9 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
 
     # ---------- Ranking ----------
 
-    @staticmethod
-    def _winsor_z(rows, feature):
+    def _winsor_z(self, rows, feature):
         vals = [(i, r[feature]) for i, r in enumerate(rows) if math.isfinite(r.get(feature, float("nan")))]
-        if len(vals) < 20:
+        if len(vals) < self.min_cross_section:
             return {}
         raw = sorted(v for _, v in vals)
         lo = raw[max(0, int(0.01 * (len(raw) - 1)))]

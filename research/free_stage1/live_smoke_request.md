@@ -20,3 +20,8 @@ Re-run requested after narrowing the Item 1 parser fix: preserve only table rows
 ## SEC-first final pre-return revalidation
 
 Re-run requested after the SEC formation-feature builder, SEC-first Bottleneck scoring integration, exact 252-observation momentum rule, and corrected boundary-row regex all passed synthetic CI. This validates the live acquisition layer on the same code generation before any backtest returns are inspected.
+
+
+## Formation-feature live gate
+
+Re-run requested after extending the live FSD smoke to two Q4 filing vintages and asserting real non-null SEC YoY revenue-growth features in the compact formation panel.

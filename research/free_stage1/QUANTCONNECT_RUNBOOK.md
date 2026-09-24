@@ -13,6 +13,36 @@ Create two QuantConnect Cloud projects using the repo code:
 
 Do not modify factor weights, sample windows, portfolio sizes, delta targets, DTE targets, allocations, minimum OI, or slippage scenarios after seeing results.
 
+## SEC fundamentals data
+
+Build the full SEC as-filed panel, then compress it to prior-quarter-end CIK snapshots:
+
+```bash
+export SEC_USER_AGENT="Douglas research contact@example.com"
+python research/free_stage1/sec_fsd_pit.py \
+  --start-year 2009 \
+  --end-year 2023 \
+  --out results/free_stage1/sec_fundamentals
+
+python research/free_stage1/sec_formation_features.py \
+  --input results/free_stage1/sec_fundamentals/sec_pit_fundamentals.parquet \
+  --formation-dates "$(python - <<'PY'
+import pandas as pd
+d=pd.date_range('2009-03-31','2023-12-31',freq='QE')
+print(','.join(x.strftime('%Y-%m-%d') for x in d))
+PY
+)" \
+  --out results/free_stage1/sec_fundamentals/sec_formation_features.csv
+```
+
+The prior-quarter-end snapshot is consumed at the next Jan/Apr/Jul/Oct first-trading-day rebalance. This deliberately excludes filings dated on the rebalance day because SEC bulk filing dates do not provide a reliable before-open/after-close timestamp.
+
+Make `sec_formation_features.csv` available to the QuantConnect Bottleneck project and set:
+
+`fundamentals_url=<location>`
+
+Accounting factor values come from this SEC file. Do not substitute Morningstar financial-statement values for the frozen Stage-1 scoring run.
+
 ## Network data
 
 Generate CIK-native network data from SEC filings with:
@@ -38,6 +68,8 @@ The combined output is:
 Make this file available to the QuantConnect project either via an authorized object-store/upload workflow or a stable URL under your control. Set project parameter:
 
 `network_url=<location>`
+
+For Bottleneck models, both `fundamentals_url` and `network_url` must be populated. Pure momentum does not require either SEC factor file.
 
 Never substitute a current-ticker CIK↔GVKEY match.
 

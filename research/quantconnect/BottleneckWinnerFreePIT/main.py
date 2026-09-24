@@ -80,6 +80,14 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
 
         self.network = self._load_network(self.get_parameter("network_url"))
         self.price_history = defaultdict(lambda: deque(maxlen=270))
+        self.audit_rows = []
+        self.one_way_cost_bps = 15.0
+
+        # Frozen tournament cost convention: 15 bps all-in execution drag on
+        # every buy/sell side, with no separate commission. Add (rather than
+        # replace) an initializer so LEAN's other brokerage reality models
+        # remain intact.
+        self.add_security_initializer(self._initialize_security_costs)
         self.quarter_history = defaultdict(lambda: deque(maxlen=8))
         self._last_qkey = None
         self._pending_targets = []
@@ -105,6 +113,11 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
             f"FREE_DISCOVERY model={self.model_name} top_n={self.top_n} "
             f"network_rows={sum(len(v) for v in self.network.values())}"
         )
+
+    def _initialize_security_costs(self, security):
+        if security.type == SecurityType.EQUITY:
+            security.set_fee_model(ConstantFeeModel(0, "USD"))
+            security.set_slippage_model(ConstantSlippageModel(self.one_way_cost_bps / 10_000.0))
 
     # ---------- Network ----------
 
@@ -177,9 +190,9 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
                 return False
             if sr.exchange_id not in ("NYS", "NAS", "ASE"):
                 return False
-            sic = int(f.asset_classification.sic)
-            if 4900 <= sic <= 4999 or 6000 <= sic <= 6999:
-                return False
+            # No sector/SIC exclusions are part of the frozen Stage-1 universe.
+            # Names with missing factor inputs are removed later by the scoring
+            # completeness rule, not by an undocumented industry filter.
             return True
         except Exception:
             return False
@@ -368,6 +381,26 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
 
         scored = self._score(rows)
         selected = scored[: self.top_n]
+
+        for rank, (score, row) in enumerate(selected, 1):
+            audit = {
+                "formation_date": str(self.time.date()),
+                "model": self.model_name,
+                "top_n": self.top_n,
+                "eligible_count": len(eligible),
+                "feature_complete_count": len(rows),
+                "scored_count": len(scored),
+                "rank": rank,
+                "score": score,
+                "symbol": str(row["symbol"]),
+                "cik": row.get("cik"),
+            }
+            for feature in self.MODEL_WEIGHTS[self.model_name]:
+                audit[feature] = row.get(feature)
+            audit["market_cap"] = row.get("market_cap")
+            audit["fund_file_date"] = row.get("fund_file_date")
+            self.audit_rows.append(audit)
+
         self._pending_targets = [r["symbol"] for _, r in selected]
         self._latest_scores = {r["symbol"]: s for s, r in selected}
         self._latest_feature_rows = {r["symbol"]: r for _, r in selected}
@@ -406,6 +439,20 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
         self._pending_targets = []
 
     def on_end_of_algorithm(self):
+        key = (
+            f"{self.project_id}/free_stage1/"
+            f"bottleneck_{self.model_name}_top{self.top_n}_{self.algorithm_id}.csv"
+        )
+        saved = False
+        if self.audit_rows:
+            fields = list(self.audit_rows[0].keys())
+            buf = io.StringIO()
+            writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(self.audit_rows)
+            saved = self.object_store.save(key, buf.getvalue())
         self.log(
-            f"EVIDENCE_LABEL=FREE_DISCOVERY model={self.model_name} top_n={self.top_n}"
+            f"EVIDENCE_LABEL=FREE_DISCOVERY model={self.model_name} top_n={self.top_n} "
+            f"one_way_cost_bps={self.one_way_cost_bps:.1f} "
+            f"audit_rows={len(self.audit_rows)} audit_saved={saved} audit_key={key}"
         )

@@ -420,7 +420,10 @@ def parse_formation_dates(s: str) -> list[pd.Timestamp]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--start-year", type=int, default=2009)
+    # Network formation begins in 2009, but the latest valid 10-K at
+    # 2009-03-31 can have been filed in late 2007/2008. Keep a filing-acquisition
+    # warm-up separate from the portfolio sample start.
+    ap.add_argument("--start-year", type=int, default=2007)
     ap.add_argument("--end-year", type=int, default=2023)
     ap.add_argument("--forms", default="10-K")
     ap.add_argument("--ciks", default="")

@@ -25,3 +25,8 @@ Re-run requested after the SEC formation-feature builder, SEC-first Bottleneck s
 ## Formation-feature live gate
 
 Re-run requested after extending the live FSD smoke to two Q4 filing vintages and asserting real non-null SEC YoY revenue-growth features in the compact formation panel.
+
+
+## Final strict-period gate
+
+Re-run requested after enforcing exact SEC flow-period comparability (10-Q qtrs=1, annual qtrs=4), annualizing quarterly revenue for valuation, and fixing 252-day price-history warm-up semantics. This remains pre-return validation; no backtest return surface has been inspected.

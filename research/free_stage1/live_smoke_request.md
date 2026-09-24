@@ -35,3 +35,8 @@ Re-run requested after enforcing exact SEC flow-period comparability (10-Q qtrs=
 ## Amendment-aware final gate
 
 Final re-run requested after adding amendment-aware SEC PIT handling plus strict flow-period selection, annualized valuation revenue, and corrected momentum warm-up. This is the final acquisition/data-semantics gate before QuantConnect cloud smoke runs; no return results have been inspected.
+
+
+## Amendment provenance regression fixed
+
+Re-run requested after the amendment PIT regression test exposed and fixed missing amendment provenance in canonical SEC rows. Synthetic CI is now green on the corrected code.

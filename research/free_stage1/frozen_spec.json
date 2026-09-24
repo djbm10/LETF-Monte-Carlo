@@ -1,5 +1,5 @@
 {
-  "version": "free-pit-stage1-2026-09-22-r2",
+  "version": "free-pit-stage1-2026-09-23-r3",
   "status": "FROZEN_BEFORE_RESULTS",
   "bottleneck": {
     "start": "2009-01-01",
@@ -101,7 +101,25 @@
       "model_signal_components",
       "market_cap",
       "fund_file_date"
-    ]
+    ],
+    "fundamentals": {
+      "source": "SEC Financial Statement Data Sets / XBRL as filed",
+      "id": "CIK",
+      "information_timestamp": "SEC filed date",
+      "formation_rule": "latest eligible filing with information_date <= formation_date",
+      "quantconnect_role": "historical tradable universe, point-in-time CIK mapping, market prices/returns, and contemporaneous market cap only; accounting factor values come from SEC",
+      "file": "sec_formation_features.csv"
+    },
+    "factor_definitions": {
+      "demand_accel": "legacy frozen field name; SEC as-filed revenue_growth_yoy for the latest filing available at formation",
+      "pricing_power": "SEC gross_margin_change_yoy; fall back to operating_margin_change_yoy when gross-margin change is unavailable",
+      "quality": "SEC fcf_margin minus SEC leverage; fall back to operating_margin minus leverage when FCF margin is unavailable",
+      "dilution": "negative SEC share_growth_yoy",
+      "competitive_scarcity": "SEC Item 1 TF-IDF text_scarcity_raw from latest network snapshot available at formation",
+      "valuation": "negative log(1 + contemporaneous QuantConnect market_cap / SEC as-filed revenue)",
+      "momentum12": "252-trading-day adjusted-price return",
+      "high52": "current adjusted price divided by maximum adjusted price over the latest 252 trading observations"
+    }
   },
   "leaps": {
     "start": "2012-01-01",
@@ -169,6 +187,9 @@
     "2026-09-23: specified 15 bps one-way equity transaction cost as all-in ConstantSlippageModel execution drag per buy/sell side with zero separate commission for the Bottleneck tournament.",
     "2026-09-23: specified quarterly formation as the first trading day of Jan/Apr/Jul/Oct in the daily QuantConnect implementation.",
     "2026-09-23: required per-rebalance selected-name/signal audit export to Object Store.",
-    "2026-09-23: LEAPS security initialization changed from replacement to additive initialization so IBKR brokerage fee/buying-power/settlement defaults are preserved while 0/5/10 bps option slippage is layered on top; selection and actual fill audits are persisted."
+    "2026-09-23: LEAPS security initialization changed from replacement to additive initialization so IBKR brokerage fee/buying-power/settlement defaults are preserved while 0/5/10 bps option slippage is layered on top; selection and actual fill audits are persisted.",
+    "2026-09-23: switched Bottleneck accounting factor values from QuantConnect/Morningstar financial statements to the SEC as-filed formation-date panel; QuantConnect remains the historical tradable-universe/CIK/market-return engine. This implements the intended SEC -> QuantConnect free-PIT architecture before any return results were observed.",
+    "2026-09-23: removed the early-sample 200-day substitute for the 12-month momentum/52-week-high signals; both now require 252 trading observations before a name can be scored.",
+    "2026-09-23: Item 1 extraction now preserves only Item 1/1A/1B/2 boundary rows found inside HTML tables and discards other table text, addressing modern inline-XBRL section headings without contaminating the TF-IDF corpus."
   ]
 }

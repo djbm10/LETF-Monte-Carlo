@@ -12,31 +12,31 @@ The discovery phase should not depend on CRSP/Compustat/IvyDB licenses. We can d
 
 Primary free implementation:
 
-1. **QuantConnect US Equities + Security Master**
-   - survivorship-aware/security-master handling for ticker changes, splits, dividends, mergers and delistings.
-   - historical US equity data available in QuantConnect Cloud.
-2. **QuantConnect Morningstar US Fundamentals**
-   - historical corporate fundamentals in cloud.
-   - use only values available at the algorithm date.
-   - originally reported observations; no future restatement substitution.
-3. **SEC EDGAR 10-K Item 1 text**
-   - use filing date as the information timestamp.
-   - construct a CIK-native text-similarity competitor network from Item 1 business descriptions.
+1. **SEC Financial Statement Data Sets / XBRL**
+   - accounting factor values are taken from the filing as submitted.
+   - SEC filing date is the information timestamp.
+   - a compact CIK-native formation panel is built before backtesting; every row enforces `information_date <= snapshot_date`.
+2. **SEC EDGAR 10-K Item 1 text**
+   - construct a CIK-native TF-IDF competitor network from business descriptions.
+   - use only the latest 10-K public by the network snapshot date.
+3. **QuantConnect US Equities + Security Master / PIT universe**
+   - supplies the historical tradable universe, point-in-time CIK identity, prices, corporate-action handling and returns, including delisted names.
+   - contemporaneous market cap is used only as a market input for the valuation ratio; accounting denominators remain SEC as-filed.
 4. **QuantConnect Symbol.CIK**
-   - bridges the CIK-native SEC network directly to point-in-time tradable securities inside LEAN.
+   - bridges both SEC datasets directly to point-in-time tradable securities inside LEAN.
 
 This intentionally avoids needing a free CIK↔GVKEY map.
 
-### B. Independent SEC fundamentals replica
+### B. SEC fundamentals are the primary Stage-1 accounting source
 
-For 2009 onward, build a second free fundamentals panel from SEC Financial Statement Data Sets / XBRL:
-- as-filed numeric facts
-- CIK
-- filing date
-- fiscal period
-- no observation may enter a portfolio before filing date
+For 2009 onward, `sec_fsd_pit.py` builds the filing-level as-filed panel and
+`sec_formation_features.py` compresses it into quarterly CIK snapshots. The
+Bottleneck algorithm does not use Morningstar financial-statement values for
+factor scoring. QuantConnect is the market/universe engine.
 
-This is an independent audit of the QuantConnect/Morningstar version, not a replacement for it.
+Quarterly SEC/network snapshots use prior-quarter-end cutoffs and are consumed
+at the next Jan/Apr/Jul/Oct rebalance. This avoids treating a same-day SEC filing
+as if it were known before the market opened.
 
 ### C. Published TNIC/ETNIC role
 
@@ -71,13 +71,13 @@ The score must be computable using information known at the formation date.
 
 Candidate components:
 
-- **Demand acceleration:** revenue growth and acceleration
-- **Pricing power:** gross/operating margin level and improvement
-- **Quality:** operating cash flow / free cash flow, profitability, leverage
+- **Demand signal (`demand_accel` legacy field name):** SEC as-filed YoY revenue growth
+- **Pricing power:** SEC YoY gross-margin improvement, with operating-margin improvement as fallback
+- **Quality:** SEC FCF margin minus leverage, with operating margin minus leverage as fallback
 - **Supply scarcity / competitive scarcity:** CIK-native Item 1 text network concentration and peer count
-- **Momentum:** 6–12 month price momentum and 52-week-high proximity
-- **Dilution:** share-count growth penalty
-- **Valuation sanity:** enterprise value / sales or earnings/FCF where available
+- **Momentum:** 252-trading-day price momentum and 52-week-high proximity
+- **Dilution:** negative SEC YoY share-count growth
+- **Valuation sanity:** contemporaneous market cap / SEC as-filed revenue
 
 Frozen model families:
 1. momentum

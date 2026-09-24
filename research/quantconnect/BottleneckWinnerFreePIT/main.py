@@ -108,6 +108,11 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
         self.universe_settings.data_normalization_mode = DataNormalizationMode.ADJUSTED
         self.add_universe(self._select_fundamentals)
 
+        # Prime one trading year of adjusted-price history before 2009-01-01.
+        # Universe selection runs during warm-up, so _select_fundamentals can
+        # populate price_history without placing trades.
+        self.set_warm_up(252, Resolution.DAILY)
+
         # Rebalance after universe selection at the market open.
         self.schedule.on(
             self.date_rules.every_day(),
@@ -157,6 +162,7 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
                     {
                         "information_date": information_date,
                         "revenue": self._float(row.get("revenue")),
+                        "revenue_qtrs": self._float(row.get("revenue_qtrs")),
                         "gross_margin": self._float(row.get("gross_margin")),
                         "operating_margin": self._float(row.get("operating_margin")),
                         "fcf_margin": self._float(row.get("fcf_margin")),
@@ -324,11 +330,19 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
                 else float("nan")
             )
 
-            # Valuation uses a contemporaneous market value divided by the SEC
-            # as-filed revenue figure. Market cap is market data at algorithm
-            # time; the accounting denominator is filing-date gated.
+            # Put 10-K and 10-Q revenue on the same scale before using it
+            # in valuation. SEC qtrs=4 is annual; qtrs=1 is one quarter, so
+            # annualize the latter by 4. This is PIT and internally comparable,
+            # though still intentionally simpler than a full TTM reconstruction.
             market_cap = self._float(f.market_cap)
-            sales_multiple = self._safe_div(market_cap, sec["revenue"])
+            revenue_qtrs = sec["revenue_qtrs"]
+            annualized_revenue = float("nan")
+            if math.isfinite(sec["revenue"]) and math.isfinite(revenue_qtrs):
+                if int(revenue_qtrs) == 4:
+                    annualized_revenue = sec["revenue"]
+                elif int(revenue_qtrs) == 1:
+                    annualized_revenue = sec["revenue"] * 4.0
+            sales_multiple = self._safe_div(market_cap, annualized_revenue)
             valuation = (
                 -math.log1p(max(sales_multiple, 0))
                 if math.isfinite(sales_multiple)
@@ -405,10 +419,17 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
     def _select_fundamentals(self, fundamentals):
         eligible = []
         for f in fundamentals:
-            if not self._eligible(f):
-                continue
+            # Price history must be calendar/trading-day history, not "days the
+            # stock happened to pass today's liquidity screen".
             self._update_price(f)
-            eligible.append(f)
+            if self._eligible(f):
+                eligible.append(f)
+
+        # Warm-up is used only to prime trailing price history. Universe
+        # selection still streams fundamentals during warm-up, but no portfolio
+        # state or rebalance key should advance before the official start date.
+        if self.is_warming_up:
+            return Universe.UNCHANGED
 
         if not self._is_rebalance_window():
             return Universe.UNCHANGED

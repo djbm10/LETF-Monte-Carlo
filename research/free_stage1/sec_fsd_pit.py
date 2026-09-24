@@ -213,56 +213,90 @@ def canonicalize_quarter(sub: pd.DataFrame, num: pd.DataFrame) -> pd.DataFrame:
 
 
 def derive_features(panel: pd.DataFrame) -> pd.DataFrame:
-    x = panel.copy().sort_values(["cik", "filed", "period"])
-    # Use filing sequence, not period sequence alone.
-    g = x.groupby("cik", group_keys=False)
+    x = panel.copy().sort_values(["cik", "filed", "period"]).reset_index(drop=True)
     x["gross_margin"] = x.gross_profit / x.revenue.replace(0, np.nan)
     x["operating_margin"] = x.operating_income / x.revenue.replace(0, np.nan)
     x["fcf"] = x.operating_cash_flow - x.capex.abs()
     x["fcf_margin"] = x.fcf / x.revenue.replace(0, np.nan)
     x["leverage"] = x.liabilities / x.assets.replace(0, np.nan)
 
-    # Approximate YoY by matching filings ~1 year earlier for same form/fp.
-    def add_yoy(group: pd.DataFrame) -> pd.DataFrame:
-        group = group.sort_values("filed").copy()
-        for metric in ["revenue", "gross_margin", "operating_margin", "shares", "assets"]:
-            vals = []
-            for r in group.itertuples():
-                prior = group[
-                    (group.filed <= r.filed - pd.Timedelta(days=300))
-                    & (group.filed >= r.filed - pd.Timedelta(days=450))
-                    & (group.form == r.form)
-                ]
-                if hasattr(r, "fp") and "fp" in group and pd.notna(r.fp):
-                    same = prior[prior.fp == r.fp]
-                    if len(same):
-                        prior = same
-                if prior.empty:
-                    vals.append(np.nan)
-                    continue
-                p = prior.iloc[-1][metric]
-                cur = getattr(r, metric)
-                if metric in ("gross_margin", "operating_margin"):
-                    vals.append(cur - p if pd.notna(cur) and pd.notna(p) else np.nan)
-                else:
-                    vals.append(cur / p - 1 if pd.notna(cur) and pd.notna(p) and p != 0 else np.nan)
-            name = {
-                "revenue": "revenue_growth_yoy",
-                "gross_margin": "gross_margin_change_yoy",
-                "operating_margin": "operating_margin_change_yoy",
-                "shares": "share_growth_yoy",
-                "assets": "asset_growth_yoy",
-            }[metric]
-            group[name] = vals
-        return group
+    # Point-in-time YoY matching, vectorized:
+    # for each current filing, choose the latest same-form filing that was
+    # filed 300-450 days earlier; if an FP value is present and a same-FP
+    # candidate exists, prefer that candidate. This preserves the original
+    # matching rule without an O(rows-per-CIK^2) Python loop.
+    metrics = ["revenue", "gross_margin", "operating_margin", "shares", "assets"]
+    x["_row_id"] = np.arange(len(x))
+    x["_target_prior_date"] = x["filed"] - pd.Timedelta(days=300)
 
-    # Avoid pandas groupby.apply grouping-column behavior changes: some
-    # versions drop the grouping key from the returned frame. Preserve CIK
-    # explicitly by processing each group and concatenating the original rows.
-    grouped = [add_yoy(group.copy()) for _, group in x.groupby("cik", sort=False, dropna=False)]
-    x = pd.concat(grouped, ignore_index=True) if grouped else x.iloc[0:0].copy()
-    if "cik" not in x.columns:
-        raise RuntimeError("CIK was lost during YoY feature derivation")
+    def lookup(keys: list[str], left: pd.DataFrame) -> pd.DataFrame:
+        left_cols = ["_row_id", "_target_prior_date", *keys]
+        l = left[left_cols].dropna(subset=["_target_prior_date", *keys]).copy()
+        right_cols = [*keys, "filed", *metrics]
+        r = x[right_cols].dropna(subset=["filed", *keys]).copy()
+        rename = {"filed": "prior_filed", **{m: f"prior_{m}" for m in metrics}}
+        r = r.rename(columns=rename)
+        if l.empty or r.empty:
+            return pd.DataFrame(index=pd.Index([], name="_row_id"))
+        # merge_asof requires global sorting by the time key even when BY keys
+        # are also supplied.
+        l = l.sort_values("_target_prior_date")
+        r = r.sort_values("prior_filed")
+        out = pd.merge_asof(
+            l,
+            r,
+            left_on="_target_prior_date",
+            right_on="prior_filed",
+            by=keys,
+            direction="backward",
+            tolerance=pd.Timedelta(days=150),
+            allow_exact_matches=True,
+        )
+        return out.set_index("_row_id")
+
+    fallback = lookup(["cik", "form"], x)
+    if "fp" in x.columns:
+        same_fp = lookup(["cik", "form", "fp"], x[x["fp"].notna()])
+    else:
+        same_fp = pd.DataFrame(index=pd.Index([], name="_row_id"))
+
+    row_ids = pd.Index(x["_row_id"], name="_row_id")
+    fallback = fallback.reindex(row_ids)
+    same_fp = same_fp.reindex(row_ids)
+    prefer_same = (
+        same_fp["prior_filed"].notna()
+        if "prior_filed" in same_fp.columns
+        else pd.Series(False, index=row_ids)
+    )
+
+    names = {
+        "revenue": "revenue_growth_yoy",
+        "gross_margin": "gross_margin_change_yoy",
+        "operating_margin": "operating_margin_change_yoy",
+        "shares": "share_growth_yoy",
+        "assets": "asset_growth_yoy",
+    }
+    for metric in metrics:
+        fallback_prior = (
+            fallback[f"prior_{metric}"]
+            if f"prior_{metric}" in fallback.columns
+            else pd.Series(np.nan, index=row_ids)
+        )
+        same_prior = (
+            same_fp[f"prior_{metric}"]
+            if f"prior_{metric}" in same_fp.columns
+            else pd.Series(np.nan, index=row_ids)
+        )
+        prior = fallback_prior.copy()
+        prior.loc[prefer_same] = same_prior.loc[prefer_same]
+        cur = x.set_index("_row_id")[metric]
+        if metric in ("gross_margin", "operating_margin"):
+            out = cur - prior
+        else:
+            out = cur / prior.replace(0, np.nan) - 1
+        x[names[metric]] = out.reindex(row_ids).to_numpy()
+
+    x = x.drop(columns=["_row_id", "_target_prior_date"])
     x["evidence_label"] = "FREE_DISCOVERY"
     x["information_date"] = x["filed"]
     return x

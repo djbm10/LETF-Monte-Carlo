@@ -30,3 +30,8 @@ Re-run requested after extending the live FSD smoke to two Q4 filing vintages an
 ## Final strict-period gate
 
 Re-run requested after enforcing exact SEC flow-period comparability (10-Q qtrs=1, annual qtrs=4), annualizing quarterly revenue for valuation, and fixing 252-day price-history warm-up semantics. This remains pre-return validation; no backtest return surface has been inspected.
+
+
+## Amendment-aware final gate
+
+Final re-run requested after adding amendment-aware SEC PIT handling plus strict flow-period selection, annualized valuation revenue, and corrected momentum warm-up. This is the final acquisition/data-semantics gate before QuantConnect cloud smoke runs; no return results have been inspected.

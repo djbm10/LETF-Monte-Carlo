@@ -227,16 +227,17 @@ class BottleneckWinnerFreePIT(QCAlgorithm):
 
     # ---------- Network ----------
 
-    def _load_network(self, url):
+    def _load_network(self, url, object_key):
         # cik -> sorted list of (formation_date, metrics)
         out = defaultdict(list)
-        if not url:
-            if self.model_name.startswith("bottleneck"):
-                self.debug("No network_url supplied; bottleneck features will be missing.")
-            return out
-        raw = self.download(url)
+        raw = self._load_csv_text(url, object_key, "network")
         if not raw:
-            raise ValueError("network_url returned empty content")
+            if self.model_name.startswith("bottleneck"):
+                self.debug(
+                    "No network_url or network_object_key supplied; "
+                    "bottleneck features will be missing."
+                )
+            return out
         for row in csv.DictReader(io.StringIO(raw)):
             cik = str(row["cik"]).zfill(10)
             d = datetime.strptime(row["formation_date"][:10], "%Y-%m-%d").date()

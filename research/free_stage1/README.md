@@ -78,7 +78,7 @@ Candidate components:
 - **Supply scarcity / competitive scarcity:** CIK-native Item 1 text network concentration and peer count
 - **Momentum:** 252-trading-day price momentum and 52-week-high proximity
 - **Dilution:** negative SEC YoY share-count growth
-- **Valuation sanity:** contemporaneous market cap / SEC as-filed revenue
+- **Valuation sanity:** contemporaneous market cap / annualized SEC as-filed revenue; 10-K qtrs=4 revenue is used directly and 10-Q qtrs=1 revenue is multiplied by 4; other flow-period lengths are rejected
 
 Frozen model families:
 1. momentum
@@ -89,6 +89,7 @@ Frozen model families:
 
 Portfolio sizes: top 10 / 20 / 40.
 Rebalance: quarterly.
+Price-history state is primed with a 252-daily-bar warm-up and updated before applying each day's eligibility screen, so 12-month momentum is based on trading observations rather than "eligible-only" days.
 Transaction costs: pre-specified, not tuned after holdout results.
 
 ## Validation chronology

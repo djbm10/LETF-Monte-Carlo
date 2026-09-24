@@ -64,7 +64,7 @@ Generate CIK-native network data from SEC filings with:
 ```bash
 export SEC_USER_AGENT="Douglas research contact@example.com"
 python research/free_stage1/sec_item1_network.py \
-  --start-year 2009 \
+  --start-year 2007 \
   --end-year 2023 \
   --formation-dates "$(python - <<'PY'
 import pandas as pd

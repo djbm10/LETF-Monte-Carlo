@@ -61,6 +61,40 @@ def test_network():
 
 
 
+
+def test_sec_amendment_pit():
+    sub = pd.DataFrame([
+        {
+            "adsh": "orig", "cik": "0000000003", "name": "Example A",
+            "form": "10-K", "filed": pd.Timestamp("2023-02-15"),
+            "period": pd.Timestamp("2022-12-31"), "fy": 2022, "fp": "FY", "sic": 3571,
+        },
+        {
+            "adsh": "amnd", "cik": "0000000003", "name": "Example A",
+            "form": "10-K/A", "filed": pd.Timestamp("2023-04-15"),
+            "period": pd.Timestamp("2022-12-31"), "fy": 2022, "fp": "FY", "sic": 3571,
+        },
+    ])
+    num = pd.DataFrame([
+        {
+            "adsh": "orig", "tag": "Revenues", "ddate": pd.Timestamp("2022-12-31"),
+            "qtrs": 4, "uom": "USD", "value": 100.0, "coreg": np.nan, "segments": 0,
+        },
+        {
+            "adsh": "amnd", "tag": "Revenues", "ddate": pd.Timestamp("2022-12-31"),
+            "qtrs": 4, "uom": "USD", "value": 105.0, "coreg": np.nan, "segments": 0,
+        },
+    ])
+    panel = fsd.canonicalize_quarter(sub, num)
+    panel["information_date"] = panel["filed"]
+    before = formfeat.build_formation_panel(panel, [pd.Timestamp("2023-03-31")])
+    after = formfeat.build_formation_panel(panel, [pd.Timestamp("2023-06-30")])
+    assert before.iloc[0].revenue == 100.0
+    assert before.iloc[0].form_original == "10-K"
+    assert after.iloc[0].revenue == 105.0
+    assert after.iloc[0].form_original == "10-K/A"
+    assert bool(after.iloc[0].amended)
+
 def test_sec_flow_period_strictness():
     sub = pd.DataFrame([{
         "adsh": "q1", "cik": "0000000002", "name": "Example Q", "form": "10-Q",
@@ -216,6 +250,7 @@ def test_sec_fsd():
 if __name__=="__main__":
     test_item1_table_heading()
     test_network()
+    test_sec_amendment_pit()
     test_sec_flow_period_strictness()
     test_sec_formation_panel()
     test_frozen_source_invariants()

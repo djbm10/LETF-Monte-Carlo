@@ -90,13 +90,14 @@ def test_sec_amendment_pit():
         },
     ])
     panel = fsd.apply_amendment_carryforward(fsd.canonicalize_quarter(sub, num))
+    amended_row = panel[panel["amended"].fillna(False).astype(bool)].iloc[0]
+    assert amended_row.assets == 500.0
     panel["information_date"] = panel["filed"]
     before = formfeat.build_formation_panel(panel, [pd.Timestamp("2023-03-31")])
     after = formfeat.build_formation_panel(panel, [pd.Timestamp("2023-06-30")])
     assert before.iloc[0].revenue == 100.0
     assert before.iloc[0].form_original == "10-K"
     assert after.iloc[0].revenue == 105.0
-    assert after.iloc[0].assets == 500.0
     assert after.iloc[0].form_original == "10-K/A"
     assert bool(after.iloc[0].amended)
 

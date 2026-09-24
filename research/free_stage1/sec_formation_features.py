@@ -22,6 +22,7 @@ KEEP = [
     "form",
     "period",
     "revenue",
+    "revenue_qtrs",
     "gross_margin",
     "operating_margin",
     "fcf_margin",

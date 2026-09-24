@@ -289,8 +289,12 @@ class RealHistoricalLeaps(QCAlgorithm):
         })
 
         if order_event.order_id == self.pending_exit_order_id:
+            exited = self.pending_exit_symbol
             self.pending_exit_symbol = None
             self.pending_exit_order_id = None
+            if self.contract == exited:
+                self.contract = None
+                self.entry_date = None
             self.roll_count += 1
 
         if order_event.order_id == self.pending_entry_order_id:

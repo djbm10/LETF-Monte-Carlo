@@ -120,7 +120,9 @@ The model/portfolio-size choice for any later live candidate must be determined 
 
 Execution invariant:
 - contract selection is made from a completed daily option chain
-- entry/roll orders are submitted as Market-On-Open orders for the next regular session
+- a fresh entry is submitted as a Market-On-Open order for the next regular session
+- a roll is sequenced: old contract exits next open; replacement is selected from that day's completed chain; replacement enters the following open
+- this one-session roll gap is intentional and conservative, avoiding same-open sell/buy ordering ambiguity at 100% premium allocation
 - selection-time bid/ask and next-open fill must both be retained so same-close execution leakage can be audited
 
 For every run save:

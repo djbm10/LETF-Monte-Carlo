@@ -81,17 +81,22 @@ def test_sec_amendment_pit():
             "qtrs": 4, "uom": "USD", "value": 100.0, "coreg": np.nan, "segments": 0,
         },
         {
+            "adsh": "orig", "tag": "Assets", "ddate": pd.Timestamp("2022-12-31"),
+            "qtrs": 0, "uom": "USD", "value": 500.0, "coreg": np.nan, "segments": 0,
+        },
+        {
             "adsh": "amnd", "tag": "Revenues", "ddate": pd.Timestamp("2022-12-31"),
             "qtrs": 4, "uom": "USD", "value": 105.0, "coreg": np.nan, "segments": 0,
         },
     ])
-    panel = fsd.canonicalize_quarter(sub, num)
+    panel = fsd.apply_amendment_carryforward(fsd.canonicalize_quarter(sub, num))
     panel["information_date"] = panel["filed"]
     before = formfeat.build_formation_panel(panel, [pd.Timestamp("2023-03-31")])
     after = formfeat.build_formation_panel(panel, [pd.Timestamp("2023-06-30")])
     assert before.iloc[0].revenue == 100.0
     assert before.iloc[0].form_original == "10-K"
     assert after.iloc[0].revenue == 105.0
+    assert after.iloc[0].assets == 500.0
     assert after.iloc[0].form_original == "10-K/A"
     assert bool(after.iloc[0].amended)
 

@@ -15,6 +15,7 @@ import os
 import re
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import requests
@@ -232,6 +233,20 @@ def order_type(order):
     return str(order.get("type", "")).lower()
 
 
+def security_type(order):
+    return str(order.get("securityType", "")).lower()
+
+
+def _iso_date(value):
+    if not value:
+        return None
+    text = str(value).replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(text).date()
+    except Exception:
+        return None
+
+
 def validate_bottleneck(logs, orders, code_text):
     text = "\n".join(logs)
     require("FREE_DISCOVERY model=bottleneck_core" in text, "Bottleneck initialization log missing")
@@ -280,7 +295,42 @@ def validate_leaps(logs, orders):
     invalid = [o for o in orders if order_status(o) in {"7", "invalid"}]
     require(not invalid, f"LEAPS has {len(invalid)} invalid orders")
     moo = [o for o in orders if order_type(o) in {"4", "marketonopen", "market on open"}]
-    require(moo, "LEAPS order history contains no Market-On-Open orders")
+    option_moo = [
+        o for o in moo
+        if security_type(o) in {"2", "option"}
+        and order_status(o) in {"3", "filled"}
+    ]
+    require(len(option_moo) >= 3, "LEAPS smoke needs filled option MOO entry/exit/re-entry orders")
+
+    exits = sorted(
+        [o for o in option_moo if "roll/exit" in str(o.get("tag", "")).lower()],
+        key=lambda o: int(o.get("id", 0)),
+    )
+    entries_orders = sorted(
+        [o for o in option_moo if "entry next open" in str(o.get("tag", "")).lower()],
+        key=lambda o: int(o.get("id", 0)),
+    )
+    require(exits, "LEAPS smoke has no filled option roll/exit MOO order")
+    require(len(entries_orders) >= 2, "LEAPS smoke has no filled replacement-entry MOO order")
+
+    separated_rolls = 0
+    for exit_order in exits:
+        exit_id = int(exit_order.get("id", 0))
+        replacement = next(
+            (o for o in entries_orders if int(o.get("id", 0)) > exit_id),
+            None,
+        )
+        if replacement is None:
+            continue
+        exit_fill_date = _iso_date(exit_order.get("lastFillTime"))
+        entry_fill_date = _iso_date(replacement.get("lastFillTime"))
+        if exit_fill_date and entry_fill_date and entry_fill_date > exit_fill_date:
+            separated_rolls += 1
+
+    require(
+        separated_rolls >= 1,
+        "LEAPS roll exit and replacement entry were not proven to fill on separate opens",
+    )
     return {
         "entries": entries,
         "rolls": rolls,
@@ -288,6 +338,8 @@ def validate_leaps(logs, orders):
         "fill_rows": fill_rows,
         "order_count": len(orders),
         "moo_order_count": len(moo),
+        "filled_option_moo_count": len(option_moo),
+        "separated_roll_count": separated_rolls,
     }
 
 

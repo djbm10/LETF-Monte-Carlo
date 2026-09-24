@@ -60,6 +60,42 @@ def test_network():
 
 
 
+
+def test_sec_flow_period_strictness():
+    sub = pd.DataFrame([{
+        "adsh": "q1", "cik": "0000000002", "name": "Example Q", "form": "10-Q",
+        "filed": pd.Timestamp("2023-05-01"), "period": pd.Timestamp("2023-03-31"),
+        "fy": 2023, "fp": "Q1", "sic": 3571,
+    }])
+    # A qtrs=2 YTD revenue must not masquerade as a single-quarter 10-Q flow.
+    num = pd.DataFrame([
+        {
+            "adsh": "q1",
+            "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+            "ddate": pd.Timestamp("2023-03-31"),
+            "qtrs": 2,
+            "uom": "USD",
+            "value": 200.0,
+            "coreg": np.nan,
+            "segments": 0,
+        },
+        {
+            "adsh": "q1",
+            "tag": "Assets",
+            "ddate": pd.Timestamp("2023-03-31"),
+            "qtrs": 0,
+            "uom": "USD",
+            "value": 500.0,
+            "coreg": np.nan,
+            "segments": 0,
+        },
+    ])
+    out = fsd.canonicalize_quarter(sub, num)
+    assert len(out) == 1
+    assert pd.isna(out.iloc[0].revenue)
+    assert pd.isna(out.iloc[0].revenue_qtrs)
+    assert out.iloc[0].assets == 500.0
+
 def test_sec_formation_panel():
     panel = pd.DataFrame([
         {
@@ -178,6 +214,7 @@ def test_sec_fsd():
 if __name__=="__main__":
     test_item1_table_heading()
     test_network()
+    test_sec_flow_period_strictness()
     test_sec_formation_panel()
     test_frozen_source_invariants()
     test_sec_fsd()

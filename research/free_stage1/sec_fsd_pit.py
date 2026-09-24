@@ -153,10 +153,22 @@ def choose_value(g: pd.DataFrame, metric: str) -> float:
 
 
 def canonicalize_quarter(sub: pd.DataFrame, num: pd.DataFrame) -> pd.DataFrame:
-    keep_forms = {"10-K", "10-Q", "20-F", "40-F"}
+    keep_forms = {
+        "10-K", "10-K/A", "10-Q", "10-Q/A",
+        "20-F", "20-F/A", "40-F", "40-F/A",
+    }
     s = sub[sub.form.isin(keep_forms)].copy()
-    cols = ["adsh", "cik", "name", "form", "filed", "period", "fy", "fp", "sic"]
-    cols = [c for c in cols if c in s]
+    s["form_original"] = s["form"]
+    s["amended"] = s["form"].str.endswith("/A")
+    # Treat amendments as the same reporting-form family for period semantics
+    # and YoY matching, but keep the later amendment filing date as the PIT
+    # information timestamp.
+    s["form"] = s["form"].str.replace("/A", "", regex=False)
+    cols = [
+        "adsh", "cik", "name", "form", "form_original", "amended",
+        "filed", "period", "fy", "fp", "sic",
+    ]
+    cols = [col for col in cols if col in s]
     s = s[cols]
 
     map_tag = tag_to_metric()
@@ -359,7 +371,7 @@ def main() -> None:
         "limitations": [
             "Primary-statement numeric facts only; this is not a full Compustat replacement.",
             "Tag aliases are intentionally narrow and must be audited before performance conclusions.",
-            "Restatements enter only when subsequently filed; prior portfolio dates retain prior filings.",
+            "Amended 10-K/10-Q/20-F/40-F filings enter only from their amendment filing date; prior portfolio dates retain the earlier filing.",
         ],
     }
     (args.out / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))

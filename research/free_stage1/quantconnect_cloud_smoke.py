@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import argparse
 import base64
+import csv
 import hashlib
 import json
+import math
 import os
 import re
 import sys
@@ -218,6 +220,77 @@ def require(cond: bool, message: str):
         raise QCError(message)
 
 
+def _finite(value):
+    try:
+        x = float(value)
+        return x if math.isfinite(x) else None
+    except Exception:
+        return None
+
+
+def preflight_bundle(sec_features: Path, network: Path, target_date="2023-12-31"):
+    sec_by_cik = {}
+    with sec_features.open("r", encoding="utf-8", newline="") as fh:
+        for row in csv.DictReader(fh):
+            d = str(row.get("formation_date", ""))[:10]
+            if not d or d > target_date:
+                continue
+            cik = str(row.get("cik", "")).strip().zfill(10)
+            if cik and (cik not in sec_by_cik or d >= sec_by_cik[cik][0]):
+                sec_by_cik[cik] = (d, row)
+
+    net_by_cik = {}
+    with network.open("r", encoding="utf-8", newline="") as fh:
+        for row in csv.DictReader(fh):
+            d = str(row.get("formation_date", ""))[:10]
+            if not d or d > target_date:
+                continue
+            cik = str(row.get("cik", "")).strip().zfill(10)
+            if cik and (cik not in net_by_cik or d >= net_by_cik[cik][0]):
+                net_by_cik[cik] = (d, row)
+
+    complete = []
+    demand_values = []
+    pricing_values = []
+    scarcity_values = []
+    for cik, (_, net) in net_by_cik.items():
+        if cik not in sec_by_cik:
+            continue
+        _, sec = sec_by_cik[cik]
+        demand = _finite(sec.get("revenue_growth_yoy"))
+        gross = _finite(sec.get("gross_margin_change_yoy"))
+        operating = _finite(sec.get("operating_margin_change_yoy"))
+        pricing = gross if gross is not None else operating
+        scarcity = _finite(net.get("text_scarcity_raw"))
+        if demand is None or pricing is None or scarcity is None:
+            continue
+        complete.append(cik)
+        demand_values.append(demand)
+        pricing_values.append(pricing)
+        scarcity_values.append(scarcity)
+
+    require(len(sec_by_cik) > 0, "SEC smoke bundle contains no formation rows")
+    require(len(net_by_cik) >= 10, f"network smoke bundle has only {len(net_by_cik)} CIKs")
+    require(
+        len(complete) >= 10,
+        f"only {len(complete)} CIKs have complete bottleneck_core smoke features; need >=10",
+    )
+    for name, values in (
+        ("demand_accel", demand_values),
+        ("pricing_power", pricing_values),
+        ("competitive_scarcity", scarcity_values),
+    ):
+        require(len(set(values)) > 1, f"{name} smoke cross-section is degenerate")
+
+    return {
+        "target_date": target_date,
+        "sec_ciks": len(sec_by_cik),
+        "network_ciks": len(net_by_cik),
+        "complete_bottleneck_core_ciks": len(complete),
+        "complete_ciks": complete,
+    }
+
+
 def parse_int(pattern: str, text: str, label: str) -> int:
     m = re.search(pattern, text)
     if not m:
@@ -351,10 +424,25 @@ def main():
     ap.add_argument("--leaps-code", required=True, type=Path)
     ap.add_argument("--report", required=True, type=Path)
     ap.add_argument("--source-sha", default=os.getenv("GITHUB_SHA", "unknown"))
+    ap.add_argument("--preflight-only", action="store_true")
     args = ap.parse_args()
 
     for path in (args.sec_features, args.network, args.bottleneck_code, args.leaps_code):
         require(path.exists(), f"missing required file: {path}")
+
+    bundle_checks = preflight_bundle(args.sec_features, args.network)
+    if args.preflight_only:
+        report = {
+            "source_sha": args.source_sha,
+            "evidence_label": "INTEGRATION_BUNDLE_PREFLIGHT_ONLY",
+            "performance_statistics_inspected_or_emitted": False,
+            "bundle_checks": bundle_checks,
+            "go_no_go": "BUNDLE_READY_FOR_QC_SMOKE",
+        }
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(report, indent=2))
+        return
 
     required_env = ["QC_USER_ID", "QC_API_TOKEN", "QC_ORGANIZATION_ID"]
     missing = [k for k in required_env if not os.getenv(k)]
@@ -377,6 +465,7 @@ def main():
         "source_sha": args.source_sha,
         "evidence_label": "INTEGRATION_SMOKE_ONLY",
         "performance_statistics_inspected_or_emitted": False,
+        "bundle_checks": bundle_checks,
         "object_store": {"fundamentals_key": fund_key, "network_key": network_key},
         "tests": {},
     }

@@ -324,7 +324,7 @@ def main():
     report = {
         "source_sha": args.source_sha,
         "evidence_label": "INTEGRATION_SMOKE_ONLY",
-        "performance_statistics_read": False,
+        "performance_statistics_inspected_or_emitted": False,
         "object_store": {"fundamentals_key": fund_key, "network_key": network_key},
         "tests": {},
     }

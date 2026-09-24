@@ -47,19 +47,38 @@ jobs:
         run: |
           export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
           python research/free_stage1/sec_fsd_pit.py \
-            --start-year 2023 \
+            --start-year 2022 \
             --end-year 2023 \
             --quarters 4 \
             --out results/free_stage1/live_smoke/sec_fundamentals
+          python research/free_stage1/sec_formation_features.py \
+            --input results/free_stage1/live_smoke/sec_fundamentals/sec_pit_fundamentals.parquet \
+            --formation-dates "2022-12-31,2023-12-31" \
+            --out results/free_stage1/live_smoke/sec_fundamentals/sec_formation_features.csv
           python - <<'PY'
           import json
+          import pandas as pd
           from pathlib import Path
           p = Path("results/free_stage1/live_smoke/sec_fundamentals/manifest.json")
           m = json.loads(p.read_text())
-          assert m["rows"] > 1000, m
-          assert m["ciks"] > 500, m
+          assert m["rows"] > 2000, m
+          assert m["ciks"] > 1000, m
           assert not m["failed_quarters"], m
-          print("LIVE SEC FSD SMOKE PASS", m["rows"], m["ciks"])
+          f = pd.read_csv(
+              "results/free_stage1/live_smoke/sec_fundamentals/sec_formation_features.csv",
+              dtype={"cik": str},
+          )
+          assert len(f) > 2000, len(f)
+          assert (pd.to_datetime(f["information_date"]) <= pd.to_datetime(f["formation_date"])).all()
+          latest = f[f["formation_date"].astype(str).str.startswith("2023-12-31")]
+          assert latest["revenue_growth_yoy"].notna().sum() > 200, latest["revenue_growth_yoy"].notna().sum()
+          print(
+              "LIVE SEC FSD+FORMATION SMOKE PASS",
+              m["rows"],
+              m["ciks"],
+              len(f),
+              int(latest["revenue_growth_yoy"].notna().sum()),
+          )
           PY
 
       - name: Live SEC Item 1 network smoke

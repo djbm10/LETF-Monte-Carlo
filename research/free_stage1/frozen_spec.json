@@ -1,5 +1,5 @@
 {
-  "version": "free-pit-stage1-2026-09-23-r3",
+  "version": "free-pit-stage1-2026-09-23-r4",
   "status": "FROZEN_BEFORE_RESULTS",
   "bottleneck": {
     "start": "2009-01-01",
@@ -146,8 +146,8 @@
     "force_roll_dte": 180,
     "min_open_interest": 100,
     "use_quote_data": true,
-    "buy_side": "ask",
-    "sell_side": "bid",
+    "buy_side": "next-session ask open via LatestPriceFillModel",
+    "sell_side": "next-session bid open via LatestPriceFillModel",
     "slippage_bps_sensitivity": [
       0,
       5,
@@ -155,7 +155,7 @@
     ],
     "evidence_label": "FREE_DISCOVERY",
     "cost_model": {
-      "bid_ask": "LatestPriceFillModel using quote-side fills",
+      "bid_ask": "LatestPriceFillModel on Market-On-Open orders: next QuoteBar ask open for buys and bid open for sells",
       "brokerage_fees": "Interactive Brokers brokerage model retained",
       "additional_slippage_bps_sensitivity": [
         0,
@@ -167,7 +167,8 @@
       "selected contract/expiry/strike/DTE/delta/bid/ask/open_interest/quantity",
       "underlying price/portfolio value/premium budget",
       "actual filled order symbol/direction/quantity/price/fee"
-    ]
+    ],
+    "execution_timing": "select from completed daily chain; submit equity-option Market-On-Open order for the next regular session"
   },
   "stage2": {
     "freeze_before_vendor_replication": true,
@@ -190,6 +191,7 @@
     "2026-09-23: LEAPS security initialization changed from replacement to additive initialization so IBKR brokerage fee/buying-power/settlement defaults are preserved while 0/5/10 bps option slippage is layered on top; selection and actual fill audits are persisted.",
     "2026-09-23: switched Bottleneck accounting factor values from QuantConnect/Morningstar financial statements to the SEC as-filed formation-date panel; QuantConnect remains the historical tradable-universe/CIK/market-return engine. This implements the intended SEC -> QuantConnect free-PIT architecture before any return results were observed.",
     "2026-09-23: removed the early-sample 200-day substitute for the 12-month momentum/52-week-high signals; both now require 252 trading observations before a name can be scored.",
-    "2026-09-23: Item 1 extraction now preserves only Item 1/1A/1B/2 boundary rows found inside HTML tables and discards other table text, addressing modern inline-XBRL section headings without contaminating the TF-IDF corpus."
+    "2026-09-23: Item 1 extraction now preserves only Item 1/1A/1B/2 boundary rows found inside HTML tables and discards other table text, addressing modern inline-XBRL section headings without contaminating the TF-IDF corpus.",
+    "2026-09-23: changed LEAPS execution from same-daily-slice market orders to next-session Market-On-Open orders. Contract selection occurs only after the daily chain is known; execution uses the next session's quote-side open plus frozen slippage. Contract/entry-date state is now set only on confirmed fills."
   ]
 }

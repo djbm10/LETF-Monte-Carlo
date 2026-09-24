@@ -40,3 +40,8 @@ Final re-run requested after adding amendment-aware SEC PIT handling plus strict
 ## Amendment provenance regression fixed
 
 Re-run requested after the amendment PIT regression test exposed and fixed missing amendment provenance in canonical SEC rows. Synthetic CI is now green on the corrected code.
+
+
+## Sparse-amendment final validation
+
+Final live re-run requested after the sparse-amendment overlay test was corrected and passed: supplied amendment facts override prior values, missing raw facts carry forward, and the amendment retains its later PIT timestamp.

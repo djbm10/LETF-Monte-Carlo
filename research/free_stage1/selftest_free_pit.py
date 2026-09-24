@@ -49,8 +49,19 @@ def test_network():
             "word_count":len(text.split()),
             "error":None,
         })
+    stale_text=("Item 1 Business obsolete legacy dormant filer text ")*120
+    docs.append({
+        "cik":"0000999999",
+        "filing_date":pd.Timestamp("2019-03-01"),
+        "filename":"stale.txt",
+        "item1":stale_text,
+        "word_count":len(stale_text.split()),
+        "error":None,
+    })
     f=pd.DataFrame(docs)
     sample=net.latest_asof(f,pd.Timestamp("2022-06-30"))
+    assert len(sample)==40
+    assert "0000999999" not in set(sample.cik)
     m,e,manifest=net.build_network(sample,pd.Timestamp("2022-06-30"),pair_density=.10,max_features=5000)
     assert len(m)==40
     assert manifest["n_firms"]==40

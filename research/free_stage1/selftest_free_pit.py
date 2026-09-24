@@ -153,6 +153,8 @@ def test_frozen_source_invariants():
     # Stage-1 accounting factors must be sourced from the SEC formation panel.
     assert "fundamentals_url" in bottleneck
     assert "_sec_fundamental_asof" in bottleneck
+    assert "self.set_warm_up(252, Resolution.DAILY)" in bottleneck
+    assert "revenue_qtrs" in bottleneck
     assert ".financial_statements" not in bottleneck
     assert "income_statement" not in bottleneck
 

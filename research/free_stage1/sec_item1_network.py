@@ -141,13 +141,25 @@ def _document_blocks(submission: str) -> list[tuple[str, str]]:
 
 def _html_to_text(raw: str) -> str:
     soup = BeautifulSoup(raw, "html.parser")
-    # Preserve table text: many modern inline-XBRL 10-Ks render Item headings
-    # (including the real Item 1. Business heading) inside table cells. Removing
-    # all tables can erase the section boundary and create systematic coverage
-    # holes. TOC starts remain harmless because extract_item1 rejects sections
-    # shorter than 250 words and evaluates every plausible Item 1 start.
     for tag in soup(["script", "style"]):
         tag.decompose()
+
+    # Modern inline-XBRL 10-Ks can render real section headings inside table
+    # cells (for example "Item 1. | Business"). Preserve only rows that look
+    # like Item 1/1A/1B/2 boundaries, then discard the rest of each table so
+    # layout/financial-table text does not contaminate the TF-IDF corpus.
+    boundary = re.compile(r"(?i)\\bitem\\s+(?:1(?:a|b)?|2)\\b")
+    for table in list(soup.find_all("table")):
+        heading_rows = []
+        for tr in table.find_all("tr"):
+            row_text = " ".join(tr.stripped_strings)
+            if boundary.search(row_text):
+                heading_rows.append(row_text)
+        for row_text in heading_rows:
+            p = soup.new_tag("p")
+            p.string = row_text
+            table.insert_before(p)
+        table.decompose()
     text = soup.get_text("\n")
     text = text.replace("\xa0", " ")
     text = re.sub(r"[ \t]+", " ", text)

@@ -256,7 +256,13 @@ def derive_features(panel: pd.DataFrame) -> pd.DataFrame:
             group[name] = vals
         return group
 
-    x = g.apply(add_yoy).reset_index(drop=True)
+    # Avoid pandas groupby.apply grouping-column behavior changes: some
+    # versions drop the grouping key from the returned frame. Preserve CIK
+    # explicitly by processing each group and concatenating the original rows.
+    grouped = [add_yoy(group.copy()) for _, group in x.groupby("cik", sort=False, dropna=False)]
+    x = pd.concat(grouped, ignore_index=True) if grouped else x.iloc[0:0].copy()
+    if "cik" not in x.columns:
+        raise RuntimeError("CIK was lost during YoY feature derivation")
     x["evidence_label"] = "FREE_DISCOVERY"
     x["information_date"] = x["filed"]
     return x

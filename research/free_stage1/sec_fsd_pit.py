@@ -200,7 +200,7 @@ def canonicalize_quarter(sub: pd.DataFrame, num: pd.DataFrame) -> pd.DataFrame:
 
     rows = []
     group_cols = ["adsh", "cik", "name", "form", "filed", "period"]
-    extra = [c for c in ["fy", "fp", "sic"] if c in merged]
+    extra = [c for c in ["form_original", "amended", "fy", "fp", "sic"] if c in merged]
     for keys, g in merged.groupby(group_cols, dropna=False):
         row = dict(zip(group_cols, keys))
         for c in extra:

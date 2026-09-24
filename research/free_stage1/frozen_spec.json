@@ -1,5 +1,5 @@
 {
-  "version": "free-pit-stage1-2026-09-23-r8",
+  "version": "free-pit-stage1-2026-09-23-r9",
   "status": "FROZEN_BEFORE_RESULTS",
   "bottleneck": {
     "start": "2009-01-01",
@@ -121,6 +121,11 @@
       "valuation": "negative log(1 + contemporaneous QuantConnect market_cap / annualized SEC as-filed revenue); qtrs=4 revenue used directly, qtrs=1 revenue multiplied by 4; other flow-period lengths are rejected",
       "momentum12": "252-trading-day adjusted-price return",
       "high52": "current adjusted price divided by maximum adjusted price over the latest 252 trading observations"
+    },
+    "min_cross_section": 20,
+    "smoke_only_overrides": {
+      "min_cross_section": 10,
+      "purpose": "permit tiny non-performance cloud integration bundles; frozen 177-run matrix must use 20"
     }
   },
   "leaps": {
@@ -201,6 +206,7 @@
     "2026-09-23: Bottleneck price history now records every daily fundamental-universe observation before applying today's eligibility screen, and a 252-daily-bar warm-up primes the 2009 start. Momentum no longer measures 252 'eligible days' when liquidity eligibility is intermittent.",
     "2026-09-23: LEAPS rolls are now sequenced rather than submitting the exit and replacement entry to the same opening auction. The old contract exits next open, the replacement is selected from that day's completed chain, and the new contract enters the following open. This introduces a conservative one-session gap and removes ambiguous buying-power/order sequencing at 100% premium allocation.",
     "2026-09-23: SEC amended forms (10-K/A, 10-Q/A, 20-F/A, 40-F/A) are now included point in time. They share the base form family for period/YoY matching but replace an earlier filing only at formation dates after the amendment filing date.",
-    "2026-09-23: sparse SEC amendments now overlay the prior filing for the same CIK/form-family/reporting period. Amendment-supplied facts win; missing raw facts carry forward from the earlier filing, while the amendment retains its later information timestamp."
+    "2026-09-23: sparse SEC amendments now overlay the prior filing for the same CIK/form-family/reporting period. Amendment-supplied facts win; missing raw facts carry forward from the earlier filing, while the amendment retains its later information timestamp.",
+    "2026-09-23: added a smoke-only min_cross_section parameter. Full Stage-1 runs remain frozen at 20; min_cross_section=10 is permitted only for tiny cloud integration bundles and must not be interpreted as a performance specification."
   ]
 }

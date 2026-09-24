@@ -20,6 +20,8 @@ KEEP = [
     "cik",
     "information_date",
     "form",
+    "form_original",
+    "amended",
     "period",
     "revenue",
     "revenue_qtrs",

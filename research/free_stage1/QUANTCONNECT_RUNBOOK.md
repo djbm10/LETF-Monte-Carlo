@@ -37,9 +37,13 @@ PY
 
 The prior-quarter-end snapshot is consumed at the next Jan/Apr/Jul/Oct first-trading-day rebalance. This deliberately excludes filings dated on the rebalance day because SEC bulk filing dates do not provide a reliable before-open/after-close timestamp.
 
-Make `sec_formation_features.csv` available to the QuantConnect Bottleneck project and set:
+Make `sec_formation_features.csv` available to the QuantConnect Bottleneck project and set exactly one of:
 
-`fundamentals_url=<location>`
+`fundamentals_url=<stable URL>`
+
+or
+
+`fundamentals_object_key=<QuantConnect Object Store key>`
 
 Accounting factor values come from this SEC file. Do not substitute Morningstar financial-statement values for the frozen Stage-1 scoring run.
 
@@ -75,11 +79,15 @@ Audit a stratified sample of Item 1 extracts before using performance results.
 The combined output is:
 `results/free_stage1/sec_item1_network/network_metrics_all.csv`
 
-Make this file available to the QuantConnect project either via an authorized object-store/upload workflow or a stable URL under your control. Set project parameter:
+Make this file available to the QuantConnect project and set exactly one of:
 
-`network_url=<location>`
+`network_url=<stable URL>`
 
-For Bottleneck models, both `fundamentals_url` and `network_url` must be populated. Pure momentum does not require either SEC factor file.
+or
+
+`network_object_key=<QuantConnect Object Store key>`
+
+For Bottleneck models, one fundamentals source and one network source must be populated. Pure momentum does not require either SEC factor file.
 
 Never substitute a current-ticker CIK↔GVKEY match.
 

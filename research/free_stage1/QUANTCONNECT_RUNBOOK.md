@@ -45,6 +45,7 @@ Accounting factor values come from this SEC file. Do not substitute Morningstar 
 
 SEC filing invariant:
 - 10-K/A, 10-Q/A, 20-F/A and 40-F/A enter only from their amendment filing date and retain amendment provenance
+- sparse amendments overlay the prior filing for the same CIK/form-family/reporting period: amendment facts override and missing raw facts carry forward
 - annual filings use only qtrs=4 flow facts
 - quarterly filings use only qtrs=1 flow facts
 - valuation annualizes qtrs=1 revenue by 4 and uses qtrs=4 revenue directly

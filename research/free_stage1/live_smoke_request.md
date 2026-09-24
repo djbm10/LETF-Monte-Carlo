@@ -45,3 +45,8 @@ Re-run requested after the amendment PIT regression test exposed and fixed missi
 ## Sparse-amendment final validation
 
 Final live re-run requested after the sparse-amendment overlay test was corrected and passed: supplied amendment facts override prior values, missing raw facts carry forward, and the amendment retains its later PIT timestamp.
+
+
+## Final exact-head data validation
+
+Re-run requested after sparse-amendment carry-forward CI passed and its semantics were frozen/documented. No research parameters or return outputs changed.

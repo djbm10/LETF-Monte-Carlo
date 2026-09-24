@@ -76,6 +76,12 @@ PY
 
 Audit a stratified sample of Item 1 extracts before using performance results.
 
+Network staleness invariant:
+- only a 10-K public by the formation date may enter
+- the selected Item 1 filing must be no more than 550 days old at that formation date
+- this prevents inactive/dead historical filers from remaining permanent peers in later networks
+- `--max-item1-age-days 550` is frozen before return analysis
+
 The combined output is:
 `results/free_stage1/sec_item1_network/network_metrics_all.csv`
 

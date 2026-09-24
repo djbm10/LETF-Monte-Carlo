@@ -228,6 +228,29 @@ def canonicalize_quarter(sub: pd.DataFrame, num: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+
+def apply_amendment_carryforward(panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    SEC amendments may report only changed facts. For an amended filing, carry
+    forward missing raw facts from the latest earlier filing for the same CIK,
+    normalized form family, and reporting period. Supplied amendment facts
+    always win, and the amendment keeps its own later filing timestamp.
+    """
+    x = panel.copy().sort_values(["cik", "form", "period", "filed", "adsh"]).reset_index(drop=True)
+    if "amended" not in x:
+        return x
+
+    raw_cols = [m for m in ALIASES if m in x.columns]
+    raw_cols += [f"{m}_qtrs" for m in FLOW_METRICS if f"{m}_qtrs" in x.columns]
+    keys = ["cik", "form", "period"]
+
+    for col in raw_cols:
+        carried = x.groupby(keys, dropna=False)[col].ffill()
+        mask = x["amended"].fillna(False).astype(bool) & x[col].isna()
+        x.loc[mask, col] = carried.loc[mask]
+
+    return x
+
 def derive_features(panel: pd.DataFrame) -> pd.DataFrame:
     x = panel.copy().sort_values(["cik", "filed", "period"]).reset_index(drop=True)
     x["gross_margin"] = x.gross_profit / x.revenue.replace(0, np.nan)
@@ -353,6 +376,7 @@ def main() -> None:
     panel = panel.sort_values(["cik", "filed", "period", "adsh"]).drop_duplicates(
         ["adsh", "cik"], keep="last"
     )
+    panel = apply_amendment_carryforward(panel)
     derived = derive_features(panel)
     derived.to_parquet(args.out / "sec_pit_fundamentals.parquet", index=False)
 

@@ -1,0 +1,75 @@
+name: QuantConnect Stage 1 pre-return smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      sec_run_id:
+        description: Successful live SEC workflow run containing free-stage1-live-sec-smoke
+        required: true
+        default: '35946883974'
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[qc-cloud-smoke]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    env:
+      QC_USER_ID: ${{ secrets.QC_USER_ID }}
+      QC_API_TOKEN: ${{ secrets.QC_API_TOKEN }}
+      QC_ORGANIZATION_ID: ${{ secrets.QC_ORGANIZATION_ID }}
+      GH_TOKEN: ${{ github.token }}
+      SEC_RUN_ID: ${{ github.event.inputs.sec_run_id || '35946883974' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install smoke-runner dependency
+        run: pip install requests
+
+      - name: Require QuantConnect credentials
+        shell: bash
+        run: |
+          test -n "$QC_USER_ID" || { echo "Missing repository secret QC_USER_ID"; exit 2; }
+          test -n "$QC_API_TOKEN" || { echo "Missing repository secret QC_API_TOKEN"; exit 2; }
+          test -n "$QC_ORGANIZATION_ID" || { echo "Missing repository secret QC_ORGANIZATION_ID"; exit 2; }
+
+      - name: Download validated live SEC smoke bundle
+        shell: bash
+        run: |
+          mkdir -p /tmp/free-stage1-sec
+          gh run download "$SEC_RUN_ID"             --repo "$GITHUB_REPOSITORY"             --name free-stage1-live-sec-smoke             --dir /tmp/free-stage1-sec
+
+          SEC_FEATURES="$(find /tmp/free-stage1-sec -type f -name sec_formation_features.csv -print -quit)"
+          NETWORK="$(find /tmp/free-stage1-sec -type f -name network_metrics_all.csv -print -quit)"
+
+          test -n "$SEC_FEATURES" && test -f "$SEC_FEATURES" || {
+            echo "sec_formation_features.csv not found in SEC artifact"; exit 3;
+          }
+          test -n "$NETWORK" && test -f "$NETWORK" || {
+            echo "network_metrics_all.csv not found in SEC artifact"; exit 3;
+          }
+
+          echo "SEC_FEATURES=$SEC_FEATURES" >> "$GITHUB_ENV"
+          echo "NETWORK=$NETWORK" >> "$GITHUB_ENV"
+
+      - name: Run integration-only QuantConnect smokes
+        shell: bash
+        run: |
+          python research/free_stage1/quantconnect_cloud_smoke.py             --sec-features "$SEC_FEATURES"             --network "$NETWORK"             --bottleneck-code research/quantconnect/BottleneckWinnerFreePIT/main.py             --leaps-code research/quantconnect/RealHistoricalLeaps/main.py             --report results/free_stage1/qc_smoke/qc_smoke_report.json             --source-sha "$GITHUB_SHA"
+
+      - name: Upload smoke go/no-go report
+        uses: actions/upload-artifact@v4
+        with:
+          name: quantconnect-stage1-pre-return-smoke
+          path: results/free_stage1/qc_smoke/qc_smoke_report.json
+          retention-days: 30

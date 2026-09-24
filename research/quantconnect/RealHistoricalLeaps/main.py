@@ -235,21 +235,21 @@ class RealHistoricalLeaps(QCAlgorithm):
         if not self._needs_roll():
             return
 
+        # For a roll, exit first. The replacement is selected from the next
+        # completed daily chain and entered on the following open. This creates
+        # a conservative one-session gap but removes any dependence on broker/
+        # engine ordering of simultaneous 100%-allocation option sell and buy
+        # orders at the same opening auction.
+        if self.contract is not None and self.portfolio[self.contract].invested:
+            self._queue_exit_current()
+            return
+
         selected = self._select_contract(chain)
         if selected is None:
             self.no_candidate_days += 1
             return
 
-        exit_ticket = None
-        if self.contract is not None and self.portfolio[self.contract].invested:
-            exit_ticket = self._queue_exit_current()
-
-        entry_ticket = self._queue_entry(selected)
-        if entry_ticket is None:
-            if exit_ticket is not None:
-                exit_ticket.cancel("replacement entry could not be created")
-                self.pending_exit_symbol = None
-                self.pending_exit_order_id = None
+        if self._queue_entry(selected) is None:
             self.no_candidate_days += 1
             return
 

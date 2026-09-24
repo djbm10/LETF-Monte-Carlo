@@ -43,7 +43,8 @@ Make `sec_formation_features.csv` available to the QuantConnect Bottleneck proje
 
 Accounting factor values come from this SEC file. Do not substitute Morningstar financial-statement values for the frozen Stage-1 scoring run.
 
-SEC flow-period invariant:
+SEC filing invariant:
+- 10-K/A, 10-Q/A, 20-F/A and 40-F/A enter only from their amendment filing date and retain amendment provenance
 - annual filings use only qtrs=4 flow facts
 - quarterly filings use only qtrs=1 flow facts
 - valuation annualizes qtrs=1 revenue by 4 and uses qtrs=4 revenue directly

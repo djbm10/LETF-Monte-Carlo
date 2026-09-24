@@ -1,5 +1,7 @@
 from AlgorithmImports import *
 from datetime import timedelta
+import csv
+import io
 import math
 
 
@@ -51,6 +53,9 @@ class RealHistoricalLeaps(QCAlgorithm):
         self.set_cash(1_000_000)
         self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE, AccountType.MARGIN)
 
+        # Preserve brokerage defaults and layer on the frozen option slippage.
+        self.add_security_initializer(self._initialize_security)
+
         self.underlying = self.add_equity(ticker, Resolution.DAILY).symbol
         self.bill = self.add_equity("BIL", Resolution.DAILY).symbol
         self.set_benchmark(self.underlying)
@@ -70,9 +75,8 @@ class RealHistoricalLeaps(QCAlgorithm):
         self.entry_count = 0
         self.no_chain_days = 0
         self.no_candidate_days = 0
-
-        # Configure option securities as they are created/subscribed.
-        self.set_security_initializer(self._initialize_security)
+        self.selection_audit = []
+        self.fill_audit = []
 
         self.log(
             f"EVIDENCE_LABEL=FREE_DISCOVERY underlying={ticker} "
@@ -162,6 +166,27 @@ class RealHistoricalLeaps(QCAlgorithm):
         if quantity < 1:
             return False
 
+        self.selection_audit.append({
+            "decision_time": str(self.time),
+            "event": "ENTRY_SELECTION",
+            "underlying": str(self.underlying),
+            "contract": str(contract.symbol),
+            "expiry": str(contract.expiry.date()),
+            "strike": float(contract.strike),
+            "dte": int((contract.expiry.date() - self.time.date()).days),
+            "delta": float(contract.greeks.delta),
+            "bid": float(contract.bid_price),
+            "ask": float(contract.ask_price),
+            "open_interest": int(contract.open_interest),
+            "quantity": int(quantity),
+            "underlying_price": float(self.securities[self.underlying].price),
+            "portfolio_value": float(self.portfolio.total_portfolio_value),
+            "premium_budget": float(budget),
+            "target_delta": self.target_delta,
+            "target_dte": self.target_dte,
+            "allocation": self.allocation,
+            "slippage_bps": self.slippage * 10000.0,
+        })
         self.market_order(contract.symbol, quantity, tag="LEAPS entry")
         self.contract = contract.symbol
         self.entry_date = self.time.date()
@@ -202,10 +227,47 @@ class RealHistoricalLeaps(QCAlgorithm):
 
         self._enter(selected)
 
+    def on_order_event(self, order_event: OrderEvent):
+        if order_event.status != OrderStatus.FILLED:
+            return
+        fee_amount = float("nan")
+        fee_currency = ""
+        try:
+            fee_amount = float(order_event.order_fee.value.amount)
+            fee_currency = str(order_event.order_fee.value.currency)
+        except Exception:
+            pass
+        self.fill_audit.append({
+            "fill_time": str(self.time),
+            "order_id": int(order_event.order_id),
+            "symbol": str(order_event.symbol),
+            "direction": str(order_event.direction),
+            "fill_quantity": float(order_event.fill_quantity),
+            "fill_price": float(order_event.fill_price),
+            "fee_amount": fee_amount,
+            "fee_currency": fee_currency,
+        })
+
+    def _save_csv(self, stem, rows):
+        if not rows:
+            return None, False
+        fields = list(rows[0].keys())
+        buf = io.StringIO()
+        writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(rows)
+        key = "%s/free_stage1/%s_%s.csv" % (self.project_id, stem, self.algorithm_id)
+        return key, self.object_store.save(key, buf.getvalue())
+
     def on_end_of_algorithm(self):
+        selection_key, selection_saved = self._save_csv("leaps_selection_audit", self.selection_audit)
+        fill_key, fill_saved = self._save_csv("leaps_fill_audit", self.fill_audit)
         self.log(
             "LEAPS_AUDIT "
             f"entries={self.entry_count} rolls={self.roll_count} "
             f"no_chain_days={self.no_chain_days} no_candidate_days={self.no_candidate_days} "
+            f"selection_rows={len(self.selection_audit)} selection_saved={selection_saved} "
+            f"selection_key={selection_key} fill_rows={len(self.fill_audit)} "
+            f"fill_saved={fill_saved} fill_key={fill_key} "
             f"EVIDENCE_LABEL=FREE_DISCOVERY"
         )

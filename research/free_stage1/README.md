@@ -99,7 +99,7 @@ Transaction costs: pre-specified, not tuned after holdout results.
 ## Validation chronology
 
 Free discovery sample:
-- build inputs: 2009 onward (SEC XBRL starts in 2009; QuantConnect history is longer)
+- accounting/portfolio inputs: 2009 onward (SEC XBRL starts in 2009); Item 1 filing acquisition warms up from 2007 so the first 2009 network snapshots can use valid prior 10-Ks
 - training: 2009–2014
 - validation: 2015–2019
 - untouched free-data holdout: 2020–2023 for TNIC-comparable period, and through latest available date for CIK-native SEC network

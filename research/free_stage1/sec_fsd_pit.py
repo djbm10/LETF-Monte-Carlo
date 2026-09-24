@@ -200,13 +200,17 @@ def canonicalize_quarter(sub: pd.DataFrame, num: pd.DataFrame) -> pd.DataFrame:
                 row[metric] = np.nan
                 continue
             if metric in FLOW_METRICS and "qtrs" in z:
-                # Annual filings: prefer qtrs=4; quarterly filings: prefer qtrs=1,
-                # but preserve the chosen qtrs so transformations can audit it.
+                # Never silently substitute a YTD flow for a single-quarter
+                # 10-Q value (or vice versa). That would make YoY growth and
+                # valuation denominators incomparable across filings.
                 desired = 4 if row["form"] in ("10-K", "20-F", "40-F") else 1
                 zz = z[pd.to_numeric(z.qtrs, errors="coerce") == desired]
-                if len(zz):
-                    z = zz
-                row[metric + "_qtrs"] = desired if len(z) else np.nan
+                if zz.empty:
+                    row[metric + "_qtrs"] = np.nan
+                    row[metric] = np.nan
+                    continue
+                z = zz
+                row[metric + "_qtrs"] = desired
             row[metric] = choose_value(z, metric)
         rows.append(row)
     return pd.DataFrame(rows)

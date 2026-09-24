@@ -12,6 +12,25 @@ on:
       - research/free-pit-quantconnect-stage1
 
 jobs:
+  credential_check:
+    if: contains(github.event.head_commit.message, '[qc-credential-check]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      QC_USER_ID: ${{ secrets.QC_USER_ID }}
+      QC_API_TOKEN: ${{ secrets.QC_API_TOKEN }}
+      QC_ORGANIZATION_ID: ${{ secrets.QC_ORGANIZATION_ID }}
+    steps:
+      - name: Check required QuantConnect secret presence only
+        shell: bash
+        run: |
+          missing=0
+          test -n "$QC_USER_ID" || { echo "MISSING QC_USER_ID"; missing=1; }
+          test -n "$QC_API_TOKEN" || { echo "MISSING QC_API_TOKEN"; missing=1; }
+          test -n "$QC_ORGANIZATION_ID" || { echo "MISSING QC_ORGANIZATION_ID"; missing=1; }
+          test "$missing" -eq 0 || exit 2
+          echo "QC_CREDENTIAL_SECRETS_PRESENT"
+
   bundle_preflight:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[sec-bundle-preflight]') || contains(github.event.head_commit.message, '[qc-cloud-smoke]')
     runs-on: ubuntu-latest

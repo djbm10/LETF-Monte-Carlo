@@ -30,6 +30,65 @@ jobs:
         run: pip install numpy pandas scipy scikit-learn beautifulsoup4 requests pyarrow
       - name: Compile
         run: |
-          python -m py_compile             research/free_stage1/sec_item1_network.py             research/free_stage1/sec_fsd_pit.py             research/free_stage1/selftest_free_pit.py             research/quantconnect/BottleneckWinnerFreePIT/main.py             research/quantconnect/RealHistoricalLeaps/main.py
+          python -m py_compile \
+            research/free_stage1/sec_item1_network.py \
+            research/free_stage1/sec_fsd_pit.py \
+            research/free_stage1/selftest_free_pit.py \
+            research/quantconnect/BottleneckWinnerFreePIT/main.py \
+            research/quantconnect/RealHistoricalLeaps/main.py
       - name: Synthetic PIT tests
         run: python research/free_stage1/selftest_free_pit.py
+
+      - name: Live SEC fundamentals smoke
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[live-sec-smoke]')
+        env:
+          SEC_USER_AGENT: LETF-Monte-Carlo research
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          python research/free_stage1/sec_fsd_pit.py \
+            --start-year 2023 \
+            --end-year 2023 \
+            --quarters 4 \
+            --out results/free_stage1/live_smoke/sec_fundamentals
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("results/free_stage1/live_smoke/sec_fundamentals/manifest.json")
+          m = json.loads(p.read_text())
+          assert m["rows"] > 1000, m
+          assert m["ciks"] > 500, m
+          assert not m["failed_quarters"], m
+          print("LIVE SEC FSD SMOKE PASS", m["rows"], m["ciks"])
+          PY
+
+      - name: Live SEC Item 1 network smoke
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[live-sec-smoke]')
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          python research/free_stage1/sec_item1_network.py \
+            --start-year 2023 \
+            --end-year 2023 \
+            --ciks "0000320193,0000789019,0001652044,0001018724,0001326801,0001045810,0001318605,0000200406,0000732712,0000051143,0000019617,0001403161,0000909832,0000077476,0000021344,0000034088,0000093410,0001067983" \
+            --formation-dates "2023-12-31" \
+            --rps 2 \
+            --out results/free_stage1/live_smoke/sec_item1_network
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("results/free_stage1/live_smoke/sec_item1_network/manifest.json")
+          m = json.loads(p.read_text())
+          assert m["item1_success"] >= 10, m
+          assert m["network_runs"], m
+          run = m["network_runs"][0]
+          assert run["n_firms"] >= 10, run
+          assert 0 < run["realized_directed_density"] < 0.25, run
+          print("LIVE SEC ITEM1 SMOKE PASS", m["item1_success"], run["n_firms"], run["realized_directed_density"])
+          PY
+
+      - name: Upload live SEC smoke artifacts
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[live-sec-smoke]')
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-stage1-live-sec-smoke
+          path: results/free_stage1/live_smoke
+          retention-days: 14

@@ -1,5 +1,5 @@
 {
-  "version": "free-pit-stage1-2026-09-22",
+  "version": "free-pit-stage1-2026-09-22-r2",
   "status": "FROZEN_BEFORE_RESULTS",
   "bottleneck": {
     "start": "2009-01-01",
@@ -15,7 +15,7 @@
       "2020-01-01",
       "2023-12-31"
     ],
-    "rebalance": "quarterly",
+    "rebalance": "first trading day of Jan/Apr/Jul/Oct",
     "portfolio_sizes": [
       10,
       20,
@@ -69,7 +69,39 @@
         "momentum12": 0.15,
         "high52": 0.1
       }
-    }
+    },
+    "transaction_cost_implementation": {
+      "one_way_cost_bps": 15,
+      "model": "ConstantSlippageModel",
+      "separate_commission": 0,
+      "interpretation": "all-in execution drag applied independently to each buy and sell side"
+    },
+    "universe": {
+      "security_type": "primary US common shares",
+      "exchanges": [
+        "NYS",
+        "NAS",
+        "ASE"
+      ],
+      "min_price": 5,
+      "min_dollar_volume": 1000000,
+      "sector_exclusions": []
+    },
+    "audit_output": [
+      "formation_date",
+      "model",
+      "top_n",
+      "eligible_count",
+      "feature_complete_count",
+      "scored_count",
+      "rank",
+      "score",
+      "symbol",
+      "cik",
+      "model_signal_components",
+      "market_cap",
+      "fund_file_date"
+    ]
   },
   "leaps": {
     "start": "2012-01-01",
@@ -117,5 +149,11 @@
       "OptionMetrics IvyDB US"
     ],
     "parameter_changes_after_replication": false
-  }
+  },
+  "pre_result_corrections": [
+    "2026-09-23: removed undocumented utilities/financials SIC exclusions from QuantConnect Bottleneck universe; frozen universe has no sector exclusion.",
+    "2026-09-23: specified 15 bps one-way equity transaction cost as all-in ConstantSlippageModel execution drag per buy/sell side with zero separate commission for the Bottleneck tournament.",
+    "2026-09-23: specified quarterly formation as the first trading day of Jan/Apr/Jul/Oct in the daily QuantConnect implementation.",
+    "2026-09-23: required per-rebalance selected-name/signal audit export to Object Store."
+  ]
 }

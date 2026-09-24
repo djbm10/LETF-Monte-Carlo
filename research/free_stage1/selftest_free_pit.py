@@ -11,6 +11,24 @@ import sec_item1_network as net
 import sec_fsd_pit as fsd
 
 
+
+def test_item1_table_heading():
+    # Regression: modern inline-XBRL filings can put the real Item 1 heading
+    # inside a layout table. Table text must survive HTML normalization.
+    body = " ".join(["cloud retail logistics infrastructure services competition"] * 80)
+    html = f"""
+    <html><body>
+      <table><tr><td>Item 1.</td><td>Business</td></tr></table>
+      <p>{body}</p>
+      <p>Item 1A. Risk Factors</p>
+      <p>risk text</p>
+    </body></html>
+    """
+    item1 = net.extract_item1(f"<DOCUMENT><TYPE>10-K<TEXT>{html}</TEXT></DOCUMENT>")
+    assert item1 is not None
+    assert len(item1.split()) >= 250
+    assert "cloud retail logistics" in item1
+
 def test_network():
     docs=[]
     themes=[
@@ -90,6 +108,7 @@ def test_sec_fsd():
 
 
 if __name__=="__main__":
+    test_item1_table_heading()
     test_network()
     test_sec_fsd()
     print("FREE PIT SELFTEST PASS")

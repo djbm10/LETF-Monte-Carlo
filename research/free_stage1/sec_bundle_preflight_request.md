@@ -5,3 +5,5 @@ Purpose: validate that the pinned successful live SEC smoke artifact has at leas
 This is an integration/data-coverage check only. It changes no research parameter and reads no return output.
 
 Retry requested after adding the missing workflow-only `requests` dependency. No dataset, signal definition, or research parameter changed.
+
+Credential-presence check requested after the SEC bundle preflight passed. This check does not call QuantConnect and does not print secret values.

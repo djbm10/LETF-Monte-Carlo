@@ -91,6 +91,40 @@ For Bottleneck models, one fundamentals source and one network source must be po
 
 Never substitute a current-ticker CIK↔GVKEY match.
 
+## Automated pre-return cloud smoke
+
+Before running any of the 177 performance cells, run the integration-only cloud
+smoke in `.github/workflows/quantconnect-stage1-smoke.yml`.
+
+The branch pins the default SEC input to successful live run `35946883974`
+(`[live-sec-smoke] exact-head final data validation`). That run passed compile,
+synthetic PIT tests, live SEC fundamentals, live Item 1 network construction, and
+artifact upload. Later branch changes are QuantConnect integration/workflow
+changes and do not alter that SEC artifact's data-construction semantics.
+
+Required GitHub repository secrets:
+
+- `QC_USER_ID`
+- `QC_API_TOKEN`
+- `QC_ORGANIZATION_ID`
+
+The smoke can be started by workflow dispatch, or on this research branch by a
+deliberate commit whose message contains `[qc-cloud-smoke]`. Ordinary pushes
+do not launch QuantConnect compute.
+
+The runner is `research/free_stage1/quantconnect_cloud_smoke.py`. It uploads
+the validated smoke CSVs to namespaced QuantConnect Object Store keys, syncs the
+exact repo algorithms to dedicated smoke projects, compiles them, runs the short
+Bottleneck and LEAPS windows in `CLOUD_SMOKE_CHECKLIST.md`, and checks only
+mechanical/integration evidence: runtime state, logs, order records, audit-save
+status, and required order behavior.
+
+The runner does not inspect or emit CAGR, Sharpe, drawdown, alpha, relative
+returns, equity curves, or other performance statistics. Its only permitted
+terminal result is an integration go/no-go report. A mechanical smoke failure
+may be fixed and documented in `frozen_spec.json`; no research parameter may be
+changed because of a smoke result.
+
 ## Bottleneck Winner matrix
 
 Frozen grid is in:

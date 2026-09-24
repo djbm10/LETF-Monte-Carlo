@@ -110,12 +110,17 @@ The model/portfolio-size choice for any later live candidate must be determined 
 - min OI 100
 - 2012-01-03 to 2026-09-21
 
+Execution invariant:
+- contract selection is made from a completed daily option chain
+- entry/roll orders are submitted as Market-On-Open orders for the next regular session
+- selection-time bid/ask and next-open fill must both be retained so same-close execution leakage can be audited
+
 For every run save:
 - selected option symbol at each entry
-- entry/exit dates
+- selection date and actual entry/exit fill dates
 - strike / expiry / DTE
 - delta at selection
-- bid / ask / fill
+- selection-time bid / ask and actual next-open fill
 - OI
 - premium paid
 - effective portfolio delta exposure

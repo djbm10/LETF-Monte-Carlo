@@ -15,6 +15,8 @@ class RealHistoricalLeaps(QCAlgorithm):
         target_dte=365|548|730
         allocation=0.25|0.50|1.00
         slippage_bps=0|5|10
+        start=2012-01-03 (optional smoke override)
+        end=2026-09-21 (optional smoke override)
 
     Execution:
     - daily option-chain / quote data
@@ -49,8 +51,10 @@ class RealHistoricalLeaps(QCAlgorithm):
         if self.allocation not in (0.25, 0.50, 1.00):
             raise ValueError("allocation must be 0.25, 0.50, or 1.00")
 
-        self.set_start_date(2012, 1, 3)
-        self.set_end_date(2026, 9, 21)
+        start = self.get_parameter("start") or "2012-01-03"
+        end = self.get_parameter("end") or "2026-09-21"
+        self.set_start_date(*[int(x) for x in start.split("-")])
+        self.set_end_date(*[int(x) for x in end.split("-")])
         self.set_cash(1_000_000)
         self.set_brokerage_model(BrokerageName.INTERACTIVE_BROKERS_BROKERAGE, AccountType.MARGIN)
 

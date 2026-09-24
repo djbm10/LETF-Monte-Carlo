@@ -3,6 +3,23 @@
 These are integration tests, not performance tests. Do not interpret CAGR, Sharpe,
 drawdown, alpha, or relative returns from these short smoke windows.
 
+## Reproducible execution path
+
+Preferred execution is the gated GitHub workflow:
+`.github/workflows/quantconnect-stage1-smoke.yml`.
+
+Default validated SEC artifact source:
+- workflow run: `35946883974`
+- event: `[live-sec-smoke] exact-head final data validation`
+- SEC fundamentals smoke: passed
+- SEC Item 1 network smoke: passed
+
+The workflow requires repository secrets `QC_USER_ID`, `QC_API_TOKEN`, and
+`QC_ORGANIZATION_ID`. It runs
+`research/free_stage1/quantconnect_cloud_smoke.py` and uploads only a
+mechanical go/no-go JSON report. The smoke runner must not inspect or emit
+performance statistics.
+
 ## 1) Bottleneck Winner end-to-end smoke
 
 Use the small SEC/network smoke bundle generated from the validated live SEC job.

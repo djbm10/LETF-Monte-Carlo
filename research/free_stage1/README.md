@@ -21,6 +21,7 @@ Primary free implementation:
 2. **SEC EDGAR 10-K Item 1 text**
    - construct a CIK-native TF-IDF competitor network from business descriptions.
    - use only the latest 10-K public by the network snapshot date.
+   - exclude Item 1 text more than 550 days old at formation so inactive/dead filers do not persist indefinitely in later competitor cross-sections.
 3. **QuantConnect US Equities + Security Master / PIT universe**
    - supplies the historical tradable universe, point-in-time CIK identity, prices, corporate-action handling and returns, including delisted names.
    - contemporaneous market cap is used only as a market input for the valuation ratio; accounting denominators remain SEC as-filed.

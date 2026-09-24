@@ -148,7 +148,7 @@ def _html_to_text(raw: str) -> str:
     # cells (for example "Item 1. | Business"). Preserve only rows that look
     # like Item 1/1A/1B/2 boundaries, then discard the rest of each table so
     # layout/financial-table text does not contaminate the TF-IDF corpus.
-    boundary = re.compile(r"(?i)\\bitem\\s+(?:1(?:a|b)?|2)\\b")
+    boundary = re.compile(r"(?i)\bitem\s+(?:1(?:a|b)?|2)\b")
     for table in list(soup.find_all("table")):
         heading_rows = []
         for tr in table.find_all("tr"):

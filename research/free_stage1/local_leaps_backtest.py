@@ -409,6 +409,7 @@ def run_symbol(
                     quote_source = "intrinsic_missing_quote"
                     st.intrinsic_exit_count += 1
                 qty = st.option_qty
+                pv_before_exit = st.portfolio_value()
                 proceeds = qty * px * OPTION_MULTIPLIER
                 fee = option_fee(qty)
                 st.cash += proceeds - fee
@@ -428,7 +429,7 @@ def run_symbol(
                     "fee": fee,
                     "quote_source": quote_source,
                     "entry_date": str(st.entry_date) if st.entry_date else "",
-                    "portfolio_value_before": st.portfolio_value(),
+                    "portfolio_value_before": pv_before_exit,
                 })
                 st.option_contract = None
                 st.option_expiration = None

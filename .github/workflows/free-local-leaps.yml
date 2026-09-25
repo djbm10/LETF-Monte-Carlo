@@ -1,0 +1,111 @@
+name: Free local LEAPS replication
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  local_leaps:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[local-leaps-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install local backtest dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas polars pyarrow
+
+      - name: Fetch preserved SPY and QQQ historical option chains
+        shell: bash
+        run: |
+          rm -rf /tmp/options-dataset
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/anahatsingh-ui/options-dataset-hist.git \
+            /tmp/options-dataset
+          cd /tmp/options-dataset
+          git sparse-checkout set spy qqq
+          du -sh /tmp/options-dataset
+          test -f /tmp/options-dataset/spy/options_2012.parquet
+          test -f /tmp/options-dataset/qqq/options_2012.parquet
+          test -f /tmp/options-dataset/spy/underlying_prices.parquet
+          test -f /tmp/options-dataset/qqq/underlying_prices.parquet
+
+      - name: Fetch BIL adjusted total-return sleeve
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2 \
+            https://raw.githubusercontent.com/manisahni/marketdata/main/daily_adjclose_wide.csv \
+            -o /tmp/daily_adjclose_wide.csv
+          head -1 /tmp/daily_adjclose_wide.csv | grep -q 'BIL'
+
+      - name: Record source revisions and hashes
+        shell: bash
+        run: |
+          mkdir -p results/free_stage1/local_leaps
+          {
+            echo "options_repo=https://github.com/anahatsingh-ui/options-dataset-hist"
+            echo "options_commit=$(git -C /tmp/options-dataset rev-parse HEAD)"
+            echo "bil_repo=https://github.com/manisahni/marketdata"
+            echo "run_source_sha=$GITHUB_SHA"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > results/free_stage1/local_leaps/source_manifest.txt
+          sha256sum /tmp/options-dataset/spy/underlying_prices.parquet \
+                    /tmp/options-dataset/qqq/underlying_prices.parquet \
+                    /tmp/daily_adjclose_wide.csv \
+            >> results/free_stage1/local_leaps/source_manifest.txt
+
+      - name: Run frozen 162-cell LEAPS surface on free historical chains
+        shell: bash
+        run: |
+          python research/free_stage1/local_leaps_backtest.py \
+            --data-root /tmp/options-dataset \
+            --bil-csv /tmp/daily_adjclose_wide.csv \
+            --out results/free_stage1/local_leaps \
+            --start 2012-01-03 \
+            --end 2025-12-16
+
+      - name: Assert complete frozen grid
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/free_stage1/local_leaps/leaps_local_eod_summary.json")
+          j=json.loads(p.read_text())
+          assert j["frozen_grid_cells_completed"] == 162, j
+          print("LOCAL LEAPS GRID PASS", j["frozen_grid_cells_completed"])
+          PY
+
+      - name: Upload local LEAPS results
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-local-leaps-results
+          path: results/free_stage1/local_leaps/
+          retention-days: 30
+
+      - name: Commit reproducible result surface
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/free_stage1/local_leaps
+          if git diff --cached --quiet; then
+            echo "No result changes to commit"
+          else
+            git commit -m "Record free local LEAPS result surface [skip ci]"
+            git push origin HEAD:research/free-pit-quantconnect-stage1
+          fi

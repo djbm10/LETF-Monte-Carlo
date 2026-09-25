@@ -96,6 +96,8 @@ class StrategyState:
     resized_entries: int = 0
     no_candidate_days: int = 0
     missing_mark_days: int = 0
+    sanitized_mark_days: int = 0
+    sanitized_exit_quotes: int = 0
     intrinsic_exit_count: int = 0
     missing_next_close_entry_rejections: int = 0
     audit: list = field(default_factory=list)
@@ -160,7 +162,7 @@ def load_bil_returns(path: Path, dates: Iterable[date]) -> Dict[date, float]:
     return out
 
 
-def valid_chain(day_df: pl.DataFrame, current_date: date) -> pl.DataFrame:
+def valid_chain(day_df: pl.DataFrame, current_date: date, underlying_close: float) -> pl.DataFrame:
     if day_df.is_empty():
         return day_df
     x = day_df.with_columns(
@@ -174,7 +176,12 @@ def valid_chain(day_df: pl.DataFrame, current_date: date) -> pl.DataFrame:
         ]
     )
     x = x.with_columns(
-        (pl.col("expiration") - pl.col("date")).dt.total_days().cast(pl.Int32).alias("dte")
+        [
+            (pl.col("expiration") - pl.col("date")).dt.total_days().cast(pl.Int32).alias("dte"),
+            (pl.lit(float(underlying_close)) - pl.col("strike").cast(pl.Float64, strict=False))
+                .clip(lower_bound=0.0)
+                .alias("intrinsic"),
+        ]
     )
     return x.filter(
         (pl.col("type").cast(pl.Utf8).str.to_lowercase() == "call")
@@ -184,6 +191,11 @@ def valid_chain(day_df: pl.DataFrame, current_date: date) -> pl.DataFrame:
         & (pl.col("bid") > 0)
         & (pl.col("ask") > 0)
         & (pl.col("ask") >= pl.col("bid"))
+        # Hard American-call no-arbitrage data-quality bounds. Reject quotes
+        # that imply buying below intrinsic or above the underlying itself.
+        & (pl.col("ask") >= pl.col("intrinsic") - 1e-9)
+        & (pl.col("bid") <= float(underlying_close) + 1e-9)
+        & (pl.col("ask") <= float(underlying_close) + 1e-9)
         & (pl.col("delta").abs() >= 0.55)
         & (pl.col("delta").abs() <= 0.99)
     )
@@ -372,7 +384,12 @@ def run_symbol(
                 current_group[current_date.year] = None
 
         qmap = quote_map(day_df)
-        valid = valid_chain(day_df, current_date) if not day_df.is_empty() else day_df
+        underlying_close = float(underlying.loc[current_date, "close"])
+        valid = (
+            valid_chain(day_df, current_date, underlying_close)
+            if not day_df.is_empty()
+            else day_df
+        )
         candidates = best_candidates(valid, current_date) if not day_df.is_empty() else {}
 
         # Mark held contracts first. The preserved source occasionally
@@ -382,7 +399,6 @@ def run_symbol(
         # time value and recompute current intrinsic value. This is lookahead-free,
         # respects the current intrinsic floor, and affects only mark-to-market
         # risk paths; cash-flow exits with a missing quote remain intrinsic-only.
-        underlying_close = float(underlying.loc[current_date, "close"])
         for st in states:
             if not st.option_contract:
                 continue
@@ -392,7 +408,14 @@ def run_symbol(
             intrinsic = max(underlying_close - require_strike, 0.0)
             if st.option_contract in qmap:
                 bid, ask = qmap[st.option_contract]
-                st.option_mark = (bid + ask) / 2.0
+                raw_mid = (bid + ask) / 2.0
+                # Economic bounds for an American call: value is at least
+                # intrinsic and no more than the underlying. Clipping only
+                # the mark prevents stale/wild quotes from creating impossible
+                # path jumps without using future observations.
+                st.option_mark = min(max(raw_mid, intrinsic), underlying_close)
+                if abs(st.option_mark - raw_mid) > 1e-9:
+                    st.sanitized_mark_days += 1
                 st.last_time_value = max(st.option_mark - intrinsic, 0.0)
             else:
                 st.option_mark = intrinsic + max(st.last_time_value, 0.0)
@@ -405,8 +428,14 @@ def run_symbol(
                 quote = qmap.get(st.option_contract)
                 if quote is not None:
                     bid, ask = quote
-                    px = bid * (1.0 - st.slippage)
-                    quote_source = "actual_bid"
+                    if st.option_strike is None:
+                        raise RuntimeError(f"missing strike state for {st.option_contract}")
+                    intrinsic_exit = max(underlying_close - st.option_strike, 0.0)
+                    executable_bid = min(max(bid, intrinsic_exit), underlying_close)
+                    if abs(executable_bid - bid) > 1e-9:
+                        st.sanitized_exit_quotes += 1
+                    px = executable_bid * (1.0 - st.slippage)
+                    quote_source = "actual_bid_no_arbitrage_bounded"
                 else:
                     if st.option_strike is None:
                         raise RuntimeError(f"missing strike state for {st.option_contract}")
@@ -480,6 +509,31 @@ def run_symbol(
                     st.pending_entry = None
                 if quote is not None:
                     _, ask = quote
+                    entry_intrinsic_now = max(
+                        underlying_close - pe.candidate.strike, 0.0
+                    )
+                    if (
+                        ask < entry_intrinsic_now - 1e-9
+                        or ask > underlying_close + 1e-9
+                    ):
+                        st.rejected_entries += 1
+                        st.audit.append({
+                            "event": "ENTRY_REJECTED_NO_ARBITRAGE_QUOTE",
+                            "date": str(current_date),
+                            "selection_date": str(pe.selection_date),
+                            "underlying": st.underlying,
+                            "target_delta": st.target_delta,
+                            "target_dte": st.target_dte,
+                            "allocation": st.allocation,
+                            "slippage_bps": st.slippage_bps,
+                            "contract_id": pe.candidate.contract_id,
+                            "fill_ask": ask,
+                            "underlying_close": underlying_close,
+                            "intrinsic": entry_intrinsic_now,
+                        })
+                        st.pending_entry = None
+                        curves[st.key].append((current_date, st.portfolio_value()))
+                        continue
                     fill_px = ask * (1.0 + st.slippage)
                     pv_before = st.portfolio_value()
                     budget = max(0.0, pv_before * st.allocation)
@@ -640,6 +694,8 @@ def run_symbol(
                 "rejected_entries": st.rejected_entries,
                 "no_candidate_days": st.no_candidate_days,
                 "missing_mark_days": st.missing_mark_days,
+                "sanitized_mark_days": st.sanitized_mark_days,
+                "sanitized_exit_quotes": st.sanitized_exit_quotes,
                 "intrinsic_exit_count": st.intrinsic_exit_count,
                 "missing_next_close_entry_rejections": st.missing_next_close_entry_rejections,
                 "min_portfolio_value": float(curve.min()) if len(curve) else float("nan"),
@@ -767,13 +823,13 @@ def main():
                 "premium allocation after an overnight move."
             ),
             "missing_quote_rule": (
+                "Daily call marks are bounded by hard no-arbitrage limits [intrinsic, underlying]. "
                 "If a held contract is absent from the preserved EOD snapshot, "
-                "daily mark-to-market uses current intrinsic value plus the last "
-                "observed non-negative time value. This avoids artificial "
-                "intrinsic-only mark collapses without using future information. "
-                "If a roll exit is due while the quote is missing, the cash-flow "
-                "exit remains intrinsic-only, deliberately discarding remaining "
-                "time value."
+                "mark-to-market uses current intrinsic plus the last observed "
+                "non-negative time value. Entry quotes violating intrinsic/underlying "
+                "bounds are rejected; exit bids are bounded by the exercise floor and "
+                "underlying upper bound. A fully missing roll-exit quote remains "
+                "intrinsic-only."
             ),
             "collateral": (
                 "BIL adjusted-close total-return sleeve from manisahni/marketdata; "
@@ -785,7 +841,7 @@ def main():
             ),
             "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
             "trade_audit_rows": int(len(audits)),
-            "local_proxy_version": "2026-09-25-r3-timevalue-carry-mark",
+            "local_proxy_version": "2026-09-25-r4-no-arbitrage-bounds",
             "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY",
         }
     )

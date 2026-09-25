@@ -32,6 +32,7 @@ jobs:
         run: |
           python -m py_compile \
             research/free_stage1/sec_item1_network.py \
+            research/free_stage1/sec_item1_sp500_network.py \
             research/free_stage1/sec_fsd_pit.py \
             research/free_stage1/sec_formation_features.py \
             research/free_stage1/selftest_free_pit.py \

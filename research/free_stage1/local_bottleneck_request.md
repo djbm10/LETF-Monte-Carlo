@@ -9,3 +9,5 @@ Kaggle recovery audit rerun requested after explicit archive extraction fix. Sam
 Hybrid WIKI+Yahoo 2007-2023 price build requested after WIKI recovered 94.3% of pre-2018 historical S&P symbols and the raw Yahoo-only panel showed unacceptable survivor gaps. Hard gate remains weighted member-session coverage >=97% before any Bottleneck return run.
 
 Parallel 5-way SEC fundamentals + Item 1 network build requested. Each accounting shard carries prior-year warm-up; each network shard carries >=550 days of acquisition warm-up. Final merge revalidates all 60 formation dates before output.
+
+Sharded build rerun requested after fixing workflow-only network --end-year typing. Research definitions and source code semantics unchanged.

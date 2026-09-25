@@ -38,6 +38,7 @@ jobs:
             research/free_stage1/selftest_free_pit.py \
             research/free_stage1/quantconnect_cloud_smoke.py \
             research/free_stage1/local_leaps_backtest.py \
+            research/free_stage1/local_sp500_bottleneck_backtest.py \
             research/quantconnect/BottleneckWinnerFreePIT/main.py \
             research/quantconnect/RealHistoricalLeaps/main.py
       - name: Synthetic PIT tests

@@ -10,17 +10,17 @@
     "slippage_bps": 0,
     "cagr": 0.5764034352786163,
     "max_drawdown": -0.8910544650669764,
-    "sharpe_0rf": 0.9380458618816925
+    "sharpe_0rf": 0.9447469949734576
   },
-  "median_cagr": 0.23958200651582118,
-  "median_max_drawdown": -0.49001617565433503,
+  "median_cagr": 0.24137467236130794,
+  "median_max_drawdown": -0.49001584077274374,
   "by_underlying": {
     "QQQ": {
       "cells": 81,
-      "median_cagr": 0.2572324414839513,
+      "median_cagr": 0.257904368222849,
       "max_cagr": 0.5764034352786163,
-      "min_cagr": 0.10976668763725383,
-      "median_max_drawdown": -0.5189314740026318
+      "min_cagr": 0.11253443659702711,
+      "median_max_drawdown": -0.5188653233890197
     },
     "SPY": {
       "cells": 81,
@@ -38,11 +38,11 @@
   "actual_end": "2025-12-16",
   "execution_difference": "Free source is a 4:00 PM ET EOD chain. Contract selection uses the completed close and execution uses the next trading day's actual quote-side close, not an unavailable next-open QuoteBar.",
   "sizing_difference": "Quantity is never increased after selection; it may be resized downward at next-close execution to remain within the frozen premium allocation after an overnight move.",
-  "missing_quote_rule": "If a held contract is absent from the preserved EOD snapshot, daily mark-to-market uses current intrinsic value plus the last observed non-negative time value. This avoids artificial intrinsic-only mark collapses without using future information. If a roll exit is due while the quote is missing, the cash-flow exit remains intrinsic-only, deliberately discarding remaining time value.",
+  "missing_quote_rule": "Daily call marks are bounded by hard no-arbitrage limits [intrinsic, underlying]. If a held contract is absent from the preserved EOD snapshot, mark-to-market uses current intrinsic plus the last observed non-negative time value. Entry quotes violating intrinsic/underlying bounds are rejected; exit bids are bounded by the exercise floor and underlying upper bound. A fully missing roll-exit quote remains intrinsic-only.",
   "collateral": "BIL adjusted-close total-return sleeve from manisahni/marketdata; BIL trading fees are omitted in this local proxy.",
   "option_fee_model": "QuantConnect InteractiveBrokersFeeModel low-volume equity-option tier: $0.65/contract for premium >= $0.10, $1 minimum.",
   "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
   "trade_audit_rows": 13500,
-  "local_proxy_version": "2026-09-25-r3-timevalue-carry-mark",
+  "local_proxy_version": "2026-09-25-r4-no-arbitrage-bounds",
   "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY"
 }

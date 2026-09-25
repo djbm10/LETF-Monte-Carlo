@@ -215,5 +215,10 @@
     "2026-09-23: fixed Bottleneck network input loader arity so network_object_key and network_url both route through the same validated CSV loader. This is a pre-return integration fix only; no factor, universe, portfolio, cost, or sample parameter changed.",
     "2026-09-23: added a 550-day maximum age for SEC 10-K Item 1 text at each network formation date. Without a staleness rule, a filer that stopped submitting 10-Ks years earlier could remain in every later competition network and distort scarcity for active firms. This is a pre-return network-universe semantics correction; no factor weight, portfolio size, cost, holdout, or return result changed.",
     "2026-09-23: network filing acquisition now starts in 2007 while portfolio/network formation remains 2009 onward. This supplies the up-to-550-day Item 1 lookback needed for early-2009 snapshots and does not introduce pre-2009 portfolio returns."
+  ],
+  "local_free_proxy_corrections": [
+    "2026-09-24/25: corrected the local free EOD LEAPS proxy's InteractiveBrokers equity-option fee from $0.70/contract to the current LEAN InteractiveBrokersFeeModel low-volume rate of $0.65/contract for premium >= $0.10, with $1 minimum. This is a mechanical replication fix after proxy results were observed; the frozen strategy grid is unchanged.",
+    "2026-09-24/25: corrected the local free EOD LEAPS proxy so an entry selected at close(t) must either fill from that same contract's quote at close(t+1) or be rejected. The prior local proxy could leave a missing next-session quote pending and fill the stale selection on a later date. This is a mechanical execution-timing fix after proxy results were observed; it does not change delta/DTE/allocation/slippage parameters.",
+    "2026-09-24/25: added path diagnostics (missing marks, intrinsic exits, missing-next-close rejections, minimum portfolio value, extreme daily returns) to audit the local EOD proxy's large 100%-allocation drawdowns/volatility. Diagnostics do not alter trading decisions."
   ]
 }

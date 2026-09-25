@@ -370,11 +370,19 @@ def run_symbol(
         valid = valid_chain(day_df, current_date) if not day_df.is_empty() else day_df
         candidates = best_candidates(valid, current_date) if not day_df.is_empty() else {}
 
-        # Mark held contracts first using actual close-mid when available.
+        # Mark held contracts first. When the preserved EOD snapshot
+        # omits a held contract, use intrinsic value as a conservative lower
+        # bound instead of carrying a stale quote forward.
+        underlying_close = float(underlying.loc[current_date, "close"])
         for st in states:
-            if st.option_contract and st.option_contract in qmap:
+            if not st.option_contract:
+                continue
+            if st.option_contract in qmap:
                 bid, ask = qmap[st.option_contract]
                 st.option_mark = (bid + ask) / 2.0
+            else:
+                strike = float(st.option_contract[-8:]) / 1000.0
+                st.option_mark = max(underlying_close - strike, 0.0)
 
         for st in states:
             # 1) Execute a queued exit at this close using actual bid.
@@ -382,37 +390,45 @@ def run_symbol(
             if st.pending_exit and st.option_contract:
                 quote = qmap.get(st.option_contract)
                 if quote is not None:
-                    bid, _ = quote
+                    bid, ask = quote
                     px = bid * (1.0 - st.slippage)
-                    qty = st.option_qty
-                    proceeds = qty * px * OPTION_MULTIPLIER
-                    fee = option_fee(qty)
-                    st.cash += proceeds - fee
-                    st.audit.append({
-                        "event": "EXIT_FILL",
-                        "date": str(current_date),
-                        "underlying": st.underlying,
-                        "target_delta": st.target_delta,
-                        "target_dte": st.target_dte,
-                        "allocation": st.allocation,
-                        "slippage_bps": st.slippage_bps,
-                        "contract_id": st.option_contract,
-                        "bid": bid,
-                        "ask": quote[1],
-                        "fill_price": px,
-                        "quantity": qty,
-                        "fee": fee,
-                        "entry_date": str(st.entry_date) if st.entry_date else "",
-                        "portfolio_value_before": st.portfolio_value(),
-                    })
-                    st.option_contract = None
-                    st.option_expiration = None
-                    st.option_qty = 0
-                    st.option_mark = 0.0
-                    st.entry_date = None
-                    st.pending_exit = False
-                    st.roll_count += 1
-                    just_exited = True
+                    quote_source = "actual_bid"
+                else:
+                    strike = float(st.option_contract[-8:]) / 1000.0
+                    bid = max(underlying_close - strike, 0.0)
+                    ask = float("nan")
+                    px = bid
+                    quote_source = "intrinsic_missing_quote"
+                qty = st.option_qty
+                proceeds = qty * px * OPTION_MULTIPLIER
+                fee = option_fee(qty)
+                st.cash += proceeds - fee
+                st.audit.append({
+                    "event": "EXIT_FILL",
+                    "date": str(current_date),
+                    "underlying": st.underlying,
+                    "target_delta": st.target_delta,
+                    "target_dte": st.target_dte,
+                    "allocation": st.allocation,
+                    "slippage_bps": st.slippage_bps,
+                    "contract_id": st.option_contract,
+                    "bid": bid,
+                    "ask": ask,
+                    "fill_price": px,
+                    "quantity": qty,
+                    "fee": fee,
+                    "quote_source": quote_source,
+                    "entry_date": str(st.entry_date) if st.entry_date else "",
+                    "portfolio_value_before": st.portfolio_value(),
+                })
+                st.option_contract = None
+                st.option_expiration = None
+                st.option_qty = 0
+                st.option_mark = 0.0
+                st.entry_date = None
+                st.pending_exit = False
+                st.roll_count += 1
+                just_exited = True
 
             # 2) Execute queued entry at this close using actual ask.
             if st.pending_entry is not None and st.option_contract is None and not just_exited:
@@ -685,6 +701,12 @@ def main():
                 "Quantity is never increased after selection; it may be resized "
                 "downward at next-close execution to remain within the frozen "
                 "premium allocation after an overnight move."
+            ),
+            "missing_quote_rule": (
+                "If a held contract is absent from the preserved EOD snapshot, "
+                "daily marking uses intrinsic value. If a roll exit is due while "
+                "the quote is missing, the position is liquidated at intrinsic "
+                "value, deliberately discarding remaining time value."
             ),
             "collateral": (
                 "BIL adjusted-close total-return sleeve from manisahni/marketdata; "

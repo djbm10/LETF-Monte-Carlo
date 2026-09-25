@@ -33,8 +33,8 @@ jobs:
       - name: Resolve latest successful free input runs
         shell: bash
         run: |
-          INPUT_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-bottleneck-inputs.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
-          PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-price-panel.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          INPUT_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-bottleneck-inputs-sharded.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-hybrid-price-panel.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
           test -n "$INPUT_RUN" || { echo "No successful Bottleneck input build"; exit 2; }
           test -n "$PRICE_RUN" || { echo "No successful S&P price-panel build"; exit 2; }
           echo "INPUT_RUN=$INPUT_RUN" >> "$GITHUB_ENV"
@@ -46,8 +46,8 @@ jobs:
         run: |
           rm -rf /tmp/bottleneck-inputs /tmp/bottleneck-prices
           mkdir -p /tmp/bottleneck-inputs /tmp/bottleneck-prices
-          gh run download "$INPUT_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-bottleneck-inputs --dir /tmp/bottleneck-inputs
-          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-price-panel --dir /tmp/bottleneck-prices
+          gh run download "$INPUT_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-bottleneck-inputs-sharded --dir /tmp/bottleneck-inputs
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-hybrid-price-panel --dir /tmp/bottleneck-prices
           find /tmp/bottleneck-inputs -maxdepth 3 -type f -printf '%p %k KB\n'
           find /tmp/bottleneck-prices -maxdepth 2 -type f -printf '%p %k KB\n'
 
@@ -62,7 +62,7 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          p=next(Path("/tmp/bottleneck-prices").rglob("sp500_price_panel_summary.json"))
+          p=next(Path("/tmp/bottleneck-prices").rglob("sp500_hybrid_price_panel_summary.json"))
           j=json.loads(p.read_text())
           print(json.dumps(j,indent=2,default=str))
           coverage=float(j["weighted_member_session_coverage"])
@@ -77,12 +77,12 @@ jobs:
         run: |
           FUND="$(find /tmp/bottleneck-inputs -type f -name sec_formation_features.csv -print -quit)"
           NET="$(find /tmp/bottleneck-inputs -type f -name network_metrics_all.csv -print -quit)"
-          PRICES="$(find /tmp/bottleneck-prices -type f -name sp500_prices_2007_2023.parquet -print -quit)"
+          PRICES="$(find /tmp/bottleneck-prices -type f -name sp500_hybrid_prices_2007_2023.parquet -print -quit)"
           test -f "$FUND" || { echo "Missing fundamentals"; exit 3; }
           test -f "$NET" || { echo "Missing network"; exit 3; }
           test -f "$PRICES" || { echo "Missing price panel"; exit 3; }
 
-          rm -rf results/free_stage1/local_sp500_bottleneck
+          rm -rf results/free_stage1/local_sp500_bottleneck_discovery
           python research/free_stage1/local_sp500_bottleneck_backtest.py             --membership /tmp/components_history.csv             --fundamentals "$FUND"             --network "$NET"             --prices "$PRICES"             --out results/free_stage1/local_sp500_bottleneck_discovery             --start 2009-01-01             --end 2019-12-31
 
       - name: Assert complete proxy grid
@@ -113,6 +113,8 @@ jobs:
             echo "price_workflow_run=$PRICE_RUN"
             echo "executor_source_sha=$GITHUB_SHA"
             echo "membership_source=https://github.com/lawcal/sp500-components-history"
+            echo "price_sources=Yahoo Finance + Kaggle mirror of Quandl WIKI EOD"
+            echo "price_coverage_gate=0.97"
             echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           } > results/free_stage1/local_sp500_bottleneck_discovery/source_manifest.txt
 

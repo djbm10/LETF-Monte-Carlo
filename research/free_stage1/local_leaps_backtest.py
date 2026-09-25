@@ -83,6 +83,7 @@ class StrategyState:
     bil_value: float = 0.0
     option_contract: Optional[str] = None
     option_expiration: Optional[date] = None
+    option_strike: Optional[float] = None
     option_qty: int = 0
     option_mark: float = 0.0
     entry_date: Optional[date] = None
@@ -381,8 +382,10 @@ def run_symbol(
                 bid, ask = qmap[st.option_contract]
                 st.option_mark = (bid + ask) / 2.0
             else:
-                strike = float(st.option_contract[-8:]) / 1000.0
-                st.option_mark = max(underlying_close - strike, 0.0)
+                require_strike = st.option_strike
+                if require_strike is None:
+                    raise RuntimeError(f"missing strike state for {st.option_contract}")
+                st.option_mark = max(underlying_close - require_strike, 0.0)
 
         for st in states:
             # 1) Execute a queued exit at this close using actual bid.
@@ -394,8 +397,9 @@ def run_symbol(
                     px = bid * (1.0 - st.slippage)
                     quote_source = "actual_bid"
                 else:
-                    strike = float(st.option_contract[-8:]) / 1000.0
-                    bid = max(underlying_close - strike, 0.0)
+                    if st.option_strike is None:
+                        raise RuntimeError(f"missing strike state for {st.option_contract}")
+                    bid = max(underlying_close - st.option_strike, 0.0)
                     ask = float("nan")
                     px = bid
                     quote_source = "intrinsic_missing_quote"
@@ -423,6 +427,7 @@ def run_symbol(
                 })
                 st.option_contract = None
                 st.option_expiration = None
+                st.option_strike = None
                 st.option_qty = 0
                 st.option_mark = 0.0
                 st.entry_date = None
@@ -464,6 +469,7 @@ def run_symbol(
                             st.cash -= option_cost + fee
                             st.option_contract = pe.candidate.contract_id
                             st.option_expiration = pe.candidate.expiration
+                            st.option_strike = pe.candidate.strike
                             st.option_qty = qty
                             st.option_mark = (quote[0] + quote[1]) / 2.0
                             st.entry_date = current_date

@@ -1,0 +1,138 @@
+name: Free local S&P Bottleneck proxy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  local_bottleneck:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[local-bottleneck-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install numpy pandas pyarrow
+
+      - name: Resolve latest successful free input runs
+        shell: bash
+        run: |
+          INPUT_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-bottleneck-inputs.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-price-panel.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          test -n "$INPUT_RUN" || { echo "No successful Bottleneck input build"; exit 2; }
+          test -n "$PRICE_RUN" || { echo "No successful S&P price-panel build"; exit 2; }
+          echo "INPUT_RUN=$INPUT_RUN" >> "$GITHUB_ENV"
+          echo "PRICE_RUN=$PRICE_RUN" >> "$GITHUB_ENV"
+          echo "Using input run $INPUT_RUN and price run $PRICE_RUN"
+
+      - name: Download SEC/network and price artifacts
+        shell: bash
+        run: |
+          rm -rf /tmp/bottleneck-inputs /tmp/bottleneck-prices
+          mkdir -p /tmp/bottleneck-inputs /tmp/bottleneck-prices
+          gh run download "$INPUT_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-bottleneck-inputs --dir /tmp/bottleneck-inputs
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-price-panel --dir /tmp/bottleneck-prices
+          find /tmp/bottleneck-inputs -maxdepth 3 -type f -printf '%p %k KB\n'
+          find /tmp/bottleneck-prices -maxdepth 2 -type f -printf '%p %k KB\n'
+
+      - name: Download PIT S&P membership
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2             https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv             -o /tmp/components_history.csv
+
+      - name: Require price coverage before returns
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=next(Path("/tmp/bottleneck-prices").rglob("sp500_price_panel_summary.json"))
+          j=json.loads(p.read_text())
+          print(json.dumps(j,indent=2,default=str))
+          coverage=float(j["weighted_member_session_coverage"])
+          # A proxy with large systematic survivor gaps is not allowed to run.
+          # This threshold is a data-quality gate, not a strategy parameter.
+          if coverage < 0.97:
+              raise SystemExit(f"Price coverage {coverage:.4%} is below 97% gate")
+          PY
+
+      - name: Run frozen 15-cell large-cap proxy
+        shell: bash
+        run: |
+          FUND="$(find /tmp/bottleneck-inputs -type f -name sec_formation_features.csv -print -quit)"
+          NET="$(find /tmp/bottleneck-inputs -type f -name network_metrics_all.csv -print -quit)"
+          PRICES="$(find /tmp/bottleneck-prices -type f -name sp500_prices_2007_2023.parquet -print -quit)"
+          test -f "$FUND" || { echo "Missing fundamentals"; exit 3; }
+          test -f "$NET" || { echo "Missing network"; exit 3; }
+          test -f "$PRICES" || { echo "Missing price panel"; exit 3; }
+
+          rm -rf results/free_stage1/local_sp500_bottleneck
+          python research/free_stage1/local_sp500_bottleneck_backtest.py             --membership /tmp/components_history.csv             --fundamentals "$FUND"             --network "$NET"             --prices "$PRICES"             --out results/free_stage1/local_sp500_bottleneck             --start 2009-01-01             --end 2023-12-31
+
+      - name: Assert complete proxy grid
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pandas as pd
+          from pathlib import Path
+          root=Path("results/free_stage1/local_sp500_bottleneck")
+          j=json.loads((root/"bottleneck_sp500_proxy_summary.json").read_text())
+          s=pd.read_csv(root/"bottleneck_sp500_proxy_surface.csv")
+          assert j["cells_completed"]==15, j
+          assert len(s)==15, len(s)
+          assert set(s.model)=={
+              "momentum","quality_momentum","bottleneck_core",
+              "bottleneck_momentum","bottleneck_full"
+          }
+          assert set(s.top_n)=={10,20,40}
+          print("LOCAL BOTTLENECK GRID PASS",len(s))
+          PY
+
+      - name: Record provenance
+        shell: bash
+        run: |
+          {
+            echo "input_workflow_run=$INPUT_RUN"
+            echo "price_workflow_run=$PRICE_RUN"
+            echo "executor_source_sha=$GITHUB_SHA"
+            echo "membership_source=https://github.com/lawcal/sp500-components-history"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > results/free_stage1/local_sp500_bottleneck/source_manifest.txt
+
+      - name: Upload proxy results
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-local-sp500-bottleneck-results
+          path: results/free_stage1/local_sp500_bottleneck/
+          retention-days: 30
+
+      - name: Commit reproducible proxy surface
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/free_stage1/local_sp500_bottleneck
+          if git diff --cached --quiet; then
+            echo "No result changes to commit"
+            exit 0
+          fi
+          git commit -m "Record free S&P Bottleneck proxy results [skip ci]"
+          git fetch origin research/free-pit-quantconnect-stage1
+          git rebase origin/research/free-pit-quantconnect-stage1
+          git push origin HEAD:research/free-pit-quantconnect-stage1

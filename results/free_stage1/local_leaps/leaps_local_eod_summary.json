@@ -1,0 +1,47 @@
+{
+  "cells": 162,
+  "sample_start": "2012-01-03",
+  "sample_end": "2025-12-15",
+  "best_cagr_cell": {
+    "underlying": "QQQ",
+    "target_delta": 0.7,
+    "target_dte": 548,
+    "allocation": 1.0,
+    "slippage_bps": 0,
+    "cagr": 0.5763059225853653,
+    "max_drawdown": -0.9233916571376126,
+    "sharpe_0rf": 0.7167396936455834
+  },
+  "median_cagr": 0.2395719086153697,
+  "median_max_drawdown": -0.4979002081580535,
+  "by_underlying": {
+    "QQQ": {
+      "cells": 81,
+      "median_cagr": 0.2572046213649932,
+      "max_cagr": 0.5763059225853653,
+      "min_cagr": 0.10976107277159297,
+      "median_max_drawdown": -0.5188738167804116
+    },
+    "SPY": {
+      "cells": 81,
+      "median_cagr": 0.21073609616732258,
+      "max_cagr": 0.48550146511295433,
+      "min_cagr": 0.10299508439640537,
+      "median_max_drawdown": -0.49078382678940546
+    }
+  },
+  "frozen_grid_cells_expected": 162,
+  "frozen_grid_cells_completed": 162,
+  "frozen_original_end": "2026-09-21",
+  "free_dataset_end": "2025-12-16",
+  "requested_end": "2025-12-16",
+  "actual_end": "2025-12-16",
+  "execution_difference": "Free source is a 4:00 PM ET EOD chain. Contract selection uses the completed close and execution uses the next trading day's actual quote-side close, not an unavailable next-open QuoteBar.",
+  "sizing_difference": "Quantity is never increased after selection; it may be resized downward at next-close execution to remain within the frozen premium allocation after an overnight move.",
+  "missing_quote_rule": "If a held contract is absent from the preserved EOD snapshot, daily marking uses intrinsic value. If a roll exit is due while the quote is missing, the position is liquidated at intrinsic value, deliberately discarding remaining time value.",
+  "collateral": "BIL adjusted-close total-return sleeve from manisahni/marketdata; BIL trading fees are omitted in this local proxy.",
+  "option_fee_model": "QuantConnect InteractiveBrokersFeeModel low-volume equity-option tier: $0.70/contract for premium >= $0.10, $1 minimum.",
+  "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
+  "trade_audit_rows": 13500,
+  "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY"
+}

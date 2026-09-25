@@ -604,6 +604,15 @@ def run_symbol(
             dtype=float,
         )
         metrics = benchmark_metrics(curve)
+        daily_returns = curve.pct_change().replace([np.inf, -np.inf], np.nan).dropna()
+        if len(daily_returns):
+            max_daily_gain = float(daily_returns.max())
+            worst_daily_return = float(daily_returns.min())
+            p99_abs_daily_return = float(daily_returns.abs().quantile(0.99))
+            daily_abs_return_gt_50pct = int((daily_returns.abs() > 0.50).sum())
+        else:
+            max_daily_gain = worst_daily_return = p99_abs_daily_return = float("nan")
+            daily_abs_return_gt_50pct = 0
         rows.append(
             {
                 "underlying": symbol,
@@ -619,6 +628,14 @@ def run_symbol(
                 "resized_entries": st.resized_entries,
                 "rejected_entries": st.rejected_entries,
                 "no_candidate_days": st.no_candidate_days,
+                "missing_mark_days": st.missing_mark_days,
+                "intrinsic_exit_count": st.intrinsic_exit_count,
+                "missing_next_close_entry_rejections": st.missing_next_close_entry_rejections,
+                "min_portfolio_value": float(curve.min()) if len(curve) else float("nan"),
+                "max_daily_gain": max_daily_gain,
+                "worst_daily_return": worst_daily_return,
+                "p99_abs_daily_return": p99_abs_daily_return,
+                "daily_abs_return_gt_50pct": daily_abs_return_gt_50pct,
             }
         )
         audit_rows.extend(st.audit)
@@ -754,6 +771,7 @@ def main():
             ),
             "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
             "trade_audit_rows": int(len(audits)),
+            "local_proxy_version": "2026-09-25-r2-exact-next-close",
             "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY",
         }
     )

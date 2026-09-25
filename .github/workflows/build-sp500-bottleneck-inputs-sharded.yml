@@ -90,22 +90,27 @@ jobs:
             acquire_start: 2007
             formation_start: 2009-03-31
             formation_end: 2011-12-31
+            acquire_end: 2011
           - id: b
             acquire_start: 2010
             formation_start: 2012-03-31
             formation_end: 2014-12-31
+            acquire_end: 2014
           - id: c
             acquire_start: 2013
             formation_start: 2015-03-31
             formation_end: 2017-12-31
+            acquire_end: 2017
           - id: d
             acquire_start: 2016
             formation_start: 2018-03-31
             formation_end: 2020-12-31
+            acquire_end: 2020
           - id: e
             acquire_start: 2019
             formation_start: 2021-03-31
             formation_end: 2023-12-31
+            acquire_end: 2023
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -135,7 +140,7 @@ jobs:
           python research/free_stage1/sec_item1_sp500_network.py \
             --membership /tmp/components_history.csv \
             --start-year ${{ matrix.acquire_start }} \
-            --end-year ${{ matrix.formation_end }} \
+            --end-year ${{ matrix.acquire_end }} \
             --formation-dates "$DATES" \
             --pair-density 0.0205 \
             --max-item1-age-days 550 \

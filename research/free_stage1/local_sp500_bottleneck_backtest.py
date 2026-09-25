@@ -89,7 +89,18 @@ def load_membership(path: Path) -> pd.DataFrame:
     )
     m["date_added"] = _clean_date(m["date_added"])
     m["date_removed"] = _clean_date(m["date_removed"])
-    return m.dropna(subset=["symbol", "cik", "date_added"]).copy()
+    m = m.dropna(subset=["symbol", "cik", "date_added"]).copy()
+
+    # A recycled ticker can splice two unrelated issuers into one vendor price
+    # history. The full PIT engine would key securities independently, so the
+    # free symbol-keyed proxy excludes any symbol mapped to more than one CIK.
+    reuse = m.groupby("symbol")["cik"].nunique()
+    reused_symbols = sorted(reuse[reuse > 1].index.astype(str).tolist())
+    m.attrs["reused_symbol_exclusions"] = reused_symbols
+    if reused_symbols:
+        print("EXCLUDING_REUSED_SYMBOLS", reused_symbols, flush=True)
+        m = m[~m.symbol.isin(reused_symbols)].copy()
+    return m
 
 
 def active_membership(m: pd.DataFrame, d: pd.Timestamp) -> pd.DataFrame:
@@ -242,6 +253,9 @@ def build_cross_section(
         prow = asof_row(g, signal_date)
         hist = trailing_prices(g, signal_date, 252)
         if prow is None or hist is None:
+            continue
+        if pd.Timestamp(prow.name) != signal_date:
+            # Do not score a halted/suspended/missing name off a stale quote.
             continue
         close = _num(prow.get("close"))
         volume = _num(prow.get("volume"))
@@ -519,7 +533,7 @@ def run_cell(
         for sym, target_value in target_values.items():
             g = prices_by_symbol.get(sym)
             row = asof_row(g, d)
-            if row is None:
+            if row is None or pd.Timestamp(row.name) != d:
                 continue
             px = _num(row.get("adj_close"))
             if not math.isfinite(px) or px <= 0:
@@ -627,6 +641,7 @@ def main():
     args = ap.parse_args()
 
     membership = load_membership(args.membership)
+    reused_symbol_exclusions = membership.attrs.get("reused_symbol_exclusions", [])
     sec = load_sec(args.fundamentals)
     network = load_network(args.network)
     prices = load_prices(args.prices)
@@ -701,6 +716,8 @@ def main():
         "price_symbols": int(prices.symbol.nunique()),
         "trading_sessions": int(len(sessions)),
         "rebalances": int(len(rebalances)),
+        "reused_symbol_exclusions": reused_symbol_exclusions,
+        "reused_symbol_exclusion_count": int(len(reused_symbol_exclusions)),
         "universe": "PIT_S_AND_P_500_ISSUER_PROXY",
         "execution_proxy": "prior-session signals; first-quarter-session close rebalance",
         "market_cap_proxy": "SEC as-filed shares * prior-session raw close",

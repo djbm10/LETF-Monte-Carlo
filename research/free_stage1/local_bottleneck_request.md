@@ -13,3 +13,5 @@ Parallel 5-way SEC fundamentals + Item 1 network build requested. Each accountin
 Sharded build rerun requested after fixing workflow-only network --end-year typing. Research definitions and source code semantics unchanged.
 
 Hybrid price build rerun requested after making residual Yahoo chart recovery conditional on failing the unchanged 97% weighted member-session gate. Source priority and coverage standard unchanged.
+
+Hybrid panel rerun requested with verified same-CIK rename recovery. Aliases require non-overlapping membership intervals plus >99.5% daily-return correlation over >=100 WIKI/Yahoo overlap days; no current-ticker guesswork.

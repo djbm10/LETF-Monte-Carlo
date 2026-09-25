@@ -286,7 +286,10 @@ def load_year_groups(path: Path, start: date, end: date):
         yield normalize_date(d), group
 
 
-def benchmark_metrics(series: pd.Series) -> dict:
+def benchmark_metrics(
+    series: pd.Series,
+    riskfree_returns: Dict[date, float] | None = None,
+) -> dict:
     s = series.dropna().astype(float)
     if len(s) < 2:
         return {}
@@ -300,6 +303,16 @@ def benchmark_metrics(series: pd.Series) -> dict:
         if len(rets) > 1 and rets.std(ddof=1) > 0
         else np.nan
     )
+    excess_sharpe = np.nan
+    if riskfree_returns is not None and len(rets) > 1:
+        rf = pd.Series(
+            [float(riskfree_returns.get(normalize_date(d), 0.0)) for d in rets.index],
+            index=rets.index,
+            dtype=float,
+        )
+        excess = rets - rf
+        if excess.std(ddof=1) > 0:
+            excess_sharpe = excess.mean() / excess.std(ddof=1) * math.sqrt(252)
     return {
         "start": str(s.index[0]),
         "end": str(s.index[-1]),
@@ -309,8 +322,29 @@ def benchmark_metrics(series: pd.Series) -> dict:
         "cagr": float(cagr),
         "ann_vol": float(ann_vol),
         "sharpe_0rf": float(sharpe),
+        "sharpe_excess_bil": float(excess_sharpe),
         "max_drawdown": float(dd.min()),
     }
+
+
+def period_metrics(
+    series: pd.Series,
+    start: date,
+    end: date,
+    riskfree_returns: Dict[date, float] | None = None,
+) -> dict:
+    s = series.dropna().astype(float).sort_index()
+    if s.empty:
+        return {}
+    x = s[(pd.Index(s.index) >= start) & (pd.Index(s.index) <= end)].copy()
+    if x.empty:
+        return {}
+    prior = s[pd.Index(s.index) < start]
+    if len(prior):
+        baseline_date = prior.index[-1]
+        baseline_value = float(prior.iloc[-1])
+        x = pd.concat([pd.Series([baseline_value], index=[baseline_date]), x])
+    return benchmark_metrics(x, riskfree_returns)
 
 
 def run_symbol(
@@ -668,7 +702,19 @@ def run_symbol(
             index=[d for d, _ in curves[st.key]],
             dtype=float,
         )
-        metrics = benchmark_metrics(curve)
+        metrics = benchmark_metrics(curve, bil_rets)
+        pre2020 = period_metrics(
+            curve,
+            date(2012, 1, 3),
+            date(2019, 12, 31),
+            bil_rets,
+        )
+        post2020 = period_metrics(
+            curve,
+            date(2020, 1, 1),
+            end,
+            bil_rets,
+        )
         daily_returns = curve.pct_change().replace([np.inf, -np.inf], np.nan).dropna()
         if len(daily_returns):
             max_daily_gain = float(daily_returns.max())
@@ -688,6 +734,8 @@ def run_symbol(
                 "execution_proxy": "signal_close_to_next_close_quote_side",
                 "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY",
                 **metrics,
+                **{f"pre2020_{k}": v for k, v in pre2020.items()},
+                **{f"post2020_{k}": v for k, v in post2020.items()},
                 "entries": st.entry_count,
                 "rolls": st.roll_count,
                 "resized_entries": st.resized_entries,
@@ -710,7 +758,15 @@ def run_symbol(
     # Underlying adjusted-close benchmark normalized to $1m.
     bench = underlying.loc[trading_dates, "adjusted_close"].dropna()
     bench_curve = INITIAL_CASH * bench / float(bench.iloc[0])
-    benchmark = benchmark_metrics(bench_curve)
+    benchmark = benchmark_metrics(bench_curve, bil_rets)
+    benchmark.update({
+        **{f"pre2020_{k}": v for k, v in period_metrics(
+            bench_curve, date(2012, 1, 3), date(2019, 12, 31), bil_rets
+        ).items()},
+        **{f"post2020_{k}": v for k, v in period_metrics(
+            bench_curve, date(2020, 1, 1), end, bil_rets
+        ).items()},
+    })
     benchmark["underlying"] = symbol
     benchmark["benchmark"] = f"{symbol}_buy_and_hold_adjusted"
     return pd.DataFrame(rows), benchmark, pd.DataFrame(audit_rows)
@@ -841,7 +897,7 @@ def main():
             ),
             "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
             "trade_audit_rows": int(len(audits)),
-            "local_proxy_version": "2026-09-25-r4-no-arbitrage-bounds",
+            "local_proxy_version": "2026-09-25-r5-subperiod-excess-risk",
             "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY",
         }
     )

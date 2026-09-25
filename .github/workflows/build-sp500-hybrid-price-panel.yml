@@ -159,10 +159,18 @@ jobs:
               return pd.DataFrame(rows)
 
           cov=coverage_rows(prices)
+          preliminary_weighted=float(cov.covered_sessions.sum()/cov.member_sessions.sum())
           bad_symbols=sorted(set(cov.loc[cov.coverage<0.97,"symbol"]))
-          print("AFTER_WIKI_YAHOO_WEIGHTED",float(cov.covered_sessions.sum()/cov.member_sessions.sum()),"BAD_SYMBOLS",len(bad_symbols),flush=True)
+          print("AFTER_WIKI_YAHOO_WEIGHTED",preliminary_weighted,"BAD_SYMBOLS",len(bad_symbols),flush=True)
 
-          # 3) Only residual poor-coverage names hit the slower chart endpoint.
+          # 3) Only invoke the slower per-symbol chart endpoint if the merged
+          # WIKI+Yahoo panel still fails the pre-specified 97% weighted
+          # member-session coverage gate. Once the gate is met, additional
+          # recovery is unnecessary for this proxy and only adds API fragility.
+          if preliminary_weighted >= 0.97:
+              bad_symbols=[]
+              print("PRELIMINARY_COVERAGE_GATE_PASS_SKIP_CHART",preliminary_weighted,flush=True)
+
           session=requests.Session()
           session.headers.update({"User-Agent":"Mozilla/5.0 Chrome/153 Safari/537.36","Accept":"application/json,text/plain,*/*"})
           p1=int(pd.Timestamp(WARMUP_START,tz="UTC").timestamp())

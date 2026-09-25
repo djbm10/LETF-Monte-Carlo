@@ -168,11 +168,26 @@ def load_network(path: Path) -> pd.DataFrame:
     return n.sort_values(["cik", "formation_date"])
 
 
-def latest_by_cik(frame: pd.DataFrame, d: pd.Timestamp) -> pd.DataFrame:
-    x = frame[frame.formation_date <= d]
+def exact_snapshot_by_cik(frame: pd.DataFrame, d: pd.Timestamp) -> pd.DataFrame:
+    """Use only the exact frozen quarter-end snapshot.
+
+    Carrying an older network row forward can resurrect a CIK that was
+    intentionally excluded by the 550-day Item-1 staleness rule.
+    """
+    x = frame[frame.formation_date == pd.Timestamp(d).normalize()].copy()
     if x.empty:
         return x
-    return x.sort_values(["cik", "formation_date"]).groupby("cik", as_index=False).tail(1)
+    sort_cols = ["cik", "formation_date"]
+    if "information_date" in x.columns:
+        sort_cols.append("information_date")
+    return x.sort_values(sort_cols).groupby("cik", as_index=False).tail(1)
+
+
+def prior_quarter_snapshot_date(rebalance_date: pd.Timestamp) -> pd.Timestamp:
+    # Rebalances occur in Jan/Apr/Jul/Oct. The frozen accounting/network input
+    # is the immediately prior calendar quarter-end, even if that date was a
+    # weekend/holiday.
+    return (pd.Timestamp(rebalance_date).normalize() - pd.offsets.MonthEnd(1)).normalize()
 
 
 def winsor_z(values: pd.Series, min_n: int = MIN_CROSS_SECTION) -> pd.Series:
@@ -231,14 +246,15 @@ def annualized_revenue(row) -> float:
 def build_cross_section(
     rebalance_date: pd.Timestamp,
     signal_date: pd.Timestamp,
+    formation_date: pd.Timestamp,
     membership: pd.DataFrame,
     sec: pd.DataFrame,
     network: pd.DataFrame,
     prices_by_symbol: dict,
 ) -> pd.DataFrame:
     active = active_membership(membership, rebalance_date)
-    sec_latest = latest_by_cik(sec, signal_date)
-    net_latest = latest_by_cik(network, signal_date)
+    sec_latest = exact_snapshot_by_cik(sec, formation_date)
+    net_latest = exact_snapshot_by_cik(network, formation_date)
     sec_map = {r.cik: r for r in sec_latest.itertuples(index=False)}
     net_map = {r.cik: r for r in net_latest.itertuples(index=False)}
 
@@ -422,34 +438,64 @@ def solve_rebalance(nav_pre: float, current_values: dict[str, float], targets: l
     return nav_after, {s: target_value for s in targets}, gross, gross / nav_pre if nav_pre > 0 else np.nan
 
 
-def metrics_from_curve(curve: pd.Series) -> dict:
-    curve = curve.dropna()
-    if len(curve) < 2:
+def metrics_from_curve(
+    curve: pd.Series,
+    baseline_value: float | None = None,
+    baseline_date: pd.Timestamp | None = None,
+) -> dict:
+    curve = curve.dropna().sort_index()
+    if curve.empty:
         return {}
-    start, end = curve.index[0], curve.index[-1]
-    years = max((end - start).days / 365.25, 1 / 365.25)
-    total = float(curve.iloc[-1] / curve.iloc[0] - 1.0)
-    cagr = float((curve.iloc[-1] / curve.iloc[0]) ** (1.0 / years) - 1.0)
-    rets = curve.pct_change().dropna()
-    ann_vol = float(rets.std(ddof=1) * math.sqrt(4)) if len(rets) > 1 else np.nan
-    sharpe = float(rets.mean() / rets.std(ddof=1) * math.sqrt(4)) if len(rets) > 1 and rets.std(ddof=1) > 0 else np.nan
-    dd = curve / curve.cummax() - 1.0
+    x = curve.copy()
+    if baseline_value is not None and math.isfinite(float(baseline_value)):
+        bd = pd.Timestamp(baseline_date if baseline_date is not None else x.index[0])
+        bd = bd - pd.Timedelta(nanoseconds=1)
+        x = pd.concat([pd.Series([float(baseline_value)], index=[bd]), x]).sort_index()
+    if len(x) < 2:
+        return {}
+    start, end = x.index[0], x.index[-1]
+    years = max((end - start).total_seconds() / (365.25 * 86400.0), 1 / 365.25)
+    total = float(x.iloc[-1] / x.iloc[0] - 1.0)
+    cagr = float((x.iloc[-1] / x.iloc[0]) ** (1.0 / years) - 1.0)
+    rets = x.pct_change().dropna()
+    ann_vol = float(rets.std(ddof=1) * math.sqrt(252)) if len(rets) > 1 else np.nan
+    sharpe = (
+        float(rets.mean() / rets.std(ddof=1) * math.sqrt(252))
+        if len(rets) > 1 and rets.std(ddof=1) > 0
+        else np.nan
+    )
+    dd = x / x.cummax() - 1.0
     return {
-        "start": str(start.date()),
-        "end": str(end.date()),
-        "observations": int(len(curve)),
-        "terminal_value": float(curve.iloc[-1]),
+        "start": str(pd.Timestamp(start).date()),
+        "end": str(pd.Timestamp(end).date()),
+        "observations": int(len(x)),
+        "terminal_value": float(x.iloc[-1]),
         "total_return": total,
         "cagr": cagr,
-        "ann_vol_quarterly": ann_vol,
-        "sharpe_0rf_quarterly": sharpe,
-        "max_drawdown_quarterly": float(dd.min()),
+        "ann_vol_daily": ann_vol,
+        "sharpe_0rf_daily": sharpe,
+        "max_drawdown_daily": float(dd.min()),
     }
 
 
-def period_metrics(curve: pd.Series, start: str, end: str) -> dict:
-    x = curve[(curve.index >= pd.Timestamp(start)) & (curve.index <= pd.Timestamp(end))]
-    return metrics_from_curve(x)
+def period_metrics(
+    curve: pd.Series,
+    start: str,
+    end: str,
+    initial_nav: float | None = None,
+) -> dict:
+    a, b = pd.Timestamp(start), pd.Timestamp(end)
+    x = curve[(curve.index >= a) & (curve.index <= b)].copy()
+    if x.empty:
+        return {}
+    prior = curve[curve.index < a]
+    if len(prior):
+        baseline = float(prior.iloc[-1])
+    elif initial_nav is not None:
+        baseline = float(initial_nav)
+    else:
+        baseline = float(x.iloc[0])
+    return metrics_from_curve(x, baseline_value=baseline, baseline_date=a)
 
 
 def run_cell(
@@ -461,46 +507,61 @@ def run_cell(
     network: pd.DataFrame,
     prices_by_symbol: dict,
     sessions: pd.DatetimeIndex,
+    all_sessions: pd.DatetimeIndex,
 ):
-    nav = 10_000_000.0
+    initial_nav = 10_000_000.0
+    nav = initial_nav
     positions: dict[str, Position] = {}
-    curve = []
+    curve: list[tuple[pd.Timestamp, float]] = []
     selection_rows = []
     rebalance_rows = []
     stale_price_events = 0
-    removed_position_events = 0
+    removed_seen = set()
 
-    session_pos = {pd.Timestamp(d): i for i, d in enumerate(sessions)}
+    all_session_pos = {pd.Timestamp(d): i for i, d in enumerate(all_sessions)}
+    rebalance_set = {pd.Timestamp(d) for d in rebalances}
 
-    for d in rebalances:
-        if d not in session_pos or session_pos[d] == 0:
-            continue
-        signal_date = pd.Timestamp(sessions[session_pos[d] - 1])
-
+    for d0 in sessions:
+        d = pd.Timestamp(d0)
         current_values = {}
         for sym, pos in list(positions.items()):
             value, mark_date, removed = position_value_at(
                 sym, pos.value_at_entry, pos.entry_price, d, pos.removal_date, prices_by_symbol
             )
             current_values[sym] = value
-            if mark_date < signal_date:
+            if mark_date < d and not removed:
                 stale_price_events += 1
             if removed:
-                removed_position_events += 1
+                key = (sym, pos.cik, str(pos.removal_date), float(pos.entry_price))
+                removed_seen.add(key)
 
         nav_pre = float(sum(current_values.values())) if positions else nav
 
+        if d not in rebalance_set:
+            nav = nav_pre
+            curve.append((d, nav))
+            continue
+
+        pos_idx = all_session_pos.get(d)
+        if pos_idx is None or pos_idx == 0:
+            nav = nav_pre
+            curve.append((d, nav))
+            continue
+
+        signal_date = pd.Timestamp(all_sessions[pos_idx - 1])
+        formation_date = prior_quarter_snapshot_date(d)
+
         cross = build_cross_section(
-            d, signal_date, membership, sec, network, prices_by_symbol
+            d, signal_date, formation_date, membership, sec, network, prices_by_symbol
         )
         scored = score_cross_section(cross, model)
         selected = scored.head(top_n).copy()
+
         if len(selected) < min(top_n, MIN_CROSS_SECTION):
-            # Do not change the frozen min-cross-section rule merely to force a
-            # proxy return. Stay in the prior portfolio/cash and audit the gap.
             rebalance_rows.append({
                 "rebalance_date": str(d.date()),
                 "signal_date": str(signal_date.date()),
+                "formation_date": str(formation_date.date()),
                 "model": model,
                 "top_n": top_n,
                 "eligible_rows": int(len(cross)),
@@ -511,16 +572,6 @@ def run_cell(
             })
             nav = nav_pre
             curve.append((d, nav))
-            # Rebase current positions at d for numerical stability.
-            new_positions = {}
-            for sym, pos in positions.items():
-                val = current_values.get(sym, 0.0)
-                row = asof_row(prices_by_symbol.get(sym), d)
-                if row is not None and val > 0:
-                    px = _num(row.get("adj_close"))
-                    if math.isfinite(px) and px > 0:
-                        new_positions[sym] = Position(sym, pos.cik, val, px, pos.removal_date)
-            positions = new_positions
             continue
 
         targets = selected.symbol.tolist()
@@ -548,7 +599,6 @@ def run_cell(
             )
 
         if len(new_positions) != len(targets):
-            # Recompute if a selected name lacks execution-day price.
             targets = list(new_positions)
             nav_after, target_values, gross_trade, turnover = solve_rebalance(
                 nav_pre, current_values, targets, ONE_WAY_COST
@@ -569,6 +619,7 @@ def run_cell(
             row = {
                 "rebalance_date": str(d.date()),
                 "signal_date": str(signal_date.date()),
+                "formation_date": str(formation_date.date()),
                 "model": model,
                 "top_n": top_n,
                 "rank": rank,
@@ -589,6 +640,7 @@ def run_cell(
         rebalance_rows.append({
             "rebalance_date": str(d.date()),
             "signal_date": str(signal_date.date()),
+            "formation_date": str(formation_date.date()),
             "model": model,
             "top_n": top_n,
             "eligible_rows": int(len(cross)),
@@ -601,29 +653,26 @@ def run_cell(
             "turnover": turnover,
         })
 
-    # Mark to last available session.
-    if positions and len(sessions):
-        d = pd.Timestamp(sessions[-1])
-        values = []
-        for sym, pos in positions.items():
-            value, _, _ = position_value_at(
-                sym, pos.value_at_entry, pos.entry_price, d, pos.removal_date, prices_by_symbol
-            )
-            values.append(value)
-        if values:
-            curve.append((d, float(sum(values))))
-
     curve_s = pd.Series(dict(curve), dtype=float).sort_index()
-    summary = metrics_from_curve(curve_s)
+    baseline_date = pd.Timestamp(sessions[0]) if len(sessions) else None
+    summary = metrics_from_curve(
+        curve_s,
+        baseline_value=initial_nav,
+        baseline_date=baseline_date,
+    )
     summary.update({
         "model": model,
         "top_n": top_n,
         "stale_price_events": int(stale_price_events),
-        "removed_position_events": int(removed_position_events),
-        "mean_turnover": float(pd.DataFrame(rebalance_rows).turnover.dropna().mean()) if rebalance_rows and "turnover" in pd.DataFrame(rebalance_rows) else np.nan,
-        "train": period_metrics(curve_s, "2009-01-01", "2014-12-31"),
-        "validation": period_metrics(curve_s, "2015-01-01", "2019-12-31"),
-        "holdout": period_metrics(curve_s, "2020-01-01", "2023-12-31"),
+        "removed_position_events": int(len(removed_seen)),
+        "mean_turnover": (
+            float(pd.DataFrame(rebalance_rows).turnover.dropna().mean())
+            if rebalance_rows and "turnover" in pd.DataFrame(rebalance_rows)
+            else np.nan
+        ),
+        "train": period_metrics(curve_s, "2009-01-01", "2014-12-31", initial_nav),
+        "validation": period_metrics(curve_s, "2015-01-01", "2019-12-31", initial_nav),
+        "holdout": period_metrics(curve_s, "2020-01-01", "2023-12-31", initial_nav),
         "evidence_label": "FREE_DISCOVERY_LARGE_CAP_EOD_PROXY",
     })
     return summary, pd.DataFrame(selection_rows), pd.DataFrame(rebalance_rows), curve_s
@@ -649,7 +698,8 @@ def main():
     end = pd.Timestamp(args.end)
     prices = prices[(prices.date >= start - pd.Timedelta(days=550)) & (prices.date <= end)].copy()
     by_symbol = price_index(prices)
-    sessions = trading_sessions(prices, start, end)
+    all_sessions = trading_sessions(prices, prices.date.min(), end)
+    sessions = all_sessions[(all_sessions >= start) & (all_sessions <= end)]
     if len(sessions) < 1000:
         raise RuntimeError(f"too few trading sessions in price panel: {len(sessions)}")
     rebalances = [d for d in quarter_rebalances(sessions) if start <= d <= end]
@@ -663,7 +713,8 @@ def main():
     for model in MODEL_WEIGHTS:
         for top_n in (10, 20, 40):
             summary, sel, reb, curve = run_cell(
-                model, top_n, rebalances, membership, sec, network, by_symbol, sessions
+                model, top_n, rebalances, membership, sec, network,
+                by_symbol, sessions, all_sessions
             )
             experiment_id = f"{model}:{top_n}"
             summary["experiment_id"] = experiment_id
@@ -722,7 +773,7 @@ def main():
         "execution_proxy": "prior-session signals; first-quarter-session close rebalance",
         "market_cap_proxy": "SEC as-filed shares * prior-session raw close",
         "transaction_cost": "15 bps one-way gross trade",
-        "path_metrics_frequency": "quarterly",
+        "path_metrics_frequency": "daily marked NAV; trades remain quarterly",
         "warning": (
             "This is a free large-cap EOD proxy, not the frozen full-US QuantConnect "
             "replication. Historical price gaps/delisting coverage must be audited "

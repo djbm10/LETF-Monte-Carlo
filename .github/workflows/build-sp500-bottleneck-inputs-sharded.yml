@@ -41,6 +41,23 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install numpy pandas requests pyarrow
+      - name: Build historical S&P CIK filter
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/components_history_fund.csv
+          python - <<'PY'
+          import pandas as pd
+          x=pd.read_csv("/tmp/components_history_fund.csv",dtype={"cik":str})
+          c=(
+              x["cik"].dropna().astype(str)
+              .str.replace(r"\.0$","",regex=True).str.zfill(10)
+          )
+          c=c[c.str.fullmatch(r"\d{10}")]
+          open("/tmp/sp500_ciks.txt","w").write("\n".join(sorted(set(c)))+"\n")
+          print("S&P CIK FILTER",c.nunique())
+          PY
       - name: Build overlapped SEC fundamentals shard
         shell: bash
         run: |
@@ -50,6 +67,7 @@ jobs:
             --start-year ${{ matrix.acquire_start }} \
             --end-year ${{ matrix.out_end }} \
             --quarters 1,2,3,4 \
+            --ciks-file /tmp/sp500_ciks.txt \
             --out "$OUT"
           python - <<'PY'
           import json, os

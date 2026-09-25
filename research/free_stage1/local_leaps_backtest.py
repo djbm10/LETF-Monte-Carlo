@@ -48,7 +48,7 @@ DATASET_END_DATE = date(2025, 12, 16)
 INITIAL_CASH = 1_000_000.0
 MIN_OI = 100
 OPTION_MULTIPLIER = 100.0
-IB_OPTION_FEE_PER_CONTRACT = 0.70
+IB_OPTION_FEE_PER_CONTRACT = 0.65
 IB_OPTION_MIN_ORDER_FEE = 1.00
 
 
@@ -720,7 +720,7 @@ def main():
             ),
             "option_fee_model": (
                 "QuantConnect InteractiveBrokersFeeModel low-volume equity-option "
-                "tier: $0.70/contract for premium >= $0.10, $1 minimum."
+                "tier: $0.65/contract for premium >= $0.10, $1 minimum."
             ),
             "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
             "trade_audit_rows": int(len(audits)),

@@ -9,3 +9,7 @@ Re-run the identical 162-cell EOD proxy after adding transaction-level selection
 ## Conservative missing-quote rerun
 
 The transaction audit exposed three QQQ long-DTE contracts whose EOD records disappeared for an extended period. Re-run the identical 162-cell grid with missing held-contract marks and roll exits valued at intrinsic value only. This prevents stale-quote carry and deliberately discards time value when the free source cannot supply a contemporaneous quote.
+
+## Corrected exact-next-close rerun
+
+Mechanical rerun after two post-result replication corrections: (1) QuantConnect/LEAN InteractiveBrokers low-volume option fee corrected from $0.70 to $0.65 per contract for premium >= $0.10, $1 minimum; (2) a close(t) selection must fill from the same contract at close(t+1) or be rejected immediately rather than lingering to a later session. Added path diagnostics only; frozen delta/DTE/allocation/slippage grid is unchanged.

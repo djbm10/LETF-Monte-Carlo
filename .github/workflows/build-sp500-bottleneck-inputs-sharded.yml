@@ -102,6 +102,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-sharded-bottleneck-inputs]')
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         include:
           - id: a
@@ -162,7 +163,7 @@ jobs:
             --formation-dates "$DATES" \
             --pair-density 0.0205 \
             --max-item1-age-days 550 \
-            --rps 4 \
+            --rps 3 \
             --out "$OUT"
           python - <<'PY'
           import json

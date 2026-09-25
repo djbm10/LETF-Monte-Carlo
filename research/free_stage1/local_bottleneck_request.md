@@ -11,3 +11,5 @@ Hybrid WIKI+Yahoo 2007-2023 price build requested after WIKI recovered 94.3% of 
 Parallel 5-way SEC fundamentals + Item 1 network build requested. Each accounting shard carries prior-year warm-up; each network shard carries >=550 days of acquisition warm-up. Final merge revalidates all 60 formation dates before output.
 
 Sharded build rerun requested after fixing workflow-only network --end-year typing. Research definitions and source code semantics unchanged.
+
+Hybrid price build rerun requested after making residual Yahoo chart recovery conditional on failing the unchanged 97% weighted member-session gate. Source priority and coverage standard unchanged.

@@ -1,4 +1,4 @@
-name: Free local S&P Bottleneck proxy
+name: Free local S&P Bottleneck discovery
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - research/free-pit-quantconnect-stage1
 
 jobs:
-  local_bottleneck:
+  discovery:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[local-bottleneck-run]')
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -83,7 +83,7 @@ jobs:
           test -f "$PRICES" || { echo "Missing price panel"; exit 3; }
 
           rm -rf results/free_stage1/local_sp500_bottleneck
-          python research/free_stage1/local_sp500_bottleneck_backtest.py             --membership /tmp/components_history.csv             --fundamentals "$FUND"             --network "$NET"             --prices "$PRICES"             --out results/free_stage1/local_sp500_bottleneck             --start 2009-01-01             --end 2023-12-31
+          python research/free_stage1/local_sp500_bottleneck_backtest.py             --membership /tmp/components_history.csv             --fundamentals "$FUND"             --network "$NET"             --prices "$PRICES"             --out results/free_stage1/local_sp500_bottleneck_discovery             --start 2009-01-01             --end 2019-12-31
 
       - name: Assert complete proxy grid
         shell: bash
@@ -91,7 +91,7 @@ jobs:
           python - <<'PY'
           import json, pandas as pd
           from pathlib import Path
-          root=Path("results/free_stage1/local_sp500_bottleneck")
+          root=Path("results/free_stage1/local_sp500_bottleneck_discovery")
           j=json.loads((root/"bottleneck_sp500_proxy_summary.json").read_text())
           s=pd.read_csv(root/"bottleneck_sp500_proxy_surface.csv")
           assert j["cells_completed"]==15, j
@@ -101,7 +101,8 @@ jobs:
               "bottleneck_momentum","bottleneck_full"
           }
           assert set(s.top_n)=={10,20,40}
-          print("LOCAL BOTTLENECK GRID PASS",len(s))
+          assert j["sample_end"]=="2019-12-31", j
+          print("LOCAL BOTTLENECK DISCOVERY GRID PASS",len(s))
           PY
 
       - name: Record provenance
@@ -113,13 +114,13 @@ jobs:
             echo "executor_source_sha=$GITHUB_SHA"
             echo "membership_source=https://github.com/lawcal/sp500-components-history"
             echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          } > results/free_stage1/local_sp500_bottleneck/source_manifest.txt
+          } > results/free_stage1/local_sp500_bottleneck_discovery/source_manifest.txt
 
       - name: Upload proxy results
         uses: actions/upload-artifact@v4
         with:
-          name: free-local-sp500-bottleneck-results
-          path: results/free_stage1/local_sp500_bottleneck/
+          name: free-local-sp500-bottleneck-discovery-results
+          path: results/free_stage1/local_sp500_bottleneck_discovery/
           retention-days: 30
 
       - name: Commit reproducible proxy surface
@@ -127,12 +128,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/free_stage1/local_sp500_bottleneck
+          git add results/free_stage1/local_sp500_bottleneck_discovery
           if git diff --cached --quiet; then
             echo "No result changes to commit"
             exit 0
           fi
-          git commit -m "Record free S&P Bottleneck proxy results [skip ci]"
+          git commit -m "Record free S&P Bottleneck discovery results [skip ci]"
           git fetch origin research/free-pit-quantconnect-stage1
           git rebase origin/research/free-pit-quantconnect-stage1
           git push origin HEAD:research/free-pit-quantconnect-stage1

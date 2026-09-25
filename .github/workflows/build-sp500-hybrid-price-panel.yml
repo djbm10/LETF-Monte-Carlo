@@ -130,10 +130,73 @@ jobs:
           yahoo=pd.concat(yp,ignore_index=True) if yp else pd.DataFrame()
           print("YAHOO_FILTERED",len(yahoo),yahoo.symbol.nunique() if len(yahoo) else 0,flush=True)
 
-          # Merge source priority: WIKI baseline, Yahoo overwrites duplicate dates.
-          frames=[x for x in [wiki,yahoo] if len(x)]
+          # 2b) Verified same-CIK ticker-rename bridge.
+          # Never map merely because two symbols share a CIK: simultaneous share
+          # classes can share a CIK but have distinct prices. A bridge is allowed
+          # only for non-overlapping membership intervals AND when the candidate
+          # Yahoo series matches the old WIKI series at >99.5% daily-return
+          # correlation across >=100 common observations.
+          alias_parts=[]
+          alias_audit=[]
+          if len(wiki) and len(yahoo):
+              wg={s:g.set_index("Date").sort_index() for s,g in wiki.groupby("symbol")}
+              yg={s:g.set_index("Date").sort_index() for s,g in yahoo.groupby("symbol")}
+              for cik,g in relevant.groupby("cik"):
+                  rows=list(g.itertuples(index=False))
+                  if len({r.symbol for r in rows}) < 2:
+                      continue
+                  for target in rows:
+                      tw=wg.get(target.symbol)
+                      if tw is None or len(tw)<100:
+                          continue
+                      tlo=pd.Timestamp(target.date_added)
+                      thi=pd.Timestamp(target.date_removed) if pd.notna(target.date_removed) else pd.Timestamp.max.normalize()
+                      for cand in rows:
+                          if cand.symbol==target.symbol:
+                              continue
+                          cy=yg.get(cand.symbol)
+                          if cy is None or len(cy)<100:
+                              continue
+                          clo=pd.Timestamp(cand.date_added)
+                          chi=pd.Timestamp(cand.date_removed) if pd.notna(cand.date_removed) else pd.Timestamp.max.normalize()
+                          intervals_overlap=max(tlo,clo) < min(thi,chi)
+                          if intervals_overlap:
+                              continue
+                          a=tw["Adj Close"].rename("old").dropna()
+                          b=cy["Adj Close"].rename("new").dropna()
+                          ov=pd.concat([a,b],axis=1,join="inner").dropna()
+                          if len(ov)<100:
+                              continue
+                          corr=ov.pct_change().dropna().corr().iloc[0,1]
+                          if not np.isfinite(corr) or corr<0.995:
+                              continue
+                          # Candidate Yahoo history itself must span the old
+                          # security's membership era; otherwise it cannot prove
+                          # lineage through the rename.
+                          lo=max(WARMUP_START,tlo-pd.Timedelta(days=550))
+                          hi=min(thi,SAMPLE_END)
+                          z=cy[(cy.index>=lo)&(cy.index<=hi)].reset_index().copy()
+                          if len(z)<50:
+                              continue
+                          z["symbol"]=target.symbol
+                          z["source"]="YAHOO_CIK_ALIAS"
+                          alias_parts.append(z[["Date","symbol","Open","High","Low","Close","Adj Close","Volume","source"]])
+                          alias_audit.append({
+                              "cik":str(cik),"target_symbol":target.symbol,
+                              "source_symbol":cand.symbol,"overlap_days":int(len(ov)),
+                              "return_correlation":float(corr),"aliased_rows":int(len(z)),
+                          })
+                          print("VERIFIED_CIK_ALIAS",target.symbol,"<-",cand.symbol,"CIK",cik,"CORR",corr,"ROWS",len(z),flush=True)
+                          break
+          aliases=pd.concat(alias_parts,ignore_index=True) if alias_parts else pd.DataFrame()
+          (ROOT/"verified_cik_aliases.json").write_text(json.dumps(alias_audit,indent=2,default=str))
+          print("VERIFIED_CIK_ALIAS_COUNT",len(alias_audit),flush=True)
+
+          # Merge source priority: WIKI baseline, verified CIK rename bridge,
+          # then direct Yahoo target-symbol history.
+          frames=[x for x in [wiki,aliases,yahoo] if len(x)]
           prices=pd.concat(frames,ignore_index=True)
-          prices["priority"]=prices.source.map({"WIKI":1,"YAHOO_BATCH":2}).fillna(0)
+          prices["priority"]=prices.source.map({"WIKI":1,"YAHOO_CIK_ALIAS":2,"YAHOO_BATCH":3}).fillna(0)
           prices=prices.sort_values(["symbol","Date","priority"]).drop_duplicates(["symbol","Date"],keep="last")
 
           # Real US sessions from SPY.
@@ -266,5 +329,6 @@ jobs:
             /tmp/hybrid/sp500_hybrid_prices_2007_2023.parquet
             /tmp/hybrid/sp500_hybrid_price_coverage.csv
             /tmp/hybrid/sp500_hybrid_price_panel_summary.json
+            /tmp/hybrid/verified_cik_aliases.json
           if-no-files-found: warn
           retention-days: 30

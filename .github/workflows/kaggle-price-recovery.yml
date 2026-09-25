@@ -25,8 +25,12 @@ jobs:
           unset KAGGLE_USERNAME KAGGLE_KEY KAGGLE_API_TOKEN
           mkdir -p /tmp/kaggle-prices
           cd /tmp/kaggle-prices
-          kaggle datasets download marketneutral/quandl-wiki-prices-us-equites -f WIKI_PRICES.csv --unzip
-          kaggle datasets download tsaustin/us-historical-stock-prices-with-earnings-data -f dataset_summary.csv --unzip
+          kaggle datasets download marketneutral/quandl-wiki-prices-us-equites -f WIKI_PRICES.csv
+          kaggle datasets download tsaustin/us-historical-stock-prices-with-earnings-data -f dataset_summary.csv
+          if [ -f WIKI_PRICES.csv.zip ]; then unzip -o WIKI_PRICES.csv.zip; fi
+          if [ -f dataset_summary.csv.zip ]; then unzip -o dataset_summary.csv.zip; fi
+          test -f WIKI_PRICES.csv
+          test -f dataset_summary.csv
           ls -lh
       - name: Audit S&P former-member coverage
         shell: bash

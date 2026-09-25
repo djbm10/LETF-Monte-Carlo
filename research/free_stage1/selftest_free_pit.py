@@ -10,6 +10,7 @@ sys.path.insert(0,str(HERE))
 import sec_item1_network as net
 import sec_fsd_pit as fsd
 import sec_formation_features as formfeat
+import local_sp500_bottleneck_backtest as local_bottleneck
 
 
 
@@ -71,6 +72,33 @@ def test_network():
 
 
 
+
+
+def test_local_bottleneck_exact_snapshot_and_period_metrics():
+    frame = pd.DataFrame([
+        {"cik":"0000000001","formation_date":pd.Timestamp("2014-12-31"),"value":1.0},
+        {"cik":"0000000002","formation_date":pd.Timestamp("2014-12-31"),"value":2.0},
+        {"cik":"0000000002","formation_date":pd.Timestamp("2015-03-31"),"value":3.0},
+    ])
+    snap = local_bottleneck.exact_snapshot_by_cik(frame, pd.Timestamp("2015-03-31"))
+    # CIK 1 must not be carried forward from a prior network snapshot.
+    assert set(snap.cik) == {"0000000002"}
+    assert snap.iloc[0].value == 3.0
+    assert local_bottleneck.prior_quarter_snapshot_date(pd.Timestamp("2015-04-01")) == pd.Timestamp("2015-03-31")
+    assert local_bottleneck.prior_quarter_snapshot_date(pd.Timestamp("2015-01-02")) == pd.Timestamp("2014-12-31")
+
+    curve = pd.Series(
+        [9_985_000.0, 10_050_000.0, 10_100_000.0, 10_200_000.0],
+        index=pd.to_datetime(["2014-12-31","2015-01-02","2015-06-30","2015-12-31"]),
+    )
+    full = local_bottleneck.metrics_from_curve(
+        curve, baseline_value=10_000_000.0, baseline_date=pd.Timestamp("2014-12-31")
+    )
+    assert abs(full["total_return"] - 0.02) < 1e-12
+    val = local_bottleneck.period_metrics(curve, "2015-01-01", "2015-12-31")
+    # Validation must use the last 2014 NAV as its baseline, not discard the
+    # first 2015 return observation.
+    assert abs(val["total_return"] - (10_200_000.0 / 9_985_000.0 - 1.0)) < 1e-12
 
 
 def test_sec_amendment_pit():
@@ -267,6 +295,7 @@ def test_sec_fsd():
 if __name__=="__main__":
     test_item1_table_heading()
     test_network()
+    test_local_bottleneck_exact_snapshot_and_period_metrics()
     test_sec_amendment_pit()
     test_sec_flow_period_strictness()
     test_sec_formation_panel()

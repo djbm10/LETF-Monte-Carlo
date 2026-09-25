@@ -346,6 +346,11 @@ def main() -> None:
     ap.add_argument("--start-year", type=int, default=2009)
     ap.add_argument("--end-year", type=int, default=2023)
     ap.add_argument("--quarters", default="1,2,3,4")
+    ap.add_argument(
+        "--ciks-file",
+        type=Path,
+        help="Optional newline/CSV-like CIK list. Filtering before canonicalization is a compute optimization only.",
+    )
     ap.add_argument("--out", type=Path, default=Path("results/free_stage1/sec_fundamentals"))
     args = ap.parse_args()
 
@@ -357,12 +362,29 @@ def main() -> None:
     cache = args.out / "cache"
     parts = []
     failures = []
+    cik_filter = None
+    if args.ciks_file:
+        raw = args.ciks_file.read_text(encoding="utf-8")
+        tokens = [
+            t.strip().replace(".0", "")
+            for line in raw.splitlines()
+            for t in line.replace(",", " ").split()
+            if t.strip()
+        ]
+        cik_filter = {str(t).zfill(10) for t in tokens if str(t).isdigit()}
+        if not cik_filter:
+            raise ValueError(f"No valid CIKs found in {args.ciks_file}")
+        print("CIK_FILTER", len(cik_filter), flush=True)
     quarters = [int(q) for q in args.quarters.split(",") if q.strip()]
     for year in range(args.start_year, args.end_year + 1):
         for qtr in quarters:
             try:
                 z = download_quarter(year, qtr, cache, ua)
                 sub, num = load_quarter(z)
+                if cik_filter is not None:
+                    sub = sub[sub["cik"].isin(cik_filter)].copy()
+                    adsh = set(sub["adsh"].astype(str))
+                    num = num[num["adsh"].astype(str).isin(adsh)].copy()
                 c = canonicalize_quarter(sub, num)
                 c["source_quarter"] = f"{year}Q{qtr}"
                 parts.append(c)
@@ -389,6 +411,7 @@ def main() -> None:
         "min_information_date": str(derived.information_date.min()),
         "max_information_date": str(derived.information_date.max()),
         "failed_quarters": failures,
+        "cik_filter_count": int(len(cik_filter)) if cik_filter is not None else None,
         "tag_aliases": ALIASES,
         "point_in_time_rule": "information_date = SEC filed date; never use before filed date",
         "evidence_label": "FREE_DISCOVERY",

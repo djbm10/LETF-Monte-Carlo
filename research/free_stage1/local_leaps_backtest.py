@@ -28,7 +28,7 @@ Evidence label:
 import argparse
 import json
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Tuple
@@ -93,6 +93,7 @@ class StrategyState:
     rejected_entries: int = 0
     resized_entries: int = 0
     no_candidate_days: int = 0
+    audit: list = field(default_factory=list)
 
     @property
     def key(self) -> Tuple[float, int, float, int]:
@@ -385,7 +386,25 @@ def run_symbol(
                     px = bid * (1.0 - st.slippage)
                     qty = st.option_qty
                     proceeds = qty * px * OPTION_MULTIPLIER
-                    st.cash += proceeds - option_fee(qty)
+                    fee = option_fee(qty)
+                    st.cash += proceeds - fee
+                    st.audit.append({
+                        "event": "EXIT_FILL",
+                        "date": str(current_date),
+                        "underlying": st.underlying,
+                        "target_delta": st.target_delta,
+                        "target_dte": st.target_dte,
+                        "allocation": st.allocation,
+                        "slippage_bps": st.slippage_bps,
+                        "contract_id": st.option_contract,
+                        "bid": bid,
+                        "ask": quote[1],
+                        "fill_price": px,
+                        "quantity": qty,
+                        "fee": fee,
+                        "entry_date": str(st.entry_date) if st.entry_date else "",
+                        "portfolio_value_before": st.portfolio_value(),
+                    })
                     st.option_contract = None
                     st.option_expiration = None
                     st.option_qty = 0
@@ -404,6 +423,8 @@ def run_symbol(
                     fill_px = ask * (1.0 + st.slippage)
                     pv_before = st.portfolio_value()
                     budget = max(0.0, pv_before * st.allocation)
+                    old_cash = st.cash
+                    old_bil = st.bil_value
 
                     # Never increase quantity after selection. Resize only
                     # downward if the next-session quote moved up enough that
@@ -431,12 +452,36 @@ def run_symbol(
                             st.option_mark = (quote[0] + quote[1]) / 2.0
                             st.entry_date = current_date
                             st.entry_count += 1
+                            st.audit.append({
+                                "event": "ENTRY_FILL",
+                                "date": str(current_date),
+                                "selection_date": str(pe.selection_date),
+                                "underlying": st.underlying,
+                                "target_delta": st.target_delta,
+                                "target_dte": st.target_dte,
+                                "allocation": st.allocation,
+                                "slippage_bps": st.slippage_bps,
+                                "contract_id": pe.candidate.contract_id,
+                                "expiration": str(pe.candidate.expiration),
+                                "strike": pe.candidate.strike,
+                                "selection_delta": pe.candidate.delta,
+                                "selection_dte": pe.candidate.dte,
+                                "selection_bid": pe.candidate.bid,
+                                "selection_ask": pe.candidate.ask,
+                                "fill_bid": quote[0],
+                                "fill_ask": quote[1],
+                                "fill_price": fill_px,
+                                "selected_quantity": pe.selected_qty,
+                                "fill_quantity": qty,
+                                "fee": fee,
+                                "portfolio_value_before": pv_before,
+                            })
                             st.pending_entry = None
                         else:
                             # Undo collateral retarget if execution cannot be
                             # funded. The next completed chain may select again.
-                            st.cash -= st.bil_value
-                            st.bil_value = 0.0
+                            st.cash = old_cash
+                            st.bil_value = old_bil
                             st.rejected_entries += 1
                             st.pending_entry = None
                     else:
@@ -466,6 +511,26 @@ def run_symbol(
                     budget = pv * st.allocation
                     qty = int((budget * 0.995) // (cand.ask * OPTION_MULTIPLIER))
                     if qty >= 1:
+                        st.audit.append({
+                            "event": "ENTRY_SELECTION",
+                            "date": str(current_date),
+                            "underlying": st.underlying,
+                            "target_delta": st.target_delta,
+                            "target_dte": st.target_dte,
+                            "allocation": st.allocation,
+                            "slippage_bps": st.slippage_bps,
+                            "contract_id": cand.contract_id,
+                            "expiration": str(cand.expiration),
+                            "strike": cand.strike,
+                            "delta": cand.delta,
+                            "dte": cand.dte,
+                            "bid": cand.bid,
+                            "ask": cand.ask,
+                            "open_interest": cand.open_interest,
+                            "score": cand.score,
+                            "selected_quantity": qty,
+                            "portfolio_value": pv,
+                        })
                         st.pending_entry = PendingEntry(
                             candidate=cand,
                             selected_qty=qty,
@@ -479,6 +544,7 @@ def run_symbol(
         prev_date = current_date
 
     rows = []
+    audit_rows = []
     for st in states:
         curve = pd.Series(
             [v for _, v in curves[st.key]],
@@ -503,6 +569,7 @@ def run_symbol(
                 "no_candidate_days": st.no_candidate_days,
             }
         )
+        audit_rows.extend(st.audit)
 
     # Underlying adjusted-close benchmark normalized to $1m.
     bench = underlying.loc[trading_dates, "adjusted_close"].dropna()
@@ -510,7 +577,7 @@ def run_symbol(
     benchmark = benchmark_metrics(bench_curve)
     benchmark["underlying"] = symbol
     benchmark["benchmark"] = f"{symbol}_buy_and_hold_adjusted"
-    return pd.DataFrame(rows), benchmark
+    return pd.DataFrame(rows), benchmark, pd.DataFrame(audit_rows)
 
 
 def summarize(surface: pd.DataFrame) -> dict:
@@ -572,10 +639,11 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     all_rows = []
     benchmarks = []
+    all_audits = []
 
     for symbol in ("SPY", "QQQ"):
         root = args.data_root / symbol.lower()
-        surface, benchmark = run_symbol(
+        surface, benchmark, audit = run_symbol(
             symbol=symbol,
             option_dir=root,
             underlying_path=root / "underlying_prices.parquet",
@@ -585,6 +653,7 @@ def main():
         )
         all_rows.append(surface)
         benchmarks.append(benchmark)
+        all_audits.append(audit)
 
     result = pd.concat(all_rows, ignore_index=True)
     # Stable frozen-grid order.
@@ -595,6 +664,8 @@ def main():
     result.to_csv(args.out / "leaps_local_eod_surface.csv", index=False)
 
     pd.DataFrame(benchmarks).to_csv(args.out / "leaps_local_benchmarks.csv", index=False)
+    audits = pd.concat(all_audits, ignore_index=True)
+    audits.to_csv(args.out / "leaps_local_trade_audit.csv", index=False)
 
     summary = summarize(result)
     summary.update(
@@ -624,6 +695,7 @@ def main():
                 "tier: $0.70/contract for premium >= $0.10, $1 minimum."
             ),
             "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
+            "trade_audit_rows": int(len(audits)),
             "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY",
         }
     )

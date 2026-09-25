@@ -43,6 +43,6 @@
   "option_fee_model": "QuantConnect InteractiveBrokersFeeModel low-volume equity-option tier: $0.65/contract for premium >= $0.10, $1 minimum.",
   "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
   "trade_audit_rows": 13500,
-  "local_proxy_version": "2026-09-25-r4-no-arbitrage-bounds",
+  "local_proxy_version": "2026-09-25-r5-subperiod-excess-risk",
   "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY"
 }

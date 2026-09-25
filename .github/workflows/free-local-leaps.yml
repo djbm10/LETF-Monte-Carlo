@@ -107,5 +107,7 @@ jobs:
             echo "No result changes to commit"
           else
             git commit -m "Record free local LEAPS result surface [skip ci]"
+            git fetch origin research/free-pit-quantconnect-stage1
+            git rebase origin/research/free-pit-quantconnect-stage1
             git push origin HEAD:research/free-pit-quantconnect-stage1
           fi

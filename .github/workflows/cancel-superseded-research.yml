@@ -18,7 +18,7 @@ jobs:
       - name: Cancel only superseded run IDs
         shell: bash
         run: |
-          for id in 36085023919 36084388333 36087200719 36088521696 36089326249; do
+          for id in 36085023919 36084388333 36087200719 36088521696 36089326249 36126965348; do
             echo "Canceling superseded run $id"
             gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/cancel" || true
           done

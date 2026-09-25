@@ -94,6 +94,9 @@ class StrategyState:
     rejected_entries: int = 0
     resized_entries: int = 0
     no_candidate_days: int = 0
+    missing_mark_days: int = 0
+    intrinsic_exit_count: int = 0
+    missing_next_close_entry_rejections: int = 0
     audit: list = field(default_factory=list)
 
     @property
@@ -386,6 +389,7 @@ def run_symbol(
                 if require_strike is None:
                     raise RuntimeError(f"missing strike state for {st.option_contract}")
                 st.option_mark = max(underlying_close - require_strike, 0.0)
+                st.missing_mark_days += 1
 
         for st in states:
             # 1) Execute a queued exit at this close using actual bid.
@@ -403,6 +407,7 @@ def run_symbol(
                     ask = float("nan")
                     px = bid
                     quote_source = "intrinsic_missing_quote"
+                    st.intrinsic_exit_count += 1
                 qty = st.option_qty
                 proceeds = qty * px * OPTION_MULTIPLIER
                 fee = option_fee(qty)
@@ -439,6 +444,31 @@ def run_symbol(
             if st.pending_entry is not None and st.option_contract is None and not just_exited:
                 pe = st.pending_entry
                 quote = qmap.get(pe.candidate.contract_id)
+                if quote is None:
+                    # The local proxy is explicitly signal close -> next trading
+                    # day's quote-side close. A contract absent from that next
+                    # snapshot is rejected; it must not linger and fill later.
+                    st.rejected_entries += 1
+                    st.missing_next_close_entry_rejections += 1
+                    st.audit.append({
+                        "event": "ENTRY_REJECTED_MISSING_NEXT_CLOSE_QUOTE",
+                        "date": str(current_date),
+                        "selection_date": str(pe.selection_date),
+                        "underlying": st.underlying,
+                        "target_delta": st.target_delta,
+                        "target_dte": st.target_dte,
+                        "allocation": st.allocation,
+                        "slippage_bps": st.slippage_bps,
+                        "contract_id": pe.candidate.contract_id,
+                        "expiration": str(pe.candidate.expiration),
+                        "strike": pe.candidate.strike,
+                        "selection_delta": pe.candidate.delta,
+                        "selection_dte": pe.candidate.dte,
+                        "selection_bid": pe.candidate.bid,
+                        "selection_ask": pe.candidate.ask,
+                        "underlying_close": underlying_close,
+                    })
+                    st.pending_entry = None
                 if quote is not None:
                     _, ask = quote
                     fill_px = ask * (1.0 + st.slippage)

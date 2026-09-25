@@ -86,6 +86,7 @@ class StrategyState:
     option_strike: Optional[float] = None
     option_qty: int = 0
     option_mark: float = 0.0
+    last_time_value: float = 0.0
     entry_date: Optional[date] = None
     pending_entry: Optional[PendingEntry] = None
     pending_exit: bool = False
@@ -374,21 +375,27 @@ def run_symbol(
         valid = valid_chain(day_df, current_date) if not day_df.is_empty() else day_df
         candidates = best_candidates(valid, current_date) if not day_df.is_empty() else {}
 
-        # Mark held contracts first. When the preserved EOD snapshot
-        # omits a held contract, use intrinsic value as a conservative lower
-        # bound instead of carrying a stale quote forward.
+        # Mark held contracts first. The preserved source occasionally
+        # omits a held contract on an otherwise valid chain date. Intrinsic-only
+        # marking creates a fake collapse in time value followed by a fake jump
+        # when the quote reappears. Instead, keep the last observed non-negative
+        # time value and recompute current intrinsic value. This is lookahead-free,
+        # respects the current intrinsic floor, and affects only mark-to-market
+        # risk paths; cash-flow exits with a missing quote remain intrinsic-only.
         underlying_close = float(underlying.loc[current_date, "close"])
         for st in states:
             if not st.option_contract:
                 continue
+            require_strike = st.option_strike
+            if require_strike is None:
+                raise RuntimeError(f"missing strike state for {st.option_contract}")
+            intrinsic = max(underlying_close - require_strike, 0.0)
             if st.option_contract in qmap:
                 bid, ask = qmap[st.option_contract]
                 st.option_mark = (bid + ask) / 2.0
+                st.last_time_value = max(st.option_mark - intrinsic, 0.0)
             else:
-                require_strike = st.option_strike
-                if require_strike is None:
-                    raise RuntimeError(f"missing strike state for {st.option_contract}")
-                st.option_mark = max(underlying_close - require_strike, 0.0)
+                st.option_mark = intrinsic + max(st.last_time_value, 0.0)
                 st.missing_mark_days += 1
 
         for st in states:
@@ -436,6 +443,7 @@ def run_symbol(
                 st.option_strike = None
                 st.option_qty = 0
                 st.option_mark = 0.0
+                st.last_time_value = 0.0
                 st.entry_date = None
                 st.pending_exit = False
                 st.roll_count += 1
@@ -503,6 +511,8 @@ def run_symbol(
                             st.option_strike = pe.candidate.strike
                             st.option_qty = qty
                             st.option_mark = (quote[0] + quote[1]) / 2.0
+                            entry_intrinsic = max(underlying_close - pe.candidate.strike, 0.0)
+                            st.last_time_value = max(st.option_mark - entry_intrinsic, 0.0)
                             st.entry_date = current_date
                             st.entry_count += 1
                             st.audit.append({
@@ -758,9 +768,12 @@ def main():
             ),
             "missing_quote_rule": (
                 "If a held contract is absent from the preserved EOD snapshot, "
-                "daily marking uses intrinsic value. If a roll exit is due while "
-                "the quote is missing, the position is liquidated at intrinsic "
-                "value, deliberately discarding remaining time value."
+                "daily mark-to-market uses current intrinsic value plus the last "
+                "observed non-negative time value. This avoids artificial "
+                "intrinsic-only mark collapses without using future information. "
+                "If a roll exit is due while the quote is missing, the cash-flow "
+                "exit remains intrinsic-only, deliberately discarding remaining "
+                "time value."
             ),
             "collateral": (
                 "BIL adjusted-close total-return sleeve from manisahni/marketdata; "
@@ -772,7 +785,7 @@ def main():
             ),
             "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
             "trade_audit_rows": int(len(audits)),
-            "local_proxy_version": "2026-09-25-r2-exact-next-close",
+            "local_proxy_version": "2026-09-25-r3-timevalue-carry-mark",
             "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY",
         }
     )

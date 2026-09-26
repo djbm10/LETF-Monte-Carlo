@@ -133,10 +133,17 @@ jobs:
           m['cik']=m.cik.astype(str).str.replace(r'\.0$','',regex=True).str.zfill(10)
           relevant=m[(m.date_added<=pd.Timestamp('2023-12-31'))&(m.date_removed.isna()|(m.date_removed>=pd.Timestamp('2007-12-01')))].copy()
 
-          spy_dates=pd.DatetimeIndex(prices.loc[prices.symbol=='SPY','Date'].drop_duplicates().sort_values())
-          sessions=spy_dates[(spy_dates>=pd.Timestamp('2009-01-01'))&(spy_dates<=pd.Timestamp('2023-12-31'))]
+          # The panel contains constituents, not the SPY ETF itself.
+          # Infer the US trading calendar from dates with broad cross-sectional
+          # coverage. With ~500 S&P members, a >=300-name threshold is robust
+          # to individual missing histories and excludes weekends/holidays.
+          daily_counts=prices[
+              (prices.Date>=pd.Timestamp('2009-01-01'))
+              & (prices.Date<=pd.Timestamp('2023-12-31'))
+          ].groupby('Date').symbol.nunique()
+          sessions=pd.DatetimeIndex(daily_counts[daily_counts>=300].index).sort_values()
           if len(sessions)<3000:
-              raise RuntimeError(f'insufficient SPY sessions {len(sessions)}')
+              raise RuntimeError(f'insufficient inferred trading sessions {len(sessions)}')
           pdict={s:set(g.Date) for s,g in prices.groupby('symbol')}
           rows=[]
           for r in relevant.itertuples(index=False):

@@ -200,11 +200,21 @@ jobs:
           import pandas as pd
           p='/tmp/curated-price/curated_sp500_price_candidate_membership.csv'
           m=pd.read_csv(p,dtype={'cik':str})
-          required={'symbol','cik','date_added','date_removed','identity_resolved'}
+          required={'symbol','cik','date_added','date_removed','alias_source'}
           assert required.issubset(m.columns),(required-set(m.columns))
-          assert m.identity_resolved.astype(str).str.lower().isin({'true','1','yes'}).all()
+          allowed={
+              'CURATED_ALIAS_RESOLVED',
+              'LAWCAL_SAME_CIK_IDENTITY_WINDOW',
+              'CURATED_IDENTITY_OVERRIDE',
+          }
+          assert set(m.alias_source.dropna().astype(str)).issubset(allowed),m.alias_source.value_counts().to_dict()
           assert len(m)>500,len(m)
-          print('CURATED_STRATEGY_MEMBERSHIP_PASS',len(m),m.symbol.nunique(),m.cik.nunique())
+          assert m.cik.nunique()>=500,m.cik.nunique()
+          print(
+              'CURATED_STRATEGY_MEMBERSHIP_PASS',
+              len(m),m.symbol.nunique(),m.cik.nunique(),
+              m.alias_source.value_counts().to_dict()
+          )
           PY
 
       - name: Run frozen 15-cell discovery only

@@ -8,93 +8,93 @@
     "bottleneck_core": {
       "comparator": "momentum",
       "positive_validation_cagr_excess_topn_count": 3,
-      "median_validation_cagr_excess": 0.0670240450607427,
-      "median_validation_sharpe_excess": 0.44896177717131697,
-      "median_validation_max_drawdown_difference": 0.11364847939035949,
+      "median_validation_cagr_excess": 0.050800971786442,
+      "median_validation_sharpe_excess": 0.3544389510147469,
+      "median_validation_max_drawdown_difference": 0.11364847939035991,
       "advance_to_holdout": true,
       "by_top_n": {
         "10": {
-          "validation_cagr": 0.1093213151079881,
-          "comparator_validation_cagr": 0.0422972700472454,
-          "cagr_excess": 0.0670240450607427,
-          "sharpe_excess": 0.44896177717131697,
-          "max_drawdown_difference": 0.1740097160212166
+          "validation_cagr": 0.0967860057075873,
+          "comparator_validation_cagr": 0.0459850339211453,
+          "cagr_excess": 0.050800971786442,
+          "sharpe_excess": 0.3544389510147469,
+          "max_drawdown_difference": 0.17400971602121668
         },
         "20": {
-          "validation_cagr": 0.1056503571257816,
-          "comparator_validation_cagr": 0.0270151313054729,
-          "cagr_excess": 0.07863522582030869,
-          "sharpe_excess": 0.5157043131194837,
-          "max_drawdown_difference": 0.10980599683184311
+          "validation_cagr": 0.0872412188035727,
+          "comparator_validation_cagr": 0.0319032821563991,
+          "cagr_excess": 0.055337936647173604,
+          "sharpe_excess": 0.36922551376024065,
+          "max_drawdown_difference": 0.1098059968318425
         },
         "40": {
-          "validation_cagr": 0.1019800358433939,
-          "comparator_validation_cagr": 0.0511613055184905,
-          "cagr_excess": 0.05081873032490341,
-          "sharpe_excess": 0.36405255843335266,
-          "max_drawdown_difference": 0.11364847939035949
+          "validation_cagr": 0.0994827585623912,
+          "comparator_validation_cagr": 0.0550929690692127,
+          "cagr_excess": 0.0443897894931785,
+          "sharpe_excess": 0.32149841943445934,
+          "max_drawdown_difference": 0.11364847939035991
         }
       }
     },
     "bottleneck_momentum": {
       "comparator": "momentum",
       "positive_validation_cagr_excess_topn_count": 3,
-      "median_validation_cagr_excess": 0.045021196454107605,
-      "median_validation_sharpe_excess": 0.30794095080956435,
-      "median_validation_max_drawdown_difference": 0.06221446883996051,
+      "median_validation_cagr_excess": 0.0393447999682591,
+      "median_validation_sharpe_excess": 0.2322976743189863,
+      "median_validation_max_drawdown_difference": 0.0622144688399609,
       "advance_to_holdout": true,
       "by_top_n": {
         "10": {
-          "validation_cagr": 0.0853022376069112,
-          "comparator_validation_cagr": 0.0422972700472454,
-          "cagr_excess": 0.043004967559665805,
-          "sharpe_excess": 0.24490716273282648,
-          "max_drawdown_difference": 0.06221446883996051
+          "validation_cagr": 0.0859940538684638,
+          "comparator_validation_cagr": 0.0459850339211453,
+          "cagr_excess": 0.0400090199473185,
+          "sharpe_excess": 0.2322976743189863,
+          "max_drawdown_difference": 0.0622144688399609
         },
         "20": {
-          "validation_cagr": 0.077732317666006,
-          "comparator_validation_cagr": 0.0270151313054729,
-          "cagr_excess": 0.050717186360533094,
-          "sharpe_excess": 0.3141793473807192,
-          "max_drawdown_difference": 0.030363402546378315
+          "validation_cagr": 0.0673453583301706,
+          "comparator_validation_cagr": 0.0319032821563991,
+          "cagr_excess": 0.03544207617377149,
+          "sharpe_excess": 0.22260771927499362,
+          "max_drawdown_difference": 0.030363402546378482
         },
         "40": {
-          "validation_cagr": 0.0961825019725981,
-          "comparator_validation_cagr": 0.0511613055184905,
-          "cagr_excess": 0.045021196454107605,
-          "sharpe_excess": 0.30794095080956435,
-          "max_drawdown_difference": 0.07157568961440078
+          "validation_cagr": 0.0944377690374718,
+          "comparator_validation_cagr": 0.0550929690692127,
+          "cagr_excess": 0.0393447999682591,
+          "sharpe_excess": 0.2711903919065405,
+          "max_drawdown_difference": 0.07157568961440061
         }
       }
     },
     "bottleneck_full": {
       "comparator": "quality_momentum",
       "positive_validation_cagr_excess_topn_count": 3,
-      "median_validation_cagr_excess": 0.032080406914689205,
-      "median_validation_sharpe_excess": 0.22527280052290044,
-      "median_validation_max_drawdown_difference": 0.02879823646998947,
+      "median_validation_cagr_excess": 0.029760705400609502,
+      "median_validation_sharpe_excess": 0.20506015293838292,
+      "median_validation_max_drawdown_difference": 0.028798236469989302,
       "advance_to_holdout": true,
       "by_top_n": {
         "10": {
-          "validation_cagr": 0.1511608494513814,
-          "comparator_validation_cagr": 0.0367463030088226,
-          "cagr_excess": 0.11441454644255879,
-          "sharpe_excess": 0.6226545103625782,
-          "max_drawdown_difference": 0.057118620726034075
+          "validation_cagr": 0.1314482646340429,
+          "comparator_validation_cagr": 0.0365499907515249,
+          "cagr_excess": 0.09489827388251801,
+          "sharpe_excess": 0.5074668350969476,
+          "max_drawdown_difference": 0.0571186207260343
         },
         "20": {
-          "validation_cagr": 0.1086990572628896,
-          "comparator_validation_cagr": 0.0766186503482004,
-          "cagr_excess": 0.032080406914689205,
-          "sharpe_excess": 0.22527280052290044,
-          "max_drawdown_difference": 0.02879823646998947
+          "validation_cagr": 0.1000225036888089,
+          "comparator_validation_cagr": 0.0702617982881994,
+          "cagr_excess": 0.029760705400609502,
+          "sharpe_excess": 0.20506015293838292,
+          "max_drawdown_difference": 0.028798236469989302
         },
         "40": {
-          "validation_cagr": 0.1095943950280993,
-          "comparator_validation_cagr": 0.08865023473328,
-          "cagr_excess": 0.020944160294819297,
-          "sharpe_excess": 0.15068827556709574,
-          "max_drawdown_difference": 0.017711945256411316
+          "validation_cagr": 0.1016733315193825,
+          "comparator_validation_cagr": 0.0801882390544612,
+          "cagr_excess": 0.021485092464921307,
+          "sharpe_excess": 0.1535214739887425,
+          "max_drawdown_difference": 0.0177119452564109
         }
       }
     }

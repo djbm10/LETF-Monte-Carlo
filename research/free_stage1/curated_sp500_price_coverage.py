@@ -97,6 +97,7 @@ def build_candidate_membership(
     x = pd.DataFrame(rows)
     x["date_added"] = pd.to_datetime(x["date_added"]).dt.normalize()
     x["date_removed"] = pd.to_datetime(x["date_removed"], errors="coerce").dt.normalize()
+    x["identity_resolved"] = True
     return (
         x.sort_values(["cik","date_added","symbol","alias_source"])
         .drop_duplicates(["symbol","cik","date_added","date_removed"], keep="first")

@@ -163,10 +163,23 @@ jobs:
           python - <<'PY'
           import pandas as pd
           f=pd.read_csv('/tmp/assembled/sec_formation_features.csv')
-          assert len(f)>50000,len(f)
-          assert (pd.to_datetime(f.information_date)<=pd.to_datetime(f.formation_date)).all()
-          assert pd.to_datetime(f.formation_date).max()==pd.Timestamp('2019-12-31')
-          print('FORMATION_FEATURE_GATE_PASS',len(f))
+          f['formation_date']=pd.to_datetime(f.formation_date)
+          f['information_date']=pd.to_datetime(f.information_date)
+          assert (f.information_date<=f.formation_date).all()
+          expected=set(pd.date_range('2009-06-30','2019-12-31',freq='QE'))
+          observed=set(f.formation_date.unique())
+          assert observed==expected,(len(observed),sorted(expected-observed),sorted(observed-expected))
+          counts=f.groupby('formation_date').cik.nunique()
+          # Align the pre-return source gate to the frozen model's minimum
+          # cross-section rather than to an obsolete full-US absolute row count.
+          assert int(counts.min())>=20,counts.nsmallest(8).to_dict()
+          assert f.cik.nunique()>=500,f.cik.nunique()
+          print(
+              'FORMATION_FEATURE_GATE_PASS',
+              'rows',len(f),'ciks',f.cik.nunique(),
+              'formations',len(counts),'min_ciks',int(counts.min()),
+              'median_ciks',float(counts.median())
+          )
           PY
 
       - name: Require curated date-resolved strategy membership

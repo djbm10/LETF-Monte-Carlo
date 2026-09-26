@@ -7,7 +7,9 @@ historical 10-K Item 1 text, then fetch directly from SEC only for issuer CIKs
 that lack a valid <=550-day Item 1 at one or more point-in-time S&P 500
 formation dates.
 
-The final network definition remains the frozen authoritative one:
+The network parameters remain frozen, but HF section_1 text is produced by an
+independent parser and therefore this path is a discovery/replication proxy,
+not the authoritative direct-SEC text extraction:
 - 10-K only
 - actual filing_date information timestamp
 - max Item-1 age 550 days
@@ -397,7 +399,7 @@ def main() -> None:
     manifest = {
         "source": "HF raw SEC 10-K cache + direct SEC missing-issuer supplement",
         "universe": "PIT_S_AND_P_500_ISSUER_PROXY",
-        "evidence_label": "FREE_DISCOVERY_LARGE_CAP_PROXY",
+        "evidence_label": "FREE_DISCOVERY_HF_SEC_PARSER_PROXY",
         "formation_start": str(min(dates).date()),
         "formation_end": str(max(dates).date()),
         "forms": ["10-K"],
@@ -423,7 +425,10 @@ def main() -> None:
         },
         "warning": (
             "Large-cap PIT S&P proxy, not the frozen full-US universe. "
-            "Direct SEC remains authoritative when HF is missing."
+            "HF section_1 text uses an independent parser; even at matching "
+            "filing dates this is not byte-identical to our direct-SEC Item 1 "
+            "extractor. A positive result requires direct-SEC replication "
+            "before any holdout is opened."
         ),
     }
     (args.out / "manifest.json").write_text(

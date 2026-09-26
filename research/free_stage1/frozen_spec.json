@@ -130,6 +130,21 @@
     "smoke_only_overrides": {
       "min_cross_section": 10,
       "purpose": "permit tiny non-performance cloud integration bundles; frozen 177-run matrix must use 20"
+    },
+    "free_large_cap_proxy": {
+      "price_coverage_gate": {
+        "threshold": 0.97,
+        "metric": "strategy-aligned active CIK-session coverage",
+        "rule": "A CIK-session is covered when at least one active non-recycled symbol for that issuer has a valid price. This mirrors the executor's one-symbol-per-CIK universe and avoids double-counting overlapping legacy/current ticker rows around renames.",
+        "latest_validated_coverage": 0.97208301351339,
+        "raw_ticker_row_session_coverage_for_reference": 0.961504559346286,
+        "price_sources": [
+          "Kaggle mirror of Quandl WIKI EOD",
+          "Yahoo Finance direct/batch historical prices",
+          "verified same-CIK ticker lineage",
+          "tsaustin/us-historical-stock-prices-with-earnings-data"
+        ]
+      }
     }
   },
   "leaps": {
@@ -214,7 +229,8 @@
     "2026-09-23: added a smoke-only min_cross_section parameter. Full Stage-1 runs remain frozen at 20; min_cross_section=10 is permitted only for tiny cloud integration bundles and must not be interpreted as a performance specification.",
     "2026-09-23: fixed Bottleneck network input loader arity so network_object_key and network_url both route through the same validated CSV loader. This is a pre-return integration fix only; no factor, universe, portfolio, cost, or sample parameter changed.",
     "2026-09-23: added a 550-day maximum age for SEC 10-K Item 1 text at each network formation date. Without a staleness rule, a filer that stopped submitting 10-Ks years earlier could remain in every later competition network and distort scarcity for active firms. This is a pre-return network-universe semantics correction; no factor weight, portfolio size, cost, holdout, or return result changed.",
-    "2026-09-23: network filing acquisition now starts in 2007 while portfolio/network formation remains 2009 onward. This supplies the up-to-550-day Item 1 lookback needed for early-2009 snapshots and does not introduce pre-2009 portfolio returns."
+    "2026-09-23: network filing acquisition now starts in 2007 while portfolio/network formation remains 2009 onward. This supplies the up-to-550-day Item 1 lookback needed for early-2009 snapshots and does not introduce pre-2009 portfolio returns.",
+    "2026-09-26: the free large-cap proxy's 97% historical-price coverage gate is measured on strategy-aligned active CIK-sessions, not raw membership ticker-row sessions. The membership source can contain overlapping old/new ticker rows for the same issuer around renames while the executor always deduplicates to one symbol per CIK. The 97% threshold is unchanged; the corrected metric passed at 97.2083%. Additional public WIKI/Yahoo/tsaustin sources only recover missing prices and do not change signals, portfolio rules, costs, or sample splits."
   ],
   "local_free_proxy_corrections": [
     "2026-09-24/25: corrected the local free EOD LEAPS proxy's InteractiveBrokers equity-option fee from $0.70/contract to the current LEAN InteractiveBrokersFeeModel low-volume rate of $0.65/contract for premium >= $0.10, with $1 minimum. This is a mechanical replication fix after proxy results were observed; the frozen strategy grid is unchanged.",

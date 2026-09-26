@@ -43,25 +43,35 @@ jobs:
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId \
             --jq '.[0].databaseId')"
+          CURATED_PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-price-coverage.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
           test -n "$NET_RUN" || { echo "No successful HF+SEC Item1 hybrid run"; exit 2; }
           test -n "$PRICE_RUN" || { echo "No successful tsaustin price recovery run"; exit 2; }
+          test -n "$CURATED_PRICE_RUN" || { echo "No successful curated price-coverage run"; exit 2; }
           echo "NET_RUN=$NET_RUN" >> "$GITHUB_ENV"
           echo "PRICE_RUN=$PRICE_RUN" >> "$GITHUB_ENV"
-          echo "Using NET_RUN=$NET_RUN PRICE_RUN=$PRICE_RUN FUND_RUN=$FUND_RUN"
+          echo "CURATED_PRICE_RUN=$CURATED_PRICE_RUN" >> "$GITHUB_ENV"
+          echo "Using NET_RUN=$NET_RUN PRICE_RUN=$PRICE_RUN CURATED_PRICE_RUN=$CURATED_PRICE_RUN FUND_RUN=$FUND_RUN"
 
       - name: Download recovered network, prices, and validated SEC accounting shards
         shell: bash
         run: |
-          rm -rf /tmp/net /tmp/prices /tmp/fund
-          mkdir -p /tmp/net /tmp/prices /tmp/fund
+          rm -rf /tmp/net /tmp/prices /tmp/curated-price /tmp/fund
+          mkdir -p /tmp/net /tmp/prices /tmp/curated-price /tmp/fund
           gh run download "$NET_RUN" --repo "$GITHUB_REPOSITORY" \
             --name hf-sec-hybrid-item1-discovery-network --dir /tmp/net
           gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
             --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/prices
+          gh run download "$CURATED_PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-price-coverage --dir /tmp/curated-price
           gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY" \
             --pattern 'bottleneck-fund-*' --dir /tmp/fund
           find /tmp/net -maxdepth 2 -type f -printf '%p %k KB\n'
           find /tmp/prices -maxdepth 2 -type f -printf '%p %k KB\n'
+          find /tmp/curated-price -maxdepth 2 -type f -printf '%p %k KB\n'
           find /tmp/fund -maxdepth 3 -type f -printf '%p %k KB\n'
 
       - name: Enforce frozen data-quality gates before returns
@@ -81,10 +91,16 @@ jobs:
           print('NETWORK_GATE_PASS',minv,med)
 
           pm=json.loads((Path('/tmp/prices')/'sp500_hybrid_price_panel_summary.json').read_text())
-          cov=float(pm['strategy_aligned_cik_session_coverage'])
-          assert cov>=0.97,cov
+          raw_cik_cov=float(pm['strategy_aligned_cik_session_coverage'])
+          assert raw_cik_cov>=0.97,raw_cik_cov
           assert pm.get('coverage_gate_97pct') is True,pm
-          print('PRICE_GATE_PASS',cov)
+
+          cm=json.loads((Path('/tmp/curated-price')/'curated_sp500_price_coverage_summary.json').read_text())
+          cov=float(cm['effective_identity_plus_price_coverage'])
+          assert cov>=0.97,cov
+          assert cm.get('gate_passed') is True,cm
+          assert float(cm['identity_mapping_session_coverage'])>=0.97,cm
+          print('PRICE_GATE_PASS','raw_cik',raw_cik_cov,'curated_effective',cov)
 
           fps=sorted(Path('/tmp/fund').glob('bottleneck-fund-*/trimmed.parquet'))
           assert len(fps)==5,fps
@@ -127,18 +143,27 @@ jobs:
           print('FORMATION_FEATURE_GATE_PASS',len(f))
           PY
 
-      - name: Download PIT membership
+      - name: Require curated date-resolved strategy membership
+        shell: bash
         run: |
-          curl -L --fail --retry 5 \
-            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
-            -o /tmp/components_history.csv
+          test -f /tmp/curated-price/curated_sp500_price_candidate_membership.csv
+          python - <<'PY'
+          import pandas as pd
+          p='/tmp/curated-price/curated_sp500_price_candidate_membership.csv'
+          m=pd.read_csv(p,dtype={'cik':str})
+          required={'symbol','cik','date_added','date_removed','identity_resolved'}
+          assert required.issubset(m.columns),(required-set(m.columns))
+          assert m.identity_resolved.astype(str).str.lower().isin({'true','1','yes'}).all()
+          assert len(m)>500,len(m)
+          print('CURATED_STRATEGY_MEMBERSHIP_PASS',len(m),m.symbol.nunique(),m.cik.nunique())
+          PY
 
       - name: Run frozen 15-cell discovery only
         shell: bash
         run: |
           rm -rf results/free_stage1/local_sp500_bottleneck_hybrid_discovery
           python research/free_stage1/local_sp500_bottleneck_backtest.py \
-            --membership /tmp/components_history.csv \
+            --membership /tmp/curated-price/curated_sp500_price_candidate_membership.csv \
             --fundamentals /tmp/assembled/sec_formation_features.csv \
             --network /tmp/net/network_metrics_all.csv \
             --prices /tmp/prices/sp500_hybrid_prices_2007_2023.parquet \
@@ -255,6 +280,7 @@ jobs:
           {
             echo "network_workflow_run=$NET_RUN"
             echo "price_workflow_run=$PRICE_RUN"
+            echo "curated_price_gate_workflow_run=$CURATED_PRICE_RUN"
             echo "fundamental_workflow_run=$FUND_RUN"
             echo "executor_source_sha=$GITHUB_SHA"
             echo "holdout_status=SEALED_NOT_READ"

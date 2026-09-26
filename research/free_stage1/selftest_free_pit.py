@@ -11,6 +11,7 @@ import sec_item1_network as net
 import sec_fsd_pit as fsd
 import sec_formation_features as formfeat
 import local_sp500_bottleneck_backtest as local_bottleneck
+import direct_sec_cache_completion as direct_sec_completion
 
 
 
@@ -116,6 +117,37 @@ def test_local_bottleneck_exact_snapshot_and_period_metrics():
     assert turnover > 1.99
     assert new_key in targets
     assert nav_after < 100.0
+
+
+def test_direct_sec_cache_completion_uses_snapshot_gaps():
+    membership = pd.DataFrame([
+        {"symbol":"AAA","cik":"0000000001","date_added":pd.Timestamp("2009-01-01"),"date_removed":pd.NaT},
+        {"symbol":"BBB","cik":"0000000002","date_added":pd.Timestamp("2009-01-01"),"date_removed":pd.NaT},
+    ])
+    cached = pd.DataFrame([
+        {
+            "cik":"0000000001","filing_date":pd.Timestamp("2009-02-15"),
+            "filename":"a.txt","item1":"business text "*300,"word_count":600,
+            "error":None,"source":"SEC_DIRECT_CACHE",
+        },
+        {
+            # CIK 2 exists in the cache, but this filing is too old for the
+            # later formation. Presence-by-CIK alone must not mark it complete.
+            "cik":"0000000002","filing_date":pd.Timestamp("2008-01-15"),
+            "filename":"b.txt","item1":"business text "*300,"word_count":600,
+            "error":None,"source":"SEC_DIRECT_CACHE",
+        },
+    ])
+    missing, audit = direct_sec_completion.missing_snapshot_ciks(
+        membership,
+        cached,
+        [pd.Timestamp("2009-03-31"), pd.Timestamp("2010-03-31")],
+        max_item1_age_days=550,
+    )
+    assert "0000000002" in missing
+    assert "0000000001" in missing  # valid in 2009, stale by 2010
+    assert len(audit) == 2
+    assert audit.iloc[-1].missing_snapshot_ciks == 2
 
 
 def test_curated_reused_ticker_identity_provenance():
@@ -348,6 +380,7 @@ if __name__=="__main__":
     test_item1_table_heading()
     test_network()
     test_local_bottleneck_exact_snapshot_and_period_metrics()
+    test_direct_sec_cache_completion_uses_snapshot_gaps()
     test_curated_reused_ticker_identity_provenance()
     test_sec_amendment_pit()
     test_sec_flow_period_strictness()

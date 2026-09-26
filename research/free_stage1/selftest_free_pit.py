@@ -11,7 +11,6 @@ import sec_item1_network as net
 import sec_fsd_pit as fsd
 import sec_formation_features as formfeat
 import local_sp500_bottleneck_backtest as local_bottleneck
-import direct_sec_cache_completion as direct_complete
 import direct_sec_cache_completion as direct_sec_completion
 
 
@@ -142,11 +141,11 @@ def test_direct_sec_cache_completion_uses_snapshot_gaps():
     missing, audit = direct_sec_completion.missing_snapshot_ciks(
         membership,
         cached,
-        [pd.Timestamp("2009-03-31"), pd.Timestamp("2010-03-31")],
+        [pd.Timestamp("2009-03-31"), pd.Timestamp("2010-09-30")],
         max_item1_age_days=550,
     )
     assert "0000000002" in missing
-    assert "0000000001" in missing  # valid in 2009, stale by 2010
+    assert "0000000001" in missing  # valid in 2009, >550 days old by 2010-09-30
     assert len(audit) == 2
     assert audit.iloc[-1].missing_snapshot_ciks == 2
 
@@ -341,7 +340,7 @@ def test_direct_sec_targeted_gap_filings():
         {"cik":"0000000002","date_filed":pd.Timestamp("2009-02-20"),"filename":"b09.txt"},
         {"cik":"0000000002","date_filed":pd.Timestamp("2010-02-20"),"filename":"b10.txt"},
     ])
-    work, audit = direct_complete.required_gap_filings(
+    work, audit = direct_sec_completion.required_gap_filings(
         membership, cached, index,
         [pd.Timestamp("2010-03-31")],
         max_item1_age_days=550,

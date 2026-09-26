@@ -137,9 +137,118 @@ jobs:
           print('RECOVERED_PANEL',len(out),out.symbol.nunique(),flush=True)
           PY
 
+      - name: Audit first-pass gaps without relaxing final gate
+        shell: bash
+        run: |
+          rm -rf /tmp/audit-first
+          python research/free_stage1/curated_sp500_price_coverage.py \
+            --curated /tmp/curated.csv \
+            --mapped-membership /tmp/member/curated_sp500_membership_intervals.csv \
+            --lawcal /tmp/lawcal.csv \
+            --prices /tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet \
+            --out /tmp/audit-first \
+            --start 2020-01-01 \
+            --end 2023-12-31 \
+            --coverage-gate 0.0
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          detail=json.loads((Path('/tmp/audit-first')/'curated_sp500_price_coverage_detail.json').read_text())
+          syms=set()
+          for row in detail:
+              for miss in row.get('missing_price',[]):
+                  for s in miss.get('candidate_symbols',[]):
+                      if s:
+                          syms.add(str(s).upper().strip())
+          Path('/tmp/retry_symbols.txt').write_text('\n'.join(sorted(syms))+'\n')
+          summary=json.loads((Path('/tmp/audit-first')/'curated_sp500_price_coverage_summary.json').read_text())
+          print('FIRST_PASS_COVERAGE',summary['effective_identity_plus_price_coverage'],
+                'RETRY_SYMBOLS',len(syms),sorted(syms),flush=True)
+          PY
+
+      - name: Retry remaining missing symbols individually
+        shell: bash
+        run: |
+          python - <<'PY'
+          import time
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          import yfinance as yf
+
+          def norm(s): return str(s).upper().strip().replace('-','.')
+          def ysym(s): return str(s).replace('.','-')
+
+          symbols=[x.strip() for x in Path('/tmp/retry_symbols.txt').read_text().splitlines() if x.strip()]
+          parts=[]
+          failures=[]
+          for i,sym in enumerate(symbols,1):
+              try:
+                  z=yf.download(
+                      ysym(sym),start='2018-07-01',end='2024-01-02',
+                      auto_adjust=False,actions=False,progress=False,
+                      threads=False,group_by='column',
+                  )
+                  if z is None or z.empty:
+                      failures.append((sym,'EMPTY'))
+                      print('YF_RETRY_EMPTY',sym,flush=True)
+                      continue
+                  if isinstance(z.columns,pd.MultiIndex):
+                      z.columns=[c[0] if isinstance(c,tuple) else c for c in z.columns]
+                  z=z.reset_index()
+                  z['symbol']=norm(sym)
+                  z['Date']=pd.to_datetime(z['Date'],errors='coerce').dt.tz_localize(None).dt.normalize()
+                  for col in ['Open','High','Low','Close','Adj Close','Volume']:
+                      if col not in z: z[col]=np.nan
+                      z[col]=pd.to_numeric(z[col],errors='coerce')
+                  z=z.dropna(subset=['Date','Close'])
+                  z['Adj Close']=z['Adj Close'].fillna(z['Close'])
+                  z=z[(z['Close']>0)&(z['Adj Close']>0)]
+                  z['source']='YAHOO_HOLDOUT_INDIVIDUAL_RETRY'
+                  parts.append(z[['Date','symbol','Open','High','Low','Close','Adj Close','Volume','source']])
+                  print('YF_RETRY',i,'/',len(symbols),sym,'ROWS',len(z),flush=True)
+              except Exception as exc:
+                  failures.append((sym,repr(exc)))
+                  print('YF_RETRY_ERROR',sym,repr(exc),flush=True)
+              time.sleep(.2)
+
+          retry=pd.concat(parts,ignore_index=True) if parts else pd.DataFrame()
+          base=pd.read_parquet('/tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet')
+          ren={}
+          for c in base.columns:
+              k=str(c).strip().lower()
+              if k=='date': ren[c]='Date'
+              elif k=='symbol': ren[c]='symbol'
+              elif k=='open': ren[c]='Open'
+              elif k=='high': ren[c]='High'
+              elif k=='low': ren[c]='Low'
+              elif k=='close': ren[c]='Close'
+              elif k in ('adj close','adj_close','adjusted_close'): ren[c]='Adj Close'
+              elif k=='volume': ren[c]='Volume'
+          base=base.rename(columns=ren)
+          base['Date']=pd.to_datetime(base.Date).dt.tz_localize(None).dt.normalize()
+          base['symbol']=base.symbol.map(norm)
+          if 'source' not in base: base['source']='BASE_RECOVERED'
+          base['_priority']=2
+          if len(retry):
+              retry['_priority']=1
+              out=pd.concat([retry,base],ignore_index=True,sort=False)
+          else:
+              out=base
+          out=out.sort_values(['symbol','Date','_priority']).drop_duplicates(['symbol','Date'],keep='last')
+          out=out.drop(columns=['_priority']).sort_values(['symbol','Date'])
+          out.to_parquet('/tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet',index=False)
+          Path('/tmp/recovered/individual_retry_failures.txt').write_text(
+              '\n'.join(f'{s}\t{e}' for s,e in failures)+'\n'
+          )
+          print('INDIVIDUAL_RETRY_ROWS',len(retry),'SYMBOLS',
+                retry.symbol.nunique() if len(retry) else 0,'FAILURES',len(failures),flush=True)
+          PY
+
       - name: Re-enforce sealed holdout effective coverage gate
         shell: bash
         run: |
+          rm -rf /tmp/audit
           python research/free_stage1/curated_sp500_price_coverage.py \
             --curated /tmp/curated.csv \
             --mapped-membership /tmp/member/curated_sp500_membership_intervals.csv \
@@ -153,6 +262,7 @@ jobs:
           import json
           from pathlib import Path
           s=json.loads((Path('/tmp/audit')/'curated_sp500_price_coverage_summary.json').read_text())
+          assert s['gate_passed'] is True,s
           print('SEALED_HOLDOUT_RECOVERY_PASS',s['effective_identity_plus_price_coverage'],flush=True)
           PY
 
@@ -163,6 +273,7 @@ jobs:
           name: sealed-holdout-recovered-sp500-prices
           path: |
             /tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet
+            /tmp/recovered/individual_retry_failures.txt
             /tmp/audit/
           if-no-files-found: warn
           retention-days: 30

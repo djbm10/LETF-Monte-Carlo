@@ -48,8 +48,7 @@ def missing_snapshot_ciks(
     missing_union: set[str] = set()
     rows = []
     for fd in dates:
-        active = sp.active_ciks(membership, fd)
-        active_set = set(active["cik"].astype(str))
+        active_set = set(sp.active_ciks(membership, fd))
         sample = net.latest_asof(
             cached[cached["cik"].isin(active_set)],
             fd,
@@ -67,6 +66,66 @@ def missing_snapshot_ciks(
             }
         )
     return missing_union, pd.DataFrame(rows)
+
+
+def required_gap_filings(
+    membership: pd.DataFrame,
+    cached: pd.DataFrame,
+    index: pd.DataFrame,
+    dates: list[pd.Timestamp],
+    max_item1_age_days: int,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Select only 10-K filings that can fill an actually missing snapshot.
+
+    For each formation date, identify active CIKs without any valid cached
+    direct-SEC Item 1 in the frozen <=max_item1_age_days window. For those CIKs,
+    retain every indexed 10-K inside that exact window. Keeping the full window
+    (normally one or two annual filings) preserves the existing fallback
+    semantics if the newest 10-K cannot be parsed, while avoiding unrelated
+    issuer history.
+    """
+    chosen = []
+    audit = []
+    idx = index.copy()
+    idx["date_filed"] = pd.to_datetime(idx["date_filed"])
+    for fd in dates:
+        active = set(sp.active_ciks(membership, fd))
+        sample = net.latest_asof(
+            cached[cached["cik"].isin(active)],
+            fd,
+            max_age_days=max_item1_age_days,
+        )
+        have = set(sample["cik"].astype(str)) if len(sample) else set()
+        missing = active - have
+        lo = fd - pd.Timedelta(days=max_item1_age_days)
+        eligible = idx[
+            idx["cik"].isin(missing)
+            & (idx["date_filed"] <= fd)
+            & (idx["date_filed"] >= lo)
+        ].copy()
+        if len(eligible):
+            eligible["needed_for_formation"] = fd
+            chosen.append(eligible)
+        audit.append(
+            {
+                "formation_date": str(fd.date()),
+                "active_ciks": len(active),
+                "cached_valid_ciks": len(have),
+                "missing_snapshot_ciks": len(missing),
+                "eligible_gap_filings": int(len(eligible)),
+                "eligible_gap_ciks": int(eligible["cik"].nunique()) if len(eligible) else 0,
+            }
+        )
+    if chosen:
+        work = pd.concat(chosen, ignore_index=True)
+        work = (
+            work.sort_values(["cik", "date_filed", "filename"])
+            .drop_duplicates(["cik", "filename"], keep="last")
+            .reset_index(drop=True)
+        )
+    else:
+        work = index.iloc[0:0].copy()
+    return work, pd.DataFrame(audit)
 
 
 def main() -> None:
@@ -126,12 +185,27 @@ def main() -> None:
         client,args.start_year,args.end_year,forms=("10-K",),
         cache=args.out/"index_cache"
     )
-    idx=idx[idx.cik.isin(set(missing))].copy()
-    idx.to_csv(args.out/"new_sec_index.csv",index=False)
-    print("DIRECT_SEC_NEW_INDEX","filings",len(idx),"ciks",idx.cik.nunique(),flush=True)
+    idx=idx[idx.cik.isin(union_ciks)].copy()
+    targeted, target_audit = required_gap_filings(
+        membership,
+        cached,
+        idx,
+        dates,
+        max_item1_age_days=args.max_item1_age_days,
+    )
+    targeted.to_csv(args.out/"new_sec_index.csv",index=False)
+    target_audit.to_csv(args.out/"targeted_gap_filing_audit.csv",index=False)
+    print(
+        "DIRECT_SEC_TARGETED_INDEX",
+        "filings",len(targeted),
+        "ciks",targeted.cik.nunique() if len(targeted) else 0,
+        "vs_full_missing_history_filings",int(idx[idx.cik.isin(set(missing))].shape[0]),
+        flush=True,
+    )
 
     fresh=net.fetch_item1_rows(
-        client,idx,args.out/"new_item1_cache",ciks=set(missing)
+        client,targeted,args.out/"new_item1_cache",
+        ciks=set(targeted.cik.astype(str)) if len(targeted) else set()
     )
     fresh=normalize_filings(fresh,"SEC_DIRECT_NEW")
     fresh.to_parquet(args.out/"new_direct_sec_filings.parquet",index=False)
@@ -197,7 +271,11 @@ def main() -> None:
         "fetch_target_rule":"union of issuer CIKs missing a valid <=550-day direct-SEC Item 1 at any required formation snapshot",
         "cached_snapshot_valid_min":int(precoverage.cached_valid_ciks.min()),
         "cached_snapshot_valid_median":float(precoverage.cached_valid_ciks.median()),
-        "new_index_rows":int(len(idx)),
+        "new_index_rows":int(len(targeted)),
+        "full_missing_history_index_rows_avoided":int(
+            len(idx[idx.cik.isin(set(missing))]) - len(targeted)
+        ),
+        "targeted_gap_audit_rows":int(len(target_audit)),
         "new_direct_sec_rows":int(len(fresh)),
         "new_direct_sec_success":int(fresh.item1.notna().sum()) if len(fresh) else 0,
         "combined_direct_sec_rows":int(len(combined)),
@@ -217,7 +295,8 @@ def main() -> None:
     print("DIRECT_SEC_COMPLETION_MANIFEST",json.dumps({
         k:manifest[k] for k in [
             "union_ciks","cached_direct_sec_ciks","new_fetch_target_ciks",
-            "new_index_rows","new_direct_sec_success","combined_direct_sec_ciks",
+            "new_index_rows","full_missing_history_index_rows_avoided",
+            "new_direct_sec_success","combined_direct_sec_ciks",
             "valid_item1_min","valid_item1_median","network_rows"
         ]
     }),flush=True)

@@ -11,6 +11,7 @@ import sec_item1_network as net
 import sec_fsd_pit as fsd
 import sec_formation_features as formfeat
 import local_sp500_bottleneck_backtest as local_bottleneck
+import direct_sec_cache_completion as direct_complete
 import direct_sec_cache_completion as direct_sec_completion
 
 
@@ -321,6 +322,38 @@ def test_frozen_source_invariants():
     assert "self.market_order(" not in leaps
     assert "ENTRY_SELECTION_FOR_NEXT_OPEN" in leaps
 
+def test_direct_sec_targeted_gap_filings():
+    membership = pd.DataFrame([
+        {"symbol":"AAA","cik":"0000000001","date_added":pd.Timestamp("2008-01-01"),"date_removed":pd.NaT},
+        {"symbol":"BBB","cik":"0000000002","date_added":pd.Timestamp("2008-01-01"),"date_removed":pd.NaT},
+    ])
+    cached = pd.DataFrame([
+        {
+            "cik":"0000000001","filing_date":pd.Timestamp("2010-02-15"),
+            "filename":"cached-a.txt","item1":"business "*300,
+            "word_count":300,"error":None,
+        }
+    ])
+    index = pd.DataFrame([
+        {"cik":"0000000001","date_filed":pd.Timestamp("2008-02-15"),"filename":"old-a.txt"},
+        {"cik":"0000000001","date_filed":pd.Timestamp("2010-02-15"),"filename":"same-a.txt"},
+        {"cik":"0000000002","date_filed":pd.Timestamp("2008-02-20"),"filename":"old-b.txt"},
+        {"cik":"0000000002","date_filed":pd.Timestamp("2009-02-20"),"filename":"b09.txt"},
+        {"cik":"0000000002","date_filed":pd.Timestamp("2010-02-20"),"filename":"b10.txt"},
+    ])
+    work, audit = direct_complete.required_gap_filings(
+        membership, cached, index,
+        [pd.Timestamp("2010-03-31")],
+        max_item1_age_days=550,
+    )
+    # AAA is covered by cache and must not be fetched. BBB is missing; only
+    # its 2009/2010 filings inside the 550-day snapshot window are relevant.
+    assert set(work.cik) == {"0000000002"}
+    assert set(work.filename) == {"b09.txt","b10.txt"}
+    assert "old-b.txt" not in set(work.filename)
+    assert int(audit.iloc[0].missing_snapshot_ciks) == 1
+
+
 def test_sec_structural_empty_source_quarter():
     assert fsd.is_structural_empty_source_quarter(2009, 1)
     assert not fsd.is_structural_empty_source_quarter(2009, 2)
@@ -386,6 +419,7 @@ if __name__=="__main__":
     test_sec_flow_period_strictness()
     test_sec_formation_panel()
     test_frozen_source_invariants()
+    test_direct_sec_targeted_gap_filings()
     test_sec_structural_empty_source_quarter()
     test_sec_fsd()
     print("FREE PIT SELFTEST PASS")

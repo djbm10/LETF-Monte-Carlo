@@ -614,7 +614,11 @@ def run_cell(
         scored = score_cross_section(cross, model)
         selected = scored.head(top_n).copy()
 
-        if len(selected) < min(top_n, MIN_CROSS_SECTION):
+        # The cross-sectional z-score machinery already enforces
+        # MIN_CROSS_SECTION=20 per feature. A requested top-N portfolio must
+        # additionally have all N scored names; never silently turn top-40
+        # into a smaller portfolio.
+        if len(selected) < top_n:
             rebalance_rows.append({
                 "rebalance_date": str(d.date()),
                 "signal_date": str(signal_date.date()),

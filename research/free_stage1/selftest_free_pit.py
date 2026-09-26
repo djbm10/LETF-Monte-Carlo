@@ -257,6 +257,12 @@ def test_frozen_source_invariants():
     assert "self.market_order(" not in leaps
     assert "ENTRY_SELECTION_FOR_NEXT_OPEN" in leaps
 
+def test_sec_structural_empty_source_quarter():
+    assert fsd.is_structural_empty_source_quarter(2009, 1)
+    assert not fsd.is_structural_empty_source_quarter(2009, 2)
+    assert not fsd.is_structural_empty_source_quarter(2010, 1)
+
+
 def test_sec_fsd():
     sub=pd.DataFrame([{
         "adsh":"0001","cik":"0000320193","name":"Example","form":"10-K",
@@ -314,5 +320,6 @@ if __name__=="__main__":
     test_sec_flow_period_strictness()
     test_sec_formation_panel()
     test_frozen_source_invariants()
+    test_sec_structural_empty_source_quarter()
     test_sec_fsd()
     print("FREE PIT SELFTEST PASS")

@@ -1,0 +1,314 @@
+name: Run single sealed Bottleneck holdout
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  holdout:
+    if: contains(github.event.head_commit.message, '[local-bottleneck-holdout-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FUND_RUN: '36126965348'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas pyarrow
+
+      - name: Resolve sealed prerequisites
+        shell: bash
+        run: |
+          DISCOVERY_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow free-local-direct-sec-bottleneck.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          DISCOVERY_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow direct-sec-network-replication.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          HOLDOUT_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow direct-sec-holdout-network.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow holdout-price-recovery.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          test -n "$DISCOVERY_RUN" || { echo "No successful direct-SEC discovery"; exit 2; }
+          test -n "$DISCOVERY_NET_RUN" || { echo "No successful direct-SEC discovery network"; exit 2; }
+          test -n "$HOLDOUT_NET_RUN" || { echo "No successful direct-SEC holdout network"; exit 2; }
+          test -n "$PRICE_RUN" || { echo "No successful sealed holdout price recovery"; exit 2; }
+          {
+            echo "DISCOVERY_RUN=$DISCOVERY_RUN"
+            echo "DISCOVERY_NET_RUN=$DISCOVERY_NET_RUN"
+            echo "HOLDOUT_NET_RUN=$HOLDOUT_NET_RUN"
+            echo "PRICE_RUN=$PRICE_RUN"
+          } >> "$GITHUB_ENV"
+
+      - name: Download all frozen inputs
+        shell: bash
+        run: |
+          rm -rf /tmp/discovery /tmp/discovery-net /tmp/holdout-net /tmp/prices /tmp/fund /tmp/assembled
+          mkdir -p /tmp/discovery /tmp/discovery-net /tmp/holdout-net /tmp/prices /tmp/fund /tmp/assembled
+          gh run download "$DISCOVERY_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name free-local-direct-sec-bottleneck-discovery-results --dir /tmp/discovery
+          gh run download "$DISCOVERY_NET_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name direct-sec-item1-network-replication --dir /tmp/discovery-net
+          gh run download "$HOLDOUT_NET_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name direct-sec-holdout-item1-network --dir /tmp/holdout-net
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name sealed-holdout-recovered-sp500-prices --dir /tmp/prices
+          gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'bottleneck-fund-*' --dir /tmp/fund
+
+      - name: Enforce frozen holdout prerequisites before returns
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+
+          adv=json.loads((Path('/tmp/discovery')/'bottleneck_family_advancement.json').read_text())
+          assert adv['decision']=='ADVANCE_ALL_15_TO_SINGLE_HOLDOUT_RUN',adv
+          assert adv['advancing_families'],adv
+          assert adv['holdout_status']=='READY_FOR_SINGLE_FROZEN_HOLDOUT_RUN',adv
+
+          nm=json.loads((Path('/tmp/holdout-net')/'manifest.json').read_text())
+          assert nm['evidence_label']=='FREE_HOLDOUT_DIRECT_SEC_NETWORK',nm
+          assert nm['quality_gate']['passed'] is True,nm
+          assert nm['valid_item1_min']>=200 and nm['valid_item1_median']>=350,nm
+
+          ps=json.loads((Path('/tmp/prices')/'audit'/'curated_sp500_price_coverage_summary.json').read_text())
+          assert ps['sample_start']=='2020-01-01' and ps['sample_end']=='2023-12-31',ps
+          assert ps['gate_passed'] is True,ps
+          assert float(ps['effective_identity_plus_price_coverage'])>=0.97,ps
+
+          rule=Path('research/free_stage1/BOTTLENECK_HOLDOUT_CONFIRMATION_RULE.md').read_text()
+          assert 'positive for at least 2 of 3 top-N values' in rule
+          assert 'median holdout CAGR excess across top-N is positive' in rule
+          print('SEALED_HOLDOUT_PREREQUISITES_PASS',
+                adv['advancing_families'],
+                nm['valid_item1_min'],nm['valid_item1_median'],
+                ps['effective_identity_plus_price_coverage'],flush=True)
+          PY
+
+      - name: Assemble 2019Q4-2023 PIT fundamentals
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import pandas as pd
+          fps=sorted(Path('/tmp/fund').glob('bottleneck-fund-*/trimmed.parquet'))
+          assert len(fps)==5,fps
+          cms=[json.loads(p.read_text()) for p in sorted(Path('/tmp/fund').glob('bottleneck-fund-*/chunk_manifest.json'))]
+          failures=[z for m in cms for z in m.get('failed_quarters',[])]
+          fatal=[z for z in failures if not (int(z.get('year',-1))==2009 and int(z.get('qtr',-1))==1)]
+          assert not fatal,fatal
+          x=pd.concat([pd.read_parquet(p) for p in fps],ignore_index=True)
+          x['information_date']=pd.to_datetime(x['information_date'])
+          x=x[x.information_date<=pd.Timestamp('2023-12-31')].copy()
+          x=x.sort_values(['cik','information_date','period','adsh']).drop_duplicates(['adsh','cik'],keep='last')
+          x.to_parquet('/tmp/assembled/sec_pit_fundamentals.parquet',index=False)
+          PY
+          DATES="$(python - <<'PY'
+          import pandas as pd
+          dates=[pd.Timestamp('2019-12-31'),*list(pd.date_range('2020-03-31','2023-12-31',freq='QE'))]
+          print(','.join(x.strftime('%Y-%m-%d') for x in dates))
+          PY
+          )"
+          python research/free_stage1/sec_formation_features.py \
+            --input /tmp/assembled/sec_pit_fundamentals.parquet \
+            --formation-dates "$DATES" \
+            --out /tmp/assembled/sec_formation_features.csv
+          python - <<'PY'
+          import pandas as pd
+          f=pd.read_csv('/tmp/assembled/sec_formation_features.csv')
+          fd=pd.to_datetime(f.formation_date)
+          assert fd.min()==pd.Timestamp('2019-12-31')
+          assert fd.max()==pd.Timestamp('2023-12-31')
+          assert (pd.to_datetime(f.information_date)<=fd).all()
+          counts=f.groupby('formation_date').cik.nunique()
+          assert counts.min()>=300,counts.nsmallest()
+          print('HOLDOUT_FUNDAMENTALS_PASS',len(f),int(counts.min()),float(counts.median()),flush=True)
+          PY
+
+      - name: Assemble direct-SEC network including 2019Q4 warm-start snapshot
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          d=pd.read_csv('/tmp/discovery-net/network_metrics_all.csv',dtype={'cik':str})
+          h=pd.read_csv('/tmp/holdout-net/network_metrics_all.csv',dtype={'cik':str})
+          d['formation_date']=pd.to_datetime(d.formation_date)
+          h['formation_date']=pd.to_datetime(h.formation_date)
+          warm=d[d.formation_date==pd.Timestamp('2019-12-31')].copy()
+          assert len(warm)>=200,len(warm)
+          n=pd.concat([warm,h],ignore_index=True).sort_values(['formation_date','cik'])
+          dates=sorted(pd.to_datetime(n.formation_date).drop_duplicates())
+          assert dates[0]==pd.Timestamp('2019-12-31')
+          assert dates[-1]==pd.Timestamp('2023-12-31')
+          assert len(dates)==17,len(dates)
+          n.to_csv('/tmp/assembled/direct_sec_network_holdout.csv',index=False)
+          print('HOLDOUT_NETWORK_ASSEMBLED',len(n),len(dates),flush=True)
+          PY
+
+      - name: Run all 15 frozen holdout cells once
+        shell: bash
+        run: |
+          rm -rf results/free_stage1/local_sp500_bottleneck_direct_sec_holdout
+          python research/free_stage1/local_sp500_bottleneck_backtest.py \
+            --membership /tmp/prices/audit/curated_sp500_price_candidate_membership.csv \
+            --fundamentals /tmp/assembled/sec_formation_features.csv \
+            --network /tmp/assembled/direct_sec_network_holdout.csv \
+            --prices /tmp/prices/recovered/sp500_holdout_recovered_prices_2007_2023.parquet \
+            --out results/free_stage1/local_sp500_bottleneck_direct_sec_holdout \
+            --start 2020-01-01 \
+            --end 2023-12-31
+
+      - name: Apply pre-frozen holdout confirmation rule
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path('results/free_stage1/local_sp500_bottleneck_direct_sec_holdout')
+          s=pd.read_csv(root/'bottleneck_sp500_proxy_surface.csv')
+          assert len(s)==15,len(s)
+          assert set(s.top_n)=={10,20,40}
+          disc=json.loads((Path('/tmp/discovery')/'bottleneck_family_advancement.json').read_text())
+          advancing=set(disc['advancing_families'])
+          comparator={
+              'bottleneck_core':'momentum',
+              'bottleneck_momentum':'momentum',
+              'bottleneck_full':'quality_momentum',
+          }
+          out={
+              'rule':'research/free_stage1/BOTTLENECK_HOLDOUT_CONFIRMATION_RULE.md',
+              'sample':'2020-01-01 through 2023-12-31',
+              'evidence_label':'FREE_HOLDOUT_DIRECT_SEC_LARGE_CAP_EOD_PROXY',
+              'discovery_advancing_families':sorted(advancing),
+              'families':{},
+          }
+          confirmed=[]
+          for fam,comp in comparator.items():
+              diffs=[]; sharpe=[]; dd=[]; by_n={}
+              for n in (10,20,40):
+                  a=s[(s.model==fam)&(s.top_n==n)].iloc[0]
+                  b=s[(s.model==comp)&(s.top_n==n)].iloc[0]
+                  ex=float(a.cagr-b.cagr)
+                  sx=float(a.sharpe_0rf_daily-b.sharpe_0rf_daily)
+                  dx=float(a.max_drawdown_daily-b.max_drawdown_daily)
+                  diffs.append(ex); sharpe.append(sx); dd.append(dx)
+                  by_n[str(n)]={
+                      'holdout_cagr':float(a.cagr),
+                      'comparator_holdout_cagr':float(b.cagr),
+                      'cagr_excess':ex,
+                      'sharpe_excess':sx,
+                      'max_drawdown_difference':dx,
+                  }
+              positives=sum(x>0 for x in diffs)
+              med=float(np.median(diffs))
+              eligible=fam in advancing
+              confirm=bool(eligible and positives>=2 and med>0)
+              med_sh=float(np.median(sharpe))
+              risk_label=(
+                  'RETURN_AND_RISK_ADJUSTED_SUPPORT'
+                  if confirm and med_sh>=0 else
+                  'RETURN_ONLY_RISK_AMPLIFYING_SUPPORT'
+                  if confirm else
+                  'NOT_CONFIRMED'
+              )
+              if confirm: confirmed.append(fam)
+              out['families'][fam]={
+                  'eligible_from_discovery':eligible,
+                  'positive_holdout_cagr_excess_topn_count':positives,
+                  'median_holdout_cagr_excess':med,
+                  'median_holdout_sharpe_excess':med_sh,
+                  'median_holdout_max_drawdown_difference':float(np.median(dd)),
+                  'confirmed':confirm,
+                  'risk_interpretation':risk_label,
+                  'by_top_n':by_n,
+              }
+          out['confirmed_families']=confirmed
+          out['overall_stage1_support']=bool(confirmed)
+          out['conclusion']=(
+              'OUT_OF_SAMPLE_SUPPORT_IN_FREE_PIT_SP500_PROXY'
+              if confirmed else
+              'NO_OUT_OF_SAMPLE_SUPPORT_IN_FREE_PIT_SP500_PROXY'
+          )
+          (root/'bottleneck_holdout_confirmation.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Build SPY holdout benchmark
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/manisahni/marketdata/main/daily_adjclose.csv \
+            -o /tmp/core_adjclose.csv
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          import pandas as pd
+          p=pd.read_csv('/tmp/core_adjclose.csv',parse_dates=['Date']).set_index('Date')['SPY'].dropna()
+          p=p[(p.index>='2020-01-01')&(p.index<='2023-12-31')]
+          r=p.pct_change().dropna(); years=(p.index[-1]-p.index[0]).days/365.25
+          out={
+            'start':str(p.index[0].date()),'end':str(p.index[-1].date()),
+            'cagr':float((p.iloc[-1]/p.iloc[0])**(1/years)-1),
+            'ann_vol_daily':float(r.std(ddof=1)*math.sqrt(252)),
+            'sharpe_0rf_daily':float(r.mean()/r.std(ddof=1)*math.sqrt(252)),
+            'max_drawdown_daily':float((p/p.cummax()-1).min()),
+          }
+          root=Path('results/free_stage1/local_sp500_bottleneck_direct_sec_holdout')
+          (root/'spy_holdout_benchmark.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Record immutable provenance
+        shell: bash
+        run: |
+          {
+            echo "direct_discovery_run=$DISCOVERY_RUN"
+            echo "direct_discovery_network_run=$DISCOVERY_NET_RUN"
+            echo "direct_holdout_network_run=$HOLDOUT_NET_RUN"
+            echo "holdout_price_recovery_run=$PRICE_RUN"
+            echo "fundamental_workflow_run=$FUND_RUN"
+            echo "executor_source_sha=$GITHUB_SHA"
+            echo "holdout_execution=single_all_15_cells"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > results/free_stage1/local_sp500_bottleneck_direct_sec_holdout/source_manifest.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: free-local-direct-sec-bottleneck-holdout-results
+          path: results/free_stage1/local_sp500_bottleneck_direct_sec_holdout/
+          retention-days: 30
+
+      - name: Persist holdout once
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/free_stage1/local_sp500_bottleneck_direct_sec_holdout
+          git commit -m "Record single frozen Bottleneck holdout [skip ci]"
+          git fetch origin research/free-pit-quantconnect-stage1
+          git rebase origin/research/free-pit-quantconnect-stage1
+          git push origin HEAD:research/free-pit-quantconnect-stage1

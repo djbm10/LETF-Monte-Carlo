@@ -170,14 +170,24 @@ jobs:
           observed=set(f.formation_date.unique())
           assert observed==expected,(len(observed),sorted(expected-observed),sorted(observed-expected))
           counts=f.groupby('formation_date').cik.nunique()
-          # Align the pre-return source gate to the frozen model's minimum
-          # cross-section rather than to an obsolete full-US absolute row count.
-          assert int(counts.min())>=20,counts.nsmallest(8).to_dict()
+          # SEC structured-data coverage begins 2009-04-15. The first available
+          # formation (2009-06-30) is a documented phase-in snapshot and may be
+          # below the frozen 20-name cross-sectional minimum; never backfill it
+          # with future data. Every formation from 2009-09-30 onward must clear
+          # the minimum. The executor will skip any cell lacking full top-N breadth.
+          early=pd.Timestamp('2009-06-30')
+          assert early in counts.index,counts.index.tolist()
+          assert int(counts.loc[early])<20,counts.loc[early]
+          mature=counts[counts.index>=pd.Timestamp('2009-09-30')]
+          assert len(mature)==42,len(mature)
+          assert int(mature.min())>=20,mature.nsmallest(8).to_dict()
           assert f.cik.nunique()>=500,f.cik.nunique()
           print(
               'FORMATION_FEATURE_GATE_PASS',
               'rows',len(f),'ciks',f.cik.nunique(),
-              'formations',len(counts),'min_ciks',int(counts.min()),
+              'formations',len(counts),
+              'phase_in_2009Q2_ciks',int(counts.loc[early]),
+              'mature_min_ciks',int(mature.min()),
               'median_ciks',float(counts.median())
           )
           PY

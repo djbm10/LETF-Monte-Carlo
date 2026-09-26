@@ -148,9 +148,10 @@ def missing_issuers(
     filings: pd.DataFrame,
     formation_dates: list[pd.Timestamp],
     max_age_days: int,
-) -> tuple[set[str], pd.DataFrame]:
+) -> tuple[set[str], pd.DataFrame, dict[str, list[pd.Timestamp]]]:
     rows = []
     missing_union: set[str] = set()
+    missing_schedule: dict[str, list[pd.Timestamp]] = {}
     for fd in formation_dates:
         active = sp.active_ciks(membership, fd)
         sample = net.latest_asof(
@@ -161,6 +162,8 @@ def missing_issuers(
         have = set(sample["cik"].astype(str))
         missing = sorted(active - have)
         missing_union.update(missing)
+        for cik in missing:
+            missing_schedule.setdefault(cik, []).append(pd.Timestamp(fd))
         rows.append(
             {
                 "formation_date": str(fd.date()),
@@ -169,15 +172,17 @@ def missing_issuers(
                 "hf_missing_ciks": len(missing),
             }
         )
-    return missing_union, pd.DataFrame(rows)
+    return missing_union, pd.DataFrame(rows), missing_schedule
 
 
 def fetch_sec_supplement(
     missing: set[str],
+    missing_schedule: dict[str, list[pd.Timestamp]],
     start_year: int,
     end_year: int,
     out: Path,
     rps: float,
+    max_age_days: int,
 ) -> pd.DataFrame:
     if not missing:
         return pd.DataFrame(
@@ -203,6 +208,18 @@ def fetch_sec_supplement(
         cache=out / "sec_index_cache",
     )
     idx = idx[idx["cik"].isin(missing)].copy()
+    # Fetch only filings capable of filling a specific missing formation
+    # snapshot. Quarterly missing windows overlap heavily, so this avoids
+    # downloading irrelevant years for a CIK that has only a local HF gap.
+    keep = []
+    for row in idx.itertuples(index=False):
+        fd = pd.Timestamp(row.date_filed)
+        needed = any(
+            snap - pd.Timedelta(days=max_age_days) <= fd <= snap
+            for snap in missing_schedule.get(str(row.cik), [])
+        )
+        keep.append(needed)
+    idx = idx[pd.Series(keep, index=idx.index)].copy()
     idx.to_csv(out / "sec_supplement_index.csv", index=False)
     print(
         "SEC_SUPPLEMENT_INDEX",
@@ -350,7 +367,7 @@ def main() -> None:
     )
     hf.to_parquet(args.out / "hf_item1_filings.parquet", index=False)
 
-    missing, hf_cov = missing_issuers(
+    missing, hf_cov, missing_schedule = missing_issuers(
         membership,
         hf,
         dates,
@@ -375,10 +392,12 @@ def main() -> None:
 
     sec = fetch_sec_supplement(
         missing,
+        missing_schedule,
         args.sec_start_year,
         args.sec_end_year,
         args.out,
         args.sec_rps,
+        args.max_item1_age_days,
     )
     sec.to_parquet(args.out / "sec_supplement_filings.parquet", index=False)
 

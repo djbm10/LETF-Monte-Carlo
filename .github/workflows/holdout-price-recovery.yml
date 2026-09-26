@@ -1,0 +1,168 @@
+name: Recover sealed holdout S&P prices
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  recover:
+    if: contains(github.event.head_commit.message, '[holdout-price-recovery]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRICE_RUN: '36220567098'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas pyarrow yfinance requests
+
+      - name: Resolve curated membership and download inputs
+        shell: bash
+        run: |
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-membership.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN"
+          rm -rf /tmp/member /tmp/base /tmp/recovered /tmp/audit
+          mkdir -p /tmp/member /tmp/base /tmp/recovered /tmp/audit
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-cik-membership --dir /tmp/member
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/base
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/thuningxu/sp500nq100/main/sp500_components_history.csv \
+            -o /tmp/curated.csv
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/lawcal.csv
+
+      - name: Fill missing recent curated-symbol days from Yahoo
+        shell: bash
+        run: |
+          python - <<'PY'
+          import time
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          import yfinance as yf
+
+          def norm(s): return str(s).upper().strip().replace('-','.')
+          def ysym(s): return s.replace('.','-')
+
+          m=pd.read_csv('/tmp/member/curated_sp500_membership_intervals.csv',dtype={'cik':str})
+          m['date_added']=pd.to_datetime(m.date_added,errors='coerce')
+          m['date_removed']=pd.to_datetime(m.date_removed,errors='coerce')
+          m['symbol']=m.symbol.map(norm)
+          relevant=m[
+              (m.date_added<=pd.Timestamp('2023-12-31'))
+              & (m.date_removed.isna() | (m.date_removed>=pd.Timestamp('2018-07-01')))
+          ].copy()
+          symbols=sorted(set(relevant.symbol.dropna()))
+          print('HOLDOUT_CURATED_SYMBOLS',len(symbols),flush=True)
+
+          base=pd.read_parquet('/tmp/base/sp500_hybrid_prices_2007_2023.parquet')
+          ren={}
+          for c in base.columns:
+              k=str(c).strip().lower()
+              if k=='date': ren[c]='Date'
+              elif k=='symbol': ren[c]='symbol'
+              elif k=='open': ren[c]='Open'
+              elif k=='high': ren[c]='High'
+              elif k=='low': ren[c]='Low'
+              elif k=='close': ren[c]='Close'
+              elif k in ('adj close','adj_close','adjusted_close'): ren[c]='Adj Close'
+              elif k=='volume': ren[c]='Volume'
+          base=base.rename(columns=ren)
+          base['Date']=pd.to_datetime(base.Date).dt.tz_localize(None).dt.normalize()
+          base['symbol']=base.symbol.map(norm)
+          if 'source' not in base: base['source']='BASE_RECOVERED'
+
+          inv={ysym(s):s for s in symbols}
+          yt=list(inv)
+          parts=[]
+          for i in range(0,len(yt),60):
+              batch=yt[i:i+60]
+              try:
+                  z=yf.download(
+                      batch,start='2018-07-01',end='2024-01-02',
+                      auto_adjust=False,actions=False,progress=False,
+                      threads=True,group_by='column',
+                  )
+                  if z is None or z.empty:
+                      print('YF_EMPTY_BATCH',i,flush=True); continue
+                  if isinstance(z.columns,pd.MultiIndex):
+                      z=z.stack(level=1,future_stack=True).rename_axis(['Date','YahooTicker']).reset_index()
+                  else:
+                      z=z.reset_index(); z['YahooTicker']=batch[0]
+                  z['symbol']=z.YahooTicker.map(inv)
+                  z=z[z.symbol.notna()].copy()
+                  z['Date']=pd.to_datetime(z.Date).dt.tz_localize(None).dt.normalize()
+                  for col in ['Open','High','Low','Close','Adj Close','Volume']:
+                      if col not in z: z[col]=np.nan
+                      z[col]=pd.to_numeric(z[col],errors='coerce')
+                  z=z.dropna(subset=['Date','symbol','Close'])
+                  z['Adj Close']=z['Adj Close'].fillna(z.Close)
+                  z=z[(z.Close>0)&(z['Adj Close']>0)]
+                  z['source']='YAHOO_HOLDOUT_FILL'
+                  parts.append(z[['Date','symbol','Open','High','Low','Close','Adj Close','Volume','source']])
+                  print('YF_BATCH',i,'ROWS',len(z),flush=True)
+              except Exception as exc:
+                  print('YF_BATCH_ERROR',i,repr(exc),flush=True)
+              time.sleep(.15)
+
+          fresh=pd.concat(parts,ignore_index=True) if parts else pd.DataFrame()
+          print('YF_HOLDOUT_ROWS',len(fresh),'SYMBOLS',fresh.symbol.nunique() if len(fresh) else 0,flush=True)
+          # Fill only. Existing panel always wins duplicate symbol-date rows.
+          base['_priority']=2
+          if len(fresh):
+              fresh['_priority']=1
+              out=pd.concat([fresh,base],ignore_index=True,sort=False)
+          else:
+              out=base
+          out=out.sort_values(['symbol','Date','_priority']).drop_duplicates(['symbol','Date'],keep='last')
+          out=out.drop(columns=['_priority']).sort_values(['symbol','Date'])
+          out.to_parquet('/tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet',index=False)
+          print('RECOVERED_PANEL',len(out),out.symbol.nunique(),flush=True)
+          PY
+
+      - name: Re-enforce sealed holdout effective coverage gate
+        shell: bash
+        run: |
+          python research/free_stage1/curated_sp500_price_coverage.py \
+            --curated /tmp/curated.csv \
+            --mapped-membership /tmp/member/curated_sp500_membership_intervals.csv \
+            --lawcal /tmp/lawcal.csv \
+            --prices /tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet \
+            --out /tmp/audit \
+            --start 2020-01-01 \
+            --end 2023-12-31 \
+            --coverage-gate 0.97
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads((Path('/tmp/audit')/'curated_sp500_price_coverage_summary.json').read_text())
+          print('SEALED_HOLDOUT_RECOVERY_PASS',s['effective_identity_plus_price_coverage'],flush=True)
+          PY
+
+      - name: Upload recovered sealed holdout inputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sealed-holdout-recovered-sp500-prices
+          path: |
+            /tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet
+            /tmp/audit/
+          if-no-files-found: warn
+          retention-days: 30

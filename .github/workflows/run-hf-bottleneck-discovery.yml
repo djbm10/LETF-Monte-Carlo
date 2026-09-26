@@ -30,7 +30,7 @@ jobs:
       - name: Resolve passed HF network and price panel
         shell: bash
         run: |
-          HF_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow hf-item1-discovery-fast.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          HF_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow hf-raw-item1-discovery.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
           PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-tsaustin-price-panel.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
           test -n "$HF_RUN" || { echo "No successful HF Item1 network"; exit 2; }
           test -n "$PRICE_RUN" || { echo "No successful recovered price panel"; exit 2; }
@@ -45,7 +45,7 @@ jobs:
           for id in a b c d; do
             gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY"               --name "bottleneck-fund-$id" --dir "/tmp/hfdisc/fund/$id"
           done
-          gh run download "$HF_RUN" --repo "$GITHUB_REPOSITORY"             --name hf-item1-bottleneck-discovery-network-fast --dir /tmp/hfdisc/net
+          gh run download "$HF_RUN" --repo "$GITHUB_REPOSITORY"             --name hf-raw-item1-bottleneck-discovery-network --dir /tmp/hfdisc/net
           gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/hfdisc/prices
 
       - name: Merge accounting and rebuild 44 formation snapshots
@@ -137,11 +137,11 @@ jobs:
                   'mechanical_advancement_conditions':bool(sum(x>0 for x in ex)>=2 and np.median(ex)>0),
               }
           result={
-              'source_network':'JanosAudran/financial-reports-sec section_1 proxy',
+              'source_network':'JanosAudran/financial-reports-sec complete raw JSONL section_1 proxy',
               'sample_end':'2019-12-31',
               'holdout_exposed':False,
               'families':out,
-              'warning':'HF Item1 is an independent corpus proxy; raw SEC network replication remains authoritative.',
+              'warning':'Complete raw-HF Item1 is an independent corpus proxy; raw SEC EDGAR replication remains authoritative.',
           }
           (root/'hf_bottleneck_discovery_comparison.json').write_text(json.dumps(result,indent=2)+'\n')
           print(json.dumps(result,indent=2))

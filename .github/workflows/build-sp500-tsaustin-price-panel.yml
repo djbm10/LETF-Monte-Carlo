@@ -1,0 +1,187 @@
+name: Build tsaustin-recovered S&P historical price panel
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: contains(github.event.head_commit.message, '[build-tsaustin-sp500-price-panel]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install kaggle pandas pyarrow
+      - name: Download prior hybrid panel and public tsaustin prices
+        shell: bash
+        run: |
+          unset KAGGLE_USERNAME KAGGLE_KEY KAGGLE_API_TOKEN
+          mkdir -p /tmp/base /tmp/tsa
+          gh run download 36126965413 --repo "$GITHUB_REPOSITORY" --name free-sp500-hybrid-price-panel --dir /tmp/base
+          cd /tmp/tsa
+          kaggle datasets download tsaustin/us-historical-stock-prices-with-earnings-data -f stocks_latest/stock_prices_latest.csv
+          if [ -f stock_prices_latest.csv.zip ]; then unzip -o stock_prices_latest.csv.zip; fi
+          if [ -f stocks_latest/stock_prices_latest.csv ]; then cp stocks_latest/stock_prices_latest.csv ./stock_prices_latest.csv; fi
+          test -f /tmp/base/sp500_hybrid_prices_2007_2023.parquet
+          test -f /tmp/base/sp500_hybrid_price_coverage.csv
+          test -f /tmp/tsa/stock_prices_latest.csv
+          ls -lh /tmp/tsa/stock_prices_latest.csv
+      - name: Fill only missing PIT member sessions and enforce 97 percent gate
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv -o /tmp/components_history.csv
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+
+          BASE=Path('/tmp/base')
+          TSA=Path('/tmp/tsa')
+          base=pd.read_parquet(BASE/'sp500_hybrid_prices_2007_2023.parquet')
+          cov0=pd.read_csv(BASE/'sp500_hybrid_price_coverage.csv',dtype={'cik':str})
+          need=set(cov0.loc[cov0.coverage<0.97,'symbol'].astype(str).str.upper().str.replace('-','.',regex=False))
+          print('RECOVERY_SYMBOLS_NEEDED',len(need),flush=True)
+
+          def norm(x):
+              return str(x).upper().strip().replace('-','.')
+
+          parts=[]
+          first=True
+          for i,ch in enumerate(pd.read_csv(TSA/'stock_prices_latest.csv',chunksize=500_000,low_memory=False)):
+              ch.columns=[str(c).strip().lower() for c in ch.columns]
+              if first:
+                  print('TSA_COLUMNS',list(ch.columns),flush=True); first=False
+              symcol=next((c for c in ['symbol','ticker'] if c in ch.columns),None)
+              datecol=next((c for c in ['date','timestamp'] if c in ch.columns),None)
+              if symcol is None or datecol is None:
+                  raise RuntimeError(f'missing symbol/date columns: {list(ch.columns)}')
+              ch['_symbol']=ch[symcol].map(norm)
+              x=ch[ch._symbol.isin(need)].copy()
+              if x.empty:
+                  continue
+              x['Date']=pd.to_datetime(x[datecol],errors='coerce').dt.tz_localize(None).dt.normalize()
+              x=x[(x.Date>='2007-12-01')&(x.Date<='2023-12-31')]
+              if x.empty:
+                  continue
+              def choose(names):
+                  return next((n for n in names if n in x.columns),None)
+              oc=choose(['open']); hc=choose(['high']); lc=choose(['low']); cc=choose(['close'])
+              ac=choose(['adjusted_close','adj_close','close_adjusted','adjusted close','adj close'])
+              vc=choose(['volume'])
+              if cc is None:
+                  raise RuntimeError(f'no close column: {list(x.columns)}')
+              out=pd.DataFrame({
+                  'Date':x['Date'],
+                  'symbol':x['_symbol'],
+                  'Open':pd.to_numeric(x[oc],errors='coerce') if oc else np.nan,
+                  'High':pd.to_numeric(x[hc],errors='coerce') if hc else np.nan,
+                  'Low':pd.to_numeric(x[lc],errors='coerce') if lc else np.nan,
+                  'Close':pd.to_numeric(x[cc],errors='coerce'),
+                  'Adj Close':pd.to_numeric(x[ac],errors='coerce') if ac else pd.to_numeric(x[cc],errors='coerce'),
+                  'Volume':pd.to_numeric(x[vc],errors='coerce') if vc else np.nan,
+                  'source':'TSAUSTIN',
+              })
+              out=out.dropna(subset=['Date','symbol','Close','Adj Close'])
+              out=out[(out.Close>0)&(out['Adj Close']>0)]
+              if len(out): parts.append(out)
+              if i%20==0: print('TSA_CHUNK',i,'RECOVERED_ROWS',sum(len(z) for z in parts),flush=True)
+
+          tsa=pd.concat(parts,ignore_index=True) if parts else pd.DataFrame()
+          print('TSA_RECOVERY_ROWS',len(tsa),'SYMBOLS',tsa.symbol.nunique() if len(tsa) else 0,flush=True)
+
+          # Normalize prior panel columns and preserve it over the recovery source.
+          b=base.copy()
+          ren={}
+          for c in b.columns:
+              k=str(c).strip().lower()
+              if k=='date': ren[c]='Date'
+              elif k=='symbol': ren[c]='symbol'
+              elif k=='open': ren[c]='Open'
+              elif k=='high': ren[c]='High'
+              elif k=='low': ren[c]='Low'
+              elif k=='close': ren[c]='Close'
+              elif k in ('adj close','adj_close','adjusted_close'): ren[c]='Adj Close'
+              elif k=='volume': ren[c]='Volume'
+          b=b.rename(columns=ren)
+          if 'source' not in b: b['source']='BASE_HYBRID'
+          b['Date']=pd.to_datetime(b['Date']).dt.tz_localize(None).dt.normalize()
+          b['symbol']=b.symbol.map(norm)
+          b['_priority']=2
+          if len(tsa):
+              tsa['_priority']=1
+              prices=pd.concat([tsa,b],ignore_index=True,sort=False)
+          else:
+              prices=b
+          prices=prices.sort_values(['symbol','Date','_priority']).drop_duplicates(['symbol','Date'],keep='last')
+          prices=prices.drop(columns=['_priority'])
+
+          m=pd.read_csv('/tmp/components_history.csv',dtype={'cik':str})
+          def clean_date(s):
+              return pd.to_datetime(s.astype(str).str.replace('*','',regex=False).str.strip(),errors='coerce').dt.normalize()
+          m['date_added']=clean_date(m.date_added); m['date_removed']=clean_date(m.date_removed)
+          m['symbol']=m.symbol.map(norm)
+          m['cik']=m.cik.astype(str).str.replace(r'\.0$','',regex=True).str.zfill(10)
+          relevant=m[(m.date_added<=pd.Timestamp('2023-12-31'))&(m.date_removed.isna()|(m.date_removed>=pd.Timestamp('2007-12-01')))].copy()
+
+          spy_dates=pd.DatetimeIndex(prices.loc[prices.symbol=='SPY','Date'].drop_duplicates().sort_values())
+          sessions=spy_dates[(spy_dates>=pd.Timestamp('2009-01-01'))&(spy_dates<=pd.Timestamp('2023-12-31'))]
+          if len(sessions)<3000:
+              raise RuntimeError(f'insufficient SPY sessions {len(sessions)}')
+          pdict={s:set(g.Date) for s,g in prices.groupby('symbol')}
+          rows=[]
+          for r in relevant.itertuples(index=False):
+              lo=max(pd.Timestamp(r.date_added),pd.Timestamp('2009-01-01'))
+              hi=min(pd.Timestamp(r.date_removed) if pd.notna(r.date_removed) else pd.Timestamp('2023-12-31'),pd.Timestamp('2023-12-31'))
+              if hi<lo: continue
+              ss=sessions[(sessions>=lo)&(sessions<hi if pd.notna(r.date_removed) else sessions<=hi)]
+              if len(ss)==0: continue
+              dates=pdict.get(r.symbol,set())
+              covered=sum(d in dates for d in ss)
+              rows.append({'symbol':r.symbol,'cik':r.cik,'date_added':r.date_added,'date_removed':r.date_removed,
+                           'member_sessions':len(ss),'covered_sessions':covered,'coverage':covered/len(ss)})
+          cov=pd.DataFrame(rows)
+          weighted=float(cov.covered_sessions.sum()/cov.member_sessions.sum())
+          before=float(cov0.covered_sessions.sum()/cov0.member_sessions.sum())
+          zero=cov[cov.covered_sessions==0]
+          partial=cov[(cov.covered_sessions>0)&(cov.coverage<0.95)]
+          summary={
+              'base_weighted_member_session_coverage':before,
+              'weighted_member_session_coverage':weighted,
+              'coverage_gain':weighted-before,
+              'tsaustin_rows_used':int(len(tsa)),
+              'tsaustin_symbols_used':int(tsa.symbol.nunique()) if len(tsa) else 0,
+              'price_rows':int(len(prices)),
+              'price_symbols':int(prices.symbol.nunique()),
+              'completely_missing_membership_rows':int(len(zero)),
+              'partial_under_95pct_membership_rows':int(len(partial)),
+              'missing_member_sessions':int((cov.member_sessions-cov.covered_sessions).sum()),
+              'total_member_sessions':int(cov.member_sessions.sum()),
+              'coverage_gate_97pct':bool(weighted>=0.97),
+              'sources':{str(k):int(v) for k,v in prices.source.value_counts().items()},
+          }
+          out=Path('/tmp/final'); out.mkdir(exist_ok=True)
+          prices.to_parquet(out/'sp500_hybrid_prices_2007_2023.parquet',index=False)
+          cov.to_csv(out/'sp500_hybrid_price_coverage.csv',index=False)
+          (out/'sp500_hybrid_price_panel_summary.json').write_text(json.dumps(summary,indent=2,default=str))
+          print(json.dumps(summary,indent=2,default=str))
+          if weighted<0.97:
+              raise SystemExit(f'TSAUSTIN RECOVERY FAIL {weighted:.6f} < 0.97')
+          print('TSAUSTIN RECOVERED PRICE PANEL PASS',weighted,flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: free-sp500-tsaustin-recovered-price-panel
+          path: /tmp/final/
+          if-no-files-found: warn
+          retention-days: 30

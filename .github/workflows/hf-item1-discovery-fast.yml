@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install
-        run: pip install duckdb requests numpy pandas scipy scikit-learn pyarrow
+        run: pip install duckdb requests numpy pandas scipy scikit-learn pyarrow beautifulsoup4
       - name: Download membership and HF parquet shards concurrently
         shell: bash
         run: |

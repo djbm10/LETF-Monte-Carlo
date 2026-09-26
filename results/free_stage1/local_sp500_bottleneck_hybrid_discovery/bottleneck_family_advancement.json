@@ -1,0 +1,108 @@
+{
+  "firewall": "research/free_stage1/BOTTLENECK_DISCOVERY_FIREWALL.md",
+  "sample": "2009-01-01 through 2019-12-31",
+  "holdout_status": "SEALED_PENDING_DIRECT_SEC_REPLICATION",
+  "network_evidence": "FREE_DISCOVERY_HF_SEC_PARSER_PROXY_CACHE_ONLY",
+  "network_source": "preserved HF raw 10-K cache + preserved direct-SEC 10-K cache",
+  "families": {
+    "bottleneck_core": {
+      "comparator": "momentum",
+      "positive_validation_cagr_excess_topn_count": 3,
+      "median_validation_cagr_excess": 0.0670240450607427,
+      "median_validation_sharpe_excess": 0.4489617771713173,
+      "median_validation_max_drawdown_difference": 0.11364847939035949,
+      "advance_to_holdout": true,
+      "by_top_n": {
+        "10": {
+          "validation_cagr": 0.1093213151079881,
+          "comparator_validation_cagr": 0.0422972700472454,
+          "cagr_excess": 0.0670240450607427,
+          "sharpe_excess": 0.4489617771713173,
+          "max_drawdown_difference": 0.1740097160212166
+        },
+        "20": {
+          "validation_cagr": 0.1056503571257816,
+          "comparator_validation_cagr": 0.0270151313054729,
+          "cagr_excess": 0.07863522582030869,
+          "sharpe_excess": 0.5157043131194837,
+          "max_drawdown_difference": 0.10980599683184311
+        },
+        "40": {
+          "validation_cagr": 0.1019800358433939,
+          "comparator_validation_cagr": 0.0511613055184905,
+          "cagr_excess": 0.05081873032490341,
+          "sharpe_excess": 0.36405255843335166,
+          "max_drawdown_difference": 0.11364847939035949
+        }
+      }
+    },
+    "bottleneck_momentum": {
+      "comparator": "momentum",
+      "positive_validation_cagr_excess_topn_count": 3,
+      "median_validation_cagr_excess": 0.045021196454107605,
+      "median_validation_sharpe_excess": 0.30794095080956335,
+      "median_validation_max_drawdown_difference": 0.06221446883996051,
+      "advance_to_holdout": true,
+      "by_top_n": {
+        "10": {
+          "validation_cagr": 0.0853022376069112,
+          "comparator_validation_cagr": 0.0422972700472454,
+          "cagr_excess": 0.043004967559665805,
+          "sharpe_excess": 0.2449071627328268,
+          "max_drawdown_difference": 0.06221446883996051
+        },
+        "20": {
+          "validation_cagr": 0.077732317666006,
+          "comparator_validation_cagr": 0.0270151313054729,
+          "cagr_excess": 0.050717186360533094,
+          "sharpe_excess": 0.3141793473807192,
+          "max_drawdown_difference": 0.030363402546378315
+        },
+        "40": {
+          "validation_cagr": 0.0961825019725981,
+          "comparator_validation_cagr": 0.0511613055184905,
+          "cagr_excess": 0.045021196454107605,
+          "sharpe_excess": 0.30794095080956335,
+          "max_drawdown_difference": 0.07157568961440078
+        }
+      }
+    },
+    "bottleneck_full": {
+      "comparator": "quality_momentum",
+      "positive_validation_cagr_excess_topn_count": 3,
+      "median_validation_cagr_excess": 0.032080406914689205,
+      "median_validation_sharpe_excess": 0.22527280052290044,
+      "median_validation_max_drawdown_difference": 0.02879823646998947,
+      "advance_to_holdout": true,
+      "by_top_n": {
+        "10": {
+          "validation_cagr": 0.1511608494513814,
+          "comparator_validation_cagr": 0.0367463030088226,
+          "cagr_excess": 0.11441454644255879,
+          "sharpe_excess": 0.6226545103625782,
+          "max_drawdown_difference": 0.057118620726034075
+        },
+        "20": {
+          "validation_cagr": 0.1086990572628896,
+          "comparator_validation_cagr": 0.0766186503482004,
+          "cagr_excess": 0.032080406914689205,
+          "sharpe_excess": 0.22527280052290044,
+          "max_drawdown_difference": 0.02879823646998947
+        },
+        "40": {
+          "validation_cagr": 0.1095943950280993,
+          "comparator_validation_cagr": 0.08865023473328,
+          "cagr_excess": 0.020944160294819297,
+          "sharpe_excess": 0.15068827556709574,
+          "max_drawdown_difference": 0.017711945256411316
+        }
+      }
+    }
+  },
+  "advancing_families": [
+    "bottleneck_core",
+    "bottleneck_momentum",
+    "bottleneck_full"
+  ],
+  "decision": "ADVANCE_TO_DIRECT_SEC_NETWORK_REPLICATION"
+}

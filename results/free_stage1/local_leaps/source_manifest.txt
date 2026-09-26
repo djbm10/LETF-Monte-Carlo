@@ -1,8 +1,8 @@
 options_repo=https://github.com/anahatsingh-ui/options-dataset-hist
 options_commit=37f6c456fe1a4775c875673fb8ef907d5cd2fd66
 bil_repo=https://github.com/manisahni/marketdata
-run_source_sha=47db639ba0853cba426ef4ac99d4e21440379bf4
-generated_utc=2026-09-25T11:04:28Z
+run_source_sha=61b18a121e1bb27d0041c245c19895f6c3ec39f1
+generated_utc=2026-09-26T04:05:18Z
 847e60a441eb10969d87cd4a6da604257b782d9076168f68d5730b84096c79db  /tmp/options-dataset/spy/underlying_prices.parquet
 78c015fd7fa9d493cd798d5ae81b3c2ae6dc3b8176e25e7bb90cd4114b103351  /tmp/options-dataset/qqq/underlying_prices.parquet
 8d89c10589cf7507a6ce59c6cb93510c7c9a53726fac64d277f863fba3575940  /tmp/daily_adjclose_wide.csv

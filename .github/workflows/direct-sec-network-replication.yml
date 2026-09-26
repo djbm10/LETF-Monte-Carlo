@@ -15,7 +15,7 @@ jobs:
       actions: read
     env:
       GH_TOKEN: ${{ github.token }}
-      CACHE_RUN: '36245144257'
+      FALLBACK_CACHE_RUN: '36245144257'
 
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
       - name: Install
         run: pip install numpy pandas scipy scikit-learn beautifulsoup4 requests pyarrow
 
-      - name: Resolve curated membership
+      - name: Resolve curated membership and best prior direct-SEC seed
         shell: bash
         run: |
           MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
@@ -39,19 +39,41 @@ jobs:
             --status success --limit 1 --json databaseId \
             --jq '.[0].databaseId')"
           test -n "$MEMBER_RUN" || { echo "No successful curated membership build"; exit 2; }
-          echo "MEMBER_RUN=$MEMBER_RUN" >> "$GITHUB_ENV"
 
-      - name: Download preserved direct SEC cache and curated membership
+          PREV_DIRECT_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow direct-sec-network-replication.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+
+          echo "MEMBER_RUN=$MEMBER_RUN" >> "$GITHUB_ENV"
+          echo "PREV_DIRECT_RUN=$PREV_DIRECT_RUN" >> "$GITHUB_ENV"
+          echo "MEMBER_RUN=$MEMBER_RUN PREV_DIRECT_RUN=$PREV_DIRECT_RUN FALLBACK_CACHE_RUN=$FALLBACK_CACHE_RUN"
+
+      - name: Download best preserved direct-SEC seed and curated membership
         shell: bash
         run: |
           rm -rf /tmp/cache-net /tmp/member /tmp/direct-sec
           mkdir -p /tmp/cache-net /tmp/member /tmp/direct-sec
-          gh run download "$CACHE_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name cache-only-curated-item1-network --dir /tmp/cache-net
+          if [ -n "$PREV_DIRECT_RUN" ]; then
+            gh run download "$PREV_DIRECT_RUN" --repo "$GITHUB_REPOSITORY" \
+              --name direct-sec-item1-network-replication --dir /tmp/cache-net
+            test -f /tmp/cache-net/direct_sec_filings_all.parquet
+            cp /tmp/cache-net/direct_sec_filings_all.parquet /tmp/cache-net/seed_direct_sec_filings.parquet
+            echo "SEED_KIND=prior_direct_sec_run" >> "$GITHUB_ENV"
+            echo "SEED_RUN=$PREV_DIRECT_RUN" >> "$GITHUB_ENV"
+          else
+            gh run download "$FALLBACK_CACHE_RUN" --repo "$GITHUB_REPOSITORY" \
+              --name cache-only-curated-item1-network --dir /tmp/cache-net
+            test -f /tmp/cache-net/cached_sec_filings.parquet
+            cp /tmp/cache-net/cached_sec_filings.parquet /tmp/cache-net/seed_direct_sec_filings.parquet
+            echo "SEED_KIND=cache_only_curated" >> "$GITHUB_ENV"
+            echo "SEED_RUN=$FALLBACK_CACHE_RUN" >> "$GITHUB_ENV"
+          fi
           gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" \
             --name curated-sp500-cik-membership --dir /tmp/member
-          test -f /tmp/cache-net/cached_sec_filings.parquet
           test -f /tmp/member/curated_sp500_membership_intervals.csv
+          test -f /tmp/cache-net/seed_direct_sec_filings.parquet
 
       - name: Complete direct SEC histories and rebuild frozen network
         shell: bash
@@ -59,7 +81,7 @@ jobs:
           export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
           python research/free_stage1/direct_sec_cache_completion.py \
             --membership /tmp/member/curated_sp500_membership_intervals.csv \
-            --cached-sec /tmp/cache-net/cached_sec_filings.parquet \
+            --cached-sec /tmp/cache-net/seed_direct_sec_filings.parquet \
             --out /tmp/direct-sec \
             --start-year 2007 \
             --end-year 2019 \
@@ -80,5 +102,6 @@ jobs:
             /tmp/direct-sec/manifest.json
             /tmp/direct-sec/direct_sec_filings_all.parquet
             /tmp/direct-sec/missing_ciks_before_fetch.txt
+            /tmp/direct-sec/cached_snapshot_coverage_before_fetch.csv
           if-no-files-found: warn
           retention-days: 30

@@ -45,7 +45,31 @@ def clean_lawcal(path: Path) -> pd.DataFrame:
         .str.zfill(10)
     )
     x = x[x["cik"].str.fullmatch(r"\d{10}")].copy()
+    for col in ("date_added", "date_removed"):
+        z = (
+            x[col].astype(str).str.replace("*", "", regex=False).str.strip()
+            .replace({"": None, "nan": None, "NaN": None, "None": None})
+        )
+        x[col] = pd.to_datetime(z, errors="coerce").dt.normalize()
     return x
+
+
+# Same ticker, different issuer. These boundaries are corporate-identity
+# transitions, not index-membership dates. They are used only to disambiguate
+# CIK identity after the curated membership snapshot has already said the
+# ticker/lineage is in the index.
+IDENTITY_OVERRIDES = {
+    "AGN": [
+        (pd.Timestamp.min.normalize(), pd.Timestamp("2015-03-23"), "0000850693"),
+        (pd.Timestamp("2015-03-23"), pd.Timestamp.max.normalize(), "0001578845"),
+    ],
+    # Historical Ingersoll-Rand/Trane lineage retained CIK 1466258 through the
+    # 2020 transaction; the later Gardner Denver/Ingersoll Rand issuer is 1699150.
+    "IR": [
+        (pd.Timestamp.min.normalize(), pd.Timestamp("2020-03-03"), "0001466258"),
+        (pd.Timestamp("2020-03-03"), pd.Timestamp.max.normalize(), "0001699150"),
+    ],
+}
 
 
 def unique_symbol_cik_map(lawcal: pd.DataFrame) -> tuple[dict[str, str], set[str]]:
@@ -53,6 +77,36 @@ def unique_symbol_cik_map(lawcal: pd.DataFrame) -> tuple[dict[str, str], set[str
     ambiguous = set(g[g.map(len) != 1].index)
     mapping = {sym: vals[0] for sym, vals in g.items() if len(vals) == 1}
     return mapping, ambiguous
+
+
+def resolve_symbol_cik(
+    symbol: str,
+    d: pd.Timestamp,
+    lawcal: pd.DataFrame,
+    unique_map: dict[str, str],
+) -> str | None:
+    sym = norm_symbol(symbol)
+    dt = pd.Timestamp(d).normalize()
+
+    if sym in IDENTITY_OVERRIDES:
+        for lo, hi, cik in IDENTITY_OVERRIDES[sym]:
+            if lo <= dt < hi:
+                return cik
+
+    if sym in unique_map:
+        return unique_map[sym]
+
+    rows = lawcal[lawcal["symbol"] == sym]
+    if rows.empty:
+        return None
+    active = rows[
+        (rows["date_added"].isna() | (rows["date_added"] <= dt))
+        & (rows["date_removed"].isna() | (rows["date_removed"] > dt))
+    ]
+    ciks = sorted(set(active["cik"].astype(str)))
+    if len(ciks) == 1:
+        return ciks[0]
+    return None
 
 
 def load_curated(path: Path) -> pd.DataFrame:
@@ -74,39 +128,57 @@ def snapshot_asof(curated: pd.DataFrame, d: pd.Timestamp) -> set[str]:
     return set(z.iloc[-1]["tickers_set"])
 
 
-def build_intervals(curated: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
-    # Collapse to changes only, then turn symbol presence into [added, removed)
-    # intervals. The source is daily, so a disappearance date is a valid
-    # effective removal boundary for backtest membership.
+def build_mapped_intervals(
+    curated: pd.DataFrame,
+    lawcal: pd.DataFrame,
+    unique_map: dict[str, str],
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+) -> pd.DataFrame:
+    # Work from source snapshots directly. Identity changes can split an
+    # interval even if the visible ticker is unchanged (e.g. AGN in 2015).
     x = curated[(curated.date >= start) & (curated.date <= end)].copy()
     if x.empty:
         raise ValueError("curated history empty in requested window")
 
-    change_rows = []
-    prev = None
-    for row in x.itertuples(index=False):
-        cur = set(row.tickers_set)
-        if prev is None or cur != prev:
-            change_rows.append((pd.Timestamp(row.date), cur))
-            prev = cur
-
-    active_since: dict[str, pd.Timestamp] = {}
+    active_since: dict[tuple[str, str], pd.Timestamp] = {}
     intervals = []
-    prev_set: set[str] = set()
-    for d, cur in change_rows:
-        for sym in sorted(cur - prev_set):
-            active_since[sym] = d
-        for sym in sorted(prev_set - cur):
+    prev: set[tuple[str, str]] = set()
+
+    for row in x.itertuples(index=False):
+        d = pd.Timestamp(row.date)
+        cur: set[tuple[str, str]] = set()
+        for sym in row.tickers_set:
+            cik = resolve_symbol_cik(sym, d, lawcal, unique_map)
+            if cik:
+                cur.add((sym, cik))
+        if cur == prev:
+            continue
+        for key in sorted(cur - prev):
+            active_since[key] = d
+        for key in sorted(prev - cur):
+            sym, cik = key
             intervals.append(
-                {"symbol": sym, "date_added": active_since.pop(sym), "date_removed": d}
+                {
+                    "symbol": sym,
+                    "cik": cik,
+                    "date_added": active_since.pop(key),
+                    "date_removed": d,
+                }
             )
-        prev_set = cur
-    for sym in sorted(prev_set):
+        prev = cur
+
+    for key in sorted(prev):
+        sym, cik = key
         intervals.append(
-            {"symbol": sym, "date_added": active_since[sym], "date_removed": pd.NaT}
+            {
+                "symbol": sym,
+                "cik": cik,
+                "date_added": active_since[key],
+                "date_removed": pd.NaT,
+            }
         )
     return pd.DataFrame(intervals)
-
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -123,27 +195,31 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     curated = load_curated(args.curated)
     lawcal = clean_lawcal(args.lawcal)
-    mapping, ambiguous = unique_symbol_cik_map(lawcal)
+    unique_map, ambiguous = unique_symbol_cik_map(lawcal)
 
-    intervals = build_intervals(
+    intervals = build_mapped_intervals(
         curated,
+        lawcal,
+        unique_map,
         pd.Timestamp(args.start),
         pd.Timestamp(args.end),
-    )
-    intervals["cik"] = intervals["symbol"].map(mapping)
-    intervals["mapping_status"] = intervals["symbol"].map(
-        lambda s: "AMBIGUOUS_MULTI_CIK" if s in ambiguous
-        else "UNMAPPED" if s not in mapping
-        else "UNIQUE_LAWCAL_CIK"
     )
 
     audit = []
     dates = pd.date_range(args.audit_start, args.audit_end, freq="QE")
     for d in dates:
         syms = snapshot_asof(curated, d)
-        mapped = {s: mapping[s] for s in syms if s in mapping}
-        amb = sorted(syms & ambiguous)
-        unmapped = sorted(syms - set(mapping) - ambiguous)
+        mapped = {}
+        unresolved_ambiguous = []
+        unmapped = []
+        for s in syms:
+            cik = resolve_symbol_cik(s, d, lawcal, unique_map)
+            if cik:
+                mapped[s] = cik
+            elif s in ambiguous:
+                unresolved_ambiguous.append(s)
+            else:
+                unmapped.append(s)
         audit.append(
             {
                 "formation_date": str(d.date()),
@@ -151,8 +227,8 @@ def main() -> None:
                 "mapped_unique_tickers": len(mapped),
                 "mapped_unique_ciks": len(set(mapped.values())),
                 "mapping_coverage": len(mapped) / len(syms) if syms else 0.0,
-                "ambiguous_tickers": amb,
-                "unmapped_tickers": unmapped,
+                "ambiguous_tickers": sorted(unresolved_ambiguous),
+                "unmapped_tickers": sorted(unmapped),
             }
         )
 
@@ -165,8 +241,17 @@ def main() -> None:
         "lawcal_dates_used": False,
         "interval_rows": int(len(intervals)),
         "interval_symbols": int(intervals.symbol.nunique()),
-        "mapped_interval_rows": int(intervals.cik.notna().sum()),
+        "mapped_interval_rows": int(len(intervals)),
         "ambiguous_crosswalk_symbols": sorted(ambiguous),
+        "identity_overrides": {
+            k: [
+                {"start": str(lo.date()) if lo != pd.Timestamp.min.normalize() else "MIN",
+                 "end": str(hi.date()) if hi != pd.Timestamp.max.normalize() else "MAX",
+                 "cik": cik}
+                for lo, hi, cik in vals
+            ]
+            for k, vals in IDENTITY_OVERRIDES.items()
+        },
         "quarter_audit_start": args.audit_start,
         "quarter_audit_end": args.audit_end,
         "quarters": int(len(a)),

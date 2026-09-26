@@ -1,0 +1,128 @@
+name: Build HF Item1 Bottleneck discovery proxy fast
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: contains(github.event.head_commit.message, '[hf-item1-fast]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install duckdb requests numpy pandas scipy scikit-learn pyarrow
+      - name: Download membership and HF parquet shards concurrently
+        shell: bash
+        run: |
+          curl -L --fail --retry 5             https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv             -o /tmp/components_history.csv
+          python - <<'PY'
+          import json, requests, concurrent.futures
+          from pathlib import Path
+          api='https://datasets-server.huggingface.co/parquet?dataset=JanosAudran%2Ffinancial-reports-sec'
+          j=requests.get(api,timeout=60).json()
+          files=[x for x in j.get('parquet_files',[]) if x.get('config')=='large_lite']
+          assert len(files)>=10,len(files)
+          root=Path('/tmp/hfparquet'); root.mkdir(exist_ok=True)
+          def dl(pair):
+              i,x=pair
+              p=root/f'{i:02d}.parquet'
+              with requests.get(x['url'],stream=True,timeout=180) as r:
+                  r.raise_for_status()
+                  with p.open('wb') as fh:
+                      for chunk in r.iter_content(1024*1024):
+                          if chunk: fh.write(chunk)
+              return str(p),p.stat().st_size
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+              for p,n in ex.map(dl,enumerate(files)):
+                  print('HF_DOWNLOADED',p,n,flush=True)
+          print('HF_TOTAL_BYTES',sum(p.stat().st_size for p in root.glob('*.parquet')))
+          PY
+      - name: Reconstruct Item1 and build network
+        shell: bash
+        run: |
+          python - <<'PY'
+          import duckdb, pandas as pd, json, sys
+          from pathlib import Path
+          sys.path.insert(0,'research/free_stage1')
+          import sec_item1_network as net
+          import sec_item1_sp500_network as sp
+
+          m=pd.read_csv('/tmp/components_history.csv',dtype={'cik':str})
+          ciks=(
+              m.cik.dropna().astype(str).str.replace(r'\.0$','',regex=True).str.zfill(10)
+          )
+          ciks=sorted(set(ciks[ciks.str.fullmatch(r'\d{10}')]))
+          con=duckdb.connect()
+          con.register('cik_frame',pd.DataFrame({'cik':ciks}))
+          con.execute('CREATE TEMP TABLE wanted_ciks AS SELECT * FROM cik_frame')
+          pattern='/tmp/hfparquet/*.parquet'
+          schema=con.execute(f"DESCRIBE SELECT * FROM read_parquet('{pattern}') LIMIT 0").fetchdf()
+          print('HF_SCHEMA',schema.to_dict('records'),flush=True)
+          rel=con.execute(f"""
+              SELECT
+                  lpad(CAST(p.cik AS VARCHAR),10,'0') AS cik,
+                  CAST(p.filingDate AS DATE) AS filing_date,
+                  CAST(p.docID AS VARCHAR) AS doc_id,
+                  string_agg(CAST(p.sentence AS VARCHAR), ' ' ORDER BY p.sentenceID) AS item1
+              FROM read_parquet('{pattern}', union_by_name=true) p
+              JOIN wanted_ciks w
+                ON lpad(CAST(p.cik AS VARCHAR),10,'0')=w.cik
+              WHERE CAST(p.filingDate AS DATE) BETWEEN DATE '2007-09-01' AND DATE '2019-12-31'
+                AND (CAST(p.section AS VARCHAR)='0' OR lower(CAST(p.section AS VARCHAR))='section_1')
+              GROUP BY 1,2,3
+              ORDER BY 2,1,3
+          """).fetchdf()
+          rel['word_count']=rel.item1.fillna('').str.split().str.len()
+          rel['filename']='HF:'+rel.doc_id.astype(str)
+          rel['error']=None
+          rel=rel[rel.word_count>=250].copy()
+          print('HF_VALID_ITEM1_FILINGS',len(rel),'CIKS',rel.cik.nunique(),
+                'MIN',rel.filing_date.min(),'MAX',rel.filing_date.max(),flush=True)
+          membership=sp.load_membership(Path('/tmp/components_history.csv'))
+          dates=pd.date_range('2009-03-31','2019-12-31',freq='QE')
+          out=Path('/tmp/hf/network'); out.mkdir(parents=True,exist_ok=True)
+          allm=[]; cov=[]; manifests=[]
+          for fd in dates:
+              active=sp.active_ciks(membership,fd)
+              sample=net.latest_asof(rel[rel.cik.isin(active)],fd,max_age_days=550)
+              cov.append({'formation_date':str(fd.date()),'active_ciks':len(active),
+                          'valid_item1_ciks':int(sample.cik.nunique()) if len(sample) else 0})
+              if len(sample)<20: raise RuntimeError(f'{fd.date()}: only {len(sample)} valid')
+              metrics,edges,manifest=net.build_network(sample,fd,pair_density=.0205)
+              manifest['source']='HF financial-reports-sec reconstructed section_1'
+              allm.append(metrics); manifests.append(manifest)
+              print('HF_NET',fd.date(),'VALID',len(sample),'EDGES',len(edges),flush=True)
+          metrics=pd.concat(allm,ignore_index=True).sort_values(['formation_date','cik'])
+          coverage=pd.DataFrame(cov)
+          metrics.to_csv(out/'network_metrics_all.csv',index=False)
+          coverage.to_csv(out/'membership_network_coverage.csv',index=False)
+          manifest={
+              'network_runs':manifests,
+              'source':'JanosAudran/financial-reports-sec + frozen TF-IDF builder',
+              'evidence_label':'FREE_DISCOVERY_HF_ITEM1_PROXY',
+              'warning':'Independent public corpus proxy; raw-SEC network remains authoritative replication.',
+              'valid_item1_min':int(coverage.valid_item1_ciks.min()),
+              'valid_item1_median':float(coverage.valid_item1_ciks.median()),
+          }
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2,default=str))
+          print('HF_NETWORK_COVERAGE',json.dumps({
+              'min':int(coverage.valid_item1_ciks.min()),
+              'median':float(coverage.valid_item1_ciks.median()),
+              'rows':len(metrics)
+          }),flush=True)
+          assert coverage.valid_item1_ciks.min()>=200
+          assert coverage.valid_item1_ciks.median()>=350
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hf-item1-bottleneck-discovery-network-fast
+          path: /tmp/hf/network/
+          retention-days: 30

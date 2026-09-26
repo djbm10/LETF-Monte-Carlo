@@ -1,0 +1,84 @@
+name: Audit sealed holdout S&P price coverage
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  audit:
+    if: contains(github.event.head_commit.message, '[holdout-data-preflight]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRICE_RUN: '36220567098'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas pyarrow
+
+      - name: Resolve curated membership
+        shell: bash
+        run: |
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-membership.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN"
+          echo "MEMBER_RUN=$MEMBER_RUN" >> "$GITHUB_ENV"
+
+      - name: Download membership and recovered price panel
+        shell: bash
+        run: |
+          rm -rf /tmp/member /tmp/prices /tmp/holdout-price
+          mkdir -p /tmp/member /tmp/prices /tmp/holdout-price
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-cik-membership --dir /tmp/member
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/prices
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/thuningxu/sp500nq100/main/sp500_components_history.csv \
+            -o /tmp/curated.csv
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/lawcal.csv
+
+      - name: Audit sealed 2020-2023 effective identity and price coverage
+        shell: bash
+        run: |
+          python research/free_stage1/curated_sp500_price_coverage.py \
+            --curated /tmp/curated.csv \
+            --mapped-membership /tmp/member/curated_sp500_membership_intervals.csv \
+            --lawcal /tmp/lawcal.csv \
+            --prices /tmp/prices/sp500_hybrid_prices_2007_2023.parquet \
+            --out /tmp/holdout-price \
+            --start 2020-01-01 \
+            --end 2023-12-31 \
+            --coverage-gate 0.97
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads((Path('/tmp/holdout-price')/'curated_sp500_price_coverage_summary.json').read_text())
+          assert s['sample_start']=='2020-01-01'
+          assert s['sample_end']=='2023-12-31'
+          assert s['gate_passed'] is True
+          assert float(s['effective_identity_plus_price_coverage'])>=.97
+          print('SEALED_HOLDOUT_PRICE_PREFLIGHT_PASS',s['effective_identity_plus_price_coverage'])
+          PY
+
+      - name: Upload sealed holdout data-quality artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sealed-holdout-curated-sp500-price-coverage
+          path: /tmp/holdout-price/
+          retention-days: 30

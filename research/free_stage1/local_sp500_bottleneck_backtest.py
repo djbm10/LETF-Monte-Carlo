@@ -98,12 +98,23 @@ def load_membership(path: Path) -> pd.DataFrame:
     # overlap; otherwise fail rather than guess.
     reuse = m.groupby("symbol")["cik"].nunique()
     reused_symbols = sorted(reuse[reuse > 1].index.astype(str).tolist())
-    resolved = (
+    explicit_resolved = (
         "identity_resolved" in m.columns
         and m["identity_resolved"].astype(str).str.lower().isin(
             {"true", "1", "yes"}
         ).all()
     )
+    curated_alias_sources = {
+        "CURATED_ALIAS_RESOLVED",
+        "LAWCAL_SAME_CIK_IDENTITY_WINDOW",
+        "CURATED_IDENTITY_OVERRIDE",
+    }
+    alias_resolved = (
+        "alias_source" in m.columns
+        and m["alias_source"].notna().all()
+        and set(m["alias_source"].astype(str)).issubset(curated_alias_sources)
+    )
+    resolved = explicit_resolved or alias_resolved
     m.attrs["reused_symbol_exclusions"] = []
     if reused_symbols and resolved:
         bad = []

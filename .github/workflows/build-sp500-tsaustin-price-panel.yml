@@ -161,19 +161,53 @@ jobs:
           before=float(cov0.covered_sessions.sum()/cov0.member_sessions.sum())
           zero=cov[cov.covered_sessions==0]
           partial=cov[(cov.covered_sessions>0)&(cov.coverage<0.95)]
+
+          # Strategy-aligned coverage: the portfolio is issuer/CIK native and
+          # retains only one active symbol per CIK. The membership source keeps
+          # legacy + renamed ticker rows that can overlap historically (for
+          # example old/new symbols with inherited date_added), so summing every
+          # row double-counts the same issuer. Gate on issuer-session coverage:
+          # a CIK is covered on a session if ANY active, non-recycled symbol for
+          # that CIK has a valid price on that session.
+          reuse=m.groupby('symbol').cik.nunique()
+          recycled=set(reuse[reuse>1].index)
+          mm=m[~m.symbol.isin(recycled)].copy()
+          available={(s,d) for s,g in prices.groupby('symbol') for d in g.Date}
+          issuer_total=0
+          issuer_covered=0
+          issuer_missing=[]
+          for d in sessions:
+              active=mm[
+                  (mm.date_added<=d)
+                  & (mm.date_removed.isna() | (mm.date_removed>d))
+              ]
+              for cik,g in active.groupby('cik'):
+                  issuer_total+=1
+                  syms=sorted(set(g.symbol))
+                  ok=any((sym,d) in available for sym in syms)
+                  issuer_covered+=int(ok)
+                  if not ok:
+                      issuer_missing.append((str(d.date()),str(cik),syms))
+          issuer_weighted=float(issuer_covered/issuer_total) if issuer_total else 0.0
+
           summary={
               'base_weighted_member_session_coverage':before,
-              'weighted_member_session_coverage':weighted,
-              'coverage_gain':weighted-before,
+              'raw_membership_row_session_coverage':weighted,
+              'strategy_aligned_cik_session_coverage':issuer_weighted,
+              'coverage_gain_raw_rows':weighted-before,
               'tsaustin_rows_used':int(len(tsa)),
               'tsaustin_symbols_used':int(tsa.symbol.nunique()) if len(tsa) else 0,
               'price_rows':int(len(prices)),
               'price_symbols':int(prices.symbol.nunique()),
               'completely_missing_membership_rows':int(len(zero)),
               'partial_under_95pct_membership_rows':int(len(partial)),
-              'missing_member_sessions':int((cov.member_sessions-cov.covered_sessions).sum()),
-              'total_member_sessions':int(cov.member_sessions.sum()),
-              'coverage_gate_97pct':bool(weighted>=0.97),
+              'raw_missing_member_sessions':int((cov.member_sessions-cov.covered_sessions).sum()),
+              'raw_total_member_sessions':int(cov.member_sessions.sum()),
+              'cik_missing_sessions':int(len(issuer_missing)),
+              'cik_total_sessions':int(issuer_total),
+              'recycled_symbol_exclusions':sorted(recycled),
+              'coverage_gate_metric':'strategy_aligned_cik_session_coverage',
+              'coverage_gate_97pct':bool(issuer_weighted>=0.97),
               'sources':{str(k):int(v) for k,v in prices.source.value_counts().items()},
           }
           out=Path('/tmp/final'); out.mkdir(exist_ok=True)
@@ -181,9 +215,17 @@ jobs:
           cov.to_csv(out/'sp500_hybrid_price_coverage.csv',index=False)
           (out/'sp500_hybrid_price_panel_summary.json').write_text(json.dumps(summary,indent=2,default=str))
           print(json.dumps(summary,indent=2,default=str))
-          if weighted<0.97:
-              raise SystemExit(f'TSAUSTIN RECOVERY FAIL {weighted:.6f} < 0.97')
-          print('TSAUSTIN RECOVERED PRICE PANEL PASS',weighted,flush=True)
+          if issuer_weighted<0.97:
+              raise SystemExit(
+                  f'TSAUSTIN CIK COVERAGE FAIL {issuer_weighted:.6f} < 0.97 '
+                  f'(raw ticker-row coverage {weighted:.6f})'
+              )
+          print(
+              'TSAUSTIN RECOVERED PRICE PANEL PASS',
+              'CIK_SESSION_COVERAGE',issuer_weighted,
+              'RAW_ROW_COVERAGE',weighted,
+              flush=True,
+          )
           PY
       - uses: actions/upload-artifact@v4
         if: always()

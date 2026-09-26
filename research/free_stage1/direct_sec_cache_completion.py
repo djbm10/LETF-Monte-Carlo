@@ -33,6 +33,42 @@ def normalize_filings(x: pd.DataFrame, source: str) -> pd.DataFrame:
     return y
 
 
+def missing_snapshot_ciks(
+    membership: pd.DataFrame,
+    cached: pd.DataFrame,
+    dates: list[pd.Timestamp],
+    max_item1_age_days: int,
+) -> tuple[set[str], pd.DataFrame]:
+    """CIKs needing a full direct-SEC refetch because any required snapshot is uncovered.
+
+    A CIK merely appearing somewhere in the cache is not enough. The cache may
+    contain only selected filing windows. For every formation date, require an
+    eligible direct-SEC 10-K no more than max_item1_age_days old.
+    """
+    missing_union: set[str] = set()
+    rows = []
+    for fd in dates:
+        active = sp.active_ciks(membership, fd)
+        active_set = set(active["cik"].astype(str))
+        sample = net.latest_asof(
+            cached[cached["cik"].isin(active_set)],
+            fd,
+            max_age_days=max_item1_age_days,
+        )
+        have = set(sample["cik"].astype(str)) if len(sample) else set()
+        missing = active_set - have
+        missing_union.update(missing)
+        rows.append(
+            {
+                "formation_date": str(fd.date()),
+                "active_ciks": len(active_set),
+                "cached_valid_ciks": len(have),
+                "missing_snapshot_ciks": len(missing),
+            }
+        )
+    return missing_union, pd.DataFrame(rows)
+
+
 def main() -> None:
     ap=argparse.ArgumentParser()
     ap.add_argument("--membership", type=Path, required=True)
@@ -65,14 +101,23 @@ def main() -> None:
     cached=cached[cached.cik.isin(union_ciks)].copy()
     cached_ciks=set(cached.cik.astype(str))
 
-    missing=sorted(union_ciks-cached_ciks)
+    missing_set, precoverage = missing_snapshot_ciks(
+        membership,
+        cached,
+        dates,
+        max_item1_age_days=args.max_item1_age_days,
+    )
+    missing=sorted(missing_set)
+    precoverage.to_csv(args.out/"cached_snapshot_coverage_before_fetch.csv",index=False)
     (args.out/"missing_ciks_before_fetch.txt").write_text("\n".join(missing)+"\n")
     print(
         "DIRECT_SEC_COMPLETION_START",
         "union_ciks",len(union_ciks),
         "cached_ciks",len(cached_ciks),
-        "missing_ciks",len(missing),
+        "snapshot_gap_ciks",len(missing),
         "cached_rows",len(cached),
+        "cached_min_valid",int(precoverage.cached_valid_ciks.min()),
+        "cached_median_valid",float(precoverage.cached_valid_ciks.median()),
         flush=True,
     )
 
@@ -149,6 +194,9 @@ def main() -> None:
         "cached_direct_sec_rows":int(len(cached)),
         "cached_direct_sec_ciks":int(cached.cik.nunique()),
         "new_fetch_target_ciks":len(missing),
+        "fetch_target_rule":"union of issuer CIKs missing a valid <=550-day direct-SEC Item 1 at any required formation snapshot",
+        "cached_snapshot_valid_min":int(precoverage.cached_valid_ciks.min()),
+        "cached_snapshot_valid_median":float(precoverage.cached_valid_ciks.median()),
         "new_index_rows":int(len(idx)),
         "new_direct_sec_rows":int(len(fresh)),
         "new_direct_sec_success":int(fresh.item1.notna().sum()) if len(fresh) else 0,

@@ -17,3 +17,5 @@ Rerun gated Bottleneck discovery after freezing the SEC 2009 Q2 structured-data 
 Rerun gated Bottleneck discovery after binding strategy membership validation to the curated candidate file's actual alias provenance schema. Data-quality audit remains 99.17% identity mapped and 97.47% identity+price covered; holdout remains sealed.
 
 Run authoritative direct-SEC Item1 network replication using the preserved direct SEC cache plus only the remaining curated issuer CIKs. Final network must use direct SEC 10-K text only and keep the 550-day staleness, 2.05% pair density, and 200/350 coverage gates unchanged.
+
+Rerun the gated 2009-2019 Bottleneck discovery after classifying only SEC FSD 2009 Q1 as the documented structural-empty source placeholder. No future-quarter backfill, no model/grid changes, and holdout remains sealed.

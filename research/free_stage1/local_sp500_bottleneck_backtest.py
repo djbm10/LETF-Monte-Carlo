@@ -92,12 +92,55 @@ def load_membership(path: Path) -> pd.DataFrame:
     m = m.dropna(subset=["symbol", "cik", "date_added"]).copy()
 
     # A recycled ticker can splice two unrelated issuers into one vendor price
-    # history. The full PIT engine would key securities independently, so the
-    # free symbol-keyed proxy excludes any symbol mapped to more than one CIK.
+    # history. Legacy/noisy membership therefore excludes any symbol mapped to
+    # multiple CIKs. The curated pipeline may explicitly resolve ticker identity
+    # by date. In that case allow reuse only when different-CIK intervals do not
+    # overlap; otherwise fail rather than guess.
     reuse = m.groupby("symbol")["cik"].nunique()
     reused_symbols = sorted(reuse[reuse > 1].index.astype(str).tolist())
-    m.attrs["reused_symbol_exclusions"] = reused_symbols
-    if reused_symbols:
+    resolved = (
+        "identity_resolved" in m.columns
+        and m["identity_resolved"].astype(str).str.lower().isin(
+            {"true", "1", "yes"}
+        ).all()
+    )
+    m.attrs["reused_symbol_exclusions"] = []
+    if reused_symbols and resolved:
+        bad = []
+        for sym in reused_symbols:
+            z = m[m.symbol == sym].sort_values("date_added")
+            rows = list(z.itertuples(index=False))
+            for i, a in enumerate(rows):
+                a_end = (
+                    pd.Timestamp(a.date_removed)
+                    if pd.notna(a.date_removed)
+                    else pd.Timestamp("2100-01-01")
+                )
+                for b in rows[i + 1:]:
+                    if str(a.cik) == str(b.cik):
+                        continue
+                    b_end = (
+                        pd.Timestamp(b.date_removed)
+                        if pd.notna(b.date_removed)
+                        else pd.Timestamp("2100-01-01")
+                    )
+                    if max(pd.Timestamp(a.date_added), pd.Timestamp(b.date_added)) < min(a_end, b_end):
+                        bad.append(
+                            {
+                                "symbol": sym,
+                                "cik_a": str(a.cik),
+                                "start_a": str(pd.Timestamp(a.date_added).date()),
+                                "end_a": str(a_end.date()),
+                                "cik_b": str(b.cik),
+                                "start_b": str(pd.Timestamp(b.date_added).date()),
+                                "end_b": str(b_end.date()),
+                            }
+                        )
+        if bad:
+            raise ValueError(f"overlapping reused-symbol CIK identities: {bad[:10]}")
+        print("ALLOWING_DATE_RESOLVED_REUSED_SYMBOLS", reused_symbols, flush=True)
+    elif reused_symbols:
+        m.attrs["reused_symbol_exclusions"] = reused_symbols
         print("EXCLUDING_REUSED_SYMBOLS", reused_symbols, flush=True)
         m = m[~m.symbol.isin(reused_symbols)].copy()
     return m

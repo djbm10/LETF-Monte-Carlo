@@ -58,6 +58,11 @@ FLOW_METRICS = {"revenue", "gross_profit", "operating_income", "net_income", "op
 STOCK_METRICS = {"assets", "liabilities", "cash", "shares"}
 
 
+def is_structural_empty_source_quarter(year: int, qtr: int) -> bool:
+    """SEC FSD has one documented header-only placeholder: 2009 Q1."""
+    return int(year) == 2009 and int(qtr) == 1
+
+
 def _request(url: str, user_agent: str) -> bytes:
     if "@" not in user_agent:
         raise ValueError("SEC_USER_AGENT must include a contact email")
@@ -396,7 +401,7 @@ def main() -> None:
                 # submissions from 2009-04-15. This is source availability, not
                 # a parser/data-acquisition failure, and must never be backfilled
                 # with future-quarter information.
-                if year == 2009 and qtr == 1:
+                if is_structural_empty_source_quarter(year, qtr):
                     structural_empty_quarters.append(
                         {
                             "year": 2009,

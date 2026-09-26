@@ -65,7 +65,7 @@ jobs:
                   lpad(CAST(p.cik AS VARCHAR),10,'0') AS cik,
                   CAST(p.filingDate AS DATE) AS filing_date,
                   CAST(p.docID AS VARCHAR) AS doc_id,
-                  string_agg(CAST(p.sentence AS VARCHAR), ' ' ORDER BY p.sentenceID) AS item1,
+                  string_agg(CAST(p.sentence AS VARCHAR), ' ' ORDER BY try_cast(p.sentenceID AS BIGINT) NULLS LAST, p.sentenceID) AS item1,
                   count(*) AS sentence_count
               FROM read_parquet(?, union_by_name=true) p
               JOIN wanted_ciks w

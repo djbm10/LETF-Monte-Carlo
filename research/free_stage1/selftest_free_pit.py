@@ -100,6 +100,20 @@ def test_local_bottleneck_exact_snapshot_and_period_metrics():
     # first 2015 return observation.
     assert abs(val["total_return"] - (10_200_000.0 / 9_985_000.0 - 1.0)) < 1e-12
 
+    # A recycled ticker that changes CIK is a different security. A rebalance
+    # from old-issuer AGN to new-issuer AGN must incur an exit and an entry,
+    # rather than netting the two identities as if the holding were unchanged.
+    old_key = local_bottleneck.security_identity_key("AGN", "0000850693")
+    new_key = local_bottleneck.security_identity_key("AGN", "0001578845")
+    assert old_key != new_key
+    nav_after, targets, gross, turnover = local_bottleneck.solve_rebalance(
+        100.0, {old_key: 100.0}, [new_key], 0.0015
+    )
+    assert gross > 199.0
+    assert turnover > 1.99
+    assert new_key in targets
+    assert nav_after < 100.0
+
 
 def test_sec_amendment_pit():
     sub = pd.DataFrame([

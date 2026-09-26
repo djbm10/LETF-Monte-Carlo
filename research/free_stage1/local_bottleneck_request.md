@@ -15,3 +15,5 @@ Sharded build rerun requested after fixing workflow-only network --end-year typi
 Hybrid price build rerun requested after making residual Yahoo chart recovery conditional on failing the unchanged 97% weighted member-session gate. Source priority and coverage standard unchanged.
 
 Hybrid panel rerun requested with verified same-CIK rename recovery. Aliases require non-overlapping membership intervals plus >99.5% daily-return correlation over >=100 WIKI/Yahoo overlap days; no current-ticker guesswork.
+
+Discovery launch after corrected curated-universe gates passed: CIK mapping min 97.9960%, effective identity+price coverage 97.4728%, cache-only Item1 network min 295 / median 404.5 valid issuers. Execute all 15 frozen cells only through 2019-12-31 and apply the precommitted family advancement rule. Keep 2020-2023 sealed.

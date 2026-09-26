@@ -9,3 +9,5 @@ Compliant SEC shard rerun requested after cancelling the over-parallel build. Ne
 Exact-head execution request: rerun corrected 162-cell LEAPS surface, rebuild sharded 2009-2023 SEC/network inputs, and rebuild the coverage-gated WIKI+Yahoo historical S&P price panel. Bottleneck returns remain limited to 2009-2019 discovery until interpretation is frozen.
 
 Rerun gated curated Bottleneck discovery after classifying the SEC-documented 2009 Q1 FSD placeholder as structural-empty source coverage. No future-quarter backfill; all other failed quarters remain fatal. Holdout stays sealed.
+
+Rerun gated Bottleneck discovery after two pre-return mechanical corrections: require full requested top-N breadth and replace obsolete absolute formation-row count with structural PIT coverage checks. Holdout remains sealed.

@@ -118,6 +118,35 @@ def test_local_bottleneck_exact_snapshot_and_period_metrics():
     assert nav_after < 100.0
 
 
+def test_curated_reused_ticker_identity_provenance():
+    # Curated/date-resolved aliases may reuse a ticker across non-overlapping
+    # issuer eras; legacy membership without that provenance must still exclude.
+    rows = pd.DataFrame([
+        {
+            "symbol": "AGN", "cik": "0000850693",
+            "date_added": "2009-01-01", "date_removed": "2015-03-17",
+            "alias_source": "CURATED_ALIAS_RESOLVED",
+        },
+        {
+            "symbol": "AGN", "cik": "0001578845",
+            "date_added": "2015-06-15", "date_removed": "2019-01-01",
+            "alias_source": "LAWCAL_SAME_CIK_IDENTITY_WINDOW",
+        },
+    ])
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td) / "membership.csv"
+        rows.to_csv(p, index=False)
+        kept = local_bottleneck.load_membership(p)
+        assert len(kept) == 2
+        assert kept.attrs.get("reused_symbol_exclusions") == []
+
+        legacy = rows.drop(columns=["alias_source"])
+        legacy.to_csv(p, index=False)
+        excluded = local_bottleneck.load_membership(p)
+        assert excluded.empty
+        assert excluded.attrs.get("reused_symbol_exclusions") == ["AGN"]
+
+
 def test_sec_amendment_pit():
     sub = pd.DataFrame([
         {
@@ -319,6 +348,7 @@ if __name__=="__main__":
     test_item1_table_heading()
     test_network()
     test_local_bottleneck_exact_snapshot_and_period_metrics()
+    test_curated_reused_ticker_identity_provenance()
     test_sec_amendment_pit()
     test_sec_flow_period_strictness()
     test_sec_formation_panel()

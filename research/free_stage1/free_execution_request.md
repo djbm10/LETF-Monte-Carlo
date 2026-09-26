@@ -13,3 +13,5 @@ Rerun gated curated Bottleneck discovery after classifying the SEC-documented 20
 Rerun gated Bottleneck discovery after two pre-return mechanical corrections: require full requested top-N breadth and replace obsolete absolute formation-row count with structural PIT coverage checks. Holdout remains sealed.
 
 Rerun gated Bottleneck discovery after freezing the SEC 2009 Q2 structured-data phase-in rule. No future backfill; all mature formations from 2009-09-30 onward must clear the cross-sectional gate; full requested top-N breadth is required.
+
+Rerun gated Bottleneck discovery after binding strategy membership validation to the curated candidate file's actual alias provenance schema. Data-quality audit remains 99.17% identity mapped and 97.47% identity+price covered; holdout remains sealed.

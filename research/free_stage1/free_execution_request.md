@@ -15,3 +15,5 @@ Rerun gated Bottleneck discovery after two pre-return mechanical corrections: re
 Rerun gated Bottleneck discovery after freezing the SEC 2009 Q2 structured-data phase-in rule. No future backfill; all mature formations from 2009-09-30 onward must clear the cross-sectional gate; full requested top-N breadth is required.
 
 Rerun gated Bottleneck discovery after binding strategy membership validation to the curated candidate file's actual alias provenance schema. Data-quality audit remains 99.17% identity mapped and 97.47% identity+price covered; holdout remains sealed.
+
+Run authoritative direct-SEC Item1 network replication using the preserved direct SEC cache plus only the remaining curated issuer CIKs. Final network must use direct SEC 10-K text only and keep the 550-day staleness, 2.05% pair density, and 200/350 coverage gates unchanged.

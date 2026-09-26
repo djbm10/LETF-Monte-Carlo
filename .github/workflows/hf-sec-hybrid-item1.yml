@@ -1,0 +1,54 @@
+name: Build HF plus SEC hybrid Item1 discovery network
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: contains(github.event.head_commit.message, '[hf-sec-hybrid-item1]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install requests orjson numpy pandas scipy scikit-learn beautifulsoup4 pyarrow
+      - name: Download PIT membership
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/components_history.csv
+      - name: Build exact hybrid discovery network
+        shell: bash
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          rm -rf /tmp/hf-sec-hybrid
+          python research/free_stage1/hf_sec_hybrid_item1.py \
+            --membership /tmp/components_history.csv \
+            --out /tmp/hf-sec-hybrid \
+            --formation-start 2009-03-31 \
+            --formation-end 2019-12-31 \
+            --hf-start 2007-09-01 \
+            --sec-start-year 2007 \
+            --sec-end-year 2019 \
+            --max-item1-age-days 550 \
+            --pair-density 0.0205 \
+            --sec-rps 3.0 \
+            --hf-workers 6
+      - name: Upload hybrid network
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hf-sec-hybrid-item1-discovery-network
+          path: /tmp/hf-sec-hybrid/
+          if-no-files-found: warn
+          retention-days: 30

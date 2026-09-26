@@ -5,3 +5,5 @@ Exact-head execution request after current CI passed. Run the corrected 162-cell
 LEAPS diagnostics rerun requested after adding pre/post-2020 metrics and BIL-excess Sharpe. Strategy rules and frozen 162-cell grid are unchanged.
 
 Compliant SEC shard rerun requested after cancelling the over-parallel build. Network strategy is capped at max-parallel=2 and 3 requests/second per shard; research definitions are unchanged.
+
+Exact-head execution request: rerun corrected 162-cell LEAPS surface, rebuild sharded 2009-2023 SEC/network inputs, and rebuild the coverage-gated WIKI+Yahoo historical S&P price panel. Bottleneck returns remain limited to 2009-2019 discovery until interpretation is frozen.

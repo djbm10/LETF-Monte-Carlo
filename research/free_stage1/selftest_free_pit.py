@@ -106,6 +106,9 @@ def test_local_bottleneck_exact_snapshot_and_period_metrics():
     old_key = local_bottleneck.security_identity_key("AGN", "0000850693")
     new_key = local_bottleneck.security_identity_key("AGN", "0001578845")
     assert old_key != new_key
+    source = (HERE / "local_sp500_bottleneck_backtest.py").read_text()
+    assert "if len(selected) < top_n:" in source
+    assert "min(top_n, MIN_CROSS_SECTION)" not in source
     nav_after, targets, gross, turnover = local_bottleneck.solve_rebalance(
         100.0, {old_key: 100.0}, [new_key], 0.0015
     )

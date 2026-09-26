@@ -340,6 +340,18 @@ def main() -> None:
     ap.add_argument("--pair-density", type=float, default=0.0205)
     ap.add_argument("--sec-rps", type=float, default=3.0)
     ap.add_argument("--hf-workers", type=int, default=6)
+    ap.add_argument(
+        "--hf-cache",
+        type=Path,
+        default=None,
+        help="Optional previously extracted HF 10-K Item1 parquet.",
+    )
+    ap.add_argument(
+        "--sec-cache",
+        type=Path,
+        default=None,
+        help="Optional previously fetched direct-SEC Item1 parquet.",
+    )
     args = ap.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -359,17 +371,48 @@ def main() -> None:
     wanted = set(relevant["cik"].astype(str))
     print("PIT_UNION_CIKS", len(wanted), flush=True)
 
-    hf, hf_stats = extract_hf(
-        wanted,
-        pd.Timestamp(args.hf_start),
-        pd.Timestamp(args.formation_end),
-        workers=args.hf_workers,
-    )
+    if args.hf_cache is not None:
+        hf = pd.read_parquet(args.hf_cache)
+        hf["cik"] = hf["cik"].astype(str).str.zfill(10)
+        hf["filing_date"] = pd.to_datetime(hf["filing_date"])
+        hf = hf[hf["cik"].isin(wanted)].copy()
+        hf_stats = [{
+            "mode": "reused_hf_cache",
+            "path": str(args.hf_cache),
+            "rows": int(len(hf)),
+            "ciks": int(hf["cik"].nunique()) if len(hf) else 0,
+        }]
+        print("HF_CACHE_REUSED", len(hf), hf["cik"].nunique(), flush=True)
+    else:
+        hf, hf_stats = extract_hf(
+            wanted,
+            pd.Timestamp(args.hf_start),
+            pd.Timestamp(args.formation_end),
+            workers=args.hf_workers,
+        )
     hf.to_parquet(args.out / "hf_item1_filings.parquet", index=False)
+
+    base = hf
+    cached_sec = pd.DataFrame()
+    if args.sec_cache is not None and args.sec_cache.exists():
+        cached_sec = pd.read_parquet(args.sec_cache)
+        if len(cached_sec):
+            cached_sec["cik"] = cached_sec["cik"].astype(str).str.zfill(10)
+            cached_sec["filing_date"] = pd.to_datetime(cached_sec["filing_date"])
+            if "source" not in cached_sec:
+                cached_sec["source"] = "SEC_DIRECT_10K"
+            cached_sec = cached_sec[cached_sec["cik"].isin(wanted)].copy()
+            base = combine_filings(hf, cached_sec)
+            print(
+                "SEC_CACHE_REUSED",
+                len(cached_sec),
+                cached_sec["cik"].nunique(),
+                flush=True,
+            )
 
     missing, hf_cov, missing_schedule = missing_issuers(
         membership,
-        hf,
+        base,
         dates,
         max_age_days=args.max_item1_age_days,
     )
@@ -390,7 +433,7 @@ def main() -> None:
         flush=True,
     )
 
-    sec = fetch_sec_supplement(
+    sec_new = fetch_sec_supplement(
         missing,
         missing_schedule,
         args.sec_start_year,
@@ -399,6 +442,14 @@ def main() -> None:
         args.sec_rps,
         args.max_item1_age_days,
     )
+    sec_parts = [x for x in (cached_sec, sec_new) if x is not None and len(x)]
+    sec = pd.concat(sec_parts, ignore_index=True, sort=False) if sec_parts else pd.DataFrame()
+    if len(sec):
+        sec = (
+            sec.sort_values(["cik", "filing_date", "filename"])
+            .drop_duplicates(["cik", "filing_date", "filename"], keep="last")
+            .reset_index(drop=True)
+        )
     sec.to_parquet(args.out / "sec_supplement_filings.parquet", index=False)
 
     combined = combine_filings(hf, sec)
@@ -428,6 +479,10 @@ def main() -> None:
         "hf_valid_filings": int(len(hf)),
         "hf_unique_ciks": int(hf["cik"].nunique()),
         "sec_missing_union_ciks": len(missing),
+        "hf_cache_reused": str(args.hf_cache) if args.hf_cache else None,
+        "sec_cache_reused": str(args.sec_cache) if args.sec_cache else None,
+        "sec_cached_rows": int(len(cached_sec)),
+        "sec_new_rows": int(len(sec_new)),
         "sec_supplement_rows": int(len(sec)),
         "sec_supplement_success": int(sec["item1"].notna().sum()) if len(sec) else 0,
         "combined_filings": int(len(combined)),

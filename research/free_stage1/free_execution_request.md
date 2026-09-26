@@ -11,3 +11,5 @@ Exact-head execution request: rerun corrected 162-cell LEAPS surface, rebuild sh
 Rerun gated curated Bottleneck discovery after classifying the SEC-documented 2009 Q1 FSD placeholder as structural-empty source coverage. No future-quarter backfill; all other failed quarters remain fatal. Holdout stays sealed.
 
 Rerun gated Bottleneck discovery after two pre-return mechanical corrections: require full requested top-N breadth and replace obsolete absolute formation-row count with structural PIT coverage checks. Holdout remains sealed.
+
+Rerun gated Bottleneck discovery after freezing the SEC 2009 Q2 structured-data phase-in rule. No future backfill; all mature formations from 2009-09-30 onward must clear the cross-sectional gate; full requested top-N breadth is required.

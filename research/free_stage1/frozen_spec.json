@@ -1,0 +1,265 @@
+{
+  "version": "free-pit-stage1-2026-09-23-r9",
+  "status": "FROZEN_BEFORE_RESULTS",
+  "bottleneck": {
+    "start": "2009-01-01",
+    "train": [
+      "2009-01-01",
+      "2014-12-31"
+    ],
+    "validation": [
+      "2015-01-01",
+      "2019-12-31"
+    ],
+    "holdout": [
+      "2020-01-01",
+      "2023-12-31"
+    ],
+    "rebalance": "first trading day of Jan/Apr/Jul/Oct",
+    "portfolio_sizes": [
+      10,
+      20,
+      40
+    ],
+    "one_way_cost_bps": 15,
+    "min_price": 5,
+    "min_dollar_volume": 1000000,
+    "momentum_lookback_months": [
+      6,
+      12
+    ],
+    "network": {
+      "source": "SEC 10-K Item 1 business descriptions",
+      "id": "CIK",
+      "information_timestamp": "filing_date",
+      "baseline_method": "TF-IDF cosine similarity",
+      "target_related_pair_density": 0.0205,
+      "optional_method": "doc2vec/embedding sensitivity only; must not replace frozen baseline after results",
+      "max_item1_age_days": 550,
+      "staleness_rule": "At each formation date, exclude 10-K Item 1 text filed more than 550 days earlier so inactive/dead filers do not persist indefinitely in the competitor cross-section.",
+      "acquisition_start": "2007-01-01",
+      "formation_start": "2009-03-31"
+    },
+    "models": {
+      "momentum": {
+        "momentum12": 0.7,
+        "high52": 0.3
+      },
+      "quality_momentum": {
+        "momentum12": 0.35,
+        "high52": 0.15,
+        "quality": 0.3,
+        "dilution": 0.2
+      },
+      "bottleneck_core": {
+        "demand_accel": 0.35,
+        "pricing_power": 0.3,
+        "competitive_scarcity": 0.35
+      },
+      "bottleneck_momentum": {
+        "demand_accel": 0.2,
+        "pricing_power": 0.15,
+        "competitive_scarcity": 0.2,
+        "momentum12": 0.3,
+        "high52": 0.15
+      },
+      "bottleneck_full": {
+        "demand_accel": 0.15,
+        "pricing_power": 0.1,
+        "competitive_scarcity": 0.15,
+        "quality": 0.15,
+        "dilution": 0.1,
+        "valuation": 0.1,
+        "momentum12": 0.15,
+        "high52": 0.1
+      }
+    },
+    "transaction_cost_implementation": {
+      "one_way_cost_bps": 15,
+      "model": "ConstantSlippageModel",
+      "separate_commission": 0,
+      "interpretation": "all-in execution drag applied independently to each buy and sell side"
+    },
+    "universe": {
+      "security_type": "primary US common shares",
+      "exchanges": [
+        "NYS",
+        "NAS",
+        "ASE"
+      ],
+      "min_price": 5,
+      "min_dollar_volume": 1000000,
+      "sector_exclusions": []
+    },
+    "audit_output": [
+      "formation_date",
+      "model",
+      "top_n",
+      "eligible_count",
+      "feature_complete_count",
+      "scored_count",
+      "rank",
+      "score",
+      "symbol",
+      "cik",
+      "model_signal_components",
+      "market_cap",
+      "fund_file_date"
+    ],
+    "fundamentals": {
+      "source": "SEC Financial Statement Data Sets / XBRL as filed",
+      "id": "CIK",
+      "information_timestamp": "SEC filed date",
+      "formation_rule": "latest eligible filing with information_date <= formation_date",
+      "quantconnect_role": "historical tradable universe, point-in-time CIK mapping, market prices/returns, and contemporaneous market cap only; accounting factor values come from SEC",
+      "file": "sec_formation_features.csv",
+      "amendment_rule": "10-K/A, 10-Q/A, 20-F/A and 40-F/A are treated as the same form family for period semantics but enter the dataset only from the amendment filing date; amendment provenance is retained",
+      "amendment_carryforward": "for an amended filing, supplied facts override the prior filing; missing raw facts are carried forward from the latest earlier filing for the same CIK, normalized form family, and reporting period"
+    },
+    "factor_definitions": {
+      "demand_accel": "legacy frozen field name; SEC as-filed revenue_growth_yoy for the latest filing available at formation",
+      "pricing_power": "SEC gross_margin_change_yoy; fall back to operating_margin_change_yoy when gross-margin change is unavailable",
+      "quality": "SEC fcf_margin minus SEC leverage; fall back to operating_margin minus leverage when FCF margin is unavailable",
+      "dilution": "negative SEC share_growth_yoy",
+      "competitive_scarcity": "SEC Item 1 TF-IDF text_scarcity_raw from latest network snapshot available at formation",
+      "valuation": "negative log(1 + contemporaneous QuantConnect market_cap / annualized SEC as-filed revenue); qtrs=4 revenue used directly, qtrs=1 revenue multiplied by 4; other flow-period lengths are rejected",
+      "momentum12": "252-trading-day adjusted-price return",
+      "high52": "current adjusted price divided by maximum adjusted price over the latest 252 trading observations"
+    },
+    "min_cross_section": 20,
+    "smoke_only_overrides": {
+      "min_cross_section": 10,
+      "purpose": "permit tiny non-performance cloud integration bundles; frozen 177-run matrix must use 20"
+    },
+    "free_large_cap_proxy": {
+      "price_coverage_gate": {
+        "threshold": 0.97,
+        "metric": "effective curated constituent-session identity-plus-price coverage",
+        "rule": "A curated constituent-session is covered only when the issuer identity resolves point-in-time and at least one date-valid alias for that CIK has a valid price. Reused tickers are accepted only within non-overlapping date-resolved CIK identity eras.",
+        "latest_validated_coverage": 0.9747278906904109,
+        "identity_mapping_session_coverage": 0.991730530834007,
+        "prior_strategy_aligned_cik_session_recovery_check": 0.97208301351339,
+        "raw_ticker_row_session_coverage_for_reference": 0.961504559346286,
+        "price_sources": [
+          "Kaggle mirror of Quandl WIKI EOD",
+          "Yahoo Finance direct/batch historical prices",
+          "verified same-CIK ticker lineage",
+          "tsaustin/us-historical-stock-prices-with-earnings-data"
+        ]
+      },
+      "membership": {
+        "timing_source": "thuningxu/sp500nq100 historical S&P 500 snapshots",
+        "identity_crosswalk": "lawcal/sp500-components-history symbol-CIK mappings; lawcal membership dates are not used",
+        "mapping_gate": 0.97,
+        "min_quarter_mapping_coverage_2009_2019": 0.9799599198396793,
+        "median_quarter_mapping_coverage_2009_2019": 0.9940176547775259,
+        "reused_ticker_rule": "allow only date-resolved different-CIK intervals that do not overlap; overlapping identity intervals fail closed"
+      }
+    },
+    "sec_structural_empty_quarters": [
+      {
+        "quarter": "2009Q1",
+        "rule": "Official SEC Financial Statement Data Sets header-only placeholder; do not backfill with future-quarter information."
+      }
+    ]
+  },
+  "leaps": {
+    "start": "2012-01-01",
+    "underlyings": [
+      "SPY",
+      "QQQ"
+    ],
+    "deltas": [
+      0.7,
+      0.8,
+      0.9
+    ],
+    "target_dte": [
+      365,
+      548,
+      730
+    ],
+    "premium_allocations": [
+      0.25,
+      0.5,
+      1
+    ],
+    "roll_months": 6,
+    "force_roll_dte": 180,
+    "min_open_interest": 100,
+    "use_quote_data": true,
+    "buy_side": "next-session ask open via LatestPriceFillModel",
+    "sell_side": "next-session bid open via LatestPriceFillModel",
+    "slippage_bps_sensitivity": [
+      0,
+      5,
+      10
+    ],
+    "evidence_label": "FREE_DISCOVERY",
+    "cost_model": {
+      "bid_ask": "LatestPriceFillModel on Market-On-Open orders: next QuoteBar ask open for buys and bid open for sells",
+      "brokerage_fees": "Interactive Brokers brokerage model retained",
+      "additional_slippage_bps_sensitivity": [
+        0,
+        5,
+        10
+      ]
+    },
+    "audit_output": [
+      "selected contract/expiry/strike/DTE/delta/bid/ask/open_interest/quantity",
+      "underlying price/portfolio value/premium budget",
+      "actual filled order symbol/direction/quantity/price/fee"
+    ],
+    "execution_timing": "select from completed daily chain; submit equity-option Market-On-Open order for the next regular session",
+    "roll_execution": "when a roll is due, sell the existing LEAPS at the next regular-session open; select the replacement from that day's completed chain; buy the replacement at the following regular-session open"
+  },
+  "stage2": {
+    "freeze_before_vendor_replication": true,
+    "bottleneck": [
+      "CRSP",
+      "Compustat PIT/Snapshot",
+      "CCM historical links",
+      "TNIC/ETNIC"
+    ],
+    "leaps": [
+      "OptionMetrics IvyDB US"
+    ],
+    "parameter_changes_after_replication": false
+  },
+  "pre_result_corrections": [
+    "2026-09-23: removed undocumented utilities/financials SIC exclusions from QuantConnect Bottleneck universe; frozen universe has no sector exclusion.",
+    "2026-09-23: specified 15 bps one-way equity transaction cost as all-in ConstantSlippageModel execution drag per buy/sell side with zero separate commission for the Bottleneck tournament.",
+    "2026-09-23: specified quarterly formation as the first trading day of Jan/Apr/Jul/Oct in the daily QuantConnect implementation.",
+    "2026-09-23: required per-rebalance selected-name/signal audit export to Object Store.",
+    "2026-09-23: LEAPS security initialization changed from replacement to additive initialization so IBKR brokerage fee/buying-power/settlement defaults are preserved while 0/5/10 bps option slippage is layered on top; selection and actual fill audits are persisted.",
+    "2026-09-23: switched Bottleneck accounting factor values from QuantConnect/Morningstar financial statements to the SEC as-filed formation-date panel; QuantConnect remains the historical tradable-universe/CIK/market-return engine. This implements the intended SEC -> QuantConnect free-PIT architecture before any return results were observed.",
+    "2026-09-23: removed the early-sample 200-day substitute for the 12-month momentum/52-week-high signals; both now require 252 trading observations before a name can be scored.",
+    "2026-09-23: Item 1 extraction now preserves only Item 1/1A/1B/2 boundary rows found inside HTML tables and discards other table text, addressing modern inline-XBRL section headings without contaminating the TF-IDF corpus.",
+    "2026-09-23: changed LEAPS execution from same-daily-slice market orders to next-session Market-On-Open orders. Contract selection occurs only after the daily chain is known; execution uses the next session's quote-side open plus frozen slippage. Contract/entry-date state is now set only on confirmed fills.",
+    "2026-09-23: SEC flow facts are now strict on period length: 10-K/20-F/40-F require qtrs=4 and 10-Q requires qtrs=1. YTD values are not silently substituted for single-quarter flows.",
+    "2026-09-23: valuation now annualizes qtrs=1 SEC revenue by 4 before comparing it with contemporaneous market cap; qtrs=4 annual revenue is used directly. This removes the prior 10-K/10-Q scale mismatch.",
+    "2026-09-23: Bottleneck price history now records every daily fundamental-universe observation before applying today's eligibility screen, and a 252-daily-bar warm-up primes the 2009 start. Momentum no longer measures 252 'eligible days' when liquidity eligibility is intermittent.",
+    "2026-09-23: LEAPS rolls are now sequenced rather than submitting the exit and replacement entry to the same opening auction. The old contract exits next open, the replacement is selected from that day's completed chain, and the new contract enters the following open. This introduces a conservative one-session gap and removes ambiguous buying-power/order sequencing at 100% premium allocation.",
+    "2026-09-23: SEC amended forms (10-K/A, 10-Q/A, 20-F/A, 40-F/A) are now included point in time. They share the base form family for period/YoY matching but replace an earlier filing only at formation dates after the amendment filing date.",
+    "2026-09-23: sparse SEC amendments now overlay the prior filing for the same CIK/form-family/reporting period. Amendment-supplied facts win; missing raw facts carry forward from the earlier filing, while the amendment retains its later information timestamp.",
+    "2026-09-23: added a smoke-only min_cross_section parameter. Full Stage-1 runs remain frozen at 20; min_cross_section=10 is permitted only for tiny cloud integration bundles and must not be interpreted as a performance specification.",
+    "2026-09-23: fixed Bottleneck network input loader arity so network_object_key and network_url both route through the same validated CSV loader. This is a pre-return integration fix only; no factor, universe, portfolio, cost, or sample parameter changed.",
+    "2026-09-23: added a 550-day maximum age for SEC 10-K Item 1 text at each network formation date. Without a staleness rule, a filer that stopped submitting 10-Ks years earlier could remain in every later competition network and distort scarcity for active firms. This is a pre-return network-universe semantics correction; no factor weight, portfolio size, cost, holdout, or return result changed.",
+    "2026-09-23: network filing acquisition now starts in 2007 while portfolio/network formation remains 2009 onward. This supplies the up-to-550-day Item 1 lookback needed for early-2009 snapshots and does not introduce pre-2009 portfolio returns.",
+    "2026-09-26: the free large-cap proxy's 97% historical-price coverage gate is measured on strategy-aligned active CIK-sessions, not raw membership ticker-row sessions. The membership source can contain overlapping old/new ticker rows for the same issuer around renames while the executor always deduplicates to one symbol per CIK. The 97% threshold is unchanged; the corrected metric passed at 97.2083%. Additional public WIKI/Yahoo/tsaustin sources only recover missing prices and do not change signals, portfolio rules, costs, or sample splits.",
+    "2026-09-26: the free large-cap proxy's PIT S&P membership timing is now sourced from thuningxu/sp500nq100 historical snapshots; lawcal/sp500-components-history is used only as a symbol-to-CIK identity crosswalk, not for membership dates. The CIK mapping gate is frozen at 97% and passed with 97.9960% minimum quarterly and 99.4018% median quarterly mapping coverage over 2009-2019.",
+    "2026-09-26: recycled/reused tickers in the free large-cap proxy are handled only through date-resolved issuer identities. A reused symbol is allowed when different-CIK identity intervals do not overlap; overlapping issuer identities fail closed rather than being guessed or spliced. This correction was made before Bottleneck return analysis.",
+    "2026-09-26: the corrected curated-universe price gate measures effective identity-plus-price coverage over curated constituent sessions. It passed at 97.4728% for 2009-2019 with 99.1731% identity-mapping session coverage. The earlier 97.2083% strategy-aligned CIK-session result is retained only as an intermediate recovery check.",
+    "2026-09-26: free large-cap proxy holdings are now keyed by symbol+CIK rather than ticker alone. This ensures a date-resolved recycled ticker that changes issuer incurs an old-security exit and new-security entry, including both sides of the frozen 15 bps transaction-cost model, instead of being silently netted as one unchanged holding. Regression-tested before Bottleneck return analysis.",
+    "2026-09-26: classify SEC Financial Statement Data Sets 2009 Q1 as a documented structural-empty source quarter rather than a parser failure. SEC documentation states 2009q1.zip contains column headings only and structured coverage begins with submissions from 2009-04-15. No Q2 or later information is backfilled into Q1; every other failed quarter remains fatal.",
+    "2026-09-26: local S&P Bottleneck proxy now requires the full requested portfolio breadth at rebalance (10, 20, or 40 scored names). The previous guard could allow a top-40 cell to execute with only 20-39 scored names. No strategy return had been exposed by the gated workflow before this correction.",
+    "2026-09-26: replace the obsolete >50,000 absolute SEC formation-row gate with structural PIT checks appropriate to the curated S&P proxy: exactly the 43 available quarter-end snapshots from 2009-06-30 through 2019-12-31, information_date <= formation_date, at least the frozen 20-name minimum cross-section per snapshot, and >=500 unique CIKs across the panel. The old row threshold was inherited from a broader-universe build and failed before return execution.",
+    "2026-09-26: explicitly treat the 2009-06-30 SEC formation snapshot as an early-XBRL phase-in observation that is retained but may remain below the frozen 20-name cross-sectional minimum. No future data are backfilled. From 2009-09-30 onward every formation must clear the 20-name source breadth gate, and each strategy cell must still have its full requested top-N breadth before execution.",
+    "2026-09-26: Bottleneck discovery membership gate now validates the curated candidate membership's actual provenance schema (`alias_source`) plus the separately passed identity/price audit, rather than requiring a non-existent redundant `identity_resolved` column. The candidate universe itself is unchanged."
+  ],
+  "local_free_proxy_corrections": [
+    "2026-09-24/25: corrected the local free EOD LEAPS proxy's InteractiveBrokers equity-option fee from $0.70/contract to the current LEAN InteractiveBrokersFeeModel low-volume rate of $0.65/contract for premium >= $0.10, with $1 minimum. This is a mechanical replication fix after proxy results were observed; the frozen strategy grid is unchanged.",
+    "2026-09-24/25: corrected the local free EOD LEAPS proxy so an entry selected at close(t) must either fill from that same contract's quote at close(t+1) or be rejected. The prior local proxy could leave a missing next-session quote pending and fill the stale selection on a later date. This is a mechanical execution-timing fix after proxy results were observed; it does not change delta/DTE/allocation/slippage parameters.",
+    "2026-09-24/25: added path diagnostics (missing marks, intrinsic exits, missing-next-close rejections, minimum portfolio value, extreme daily returns) to audit the local EOD proxy's large 100%-allocation drawdowns/volatility. Diagnostics do not alter trading decisions."
+  ]
+}

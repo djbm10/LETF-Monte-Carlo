@@ -1,0 +1,122 @@
+name: Cross-check PIT S&P membership histories
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  audit:
+    if: contains(github.event.head_commit.message, '[membership-crosscheck]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas
+      - name: Download independent histories
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/lawcal.csv
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/thuningxu/sp500nq100/main/sp500_components_history.csv \
+            -o /tmp/curated.csv
+          ls -lh /tmp/lawcal.csv /tmp/curated.csv
+      - name: Compare quarterly snapshots
+        shell: bash
+        run: |
+          python - <<'PY'
+          import ast, json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+
+          def norm(s):
+              return str(s).upper().strip().replace('-','.')
+
+          l=pd.read_csv('/tmp/lawcal.csv',dtype={'cik':str})
+          def clean(x):
+              return pd.to_datetime(
+                  x.astype(str).str.replace('*','',regex=False).str.strip(),
+                  errors='coerce'
+              ).dt.normalize()
+          l['date_added']=clean(l.date_added)
+          l['date_removed']=clean(l.date_removed)
+          l['symbol']=l.symbol.map(norm)
+
+          c=pd.read_csv('/tmp/curated.csv')
+          print('CURATED_COLUMNS',list(c.columns),flush=True)
+          print('CURATED_HEAD',c.head(3).to_dict('records'),flush=True)
+          date_col=next((x for x in c.columns if str(x).lower()=='date'),None)
+          tick_col=next((x for x in c.columns if str(x).lower() in ('tickers','symbols','components')),None)
+          if date_col is None or tick_col is None:
+              raise RuntimeError(f'Unexpected curated schema {list(c.columns)}')
+          c[date_col]=pd.to_datetime(c[date_col],errors='coerce').dt.normalize()
+          c=c.dropna(subset=[date_col]).sort_values(date_col)
+
+          def parse_tickers(v):
+              if isinstance(v,list):
+                  vals=v
+              else:
+                  s=str(v).strip()
+                  try:
+                      q=ast.literal_eval(s)
+                      vals=q if isinstance(q,(list,tuple,set)) else s.split(',')
+                  except Exception:
+                      vals=s.split(',')
+              return {norm(x) for x in vals if str(x).strip()}
+
+          dates=pd.date_range('2009-03-31','2019-12-31',freq='QE')
+          rows=[]
+          for d in dates:
+              law=set(l.loc[
+                  (l.date_added<=d)&(l.date_removed.isna()|(l.date_removed>d)),
+                  'symbol'
+              ])
+              prior=c[c[date_col]<=d]
+              if prior.empty:
+                  raise RuntimeError(f'No curated snapshot <= {d}')
+              row=prior.iloc[-1]
+              cur=parse_tickers(row[tick_col])
+              inter=law&cur
+              union=law|cur
+              rows.append({
+                  'date':str(d.date()),
+                  'lawcal_n':len(law),'curated_n':len(cur),
+                  'intersection_n':len(inter),
+                  'jaccard':len(inter)/len(union) if union else 1.0,
+                  'lawcal_only_n':len(law-cur),
+                  'curated_only_n':len(cur-law),
+                  'lawcal_only':sorted(law-cur),
+                  'curated_only':sorted(cur-law),
+                  'curated_source_date':str(pd.Timestamp(row[date_col]).date()),
+              })
+          out=pd.DataFrame(rows)
+          Path('/tmp/membership').mkdir(exist_ok=True)
+          out.to_json('/tmp/membership/quarterly_membership_crosscheck.json',orient='records',indent=2)
+          out.drop(columns=['lawcal_only','curated_only']).to_csv('/tmp/membership/quarterly_membership_crosscheck.csv',index=False)
+          summary={
+              'quarters':len(out),
+              'min_jaccard':float(out.jaccard.min()),
+              'median_jaccard':float(out.jaccard.median()),
+              'mean_jaccard':float(out.jaccard.mean()),
+              'max_lawcal_only':int(out.lawcal_only_n.max()),
+              'max_curated_only':int(out.curated_only_n.max()),
+              'worst_quarters':out.nsmallest(8,'jaccard')[
+                  ['date','lawcal_n','curated_n','jaccard','lawcal_only_n','curated_only_n']
+              ].to_dict('records'),
+          }
+          Path('/tmp/membership/summary.json').write_text(json.dumps(summary,indent=2))
+          print(json.dumps(summary,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sp500-membership-crosscheck
+          path: /tmp/membership/
+          retention-days: 30

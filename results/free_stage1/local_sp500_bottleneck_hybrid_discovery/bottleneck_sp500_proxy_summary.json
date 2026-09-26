@@ -1,0 +1,29 @@
+{
+  "cells_expected": 15,
+  "cells_completed": 15,
+  "sample_start": "2009-01-01",
+  "sample_end": "2019-12-31",
+  "price_rows": 2211148,
+  "price_symbols": 812,
+  "trading_sessions": 2768,
+  "rebalances": 44,
+  "reused_symbol_exclusions": [
+    "AGN",
+    "CEG",
+    "DD",
+    "DOW",
+    "GGP",
+    "IR",
+    "MNST",
+    "NE",
+    "Q"
+  ],
+  "reused_symbol_exclusion_count": 9,
+  "universe": "PIT_S_AND_P_500_ISSUER_PROXY",
+  "execution_proxy": "prior-session signals; first-quarter-session close rebalance",
+  "market_cap_proxy": "SEC as-filed shares * prior-session raw close",
+  "transaction_cost": "15 bps one-way gross trade",
+  "path_metrics_frequency": "daily marked NAV; trades remain quarterly",
+  "warning": "This is a free large-cap EOD proxy, not the frozen full-US QuantConnect replication. Historical price gaps/delisting coverage must be audited before interpreting returns.",
+  "evidence_label": "FREE_DISCOVERY_LARGE_CAP_EOD_PROXY"
+}

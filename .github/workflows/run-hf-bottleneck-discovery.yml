@@ -1,0 +1,154 @@
+name: Run HF Item1 Bottleneck discovery
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  discovery:
+    if: contains(github.event.head_commit.message, '[hf-bottleneck-discovery-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FUND_RUN: '36216741863'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas pyarrow
+
+      - name: Resolve passed HF network and price panel
+        shell: bash
+        run: |
+          HF_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow hf-raw-item1-discovery.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-tsaustin-price-panel.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          test -n "$HF_RUN" || { echo "No successful HF Item1 network"; exit 2; }
+          test -n "$PRICE_RUN" || { echo "No successful recovered price panel"; exit 2; }
+          echo "HF_RUN=$HF_RUN" >> "$GITHUB_ENV"
+          echo "PRICE_RUN=$PRICE_RUN" >> "$GITHUB_ENV"
+
+      - name: Download inputs
+        shell: bash
+        run: |
+          rm -rf /tmp/hfdisc
+          mkdir -p /tmp/hfdisc/fund /tmp/hfdisc/net /tmp/hfdisc/prices
+          for id in a b c d; do
+            gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY"               --name "bottleneck-fund-$id" --dir "/tmp/hfdisc/fund/$id"
+          done
+          gh run download "$HF_RUN" --repo "$GITHUB_REPOSITORY"             --name hf-raw-item1-bottleneck-discovery-network --dir /tmp/hfdisc/net
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/hfdisc/prices
+
+      - name: Merge accounting and rebuild 44 formation snapshots
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json, pandas as pd
+          root=Path('/tmp/hfdisc/fund')
+          parts=[pd.read_parquet(root/x/'trimmed.parquet') for x in 'abcd']
+          panel=pd.concat(parts,ignore_index=True)
+          panel=panel.sort_values(['cik','information_date','period','adsh']).drop_duplicates(['adsh','cik'],keep='last')
+          out=Path('/tmp/hfdisc/sec'); out.mkdir(exist_ok=True)
+          panel.to_parquet(out/'sec_pit_fundamentals.parquet',index=False)
+          failures=[]
+          for x in 'abcd':
+              failures += json.loads((root/x/'chunk_manifest.json').read_text()).get('failed_quarters',[])
+          assert not failures,failures
+          PY
+          DATES="$(python - <<'PY'
+          import pandas as pd
+          d=pd.date_range('2009-03-31','2019-12-31',freq='QE')
+          print(','.join(x.strftime('%Y-%m-%d') for x in d))
+          PY
+          )"
+          python research/free_stage1/sec_formation_features.py             --input /tmp/hfdisc/sec/sec_pit_fundamentals.parquet             --formation-dates "$DATES"             --out /tmp/hfdisc/sec/sec_formation_features.csv
+
+      - name: Enforce input gates
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          cov_path=next(Path('/tmp/hfdisc/net').rglob('membership_network_coverage.csv'))
+          cov=pd.read_csv(cov_path)
+          assert len(cov)==44,len(cov)
+          assert cov.valid_item1_ciks.min()>=200,cov.nsmallest(5,'valid_item1_ciks')
+          assert cov.valid_item1_ciks.median()>=350,cov.valid_item1_ciks.median()
+          p=next(Path('/tmp/hfdisc/prices').rglob('sp500_hybrid_price_panel_summary.json'))
+          j=json.loads(p.read_text())
+          assert float(j['strategy_aligned_cik_session_coverage'])>=0.97,j
+          print('HF DISCOVERY INPUT GATES PASS',
+                'network_min',int(cov.valid_item1_ciks.min()),
+                'network_median',float(cov.valid_item1_ciks.median()),
+                'price_cik_coverage',j['strategy_aligned_cik_session_coverage'])
+          PY
+
+      - name: Run sealed 15-cell proxy
+        shell: bash
+        run: |
+          curl -L --fail --retry 5             https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv             -o /tmp/components_history.csv
+          PRICES="$(find /tmp/hfdisc/prices -name sp500_hybrid_prices_2007_2023.parquet -print -quit)"
+          NET="$(find /tmp/hfdisc/net -name network_metrics_all.csv -print -quit)"
+          test -f "$NET" || { echo "Missing HF network metrics"; exit 3; }
+          rm -rf results/free_stage1/hf_item1_bottleneck_discovery
+          python research/free_stage1/local_sp500_bottleneck_backtest.py             --membership /tmp/components_history.csv             --fundamentals /tmp/hfdisc/sec/sec_formation_features.csv             --network "$NET"             --prices "$PRICES"             --out results/free_stage1/hf_item1_bottleneck_discovery             --start 2009-01-01             --end 2019-12-31
+
+      - name: Apply frozen family comparison
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np, pandas as pd
+          root=Path('results/free_stage1/hf_item1_bottleneck_discovery')
+          s=pd.read_csv(root/'bottleneck_sp500_proxy_surface.csv')
+          mapping={'bottleneck_core':'momentum','bottleneck_momentum':'momentum','bottleneck_full':'quality_momentum'}
+          out={}
+          for fam,comp in mapping.items():
+              rows=[]
+              for n in (10,20,40):
+                  a=s[(s.model==fam)&(s.top_n==n)].iloc[0]
+                  b=s[(s.model==comp)&(s.top_n==n)].iloc[0]
+                  rows.append({
+                      'top_n':n,
+                      'family_validation_cagr':float(a.validation_cagr),
+                      'comparator_validation_cagr':float(b.validation_cagr),
+                      'validation_cagr_excess':float(a.validation_cagr-b.validation_cagr),
+                      'validation_sharpe_excess':float(a.validation_sharpe_0rf_daily-b.validation_sharpe_0rf_daily),
+                      'validation_max_dd_difference':float(a.validation_max_drawdown_daily-b.validation_max_drawdown_daily),
+                      'family_stale_price_events':int(a.stale_price_events),
+                  })
+              ex=[r['validation_cagr_excess'] for r in rows]
+              out[fam]={
+                  'rows':rows,
+                  'positive_excess_count':sum(x>0 for x in ex),
+                  'median_validation_cagr_excess':float(np.median(ex)),
+                  'mechanical_advancement_conditions':bool(sum(x>0 for x in ex)>=2 and np.median(ex)>0),
+              }
+          result={
+              'source_network':'JanosAudran/financial-reports-sec complete raw JSONL section_1 proxy',
+              'sample_end':'2019-12-31',
+              'holdout_exposed':False,
+              'families':out,
+              'warning':'Complete raw-HF Item1 is an independent corpus proxy; raw SEC EDGAR replication remains authoritative.',
+          }
+          (root/'hf_bottleneck_discovery_comparison.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hf-item1-bottleneck-discovery-results
+          path: results/free_stage1/hf_item1_bottleneck_discovery/
+          retention-days: 30

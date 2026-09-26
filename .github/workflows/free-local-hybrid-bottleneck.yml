@@ -1,0 +1,373 @@
+name: Free hybrid Bottleneck discovery and advancement gate
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  discovery:
+    if: contains(github.event.head_commit.message, '[local-hybrid-bottleneck-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FUND_RUN: '36126965348'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install numpy pandas pyarrow
+
+      - name: Resolve latest successful recovered inputs
+        shell: bash
+        run: |
+          CACHE_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow cache-only-curated-item1.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          HYBRID_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow hf-sec-hybrid-item1.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          if [ -n "$CACHE_NET_RUN" ]; then
+            NET_RUN="$CACHE_NET_RUN"
+            NET_ARTIFACT="cache-only-curated-item1-network"
+            NET_KIND="cache_only_hf_sec_parser_proxy"
+          else
+            NET_RUN="$HYBRID_NET_RUN"
+            NET_ARTIFACT="hf-sec-hybrid-item1-discovery-network"
+            NET_KIND="incremental_hf_sec_parser_proxy"
+          fi
+          PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow build-sp500-tsaustin-price-panel.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          CURATED_PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-price-coverage.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          test -n "$NET_RUN" || { echo "No successful curated Item1 proxy network run"; exit 2; }
+          test -n "$PRICE_RUN" || { echo "No successful tsaustin price recovery run"; exit 2; }
+          test -n "$CURATED_PRICE_RUN" || { echo "No successful curated price-coverage run"; exit 2; }
+          echo "NET_RUN=$NET_RUN" >> "$GITHUB_ENV"
+          echo "NET_ARTIFACT=$NET_ARTIFACT" >> "$GITHUB_ENV"
+          echo "NET_KIND=$NET_KIND" >> "$GITHUB_ENV"
+          echo "PRICE_RUN=$PRICE_RUN" >> "$GITHUB_ENV"
+          echo "CURATED_PRICE_RUN=$CURATED_PRICE_RUN" >> "$GITHUB_ENV"
+          echo "Using NET_RUN=$NET_RUN NET_ARTIFACT=$NET_ARTIFACT NET_KIND=$NET_KIND PRICE_RUN=$PRICE_RUN CURATED_PRICE_RUN=$CURATED_PRICE_RUN FUND_RUN=$FUND_RUN"
+
+      - name: Download recovered network, prices, and validated SEC accounting shards
+        shell: bash
+        run: |
+          rm -rf /tmp/net /tmp/prices /tmp/curated-price /tmp/fund
+          mkdir -p /tmp/net /tmp/prices /tmp/curated-price /tmp/fund
+          gh run download "$NET_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name "$NET_ARTIFACT" --dir /tmp/net
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/prices
+          gh run download "$CURATED_PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-price-coverage --dir /tmp/curated-price
+          gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'bottleneck-fund-*' --dir /tmp/fund
+          find /tmp/net -maxdepth 2 -type f -printf '%p %k KB\n'
+          find /tmp/prices -maxdepth 2 -type f -printf '%p %k KB\n'
+          find /tmp/curated-price -maxdepth 2 -type f -printf '%p %k KB\n'
+          find /tmp/fund -maxdepth 3 -type f -printf '%p %k KB\n'
+
+      - name: Enforce frozen data-quality gates before returns
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+
+          nm=json.loads((Path('/tmp/net')/'manifest.json').read_text())
+          minv=int(nm['valid_item1_min'])
+          med=float(nm['valid_item1_median'])
+          assert minv>=200,(minv,med)
+          assert med>=350,(minv,med)
+          assert nm.get('quality_gate',{}).get('passed') is True,nm.get('quality_gate')
+          print('NETWORK_GATE_PASS',minv,med)
+
+          pm=json.loads((Path('/tmp/prices')/'sp500_hybrid_price_panel_summary.json').read_text())
+          raw_cik_cov=float(pm['strategy_aligned_cik_session_coverage'])
+          assert raw_cik_cov>=0.97,raw_cik_cov
+          assert pm.get('coverage_gate_97pct') is True,pm
+
+          cm=json.loads((Path('/tmp/curated-price')/'curated_sp500_price_coverage_summary.json').read_text())
+          cov=float(cm['effective_identity_plus_price_coverage'])
+          assert cov>=0.97,cov
+          assert cm.get('gate_passed') is True,cm
+          assert float(cm['identity_mapping_session_coverage'])>=0.97,cm
+          print('PRICE_GATE_PASS','raw_cik',raw_cik_cov,'curated_effective',cov)
+
+          fps=sorted(Path('/tmp/fund').glob('bottleneck-fund-*/trimmed.parquet'))
+          assert len(fps)==5,fps
+          cms=[json.loads(p.read_text()) for p in sorted(Path('/tmp/fund').glob('bottleneck-fund-*/chunk_manifest.json'))]
+          failures=[z for m in cms for z in m.get('failed_quarters',[])]
+          structural=[]
+          fatal=[]
+          for z in failures:
+              if int(z.get('year',-1))==2009 and int(z.get('qtr',-1))==1:
+                  structural.append(z)
+              else:
+                  fatal.append(z)
+          assert not fatal,fatal
+          # SEC's own FSD documentation states that 2009q1.zip is intentionally
+          # header-only; never substitute later-quarter data backward.
+          assert len(structural)<=1,structural
+          print('FUND_GATE_PASS',len(fps),'STRUCTURAL_EMPTY_2009Q1',len(structural))
+          PY
+
+      - name: Assemble 2009-2019 PIT SEC formation features
+        shell: bash
+        run: |
+          mkdir -p /tmp/assembled
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          fps=sorted(Path('/tmp/fund').glob('bottleneck-fund-*/trimmed.parquet'))
+          x=pd.concat([pd.read_parquet(p) for p in fps],ignore_index=True)
+          x['information_date']=pd.to_datetime(x['information_date'])
+          x=x[x.information_date<=pd.Timestamp('2019-12-31')].copy()
+          x=x.sort_values(['cik','information_date','period','adsh']).drop_duplicates(['adsh','cik'],keep='last')
+          x.to_parquet('/tmp/assembled/sec_pit_fundamentals.parquet',index=False)
+          print('ASSEMBLED_FUND',len(x),x.cik.nunique())
+          PY
+          DATES="$(python - <<'PY'
+          import pandas as pd
+          print(','.join(x.strftime('%Y-%m-%d') for x in pd.date_range('2009-03-31','2019-12-31',freq='QE')))
+          PY
+          )"
+          python research/free_stage1/sec_formation_features.py \
+            --input /tmp/assembled/sec_pit_fundamentals.parquet \
+            --formation-dates "$DATES" \
+            --out /tmp/assembled/sec_formation_features.csv
+          python - <<'PY'
+          import pandas as pd
+          f=pd.read_csv('/tmp/assembled/sec_formation_features.csv')
+          f['formation_date']=pd.to_datetime(f.formation_date)
+          f['information_date']=pd.to_datetime(f.information_date)
+          assert (f.information_date<=f.formation_date).all()
+          expected=set(pd.date_range('2009-06-30','2019-12-31',freq='QE'))
+          observed=set(f.formation_date.unique())
+          assert observed==expected,(len(observed),sorted(expected-observed),sorted(observed-expected))
+          counts=f.groupby('formation_date').cik.nunique()
+          # SEC structured-data coverage begins 2009-04-15. The first available
+          # formation (2009-06-30) is a documented phase-in snapshot and may be
+          # below the frozen 20-name cross-sectional minimum; never backfill it
+          # with future data. Every formation from 2009-09-30 onward must clear
+          # the minimum. The executor will skip any cell lacking full top-N breadth.
+          early=pd.Timestamp('2009-06-30')
+          assert early in counts.index,counts.index.tolist()
+          assert int(counts.loc[early])<20,counts.loc[early]
+          mature=counts[counts.index>=pd.Timestamp('2009-09-30')]
+          assert len(mature)==42,len(mature)
+          assert int(mature.min())>=20,mature.nsmallest(8).to_dict()
+          assert f.cik.nunique()>=500,f.cik.nunique()
+          print(
+              'FORMATION_FEATURE_GATE_PASS',
+              'rows',len(f),'ciks',f.cik.nunique(),
+              'formations',len(counts),
+              'phase_in_2009Q2_ciks',int(counts.loc[early]),
+              'mature_min_ciks',int(mature.min()),
+              'median_ciks',float(counts.median())
+          )
+          PY
+
+      - name: Require curated date-resolved strategy membership
+        shell: bash
+        run: |
+          test -f /tmp/curated-price/curated_sp500_price_candidate_membership.csv
+          python - <<'PY'
+          import pandas as pd
+          p='/tmp/curated-price/curated_sp500_price_candidate_membership.csv'
+          m=pd.read_csv(p,dtype={'cik':str})
+          required={'symbol','cik','date_added','date_removed','alias_source'}
+          assert required.issubset(m.columns),(required-set(m.columns))
+          allowed={
+              'CURATED_ALIAS_RESOLVED',
+              'LAWCAL_SAME_CIK_IDENTITY_WINDOW',
+              'CURATED_IDENTITY_OVERRIDE',
+          }
+          assert set(m.alias_source.dropna().astype(str)).issubset(allowed),m.alias_source.value_counts().to_dict()
+          assert len(m)>500,len(m)
+          assert m.cik.nunique()>=500,m.cik.nunique()
+          print(
+              'CURATED_STRATEGY_MEMBERSHIP_PASS',
+              len(m),m.symbol.nunique(),m.cik.nunique(),
+              m.alias_source.value_counts().to_dict()
+          )
+          PY
+
+      - name: Run frozen 15-cell discovery only
+        shell: bash
+        run: |
+          rm -rf results/free_stage1/local_sp500_bottleneck_hybrid_discovery
+          python research/free_stage1/local_sp500_bottleneck_backtest.py \
+            --membership /tmp/curated-price/curated_sp500_price_candidate_membership.csv \
+            --fundamentals /tmp/assembled/sec_formation_features.csv \
+            --network /tmp/net/network_metrics_all.csv \
+            --prices /tmp/prices/sp500_hybrid_prices_2007_2023.parquet \
+            --out results/free_stage1/local_sp500_bottleneck_hybrid_discovery \
+            --start 2009-01-01 \
+            --end 2019-12-31
+
+      - name: Apply frozen family advancement rule
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+
+          root=Path('results/free_stage1/local_sp500_bottleneck_hybrid_discovery')
+          s=pd.read_csv(root/'bottleneck_sp500_proxy_surface.csv')
+          assert len(s)==15,len(s)
+          assert set(s.model)=={
+              'momentum','quality_momentum','bottleneck_core',
+              'bottleneck_momentum','bottleneck_full'
+          }
+          assert set(s.top_n)=={10,20,40}
+          summary=json.loads((root/'bottleneck_sp500_proxy_summary.json').read_text())
+          assert summary['sample_end']=='2019-12-31',summary
+          assert all(c.startswith('holdout_') is False or s[c].isna().all()
+                     for c in s.columns if c.startswith('holdout_'))
+
+          comparator={
+              'bottleneck_core':'momentum',
+              'bottleneck_momentum':'momentum',
+              'bottleneck_full':'quality_momentum',
+          }
+          nm=json.loads(Path('/tmp/net/manifest.json').read_text())
+          out={
+              'firewall':'research/free_stage1/BOTTLENECK_DISCOVERY_FIREWALL.md',
+              'sample':'2009-01-01 through 2019-12-31',
+              'holdout_status':'SEALED_NOT_READ',
+              'network_evidence':nm.get('evidence_label','HF+SEC independent-parser discovery proxy'),
+              'network_source':nm.get('source'),
+              'families':{},
+          }
+          for fam,comp in comparator.items():
+              diffs=[]
+              sharpe=[]
+              dd=[]
+              by_n={}
+              for n in (10,20,40):
+                  a=s[(s.model==fam)&(s.top_n==n)].iloc[0]
+                  b=s[(s.model==comp)&(s.top_n==n)].iloc[0]
+                  ex=float(a.validation_cagr-b.validation_cagr)
+                  sx=float(a.validation_sharpe_0rf_daily-b.validation_sharpe_0rf_daily)
+                  dx=float(a.validation_max_drawdown_daily-b.validation_max_drawdown_daily)
+                  diffs.append(ex); sharpe.append(sx); dd.append(dx)
+                  by_n[str(n)]={
+                      'validation_cagr':float(a.validation_cagr),
+                      'comparator_validation_cagr':float(b.validation_cagr),
+                      'cagr_excess':ex,
+                      'sharpe_excess':sx,
+                      'max_drawdown_difference':dx,
+                  }
+              positives=sum(x>0 for x in diffs)
+              med=float(np.median(diffs))
+              advance=bool(positives>=2 and med>0)
+              out['families'][fam]={
+                  'comparator':comp,
+                  'positive_validation_cagr_excess_topn_count':positives,
+                  'median_validation_cagr_excess':med,
+                  'median_validation_sharpe_excess':float(np.median(sharpe)),
+                  'median_validation_max_drawdown_difference':float(np.median(dd)),
+                  'advance_to_holdout':advance,
+                  'by_top_n':by_n,
+              }
+          advancing=[k for k,v in out['families'].items() if v['advance_to_holdout']]
+          out['advancing_families']=advancing
+          out['decision']=(
+              'ADVANCE_TO_DIRECT_SEC_NETWORK_REPLICATION'
+              if advancing else 'DO_NOT_ADVANCE_PROXY'
+          )
+          out['holdout_status']='SEALED_PENDING_DIRECT_SEC_REPLICATION' if advancing else 'SEALED_NOT_READ'
+          (root/'bottleneck_family_advancement.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Build independent SPY discovery benchmark
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/manisahni/marketdata/main/daily_adjclose.csv \
+            -o /tmp/core_adjclose.csv
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          import pandas as pd
+          p=pd.read_csv('/tmp/core_adjclose.csv',parse_dates=['Date']).set_index('Date')['SPY'].dropna()
+          p=p[(p.index>='2009-01-01')&(p.index<='2019-12-31')]
+          r=p.pct_change().dropna()
+          years=(p.index[-1]-p.index[0]).days/365.25
+          out={
+              'start':str(p.index[0].date()),'end':str(p.index[-1].date()),
+              'total_return':float(p.iloc[-1]/p.iloc[0]-1),
+              'cagr':float((p.iloc[-1]/p.iloc[0])**(1/years)-1),
+              'ann_vol_daily':float(r.std(ddof=1)*math.sqrt(252)),
+              'sharpe_0rf_daily':float(r.mean()/r.std(ddof=1)*math.sqrt(252)),
+              'max_drawdown_daily':float((p/p.cummax()-1).min()),
+          }
+          root=Path('results/free_stage1/local_sp500_bottleneck_hybrid_discovery')
+          (root/'spy_discovery_benchmark.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Record provenance
+        shell: bash
+        run: |
+          {
+            echo "network_workflow_run=$NET_RUN"
+            echo "network_artifact=$NET_ARTIFACT"
+            echo "network_kind=$NET_KIND"
+            echo "price_workflow_run=$PRICE_RUN"
+            echo "curated_price_gate_workflow_run=$CURATED_PRICE_RUN"
+            echo "fundamental_workflow_run=$FUND_RUN"
+            echo "executor_source_sha=$GITHUB_SHA"
+            echo "holdout_status=SEALED_NOT_READ"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > results/free_stage1/local_sp500_bottleneck_hybrid_discovery/source_manifest.txt
+
+      - name: Upload discovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-local-hybrid-bottleneck-discovery-results
+          path: results/free_stage1/local_sp500_bottleneck_hybrid_discovery/
+          retention-days: 30
+
+      - name: Persist discovery surface
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/free_stage1/local_sp500_bottleneck_hybrid_discovery
+          if git diff --cached --quiet; then
+            echo "No result changes"
+            exit 0
+          fi
+          git commit -m "Record gated hybrid Bottleneck discovery [skip ci]"
+          git fetch origin research/free-pit-quantconnect-stage1
+          git rebase origin/research/free-pit-quantconnect-stage1
+          git push origin HEAD:research/free-pit-quantconnect-stage1

@@ -1,0 +1,96 @@
+name: Recover PIT S&P prices from public Kaggle archives
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  recover:
+    if: contains(github.event.head_commit.message, '[kaggle-price-recovery]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install kaggle pandas pyarrow
+      - name: Download public metadata and WIKI EOD archive without credentials
+        shell: bash
+        run: |
+          unset KAGGLE_USERNAME KAGGLE_KEY KAGGLE_API_TOKEN
+          mkdir -p /tmp/kaggle-prices
+          cd /tmp/kaggle-prices
+          kaggle datasets download marketneutral/quandl-wiki-prices-us-equites -f WIKI_PRICES.csv
+          kaggle datasets download tsaustin/us-historical-stock-prices-with-earnings-data -f dataset_summary.csv
+          if [ -f WIKI_PRICES.csv.zip ]; then unzip -o WIKI_PRICES.csv.zip; fi
+          if [ -f dataset_summary.csv.zip ]; then unzip -o dataset_summary.csv.zip; fi
+          test -f WIKI_PRICES.csv
+          test -f dataset_summary.csv
+          ls -lh
+      - name: Audit S&P former-member coverage
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/kaggle-prices/components_history.csv
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+
+          root=Path("/tmp/kaggle-prices")
+          m=pd.read_csv(root/"components_history.csv",dtype={"cik":str})
+          m["symbol"]=m.symbol.astype(str).str.upper().str.replace("-",".",regex=False)
+          m["date_added"]=pd.to_datetime(m.date_added,errors="coerce")
+          m["date_removed"]=pd.to_datetime(m.date_removed,errors="coerce")
+          wanted=set(m.symbol)
+
+          # Stream 1.8GB WIKI file and keep only PIT S&P symbols + sample window.
+          parts=[]
+          cols=None
+          for chunk in pd.read_csv(root/"WIKI_PRICES.csv",chunksize=500_000):
+              if cols is None:
+                  cols=list(chunk.columns)
+                  print("WIKI_COLUMNS",cols,flush=True)
+              tc="ticker" if "ticker" in chunk.columns else "Ticker"
+              dc="date" if "date" in chunk.columns else "Date"
+              chunk[tc]=chunk[tc].astype(str).str.upper().str.replace("-",".",regex=False)
+              x=chunk[chunk[tc].isin(wanted)].copy()
+              if len(x):
+                  x[dc]=pd.to_datetime(x[dc],errors="coerce")
+                  x=x[(x[dc]>="2007-01-01")&(x[dc]<="2018-03-27")]
+                  if len(x): parts.append(x)
+          w=pd.concat(parts,ignore_index=True) if parts else pd.DataFrame()
+          symbols=set(w["ticker"].astype(str).str.upper().str.replace("-",".",regex=False)) if len(w) else set()
+
+          summary=pd.read_csv(root/"dataset_summary.csv")
+          print("TSAUSTIN_COLUMNS",list(summary.columns),flush=True)
+          print("TSAUSTIN_ROWS",len(summary),flush=True)
+          print("TSAUSTIN_HEAD",summary.head(10).to_dict("records"),flush=True)
+
+          # Count membership rows whose symbol is represented in WIKI over pre-2018 interval.
+          hist=m[(m.date_added<=pd.Timestamp("2018-03-27")) & (m.date_removed.isna() | (m.date_removed>=pd.Timestamp("2009-01-01")))].copy()
+          unique=set(hist.symbol)
+          out={
+              "wiki_rows_for_sp500_symbols":int(len(w)),
+              "wiki_symbols_for_sp500":int(len(symbols)),
+              "historical_sp500_symbols_pre2018":int(len(unique)),
+              "historical_sp500_symbols_pre2018_covered":int(len(unique & symbols)),
+              "historical_sp500_symbol_coverage":float(len(unique & symbols)/len(unique)) if unique else None,
+              "missing_pre2018_symbols":sorted(unique-symbols),
+              "tsaustin_summary_rows":int(len(summary)),
+              "tsaustin_summary_columns":list(summary.columns),
+          }
+          (root/"kaggle_price_recovery_audit.json").write_text(json.dumps(out,indent=2,default=str))
+          print(json.dumps(out,indent=2,default=str))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kaggle-price-recovery-audit
+          path: /tmp/kaggle-prices/kaggle_price_recovery_audit.json
+          retention-days: 30

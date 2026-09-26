@@ -1,0 +1,84 @@
+name: Complete direct SEC Item1 network replication
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: contains(github.event.head_commit.message, '[direct-sec-network-replication]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CACHE_RUN: '36245144257'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install numpy pandas scipy scikit-learn beautifulsoup4 requests pyarrow
+
+      - name: Resolve curated membership
+        shell: bash
+        run: |
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-membership.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN" || { echo "No successful curated membership build"; exit 2; }
+          echo "MEMBER_RUN=$MEMBER_RUN" >> "$GITHUB_ENV"
+
+      - name: Download preserved direct SEC cache and curated membership
+        shell: bash
+        run: |
+          rm -rf /tmp/cache-net /tmp/member /tmp/direct-sec
+          mkdir -p /tmp/cache-net /tmp/member /tmp/direct-sec
+          gh run download "$CACHE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name cache-only-curated-item1-network --dir /tmp/cache-net
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-cik-membership --dir /tmp/member
+          test -f /tmp/cache-net/cached_sec_filings.parquet
+          test -f /tmp/member/curated_sp500_membership_intervals.csv
+
+      - name: Complete direct SEC histories and rebuild frozen network
+        shell: bash
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          python research/free_stage1/direct_sec_cache_completion.py \
+            --membership /tmp/member/curated_sp500_membership_intervals.csv \
+            --cached-sec /tmp/cache-net/cached_sec_filings.parquet \
+            --out /tmp/direct-sec \
+            --start-year 2007 \
+            --end-year 2019 \
+            --formation-start 2009-03-31 \
+            --formation-end 2019-12-31 \
+            --max-item1-age-days 550 \
+            --pair-density 0.0205 \
+            --rps 4.0
+
+      - name: Upload direct SEC replication
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: direct-sec-item1-network-replication
+          path: |
+            /tmp/direct-sec/network_metrics_all.csv
+            /tmp/direct-sec/membership_network_coverage.csv
+            /tmp/direct-sec/manifest.json
+            /tmp/direct-sec/direct_sec_filings_all.parquet
+            /tmp/direct-sec/missing_ciks_before_fetch.txt
+          if-no-files-found: warn
+          retention-days: 30

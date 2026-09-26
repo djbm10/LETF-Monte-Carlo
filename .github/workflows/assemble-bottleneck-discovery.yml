@@ -1,0 +1,177 @@
+name: Assemble early Bottleneck discovery from shards
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  discovery:
+    if: contains(github.event.head_commit.message, '[assemble-bottleneck-discovery]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SHARD_RUN: '36216741863'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas pyarrow
+
+      - name: Download discovery-only fundamental and network shards
+        shell: bash
+        run: |
+          rm -rf /tmp/discovery-shards
+          mkdir -p /tmp/discovery-shards
+          for id in a b c d; do
+            gh run download "$SHARD_RUN" --repo "$GITHUB_REPOSITORY" --name "bottleneck-fund-$id" --dir "/tmp/discovery-shards/bottleneck-fund-$id"
+            gh run download "$SHARD_RUN" --repo "$GITHUB_REPOSITORY" --name "bottleneck-net-$id" --dir "/tmp/discovery-shards/bottleneck-net-$id"
+          done
+          find /tmp/discovery-shards -type f -printf '%p %k KB\n'
+
+      - name: Resolve passed strategy-aligned price panel
+        shell: bash
+        run: |
+          PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-tsaustin-price-panel.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          test -n "$PRICE_RUN" || { echo "No passed recovered price panel"; exit 2; }
+          echo "PRICE_RUN=$PRICE_RUN" >> "$GITHUB_ENV"
+          mkdir -p /tmp/discovery-prices
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-tsaustin-recovered-price-panel             --dir /tmp/discovery-prices
+
+      - name: Rebuild discovery PIT formation inputs
+        shell: bash
+        run: |
+          rm -rf /tmp/discovery-inputs
+          mkdir -p /tmp/discovery-inputs/sec_fundamentals /tmp/discovery-inputs/sec_item1_network
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          root=Path('/tmp/discovery-shards')
+          fps=[root/f'bottleneck-fund-{x}'/'trimmed.parquet' for x in 'abcd']
+          assert all(p.exists() for p in fps),fps
+          panel=pd.concat([pd.read_parquet(p) for p in fps],ignore_index=True)
+          panel=panel.sort_values(['cik','information_date','period','adsh']).drop_duplicates(['adsh','cik'],keep='last')
+          panel.to_parquet('/tmp/discovery-inputs/sec_fundamentals/sec_pit_fundamentals.parquet',index=False)
+          manifests=[json.loads((root/f'bottleneck-fund-{x}'/'chunk_manifest.json').read_text()) for x in 'abcd']
+          failures=[z for m in manifests for z in m.get('failed_quarters',[])]
+          assert not failures,failures
+
+          nm=[]; cv=[]; runs=[]
+          for x in 'abcd':
+              p=root/f'bottleneck-net-{x}'
+              nm.append(pd.read_csv(p/'network_metrics_all.csv',dtype={'cik':str}))
+              cv.append(pd.read_csv(p/'membership_network_coverage.csv'))
+              runs += json.loads((p/'manifest.json').read_text()).get('network_runs',[])
+          n=pd.concat(nm,ignore_index=True).sort_values(['formation_date','cik'])
+          cov=pd.concat(cv,ignore_index=True).sort_values('formation_date')
+          n.to_csv('/tmp/discovery-inputs/sec_item1_network/network_metrics_all.csv',index=False)
+          cov.to_csv('/tmp/discovery-inputs/sec_item1_network/membership_network_coverage.csv',index=False)
+
+          # Discovery needs 2009Q1 through 2019Q4 = 44 exact quarter snapshots.
+          wanted=pd.date_range('2009-03-31','2019-12-31',freq='QE')
+          have=pd.DatetimeIndex(pd.to_datetime(cov.formation_date).unique()).sort_values()
+          missing=[str(d.date()) for d in wanted if d not in have]
+          assert not missing,missing
+          discovery_cov=cov[pd.to_datetime(cov.formation_date).isin(wanted)]
+          assert len(discovery_cov)==44,len(discovery_cov)
+          assert discovery_cov.valid_item1_ciks.min()>=200,discovery_cov.nsmallest(5,'valid_item1_ciks')
+          assert discovery_cov.valid_item1_ciks.median()>=350,discovery_cov.valid_item1_ciks.median()
+          print('DISCOVERY NETWORK GATE PASS',
+                'snapshots',len(discovery_cov),
+                'min',int(discovery_cov.valid_item1_ciks.min()),
+                'median',float(discovery_cov.valid_item1_ciks.median()))
+          PY
+
+          DATES="$(python - <<'PY'
+          import pandas as pd
+          d=pd.date_range('2009-03-31','2019-12-31',freq='QE')
+          print(','.join(x.strftime('%Y-%m-%d') for x in d))
+          PY
+          )"
+          python research/free_stage1/sec_formation_features.py             --input /tmp/discovery-inputs/sec_fundamentals/sec_pit_fundamentals.parquet             --formation-dates "$DATES"             --out /tmp/discovery-inputs/sec_fundamentals/sec_formation_features.csv
+
+      - name: Enforce strategy-aligned price gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=next(Path('/tmp/discovery-prices').rglob('sp500_hybrid_price_panel_summary.json'))
+          j=json.loads(p.read_text())
+          coverage=float(j['strategy_aligned_cik_session_coverage'])
+          print(json.dumps(j,indent=2))
+          assert coverage>=0.97,coverage
+          print('PRICE GATE PASS',coverage)
+          PY
+
+      - name: Download PIT membership and run sealed discovery
+        shell: bash
+        run: |
+          curl -L --fail --retry 5             https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv             -o /tmp/components_history.csv
+          FUND=/tmp/discovery-inputs/sec_fundamentals/sec_formation_features.csv
+          NET=/tmp/discovery-inputs/sec_item1_network/network_metrics_all.csv
+          PRICES="$(find /tmp/discovery-prices -name sp500_hybrid_prices_2007_2023.parquet -print -quit)"
+          test -f "$PRICES"
+          rm -rf results/free_stage1/local_sp500_bottleneck_discovery
+          python research/free_stage1/local_sp500_bottleneck_backtest.py             --membership /tmp/components_history.csv             --fundamentals "$FUND"             --network "$NET"             --prices "$PRICES"             --out results/free_stage1/local_sp500_bottleneck_discovery             --start 2009-01-01             --end 2019-12-31
+
+      - name: Assert holdout sealed and summarize comparator excess
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path('results/free_stage1/local_sp500_bottleneck_discovery')
+          s=pd.read_csv(root/'bottleneck_sp500_proxy_surface.csv')
+          assert len(s)==15
+          assert set(s.top_n)=={10,20,40}
+          assert s['holdout_cagr'].isna().all() if 'holdout_cagr' in s else True
+          mapping={
+              'bottleneck_core':'momentum',
+              'bottleneck_momentum':'momentum',
+              'bottleneck_full':'quality_momentum',
+          }
+          out={}
+          for fam,comp in mapping.items():
+              rows=[]
+              for n in (10,20,40):
+                  a=s[(s.model==fam)&(s.top_n==n)].iloc[0]
+                  b=s[(s.model==comp)&(s.top_n==n)].iloc[0]
+                  rows.append({
+                      'top_n':n,
+                      'family_validation_cagr':float(a.validation_cagr),
+                      'comparator_validation_cagr':float(b.validation_cagr),
+                      'validation_cagr_excess':float(a.validation_cagr-b.validation_cagr),
+                      'validation_sharpe_excess':float(a.validation_sharpe_0rf_daily-b.validation_sharpe_0rf_daily),
+                      'validation_max_dd_difference':float(a.validation_max_drawdown_daily-b.validation_max_drawdown_daily),
+                      'stale_price_events':int(a.stale_price_events),
+                  })
+              ex=[r['validation_cagr_excess'] for r in rows]
+              out[fam]={
+                  'rows':rows,
+                  'positive_excess_count':sum(x>0 for x in ex),
+                  'median_validation_cagr_excess':float(np.median(ex)),
+                  'mechanical_advancement_conditions':bool(sum(x>0 for x in ex)>=2 and np.median(ex)>0),
+              }
+          (root/'bottleneck_discovery_family_comparison.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Upload discovery surface
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-local-sp500-bottleneck-discovery-results
+          path: results/free_stage1/local_sp500_bottleneck_discovery/
+          retention-days: 30

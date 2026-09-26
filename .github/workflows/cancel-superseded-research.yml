@@ -1,0 +1,24 @@
+name: Cancel superseded research runs
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  cancel:
+    if: contains(github.event.head_commit.message, '[cancel-superseded-runs]')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Cancel only superseded run IDs
+        shell: bash
+        run: |
+          for id in 36085023919 36084388333 36087200719 36088521696 36089326249 36126965348 36129318424; do
+            echo "Canceling superseded run $id"
+            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/cancel" || true
+          done

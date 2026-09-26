@@ -463,6 +463,10 @@ class Position:
     removal_date: pd.Timestamp | None
 
 
+def security_identity_key(symbol: str, cik: str) -> str:
+    return f"{str(symbol).upper()}::{str(cik).zfill(10)}"
+
+
 def solve_rebalance(nav_pre: float, current_values: dict[str, float], targets: list[str], cost: float):
     if not targets:
         return nav_pre, {}, 0.0, 0.0
@@ -567,15 +571,25 @@ def run_cell(
     for d0 in sessions:
         d = pd.Timestamp(d0)
         current_values = {}
-        for sym, pos in list(positions.items()):
+        for position_key, pos in list(positions.items()):
             value, mark_date, removed = position_value_at(
-                sym, pos.value_at_entry, pos.entry_price, d, pos.removal_date, prices_by_symbol
+                pos.symbol,
+                pos.value_at_entry,
+                pos.entry_price,
+                d,
+                pos.removal_date,
+                prices_by_symbol,
             )
-            current_values[sym] = value
+            current_values[position_key] = value
             if mark_date < d and not removed:
                 stale_price_events += 1
             if removed:
-                key = (sym, pos.cik, str(pos.removal_date), float(pos.entry_price))
+                key = (
+                    pos.symbol,
+                    pos.cik,
+                    str(pos.removal_date),
+                    float(pos.entry_price),
+                )
                 removed_seen.add(key)
 
         nav_pre = float(sum(current_values.values())) if positions else nav
@@ -617,14 +631,21 @@ def run_cell(
             curve.append((d, nav))
             continue
 
-        targets = selected.symbol.tolist()
+        selected = selected.copy()
+        selected["security_key"] = [
+            security_identity_key(sym, cik)
+            for sym, cik in zip(selected.symbol, selected.cik)
+        ]
+        targets = selected.security_key.tolist()
         nav_after, target_values, gross_trade, turnover = solve_rebalance(
             nav_pre, current_values, targets, ONE_WAY_COST
         )
 
-        selected_map = selected.set_index("symbol")
+        selected_map = selected.set_index("security_key")
         new_positions = {}
-        for sym, target_value in target_values.items():
+        for position_key, target_value in target_values.items():
+            sr = selected_map.loc[position_key]
+            sym = str(sr.symbol)
             g = prices_by_symbol.get(sym)
             row = asof_row(g, d)
             if row is None or pd.Timestamp(row.name) != d:
@@ -632,8 +653,7 @@ def run_cell(
             px = _num(row.get("adj_close"))
             if not math.isfinite(px) or px <= 0:
                 continue
-            sr = selected_map.loc[sym]
-            new_positions[sym] = Position(
+            new_positions[position_key] = Position(
                 sym,
                 str(sr.cik),
                 float(target_value),
@@ -646,10 +666,14 @@ def run_cell(
             nav_after, target_values, gross_trade, turnover = solve_rebalance(
                 nav_pre, current_values, targets, ONE_WAY_COST
             )
-            for sym in list(new_positions):
-                p = new_positions[sym]
-                new_positions[sym] = Position(
-                    sym, p.cik, target_values[sym], p.entry_price, p.removal_date
+            for position_key in list(new_positions):
+                p = new_positions[position_key]
+                new_positions[position_key] = Position(
+                    p.symbol,
+                    p.cik,
+                    target_values[position_key],
+                    p.entry_price,
+                    p.removal_date,
                 )
 
         positions = new_positions
@@ -657,7 +681,8 @@ def run_cell(
         curve.append((d, nav))
 
         for rank, r in enumerate(selected.itertuples(index=False), 1):
-            if r.symbol not in positions:
+            position_key = security_identity_key(r.symbol, r.cik)
+            if position_key not in positions:
                 continue
             row = {
                 "rebalance_date": str(d.date()),
@@ -668,6 +693,7 @@ def run_cell(
                 "rank": rank,
                 "symbol": r.symbol,
                 "cik": r.cik,
+                "security_key": position_key,
                 "score": r.score,
                 "eligible_rows": int(len(cross)),
                 "scored_rows": int(len(scored)),

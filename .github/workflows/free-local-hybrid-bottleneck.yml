@@ -33,11 +33,25 @@ jobs:
       - name: Resolve latest successful recovered inputs
         shell: bash
         run: |
-          NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+          CACHE_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow cache-only-curated-item1.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          HYBRID_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
             --workflow hf-sec-hybrid-item1.yml \
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId \
             --jq '.[0].databaseId')"
+          if [ -n "$CACHE_NET_RUN" ]; then
+            NET_RUN="$CACHE_NET_RUN"
+            NET_ARTIFACT="cache-only-curated-item1-network"
+            NET_KIND="cache_only_hf_sec_parser_proxy"
+          else
+            NET_RUN="$HYBRID_NET_RUN"
+            NET_ARTIFACT="hf-sec-hybrid-item1-discovery-network"
+            NET_KIND="incremental_hf_sec_parser_proxy"
+          fi
           PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
             --workflow build-sp500-tsaustin-price-panel.yml \
             --branch research/free-pit-quantconnect-stage1 \
@@ -48,13 +62,15 @@ jobs:
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId \
             --jq '.[0].databaseId')"
-          test -n "$NET_RUN" || { echo "No successful HF+SEC Item1 hybrid run"; exit 2; }
+          test -n "$NET_RUN" || { echo "No successful curated Item1 proxy network run"; exit 2; }
           test -n "$PRICE_RUN" || { echo "No successful tsaustin price recovery run"; exit 2; }
           test -n "$CURATED_PRICE_RUN" || { echo "No successful curated price-coverage run"; exit 2; }
           echo "NET_RUN=$NET_RUN" >> "$GITHUB_ENV"
+          echo "NET_ARTIFACT=$NET_ARTIFACT" >> "$GITHUB_ENV"
+          echo "NET_KIND=$NET_KIND" >> "$GITHUB_ENV"
           echo "PRICE_RUN=$PRICE_RUN" >> "$GITHUB_ENV"
           echo "CURATED_PRICE_RUN=$CURATED_PRICE_RUN" >> "$GITHUB_ENV"
-          echo "Using NET_RUN=$NET_RUN PRICE_RUN=$PRICE_RUN CURATED_PRICE_RUN=$CURATED_PRICE_RUN FUND_RUN=$FUND_RUN"
+          echo "Using NET_RUN=$NET_RUN NET_ARTIFACT=$NET_ARTIFACT NET_KIND=$NET_KIND PRICE_RUN=$PRICE_RUN CURATED_PRICE_RUN=$CURATED_PRICE_RUN FUND_RUN=$FUND_RUN"
 
       - name: Download recovered network, prices, and validated SEC accounting shards
         shell: bash
@@ -62,7 +78,7 @@ jobs:
           rm -rf /tmp/net /tmp/prices /tmp/curated-price /tmp/fund
           mkdir -p /tmp/net /tmp/prices /tmp/curated-price /tmp/fund
           gh run download "$NET_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name hf-sec-hybrid-item1-discovery-network --dir /tmp/net
+            --name "$NET_ARTIFACT" --dir /tmp/net
           gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
             --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/prices
           gh run download "$CURATED_PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
@@ -198,11 +214,13 @@ jobs:
               'bottleneck_momentum':'momentum',
               'bottleneck_full':'quality_momentum',
           }
+          nm=json.loads(Path('/tmp/net/manifest.json').read_text())
           out={
               'firewall':'research/free_stage1/BOTTLENECK_DISCOVERY_FIREWALL.md',
               'sample':'2009-01-01 through 2019-12-31',
               'holdout_status':'SEALED_NOT_READ',
-              'network_evidence':'HF+SEC independent-parser discovery proxy',
+              'network_evidence':nm.get('evidence_label','HF+SEC independent-parser discovery proxy'),
+              'network_source':nm.get('source'),
               'families':{},
           }
           for fam,comp in comparator.items():
@@ -279,6 +297,8 @@ jobs:
         run: |
           {
             echo "network_workflow_run=$NET_RUN"
+            echo "network_artifact=$NET_ARTIFACT"
+            echo "network_kind=$NET_KIND"
             echo "price_workflow_run=$PRICE_RUN"
             echo "curated_price_gate_workflow_run=$CURATED_PRICE_RUN"
             echo "fundamental_workflow_run=$FUND_RUN"

@@ -30,7 +30,7 @@ jobs:
       - name: Resolve passed HF network and price panel
         shell: bash
         run: |
-          HF_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow hf-item1-discovery.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          HF_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow hf-item1-discovery-fast.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
           PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow build-sp500-tsaustin-price-panel.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
           test -n "$HF_RUN" || { echo "No successful HF Item1 network"; exit 2; }
           test -n "$PRICE_RUN" || { echo "No successful recovered price panel"; exit 2; }
@@ -45,7 +45,7 @@ jobs:
           for id in a b c d; do
             gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY"               --name "bottleneck-fund-$id" --dir "/tmp/hfdisc/fund/$id"
           done
-          gh run download "$HF_RUN" --repo "$GITHUB_REPOSITORY"             --name hf-item1-bottleneck-discovery-network --dir /tmp/hfdisc/net
+          gh run download "$HF_RUN" --repo "$GITHUB_REPOSITORY"             --name hf-item1-bottleneck-discovery-network-fast --dir /tmp/hfdisc/net
           gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY"             --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/hfdisc/prices
 
       - name: Merge accounting and rebuild 44 formation snapshots
@@ -80,7 +80,8 @@ jobs:
           import json
           from pathlib import Path
           import pandas as pd
-          cov=pd.read_csv('/tmp/hfdisc/net/network/membership_network_coverage.csv')
+          cov_path=next(Path('/tmp/hfdisc/net').rglob('membership_network_coverage.csv'))
+          cov=pd.read_csv(cov_path)
           assert len(cov)==44,len(cov)
           assert cov.valid_item1_ciks.min()>=200,cov.nsmallest(5,'valid_item1_ciks')
           assert cov.valid_item1_ciks.median()>=350,cov.valid_item1_ciks.median()
@@ -98,8 +99,10 @@ jobs:
         run: |
           curl -L --fail --retry 5             https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv             -o /tmp/components_history.csv
           PRICES="$(find /tmp/hfdisc/prices -name sp500_hybrid_prices_2007_2023.parquet -print -quit)"
+          NET="$(find /tmp/hfdisc/net -name network_metrics_all.csv -print -quit)"
+          test -f "$NET" || { echo "Missing HF network metrics"; exit 3; }
           rm -rf results/free_stage1/hf_item1_bottleneck_discovery
-          python research/free_stage1/local_sp500_bottleneck_backtest.py             --membership /tmp/components_history.csv             --fundamentals /tmp/hfdisc/sec/sec_formation_features.csv             --network /tmp/hfdisc/net/network/network_metrics_all.csv             --prices "$PRICES"             --out results/free_stage1/hf_item1_bottleneck_discovery             --start 2009-01-01             --end 2019-12-31
+          python research/free_stage1/local_sp500_bottleneck_backtest.py             --membership /tmp/components_history.csv             --fundamentals /tmp/hfdisc/sec/sec_formation_features.csv             --network "$NET"             --prices "$PRICES"             --out results/free_stage1/hf_item1_bottleneck_discovery             --start 2009-01-01             --end 2019-12-31
 
       - name: Apply frozen family comparison
         shell: bash

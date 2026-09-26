@@ -60,14 +60,14 @@ def clean_lawcal(path: Path) -> pd.DataFrame:
 # ticker/lineage is in the index.
 IDENTITY_OVERRIDES = {
     "AGN": [
-        (pd.Timestamp.min.normalize(), pd.Timestamp("2015-03-23"), "0000850693"),
-        (pd.Timestamp("2015-03-23"), pd.Timestamp.max.normalize(), "0001578845"),
+        (pd.Timestamp("1900-01-01"), pd.Timestamp("2015-03-23"), "0000850693"),
+        (pd.Timestamp("2015-03-23"), pd.Timestamp("2100-01-01"), "0001578845"),
     ],
     # Historical Ingersoll-Rand/Trane lineage retained CIK 1466258 through the
     # 2020 transaction; the later Gardner Denver/Ingersoll Rand issuer is 1699150.
     "IR": [
-        (pd.Timestamp.min.normalize(), pd.Timestamp("2020-03-03"), "0001466258"),
-        (pd.Timestamp("2020-03-03"), pd.Timestamp.max.normalize(), "0001699150"),
+        (pd.Timestamp("1900-01-01"), pd.Timestamp("2020-03-03"), "0001466258"),
+        (pd.Timestamp("2020-03-03"), pd.Timestamp("2100-01-01"), "0001699150"),
     ],
 }
 
@@ -245,8 +245,8 @@ def main() -> None:
         "ambiguous_crosswalk_symbols": sorted(ambiguous),
         "identity_overrides": {
             k: [
-                {"start": str(lo.date()) if lo != pd.Timestamp.min.normalize() else "MIN",
-                 "end": str(hi.date()) if hi != pd.Timestamp.max.normalize() else "MAX",
+                {"start": str(lo.date()) if lo != pd.Timestamp("1900-01-01") else "MIN",
+                 "end": str(hi.date()) if hi != pd.Timestamp("2100-01-01") else "MAX",
                  "cik": cik}
                 for lo, hi, cik in vals
             ]

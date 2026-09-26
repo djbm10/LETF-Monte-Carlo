@@ -1,0 +1,76 @@
+name: Audit curated PIT S&P price coverage
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  audit:
+    if: contains(github.event.head_commit.message, '[curated-price-coverage]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRICE_RUN: '36220567098'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas pyarrow
+      - name: Resolve latest successful curated membership
+        shell: bash
+        run: |
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-membership.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN" || { echo "No successful curated membership build"; exit 2; }
+          echo "MEMBER_RUN=$MEMBER_RUN" >> "$GITHUB_ENV"
+          echo "MEMBER_RUN=$MEMBER_RUN PRICE_RUN=$PRICE_RUN"
+      - name: Download curated membership and recovered price panel
+        shell: bash
+        run: |
+          mkdir -p /tmp/member /tmp/prices
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-cik-membership --dir /tmp/member
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/prices
+          test -f /tmp/member/curated_sp500_membership_intervals.csv
+          test -f /tmp/prices/sp500_hybrid_prices_2007_2023.parquet
+      - name: Download raw identity sources
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/thuningxu/sp500nq100/main/sp500_components_history.csv \
+            -o /tmp/curated.csv
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/lawcal.csv
+      - name: Enforce effective curated identity plus price gate
+        shell: bash
+        run: |
+          rm -rf /tmp/curated-price-audit
+          python research/free_stage1/curated_sp500_price_coverage.py \
+            --curated /tmp/curated.csv \
+            --mapped-membership /tmp/member/curated_sp500_membership_intervals.csv \
+            --lawcal /tmp/lawcal.csv \
+            --prices /tmp/prices/sp500_hybrid_prices_2007_2023.parquet \
+            --out /tmp/curated-price-audit \
+            --start 2009-01-01 \
+            --end 2019-12-31 \
+            --coverage-gate 0.97
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: curated-sp500-price-coverage
+          path: /tmp/curated-price-audit/
+          if-no-files-found: warn
+          retention-days: 30

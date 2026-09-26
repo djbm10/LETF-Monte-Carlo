@@ -362,6 +362,7 @@ def main() -> None:
     cache = args.out / "cache"
     parts = []
     failures = []
+    structural_empty_quarters = []
     cik_filter = None
     if args.ciks_file:
         raw = args.ciks_file.read_text(encoding="utf-8")
@@ -390,6 +391,26 @@ def main() -> None:
                 parts.append(c)
                 print(year, qtr, len(c), flush=True)
             except Exception as exc:
+                # SEC documents that 2009q1.zip is intentionally header-only:
+                # structured Financial Statement Data Set coverage begins with
+                # submissions from 2009-04-15. This is source availability, not
+                # a parser/data-acquisition failure, and must never be backfilled
+                # with future-quarter information.
+                if year == 2009 and qtr == 1:
+                    structural_empty_quarters.append(
+                        {
+                            "year": 2009,
+                            "qtr": 1,
+                            "reason": (
+                                "SEC Financial Statement Data Sets 2009q1.zip is "
+                                "an official header-only placeholder; structured "
+                                "coverage begins with submissions from 2009-04-15."
+                            ),
+                            "observed_exception": repr(exc),
+                        }
+                    )
+                    print("STRUCTURAL_EMPTY_SOURCE_QUARTER", year, qtr, repr(exc), flush=True)
+                    continue
                 failures.append({"year": year, "qtr": qtr, "error": repr(exc)})
 
     if not parts:
@@ -411,6 +432,7 @@ def main() -> None:
         "min_information_date": str(derived.information_date.min()),
         "max_information_date": str(derived.information_date.max()),
         "failed_quarters": failures,
+        "structural_empty_quarters": structural_empty_quarters,
         "cik_filter_count": int(len(cik_filter)) if cik_filter is not None else None,
         "tag_aliases": ALIASES,
         "point_in_time_rule": "information_date = SEC filed date; never use before filed date",
@@ -419,6 +441,7 @@ def main() -> None:
             "Primary-statement numeric facts only; this is not a full Compustat replacement.",
             "Tag aliases are intentionally narrow and must be audited before performance conclusions.",
             "Amended 10-K/10-Q/20-F/40-F filings enter only from their amendment filing date; prior portfolio dates retain the earlier filing.",
+            "SEC 2009 Q1 is an official header-only placeholder; no future-quarter facts are backfilled into that quarter.",
         ],
     }
     (args.out / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))

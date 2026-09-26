@@ -177,6 +177,7 @@ jobs:
               'firewall':'research/free_stage1/BOTTLENECK_DISCOVERY_FIREWALL.md',
               'sample':'2009-01-01 through 2019-12-31',
               'holdout_status':'SEALED_NOT_READ',
+              'network_evidence':'HF+SEC independent-parser discovery proxy',
               'families':{},
           }
           for fam,comp in comparator.items():
@@ -212,7 +213,11 @@ jobs:
               }
           advancing=[k for k,v in out['families'].items() if v['advance_to_holdout']]
           out['advancing_families']=advancing
-          out['decision']='ADVANCE_ALL_15_TO_SINGLE_HOLDOUT_RUN' if advancing else 'DO_NOT_OPEN_HOLDOUT'
+          out['decision']=(
+              'ADVANCE_TO_DIRECT_SEC_NETWORK_REPLICATION'
+              if advancing else 'DO_NOT_ADVANCE_PROXY'
+          )
+          out['holdout_status']='SEALED_PENDING_DIRECT_SEC_REPLICATION' if advancing else 'SEALED_NOT_READ'
           (root/'bottleneck_family_advancement.json').write_text(json.dumps(out,indent=2)+'\n')
           print(json.dumps(out,indent=2))
           PY

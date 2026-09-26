@@ -19,3 +19,5 @@ Rerun gated Bottleneck discovery after binding strategy membership validation to
 Run authoritative direct-SEC Item1 network replication using the preserved direct SEC cache plus only the remaining curated issuer CIKs. Final network must use direct SEC 10-K text only and keep the 550-day staleness, 2.05% pair density, and 200/350 coverage gates unchanged.
 
 Rerun the gated 2009-2019 Bottleneck discovery after classifying only SEC FSD 2009 Q1 as the documented structural-empty source placeholder. No future-quarter backfill, no model/grid changes, and holdout remains sealed.
+
+Rerun after the pre-holdout curated alias identity correction. Recycled tickers with audited non-overlapping issuer eras must remain in the strategy universe; unresolved/overlapping reuse remains excluded. No model or advancement parameter changed.

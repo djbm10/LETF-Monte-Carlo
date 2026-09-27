@@ -49,10 +49,17 @@ jobs:
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
           PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
-            --workflow holdout-yahoo-chart-recovery.yml \
+            --workflow holdout-kaggle9000-recovery.yml \
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
-          PRICE_ARTIFACT="sealed-holdout-yahoo-raw-recovered-prices"
+          PRICE_ARTIFACT="sealed-holdout-kaggle9000-recovered-prices"
+          if [ -z "$PRICE_RUN" ]; then
+            PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow holdout-yahoo-chart-recovery.yml \
+              --branch research/free-pit-quantconnect-stage1 \
+              --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+            PRICE_ARTIFACT="sealed-holdout-yahoo-raw-recovered-prices"
+          fi
           if [ -z "$PRICE_RUN" ]; then
             PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
               --workflow holdout-stooq-recovery.yml \

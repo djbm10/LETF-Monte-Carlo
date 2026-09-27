@@ -1,0 +1,198 @@
+name: Build sealed direct-SEC Bottleneck holdout network
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  network:
+    if: contains(github.event.head_commit.message, '[direct-sec-holdout-network]')
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - id: y2020
+            acquire_start: 2018
+            formation_start: 2020-03-31
+            formation_end: 2020-12-31
+            acquire_end: 2020
+          - id: y2021
+            acquire_start: 2019
+            formation_start: 2021-03-31
+            formation_end: 2021-12-31
+            acquire_end: 2021
+          - id: y2022
+            acquire_start: 2020
+            formation_start: 2022-03-31
+            formation_end: 2022-12-31
+            acquire_end: 2022
+          - id: y2023
+            acquire_start: 2021
+            formation_start: 2023-03-31
+            formation_end: 2023-12-31
+            acquire_end: 2023
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install numpy pandas scipy scikit-learn beautifulsoup4 requests pyarrow
+
+      - name: Resolve authoritative discovery network and curated membership
+        shell: bash
+        run: |
+          DISCOVERY_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow direct-sec-network-sharded.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          if [ -z "$DISCOVERY_NET_RUN" ]; then
+            DISCOVERY_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow direct-sec-network-replication.yml \
+              --branch research/free-pit-quantconnect-stage1 \
+              --status success --limit 1 --json databaseId \
+              --jq '.[0].databaseId')"
+          fi
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-membership.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          test -n "$DISCOVERY_NET_RUN" || { echo "No successful authoritative direct-SEC discovery network"; exit 2; }
+          test -n "$MEMBER_RUN" || { echo "No successful curated membership"; exit 2; }
+          echo "DISCOVERY_NET_RUN=$DISCOVERY_NET_RUN" >> "$GITHUB_ENV"
+          echo "MEMBER_RUN=$MEMBER_RUN" >> "$GITHUB_ENV"
+
+      - name: Download direct-SEC seed and curated membership
+        shell: bash
+        run: |
+          rm -rf /tmp/seed /tmp/member /tmp/holdout-net
+          mkdir -p /tmp/seed /tmp/member /tmp/holdout-net
+          gh run download "$DISCOVERY_NET_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name direct-sec-item1-network-replication --dir /tmp/seed
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-cik-membership --dir /tmp/member
+          test -f /tmp/seed/direct_sec_filings_all.parquet
+          test -f /tmp/member/curated_sp500_membership_intervals.csv
+
+      - name: Build authoritative holdout network shard
+        shell: bash
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          python research/free_stage1/direct_sec_cache_completion.py \
+            --membership /tmp/member/curated_sp500_membership_intervals.csv \
+            --cached-sec /tmp/seed/direct_sec_filings_all.parquet \
+            --out /tmp/holdout-net \
+            --start-year ${{ matrix.acquire_start }} \
+            --end-year ${{ matrix.acquire_end }} \
+            --formation-start ${{ matrix.formation_start }} \
+            --formation-end ${{ matrix.formation_end }} \
+            --max-item1-age-days 550 \
+            --pair-density 0.0205 \
+            --rps 2.0
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/holdout-net')
+          m=json.loads((p/'manifest.json').read_text())
+          assert m['valid_item1_min']>=200,m['valid_item1_min']
+          assert m['valid_item1_median']>=350,m['valid_item1_median']
+          assert m['quality_gate']['passed'] is True
+          print('HOLDOUT_NET_SHARD_PASS','${{ matrix.id }}',
+                m['valid_item1_min'],m['valid_item1_median'],
+                m['new_index_rows'],flush=True)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: direct-sec-holdout-net-${{ matrix.id }}
+          path: |
+            /tmp/holdout-net/network_metrics_all.csv
+            /tmp/holdout-net/membership_network_coverage.csv
+            /tmp/holdout-net/manifest.json
+          retention-days: 30
+
+  merge:
+    needs: network
+    if: always() && needs.network.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: direct-sec-holdout-net-*
+          path: /tmp/shards
+      - name: Merge sealed holdout networks and enforce frozen gates
+        shell: bash
+        run: |
+          mkdir -p /tmp/merged
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          root=Path('/tmp/shards')
+          metrics=[pd.read_csv(p,dtype={'cik':str}) for p in sorted(root.glob('direct-sec-holdout-net-*/network_metrics_all.csv'))]
+          cov=[pd.read_csv(p) for p in sorted(root.glob('direct-sec-holdout-net-*/membership_network_coverage.csv'))]
+          manifests=[json.loads(p.read_text()) for p in sorted(root.glob('direct-sec-holdout-net-*/manifest.json'))]
+          assert len(metrics)==4,(len(metrics),len(cov),len(manifests))
+          n=pd.concat(metrics,ignore_index=True).sort_values(['formation_date','cik'])
+          c=pd.concat(cov,ignore_index=True).sort_values('formation_date')
+          assert len(c)==16,len(c)
+          assert pd.to_datetime(c.formation_date).min()==pd.Timestamp('2020-03-31')
+          assert pd.to_datetime(c.formation_date).max()==pd.Timestamp('2023-12-31')
+          minv=int(c.valid_item1_ciks.min()); med=float(c.valid_item1_ciks.median())
+          assert minv>=200,(minv,med)
+          assert med>=350,(minv,med)
+          n.to_csv('/tmp/merged/network_metrics_all.csv',index=False)
+          c.to_csv('/tmp/merged/membership_network_coverage.csv',index=False)
+          out={
+            'source':'direct SEC EDGAR original 10-K submissions only',
+            'universe':'CURATED_PIT_S_AND_P_500_ISSUER_PROXY',
+            'evidence_label':'FREE_HOLDOUT_DIRECT_SEC_NETWORK',
+            'formation_start':'2020-03-31',
+            'formation_end':'2023-12-31',
+            'forms':['10-K'],
+            'max_item1_age_days':550,
+            'pair_density':0.0205,
+            'valid_item1_min':minv,
+            'valid_item1_median':med,
+            'network_rows':int(len(n)),
+            'shard_manifests':manifests,
+            'quality_gate':{
+              'min_valid_item1_ciks_required':200,
+              'median_valid_item1_ciks_required':350,
+              'passed':True,
+            },
+            'holdout_status':'DATA_QUALITY_ONLY_NO_RETURNS_EXPOSED',
+          }
+          Path('/tmp/merged/manifest.json').write_text(json.dumps(out,indent=2,default=str)+'\n')
+          print('DIRECT_SEC_HOLDOUT_NETWORK_PASS',minv,med,len(n),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: direct-sec-holdout-item1-network
+          path: /tmp/merged/
+          retention-days: 30

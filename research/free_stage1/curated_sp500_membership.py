@@ -1,0 +1,288 @@
+from __future__ import annotations
+
+"""Build a curated PIT S&P 500 membership panel with stable SEC CIKs.
+
+Membership timing comes exclusively from thuningxu/sp500nq100 daily historical
+snapshots. lawcal/sp500-components-history is used only as an identity crosswalk
+for symbols that map to exactly one CIK across the entire file; its membership
+dates are deliberately ignored.
+
+This separation prevents revision-history dating errors from contaminating the
+point-in-time universe while retaining lawcal's useful manually backfilled CIKs.
+"""
+
+import argparse
+import ast
+import json
+from pathlib import Path
+
+import pandas as pd
+
+
+def norm_symbol(x) -> str:
+    return str(x).upper().strip().replace("-", ".")
+
+
+def parse_tickers(v) -> set[str]:
+    if isinstance(v, (list, tuple, set)):
+        vals = v
+    else:
+        s = str(v).strip()
+        try:
+            q = ast.literal_eval(s)
+            vals = q if isinstance(q, (list, tuple, set)) else s.split(",")
+        except Exception:
+            vals = s.split(",")
+    return {norm_symbol(x) for x in vals if str(x).strip()}
+
+
+def clean_lawcal(path: Path) -> pd.DataFrame:
+    x = pd.read_csv(path, dtype={"cik": str})
+    x["symbol"] = x["symbol"].map(norm_symbol)
+    x["cik"] = (
+        x["cik"].astype(str)
+        .str.replace(r"\.0$", "", regex=True)
+        .str.zfill(10)
+    )
+    x = x[x["cik"].str.fullmatch(r"\d{10}")].copy()
+    for col in ("date_added", "date_removed"):
+        z = (
+            x[col].astype(str).str.replace("*", "", regex=False).str.strip()
+            .replace({"": None, "nan": None, "NaN": None, "None": None})
+        )
+        x[col] = pd.to_datetime(z, errors="coerce").dt.normalize()
+    return x
+
+
+# Same ticker, different issuer. These boundaries are corporate-identity
+# transitions, not index-membership dates. They are used only to disambiguate
+# CIK identity after the curated membership snapshot has already said the
+# ticker/lineage is in the index.
+IDENTITY_OVERRIDES = {
+    "AGN": [
+        (pd.Timestamp("1900-01-01"), pd.Timestamp("2015-03-23"), "0000850693"),
+        (pd.Timestamp("2015-03-23"), pd.Timestamp("2100-01-01"), "0001578845"),
+    ],
+    # Historical Ingersoll-Rand/Trane lineage retained CIK 1466258 through the
+    # 2020 transaction; the later Gardner Denver/Ingersoll Rand issuer is 1699150.
+    "IR": [
+        (pd.Timestamp("1900-01-01"), pd.Timestamp("2020-03-03"), "0001466258"),
+        (pd.Timestamp("2020-03-03"), pd.Timestamp("2100-01-01"), "0001699150"),
+    ],
+}
+
+
+def unique_symbol_cik_map(lawcal: pd.DataFrame) -> tuple[dict[str, str], set[str]]:
+    g = lawcal.groupby("symbol")["cik"].agg(lambda s: sorted(set(s)))
+    ambiguous = set(g[g.map(len) != 1].index)
+    mapping = {sym: vals[0] for sym, vals in g.items() if len(vals) == 1}
+    return mapping, ambiguous
+
+
+def resolve_symbol_cik(
+    symbol: str,
+    d: pd.Timestamp,
+    lawcal: pd.DataFrame,
+    unique_map: dict[str, str],
+) -> str | None:
+    sym = norm_symbol(symbol)
+    dt = pd.Timestamp(d).normalize()
+
+    if sym in IDENTITY_OVERRIDES:
+        for lo, hi, cik in IDENTITY_OVERRIDES[sym]:
+            if lo <= dt < hi:
+                return cik
+
+    if sym in unique_map:
+        return unique_map[sym]
+
+    rows = lawcal[lawcal["symbol"] == sym]
+    if rows.empty:
+        return None
+    active = rows[
+        (rows["date_added"].isna() | (rows["date_added"] <= dt))
+        & (rows["date_removed"].isna() | (rows["date_removed"] > dt))
+    ]
+    ciks = sorted(set(active["cik"].astype(str)))
+    if len(ciks) == 1:
+        return ciks[0]
+    return None
+
+
+def load_curated(path: Path) -> pd.DataFrame:
+    x = pd.read_csv(path)
+    lower = {str(c).lower(): c for c in x.columns}
+    dc = lower.get("date")
+    tc = next((lower[k] for k in ("tickers", "symbols", "components") if k in lower), None)
+    if dc is None or tc is None:
+        raise ValueError(f"unexpected curated schema: {list(x.columns)}")
+    x["date"] = pd.to_datetime(x[dc], errors="coerce").dt.normalize()
+    x["tickers_set"] = x[tc].map(parse_tickers)
+    return x.dropna(subset=["date"]).sort_values("date")[["date", "tickers_set"]]
+
+
+def snapshot_asof(curated: pd.DataFrame, d: pd.Timestamp) -> set[str]:
+    z = curated[curated["date"] <= pd.Timestamp(d).normalize()]
+    if z.empty:
+        raise ValueError(f"no curated snapshot <= {d}")
+    return set(z.iloc[-1]["tickers_set"])
+
+
+def build_mapped_intervals(
+    curated: pd.DataFrame,
+    lawcal: pd.DataFrame,
+    unique_map: dict[str, str],
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+) -> pd.DataFrame:
+    # Work from source snapshots directly. Identity changes can split an
+    # interval even if the visible ticker is unchanged (e.g. AGN in 2015).
+    x = curated[(curated.date >= start) & (curated.date <= end)].copy()
+    if x.empty:
+        raise ValueError("curated history empty in requested window")
+
+    active_since: dict[tuple[str, str], pd.Timestamp] = {}
+    intervals = []
+    prev: set[tuple[str, str]] = set()
+
+    for row in x.itertuples(index=False):
+        d = pd.Timestamp(row.date)
+        cur: set[tuple[str, str]] = set()
+        for sym in row.tickers_set:
+            cik = resolve_symbol_cik(sym, d, lawcal, unique_map)
+            if cik:
+                cur.add((sym, cik))
+        if cur == prev:
+            continue
+        for key in sorted(cur - prev):
+            active_since[key] = d
+        for key in sorted(prev - cur):
+            sym, cik = key
+            intervals.append(
+                {
+                    "symbol": sym,
+                    "cik": cik,
+                    "date_added": active_since.pop(key),
+                    "date_removed": d,
+                }
+            )
+        prev = cur
+
+    for key in sorted(prev):
+        sym, cik = key
+        intervals.append(
+            {
+                "symbol": sym,
+                "cik": cik,
+                "date_added": active_since[key],
+                "date_removed": pd.NaT,
+            }
+        )
+    return pd.DataFrame(intervals)
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--curated", type=Path, required=True)
+    ap.add_argument("--lawcal", type=Path, required=True)
+    ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--start", default="2007-12-01")
+    ap.add_argument("--end", default="2023-12-31")
+    ap.add_argument("--audit-start", default="2009-03-31")
+    ap.add_argument("--audit-end", default="2019-12-31")
+    ap.add_argument("--mapping-gate", type=float, default=0.97)
+    args = ap.parse_args()
+
+    args.out.mkdir(parents=True, exist_ok=True)
+    curated = load_curated(args.curated)
+    lawcal = clean_lawcal(args.lawcal)
+    unique_map, ambiguous = unique_symbol_cik_map(lawcal)
+
+    intervals = build_mapped_intervals(
+        curated,
+        lawcal,
+        unique_map,
+        pd.Timestamp(args.start),
+        pd.Timestamp(args.end),
+    )
+
+    audit = []
+    dates = pd.date_range(args.audit_start, args.audit_end, freq="QE")
+    for d in dates:
+        syms = snapshot_asof(curated, d)
+        mapped = {}
+        unresolved_ambiguous = []
+        unmapped = []
+        for s in syms:
+            cik = resolve_symbol_cik(s, d, lawcal, unique_map)
+            if cik:
+                mapped[s] = cik
+            elif s in ambiguous:
+                unresolved_ambiguous.append(s)
+            else:
+                unmapped.append(s)
+        audit.append(
+            {
+                "formation_date": str(d.date()),
+                "curated_tickers": len(syms),
+                "mapped_unique_tickers": len(mapped),
+                "mapped_unique_ciks": len(set(mapped.values())),
+                "mapping_coverage": len(mapped) / len(syms) if syms else 0.0,
+                "ambiguous_tickers": sorted(unresolved_ambiguous),
+                "unmapped_tickers": sorted(unmapped),
+            }
+        )
+
+    a = pd.DataFrame(audit)
+    min_cov = float(a["mapping_coverage"].min())
+    median_cov = float(a["mapping_coverage"].median())
+    summary = {
+        "membership_timing_source": "thuningxu/sp500nq100 daily curated snapshots",
+        "identity_crosswalk_source": "lawcal/sp500-components-history unique symbol-CIK pairs only",
+        "lawcal_dates_used": False,
+        "interval_rows": int(len(intervals)),
+        "interval_symbols": int(intervals.symbol.nunique()),
+        "mapped_interval_rows": int(len(intervals)),
+        "ambiguous_crosswalk_symbols": sorted(ambiguous),
+        "identity_overrides": {
+            k: [
+                {"start": str(lo.date()) if lo != pd.Timestamp("1900-01-01") else "MIN",
+                 "end": str(hi.date()) if hi != pd.Timestamp("2100-01-01") else "MAX",
+                 "cik": cik}
+                for lo, hi, cik in vals
+            ]
+            for k, vals in IDENTITY_OVERRIDES.items()
+        },
+        "quarter_audit_start": args.audit_start,
+        "quarter_audit_end": args.audit_end,
+        "quarters": int(len(a)),
+        "mapping_gate": float(args.mapping_gate),
+        "min_quarter_mapping_coverage": min_cov,
+        "median_quarter_mapping_coverage": median_cov,
+        "gate_passed": bool(min_cov >= args.mapping_gate),
+        "worst_quarters": a.nsmallest(8, "mapping_coverage")[
+            [
+                "formation_date",
+                "curated_tickers",
+                "mapped_unique_tickers",
+                "mapped_unique_ciks",
+                "mapping_coverage",
+            ]
+        ].to_dict("records"),
+    }
+
+    intervals.to_csv(args.out / "curated_sp500_membership_intervals.csv", index=False)
+    a.to_json(args.out / "curated_sp500_cik_mapping_audit.json", orient="records", indent=2)
+    (args.out / "curated_sp500_membership_summary.json").write_text(
+        json.dumps(summary, indent=2, default=str) + "\n"
+    )
+    print(json.dumps(summary, indent=2, default=str), flush=True)
+
+    if min_cov < args.mapping_gate:
+        raise SystemExit(
+            f"CURATED CIK MAPPING FAIL min={min_cov:.4%} < {args.mapping_gate:.2%}"
+        )
+    print("CURATED CIK MAPPING PASS", min_cov, median_cov, flush=True)
+
+
+if __name__ == "__main__":
+    main()

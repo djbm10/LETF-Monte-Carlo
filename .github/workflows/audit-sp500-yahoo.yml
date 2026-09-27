@@ -1,0 +1,160 @@
+name: Audit free Yahoo S&P 500 PIT price coverage
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  audit:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[sp500-yahoo-audit]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas pyarrow yfinance
+
+      - name: Download point-in-time S&P 500 membership
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/leandroloi/historical_sp500_constituents/main/sp_500_historical_components.csv \
+            -o /tmp/sp500_components.csv
+
+      - name: Download historical union and measure member-day coverage
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, math, time
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          import yfinance as yf
+
+          START=pd.Timestamp("2015-01-01")
+          END=pd.Timestamp("2023-12-31")
+          WARMUP=pd.Timestamp("2013-12-01")
+
+          comp=pd.read_csv("/tmp/sp500_components.csv")
+          comp["date"]=pd.to_datetime(comp["date"])
+          comp=comp[(comp.date>=START)&(comp.date<=END)].copy()
+          comp["ticker_list"]=comp["tickers"].fillna("").map(lambda s:[x.strip() for x in str(s).split(",") if x.strip()])
+          union=sorted({t for xs in comp.ticker_list for t in xs})
+          print("UNION",len(union))
+
+          def yfmt(t):
+              return t.replace(".", "-")
+          inv={yfmt(t):t for t in union}
+          yf_tickers=list(inv)
+
+          parts=[]
+          failed_batches=[]
+          for i in range(0,len(yf_tickers),80):
+              batch=yf_tickers[i:i+80]
+              ok=False
+              for attempt in range(3):
+                  try:
+                      x=yf.download(
+                          batch,
+                          start=WARMUP.strftime("%Y-%m-%d"),
+                          end=(END+pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
+                          auto_adjust=False,
+                          actions=False,
+                          progress=False,
+                          threads=True,
+                          group_by="column",
+                      )
+                      if x is not None and not x.empty:
+                          if isinstance(x.columns,pd.MultiIndex):
+                              z=x.stack(level=1, future_stack=True).rename_axis(["Date","YahooTicker"]).reset_index()
+                          else:
+                              z=x.reset_index()
+                              z["YahooTicker"]=batch[0]
+                          z["Ticker"]=z["YahooTicker"].map(inv).fillna(z["YahooTicker"].astype(str).str.replace("-",".",regex=False))
+                          if "Close" in z:
+                              z=z.dropna(subset=["Close"])
+                          parts.append(z)
+                          ok=True
+                          break
+                  except Exception as e:
+                      print("BATCH_ERROR",i,attempt,repr(e),flush=True)
+                      time.sleep(5*(attempt+1))
+              if not ok:
+                  failed_batches.append(batch)
+              print("batch",i,"of",len(yf_tickers),"ok",ok,flush=True)
+
+          if not parts:
+              raise RuntimeError("Yahoo returned no data")
+          prices=pd.concat(parts,ignore_index=True)
+          prices["Date"]=pd.to_datetime(prices["Date"]).dt.normalize()
+          prices["Ticker"]=prices["Ticker"].astype(str)
+          prices=prices.sort_values(["Date","Ticker"]).drop_duplicates(["Date","Ticker"],keep="last")
+          prices.to_parquet("/tmp/sp500_yahoo_prices.parquet",index=False)
+
+          # Use SPY sessions from Yahoo as the trading calendar.
+          spy=yf.download("SPY",start=START.strftime("%Y-%m-%d"),end=(END+pd.Timedelta(days=1)).strftime("%Y-%m-%d"),auto_adjust=False,progress=False)
+          sessions=pd.DatetimeIndex(spy.index).tz_localize(None).normalize()
+          comp_by_date=dict(zip(comp.date.dt.normalize(),comp.ticker_list))
+
+          member_days={}
+          covered_days={}
+          for d in sessions:
+              # membership file is daily; if a session date is missing, use latest prior snapshot
+              idx=comp.date.searchsorted(d,side="right")-1
+              if idx<0: continue
+              members=comp.iloc[idx].ticker_list
+              for t in members:
+                  member_days[t]=member_days.get(t,0)+1
+
+          pset=set(zip(prices.Date,prices.Ticker))
+          for t,n in member_days.items():
+              covered=0
+              for d in sessions:
+                  idx=comp.date.searchsorted(d,side="right")-1
+                  if idx<0: continue
+                  if t in comp.iloc[idx].ticker_list and (d,t) in pset:
+                      covered+=1
+              covered_days[t]=covered
+
+          rows=[]
+          for t in sorted(member_days):
+              n=member_days[t]
+              c=covered_days.get(t,0)
+              rows.append({"Ticker":t,"member_sessions":n,"covered_sessions":c,"coverage":c/n if n else np.nan})
+          cov=pd.DataFrame(rows).sort_values(["coverage","member_sessions"],ascending=[True,False])
+          cov.to_csv("/tmp/sp500_yahoo_coverage.csv",index=False)
+
+          missing=cov[cov.coverage==0].copy()
+          partial=cov[(cov.coverage>0)&(cov.coverage<0.95)].copy()
+          summary={
+              "membership_union_tickers":len(union),
+              "price_symbols_with_any_rows":int(prices.Ticker.nunique()),
+              "member_tickers":int(len(cov)),
+              "completely_missing_member_tickers":int(len(missing)),
+              "partial_under_95pct_member_tickers":int(len(partial)),
+              "weighted_member_session_coverage":float(cov.covered_sessions.sum()/cov.member_sessions.sum()),
+              "missing_member_sessions":int((cov.member_sessions-cov.covered_sessions).sum()),
+              "total_member_sessions":int(cov.member_sessions.sum()),
+              "failed_batches":failed_batches,
+              "completely_missing":missing.to_dict("records"),
+              "partial_under_95pct":partial.to_dict("records"),
+          }
+          Path("/tmp/sp500_yahoo_audit.json").write_text(json.dumps(summary,indent=2,default=str))
+          print(json.dumps(summary,indent=2,default=str))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sp500-yahoo-pit-audit
+          path: |
+            /tmp/sp500_yahoo_audit.json
+            /tmp/sp500_yahoo_coverage.csv
+            /tmp/sp500_yahoo_prices.parquet
+          retention-days: 30

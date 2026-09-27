@@ -1,0 +1,160 @@
+name: Build cache-only curated Item1 discovery network
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: contains(github.event.head_commit.message, '[cache-only-curated-network]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CACHE_RUN: '36220643553'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install numpy pandas scipy scikit-learn beautifulsoup4 pyarrow requests orjson
+
+      - name: Resolve curated membership
+        shell: bash
+        run: |
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-membership.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN" || { echo "No successful curated membership"; exit 2; }
+          echo "MEMBER_RUN=$MEMBER_RUN" >> "$GITHUB_ENV"
+
+      - name: Download preserved caches and curated membership
+        shell: bash
+        run: |
+          rm -rf /tmp/cache /tmp/member /tmp/cache-network
+          mkdir -p /tmp/cache /tmp/member /tmp/cache-network
+          gh run download "$CACHE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name hf-sec-hybrid-item1-discovery-network --dir /tmp/cache
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-cik-membership --dir /tmp/member
+          test -f /tmp/cache/hf_item1_filings.parquet
+          test -f /tmp/cache/sec_supplement_index.csv
+          test -d /tmp/cache/sec_item1_cache
+          test -f /tmp/member/curated_sp500_membership_intervals.csv
+          echo "DIRECT_SEC_CACHE_FILES=$(find /tmp/cache/sec_item1_cache -type f -name '*.txt' | wc -l)"
+
+      - name: Reconstruct cached direct-SEC filing panel and network
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          import pandas as pd
+
+          sys.path.insert(0,'research/free_stage1')
+          import hf_sec_hybrid_item1 as hy
+          import sec_item1_sp500_network as sp
+
+          cache=Path('/tmp/cache')
+          out=Path('/tmp/cache-network')
+          hf=pd.read_parquet(cache/'hf_item1_filings.parquet')
+          hf['cik']=hf.cik.astype(str).str.zfill(10)
+          hf['filing_date']=pd.to_datetime(hf.filing_date)
+          if 'source' not in hf:
+              hf['source']='HF_RAW_10K'
+
+          idx=pd.read_csv(cache/'sec_supplement_index.csv',dtype={'cik':str})
+          idx['cik']=idx.cik.astype(str).str.replace(r'\.0$','',regex=True).str.zfill(10)
+          idx['date_filed']=pd.to_datetime(idx.date_filed)
+          rows=[]
+          for r in idx.itertuples(index=False):
+              accession=Path(str(r.filename)).stem
+              p=cache/'sec_item1_cache'/f'{r.cik}_{accession}.txt'
+              if not p.exists():
+                  continue
+              text=p.read_text(errors='replace')
+              wc=len(text.split())
+              if wc<250:
+                  continue
+              rows.append({
+                  'cik':str(r.cik),
+                  'filing_date':pd.Timestamp(r.date_filed),
+                  'filename':str(r.filename),
+                  'item1':text,
+                  'word_count':wc,
+                  'error':None,
+                  'source':'SEC_DIRECT_10K',
+              })
+          sec=pd.DataFrame(rows)
+          print('CACHE_RECONSTRUCT','HF_ROWS',len(hf),'HF_CIKS',hf.cik.nunique(),
+                'SEC_ROWS',len(sec),'SEC_CIKS',sec.cik.nunique() if len(sec) else 0,flush=True)
+          sec.to_parquet(out/'cached_sec_filings.parquet',index=False)
+
+          membership=sp.load_membership(Path('/tmp/member/curated_sp500_membership_intervals.csv'))
+          dates=list(pd.date_range('2009-03-31','2019-12-31',freq='QE'))
+          combined=hy.combine_filings(hf,sec)
+          combined.to_parquet(out/'combined_item1_filings.parquet',index=False)
+          metrics,cov,manifests=hy.build_networks(
+              membership,combined,dates,max_age_days=550,pair_density=.0205,out=out
+          )
+          minv=int(cov.valid_item1_ciks.min())
+          med=float(cov.valid_item1_ciks.median())
+          manifest={
+              'source':'preserved HF raw 10-K cache + preserved direct-SEC 10-K cache',
+              'universe':'CURATED_PIT_S_AND_P_500_ISSUER_PROXY',
+              'evidence_label':'FREE_DISCOVERY_HF_SEC_PARSER_PROXY_CACHE_ONLY',
+              'formation_start':'2009-03-31',
+              'formation_end':'2019-12-31',
+              'forms':['10-K'],
+              'max_item1_age_days':550,
+              'pair_density':.0205,
+              'hf_rows':int(len(hf)),
+              'hf_ciks':int(hf.cik.nunique()),
+              'cached_sec_rows':int(len(sec)),
+              'cached_sec_ciks':int(sec.cik.nunique()) if len(sec) else 0,
+              'combined_rows':int(len(combined)),
+              'combined_ciks':int(combined.cik.nunique()),
+              'valid_item1_min':minv,
+              'valid_item1_median':med,
+              'network_rows':int(len(metrics)),
+              'network_runs':manifests,
+              'quality_gate':{
+                  'min_valid_item1_ciks_required':200,
+                  'median_valid_item1_ciks_required':350,
+                  'passed':bool(minv>=200 and med>=350),
+              },
+              'warning':'Independent HF parser proxy; positive result still requires direct-SEC parser replication before holdout.',
+          }
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2,default=str)+'\n')
+          print('CACHE_ONLY_NETWORK',json.dumps({
+              'min':minv,'median':med,'rows':len(metrics),
+              'hf_ciks':manifest['hf_ciks'],'cached_sec_ciks':manifest['cached_sec_ciks']
+          }),flush=True)
+          if minv<200:
+              raise SystemExit(f'CACHE NETWORK FAIL min {minv} < 200')
+          if med<350:
+              raise SystemExit(f'CACHE NETWORK FAIL median {med} < 350')
+          print('CACHE ONLY CURATED ITEM1 PASS',minv,med,flush=True)
+          PY
+
+      - name: Upload cache-only network
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-only-curated-item1-network
+          path: /tmp/cache-network/
+          if-no-files-found: warn
+          retention-days: 30

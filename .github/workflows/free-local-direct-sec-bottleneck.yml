@@ -1,0 +1,257 @@
+name: Free direct-SEC Bottleneck discovery replication
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  discovery:
+    if: contains(github.event.head_commit.message, '[local-direct-sec-bottleneck-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FUND_RUN: '36126965348'
+      PRICE_RUN: '36220567098'
+      CURATED_PRICE_RUN: '36221684401'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install numpy pandas pyarrow
+
+      - name: Resolve authoritative direct-SEC discovery network
+        shell: bash
+        run: |
+          NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow direct-sec-network-sharded.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId \
+            --jq '.[0].databaseId')"
+          if [ -z "$NET_RUN" ]; then
+            NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow direct-sec-network-replication.yml \
+              --branch research/free-pit-quantconnect-stage1 \
+              --status success --limit 1 --json databaseId \
+              --jq '.[0].databaseId')"
+          fi
+          test -n "$NET_RUN" || { echo "No successful direct-SEC network replication"; exit 2; }
+          echo "NET_RUN=$NET_RUN" >> "$GITHUB_ENV"
+          echo "NET_RUN=$NET_RUN FUND_RUN=$FUND_RUN PRICE_RUN=$PRICE_RUN CURATED_PRICE_RUN=$CURATED_PRICE_RUN"
+
+      - name: Download authoritative network and frozen non-network inputs
+        shell: bash
+        run: |
+          rm -rf /tmp/net /tmp/prices /tmp/curated-price /tmp/fund
+          mkdir -p /tmp/net /tmp/prices /tmp/curated-price /tmp/fund
+          gh run download "$NET_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name direct-sec-item1-network-replication --dir /tmp/net
+          gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/prices
+          gh run download "$CURATED_PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-price-coverage --dir /tmp/curated-price
+          gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'bottleneck-fund-*' --dir /tmp/fund
+
+      - name: Enforce identical pre-return quality gates
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          nm=json.loads((Path('/tmp/net')/'manifest.json').read_text())
+          assert nm.get('evidence_label')=='FREE_DISCOVERY_DIRECT_SEC_NETWORK_REPLICATION',nm.get('evidence_label')
+          minv=int(nm['valid_item1_min']); med=float(nm['valid_item1_median'])
+          assert minv>=200,(minv,med)
+          assert med>=350,(minv,med)
+          assert nm.get('quality_gate',{}).get('passed') is True,nm.get('quality_gate')
+          print('DIRECT_NETWORK_GATE_PASS',minv,med)
+
+          pm=json.loads((Path('/tmp/prices')/'sp500_hybrid_price_panel_summary.json').read_text())
+          raw=float(pm['strategy_aligned_cik_session_coverage'])
+          assert raw>=0.97 and pm.get('coverage_gate_97pct') is True,pm
+
+          cm=json.loads((Path('/tmp/curated-price')/'curated_sp500_price_coverage_summary.json').read_text())
+          cov=float(cm['effective_identity_plus_price_coverage'])
+          assert cov>=0.97 and cm.get('gate_passed') is True,cm
+          assert float(cm['identity_mapping_session_coverage'])>=0.97,cm
+          print('PRICE_GATE_PASS',raw,cov)
+
+          fps=sorted(Path('/tmp/fund').glob('bottleneck-fund-*/trimmed.parquet'))
+          assert len(fps)==5,fps
+          cms=[json.loads(p.read_text()) for p in sorted(Path('/tmp/fund').glob('bottleneck-fund-*/chunk_manifest.json'))]
+          failures=[z for m in cms for z in m.get('failed_quarters',[])]
+          fatal=[z for z in failures if not (int(z.get('year',-1))==2009 and int(z.get('qtr',-1))==1)]
+          structural=[z for z in failures if int(z.get('year',-1))==2009 and int(z.get('qtr',-1))==1]
+          assert not fatal,fatal
+          assert len(structural)<=1,structural
+          print('FUND_GATE_PASS',len(fps),'STRUCTURAL_EMPTY_2009Q1',len(structural))
+          PY
+
+      - name: Assemble 2009-2019 PIT SEC formation features
+        shell: bash
+        run: |
+          mkdir -p /tmp/assembled
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          fps=sorted(Path('/tmp/fund').glob('bottleneck-fund-*/trimmed.parquet'))
+          x=pd.concat([pd.read_parquet(p) for p in fps],ignore_index=True)
+          x['information_date']=pd.to_datetime(x['information_date'])
+          x=x[x.information_date<=pd.Timestamp('2019-12-31')].copy()
+          x=x.sort_values(['cik','information_date','period','adsh']).drop_duplicates(['adsh','cik'],keep='last')
+          x.to_parquet('/tmp/assembled/sec_pit_fundamentals.parquet',index=False)
+          print('ASSEMBLED_FUND',len(x),x.cik.nunique())
+          PY
+          DATES="$(python - <<'PY'
+          import pandas as pd
+          print(','.join(x.strftime('%Y-%m-%d') for x in pd.date_range('2009-03-31','2019-12-31',freq='QE')))
+          PY
+          )"
+          python research/free_stage1/sec_formation_features.py \
+            --input /tmp/assembled/sec_pit_fundamentals.parquet \
+            --formation-dates "$DATES" \
+            --out /tmp/assembled/sec_formation_features.csv
+          python - <<'PY'
+          import pandas as pd
+          f=pd.read_csv('/tmp/assembled/sec_formation_features.csv')
+          assert (pd.to_datetime(f.information_date)<=pd.to_datetime(f.formation_date)).all()
+          mature=f[pd.to_datetime(f.formation_date)>=pd.Timestamp('2010-03-31')]
+          counts=mature.groupby('formation_date').cik.nunique()
+          assert counts.min()>=300,counts.nsmallest()
+          print('FORMATION_FEATURE_GATE_PASS',len(f),f.cik.nunique(),float(counts.median()))
+          PY
+
+      - name: Require curated date-resolved strategy membership
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          p='/tmp/curated-price/curated_sp500_price_candidate_membership.csv'
+          m=pd.read_csv(p,dtype={'cik':str})
+          required={'symbol','cik','date_added','date_removed','alias_source'}
+          assert required.issubset(m.columns),(required-set(m.columns))
+          allowed={'CURATED_ALIAS_RESOLVED','LAWCAL_SAME_CIK_IDENTITY_WINDOW','CURATED_IDENTITY_OVERRIDE'}
+          assert m.alias_source.notna().all()
+          assert set(m.alias_source.astype(str)).issubset(allowed),m.alias_source.value_counts().to_dict()
+          assert len(m)>500 and m.cik.nunique()>=500
+          print('CURATED_STRATEGY_MEMBERSHIP_PASS',len(m),m.symbol.nunique(),m.cik.nunique())
+          PY
+
+      - name: Run frozen 15-cell direct-SEC discovery replication
+        shell: bash
+        run: |
+          rm -rf results/free_stage1/local_sp500_bottleneck_direct_sec_discovery
+          python research/free_stage1/local_sp500_bottleneck_backtest.py \
+            --membership /tmp/curated-price/curated_sp500_price_candidate_membership.csv \
+            --fundamentals /tmp/assembled/sec_formation_features.csv \
+            --network /tmp/net/network_metrics_all.csv \
+            --prices /tmp/prices/sp500_hybrid_prices_2007_2023.parquet \
+            --out results/free_stage1/local_sp500_bottleneck_direct_sec_discovery \
+            --start 2009-01-01 \
+            --end 2019-12-31
+
+      - name: Apply unchanged family advancement rule
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          root=Path('results/free_stage1/local_sp500_bottleneck_direct_sec_discovery')
+          s=pd.read_csv(root/'bottleneck_sp500_proxy_surface.csv')
+          assert len(s)==15
+          assert set(s.top_n)=={10,20,40}
+          summary=json.loads((root/'bottleneck_sp500_proxy_summary.json').read_text())
+          assert summary['sample_end']=='2019-12-31'
+          comparator={
+              'bottleneck_core':'momentum',
+              'bottleneck_momentum':'momentum',
+              'bottleneck_full':'quality_momentum',
+          }
+          out={
+              'firewall':'research/free_stage1/BOTTLENECK_DISCOVERY_FIREWALL.md',
+              'sample':'2009-01-01 through 2019-12-31',
+              'network_evidence':'FREE_DISCOVERY_DIRECT_SEC_NETWORK_REPLICATION',
+              'holdout_status':'SEALED_NOT_READ',
+              'families':{},
+          }
+          for fam,comp in comparator.items():
+              diffs=[]; sharpe=[]; dd=[]; by_n={}
+              for n in (10,20,40):
+                  a=s[(s.model==fam)&(s.top_n==n)].iloc[0]
+                  b=s[(s.model==comp)&(s.top_n==n)].iloc[0]
+                  ex=float(a.validation_cagr-b.validation_cagr)
+                  sx=float(a.validation_sharpe_0rf_daily-b.validation_sharpe_0rf_daily)
+                  dx=float(a.validation_max_drawdown_daily-b.validation_max_drawdown_daily)
+                  diffs.append(ex); sharpe.append(sx); dd.append(dx)
+                  by_n[str(n)]={
+                      'validation_cagr':float(a.validation_cagr),
+                      'comparator_validation_cagr':float(b.validation_cagr),
+                      'cagr_excess':ex,'sharpe_excess':sx,
+                      'max_drawdown_difference':dx,
+                  }
+              positives=sum(x>0 for x in diffs); med=float(np.median(diffs))
+              advance=bool(positives>=2 and med>0)
+              out['families'][fam]={
+                  'comparator':comp,
+                  'positive_validation_cagr_excess_topn_count':positives,
+                  'median_validation_cagr_excess':med,
+                  'median_validation_sharpe_excess':float(np.median(sharpe)),
+                  'median_validation_max_drawdown_difference':float(np.median(dd)),
+                  'advance_to_holdout':advance,'by_top_n':by_n,
+              }
+          advancing=[k for k,v in out['families'].items() if v['advance_to_holdout']]
+          out['advancing_families']=advancing
+          out['decision']='ADVANCE_ALL_15_TO_SINGLE_HOLDOUT_RUN' if advancing else 'DO_NOT_OPEN_HOLDOUT'
+          out['holdout_status']='READY_FOR_SINGLE_FROZEN_HOLDOUT_RUN' if advancing else 'SEALED_NOT_READ'
+          (root/'bottleneck_family_advancement.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Record direct-SEC provenance
+        shell: bash
+        run: |
+          {
+            echo "network_workflow_run=$NET_RUN"
+            echo "network_artifact=direct-sec-item1-network-replication"
+            echo "price_workflow_run=$PRICE_RUN"
+            echo "curated_price_gate_workflow_run=$CURATED_PRICE_RUN"
+            echo "fundamental_workflow_run=$FUND_RUN"
+            echo "executor_source_sha=$GITHUB_SHA"
+            echo "holdout_status=SEALED_NOT_READ"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > results/free_stage1/local_sp500_bottleneck_direct_sec_discovery/source_manifest.txt
+
+      - name: Upload direct-SEC discovery replication
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-local-direct-sec-bottleneck-discovery-results
+          path: results/free_stage1/local_sp500_bottleneck_direct_sec_discovery/
+          retention-days: 30
+
+      - name: Persist direct-SEC discovery
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/free_stage1/local_sp500_bottleneck_direct_sec_discovery
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Record direct-SEC Bottleneck discovery replication [skip ci]"
+          git fetch origin research/free-pit-quantconnect-stage1
+          git rebase origin/research/free-pit-quantconnect-stage1
+          git push origin HEAD:research/free-pit-quantconnect-stage1

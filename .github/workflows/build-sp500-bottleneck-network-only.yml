@@ -1,0 +1,193 @@
+name: Build network-only free S&P Bottleneck inputs
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  network:
+    if: contains(github.event.head_commit.message, '[build-network-only-bottleneck-inputs]')
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - id: a
+            acquire_start: 2007
+            formation_start: 2009-03-31
+            formation_end: 2011-12-31
+            acquire_end: 2011
+          - id: b
+            acquire_start: 2010
+            formation_start: 2012-03-31
+            formation_end: 2014-12-31
+            acquire_end: 2014
+          - id: c
+            acquire_start: 2013
+            formation_start: 2015-03-31
+            formation_end: 2017-12-31
+            acquire_end: 2017
+          - id: d
+            acquire_start: 2016
+            formation_start: 2018-03-31
+            formation_end: 2020-12-31
+            acquire_end: 2020
+          - id: e
+            acquire_start: 2019
+            formation_start: 2021-03-31
+            formation_end: 2023-12-31
+            acquire_end: 2023
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas scipy scikit-learn beautifulsoup4 requests pyarrow
+      - name: Download PIT membership
+        run: |
+          curl -L --fail --retry 5 https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv -o /tmp/components_history.csv
+      - name: Build Item 1 network shard within SEC fair-access budget
+        shell: bash
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          DATES="$(python - <<'PY'
+          import pandas as pd
+          a=pd.Timestamp("${{ matrix.formation_start }}")
+          b=pd.Timestamp("${{ matrix.formation_end }}")
+          d=pd.date_range(a,b,freq="QE")
+          print(",".join(x.strftime("%Y-%m-%d") for x in d))
+          PY
+          )"
+          OUT="/tmp/net-${{ matrix.id }}"
+          python research/free_stage1/sec_item1_sp500_network.py \
+            --membership /tmp/components_history.csv \
+            --start-year ${{ matrix.acquire_start }} \
+            --end-year ${{ matrix.acquire_end }} \
+            --formation-dates "$DATES" \
+            --pair-density 0.0205 \
+            --max-item1-age-days 550 \
+            --rps 3 \
+            --out "$OUT"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          p=Path("/tmp/net-${{ matrix.id }}")
+          m=json.loads((p/"manifest.json").read_text())
+          c=pd.read_csv(p/"membership_network_coverage.csv")
+          n=pd.read_csv(p/"network_metrics_all.csv")
+          assert len(m["network_runs"])==12, len(m["network_runs"])
+          assert len(c)==12, len(c)
+          print("NET_SHARD_PASS","${{ matrix.id }}",len(n),int(c.valid_item1_ciks.min()),float(c.valid_item1_ciks.median()))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bottleneck-net-${{ matrix.id }}
+          path: |
+            /tmp/net-${{ matrix.id }}/network_metrics_all.csv
+            /tmp/net-${{ matrix.id }}/membership_network_coverage.csv
+            /tmp/net-${{ matrix.id }}/manifest.json
+          retention-days: 7
+
+  merge:
+    needs: network
+    if: needs.network.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FUND_RUN: '36126965348'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas pyarrow
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bottleneck-net-*
+          path: /tmp/shards
+      - name: Reuse already-successful fundamental shards
+        shell: bash
+        run: |
+          gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY" --pattern 'bottleneck-fund-*' --dir /tmp/shards
+          find /tmp/shards -maxdepth 2 -type f -printf '%p %k KB\n'
+      - name: Merge and validate 60 PIT formations
+        shell: bash
+        run: |
+          mkdir -p results/free_stage1/sp500_bottleneck_inputs_sharded/sec_fundamentals
+          mkdir -p results/free_stage1/sp500_bottleneck_inputs_sharded/sec_item1_network
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          shards=Path("/tmp/shards")
+          root=Path("results/free_stage1/sp500_bottleneck_inputs_sharded")
+          fps=sorted(shards.glob("bottleneck-fund-*/trimmed.parquet"))
+          assert len(fps)==5,fps
+          panel=pd.concat([pd.read_parquet(p) for p in fps],ignore_index=True)
+          panel=panel.sort_values(["cik","information_date","period","adsh"]).drop_duplicates(["adsh","cik"],keep="last")
+          panel.to_parquet(root/"sec_fundamentals/sec_pit_fundamentals.parquet",index=False)
+          cms=[json.loads(p.read_text()) for p in sorted(shards.glob("bottleneck-fund-*/chunk_manifest.json"))]
+          failures=[z for m in cms for z in m.get("failed_quarters",[])]
+          assert not failures,failures
+          manifest={
+              "source":"SEC Financial Statement Data Sets - reused successful shards",
+              "fundamental_source_run":36126965348,
+              "start_year":2009,"end_year":2023,"rows":int(len(panel)),
+              "ciks":int(panel.cik.nunique()),"failed_quarters":failures,
+              "point_in_time_rule":"information_date = SEC filed date; never use before filed date",
+              "evidence_label":"FREE_DISCOVERY",
+          }
+          (root/"sec_fundamentals/manifest.json").write_text(json.dumps(manifest,indent=2,default=str))
+          PY
+          DATES="$(python - <<'PY'
+          import pandas as pd
+          d=pd.date_range("2009-03-31","2023-12-31",freq="QE")
+          print(",".join(x.strftime("%Y-%m-%d") for x in d))
+          PY
+          )"
+          python research/free_stage1/sec_formation_features.py \
+            --input results/free_stage1/sp500_bottleneck_inputs_sharded/sec_fundamentals/sec_pit_fundamentals.parquet \
+            --formation-dates "$DATES" \
+            --out results/free_stage1/sp500_bottleneck_inputs_sharded/sec_fundamentals/sec_formation_features.csv
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          shards=Path("/tmp/shards")
+          root=Path("results/free_stage1/sp500_bottleneck_inputs_sharded")
+          n=pd.concat([pd.read_csv(p,dtype={"cik":str}) for p in sorted(shards.glob("bottleneck-net-*/network_metrics_all.csv"))],ignore_index=True).sort_values(["formation_date","cik"])
+          cov=pd.concat([pd.read_csv(p) for p in sorted(shards.glob("bottleneck-net-*/membership_network_coverage.csv"))],ignore_index=True).sort_values("formation_date")
+          n.to_csv(root/"sec_item1_network/network_metrics_all.csv",index=False)
+          cov.to_csv(root/"sec_item1_network/membership_network_coverage.csv",index=False)
+          manifests=[json.loads(p.read_text()) for p in sorted(shards.glob("bottleneck-net-*/manifest.json"))]
+          runs=sorted([r for m in manifests for r in m.get("network_runs",[])],key=lambda x:x["formation_date"])
+          out=dict(manifests[0]); out["network_runs"]=runs; out["build_mode"]="network-only compliant shards + reused successful fundamentals"
+          (root/"sec_item1_network/manifest.json").write_text(json.dumps(out,indent=2,default=str))
+          f=pd.read_csv(root/"sec_fundamentals/sec_formation_features.csv",dtype={"cik":str})
+          assert len(f)>100000,len(f)
+          assert (pd.to_datetime(f.information_date)<=pd.to_datetime(f.formation_date)).all()
+          assert len(runs)==60,len(runs)
+          assert len(cov)==60,len(cov)
+          assert cov.valid_item1_ciks.min()>=200,cov.nsmallest(5,"valid_item1_ciks")
+          assert cov.valid_item1_ciks.median()>=350,cov.valid_item1_ciks.median()
+          assert len(n)>15000,len(n)
+          print("NETWORK_ONLY BOTTLENECK INPUTS PASS","fund_rows",len(f),"network_rows",len(n),"min_item1",int(cov.valid_item1_ciks.min()),"median_item1",float(cov.valid_item1_ciks.median()))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: free-sp500-bottleneck-inputs-sharded
+          path: |
+            results/free_stage1/sp500_bottleneck_inputs_sharded/sec_fundamentals/sec_formation_features.csv
+            results/free_stage1/sp500_bottleneck_inputs_sharded/sec_fundamentals/manifest.json
+            results/free_stage1/sp500_bottleneck_inputs_sharded/sec_item1_network/network_metrics_all.csv
+            results/free_stage1/sp500_bottleneck_inputs_sharded/sec_item1_network/membership_network_coverage.csv
+            results/free_stage1/sp500_bottleneck_inputs_sharded/sec_item1_network/manifest.json
+          retention-days: 30

@@ -7,3 +7,5 @@ Targeted Stooq individual-symbol recovery requested for the remaining Yahoo-empt
 Re-run targeted Stooq individual-symbol recovery after downstream artifact wiring. Frozen 97% holdout coverage gate remains unchanged.
 
 Raw Yahoo chart endpoint recovery requested for the same remaining symbols; use only if it independently passes the unchanged 97% sealed holdout coverage gate.
+
+Kaggle 9000+ full-history recovery requested for remaining delisted/acquired holdout names. Accept only if the unchanged 97% identity+price gate passes; adjusted-price semantics must be verified against controls.

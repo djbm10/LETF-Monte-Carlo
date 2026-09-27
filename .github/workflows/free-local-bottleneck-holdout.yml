@@ -35,17 +35,32 @@ jobs:
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
           DISCOVERY_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
-            --workflow direct-sec-network-replication.yml \
+            --workflow direct-sec-network-sharded.yml \
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          if [ -z "$DISCOVERY_NET_RUN" ]; then
+            DISCOVERY_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow direct-sec-network-replication.yml \
+              --branch research/free-pit-quantconnect-stage1 \
+              --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          fi
           HOLDOUT_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
             --workflow direct-sec-holdout-network.yml \
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
           PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
-            --workflow holdout-price-recovery.yml \
+            --workflow holdout-stooq-recovery.yml \
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          PRICE_ARTIFACT="sealed-holdout-stooq-recovered-prices"
+          if [ -z "$PRICE_RUN" ]; then
+            PRICE_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow holdout-price-recovery.yml \
+              --branch research/free-pit-quantconnect-stage1 \
+              --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+            PRICE_ARTIFACT="sealed-holdout-recovered-sp500-prices"
+          fi
+          echo "PRICE_ARTIFACT=$PRICE_ARTIFACT" >> "$GITHUB_ENV"
           test -n "$DISCOVERY_RUN" || { echo "No successful direct-SEC discovery"; exit 2; }
           test -n "$DISCOVERY_NET_RUN" || { echo "No successful direct-SEC discovery network"; exit 2; }
           test -n "$HOLDOUT_NET_RUN" || { echo "No successful direct-SEC holdout network"; exit 2; }
@@ -69,7 +84,7 @@ jobs:
           gh run download "$HOLDOUT_NET_RUN" --repo "$GITHUB_REPOSITORY" \
             --name direct-sec-holdout-item1-network --dir /tmp/holdout-net
           gh run download "$PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name sealed-holdout-recovered-sp500-prices --dir /tmp/prices
+            --name "$PRICE_ARTIFACT" --dir /tmp/prices
           gh run download "$FUND_RUN" --repo "$GITHUB_REPOSITORY" \
             --pattern 'bottleneck-fund-*' --dir /tmp/fund
 

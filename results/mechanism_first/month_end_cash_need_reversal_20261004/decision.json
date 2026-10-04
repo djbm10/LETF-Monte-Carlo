@@ -1,0 +1,245 @@
+{
+  "strategy": "Month-End Institutional Cash-Need Reversal",
+  "frozen_spec": "research/mechanism_first/MONTH_END_CASH_NEED_FROZEN_SPEC_2026-10-04.md",
+  "mechanism": "settlement-driven institutional cash raising -> temporary pre-deadline price pressure -> post-deadline reversal",
+  "primary_falsifier": {
+    "return_condition": "full-sample matched-baseline-adjusted 3-session net reversal >= +20 bps",
+    "settlement_timing_condition": "actual settlement offset ranks first in each T+3, T+2, and T+1 era"
+  },
+  "return_condition_pass": false,
+  "timing_condition_pass": false,
+  "decision": "KILL",
+  "overall": {
+    "n": 376,
+    "event_net3_mean": 0.0008991296350357581,
+    "event_net3_median": 0.0010667795703998006,
+    "event_net3_std": 0.01846611653095373,
+    "matched_baseline_net3_mean": -0.00011512950476982247,
+    "mean_excess_net3": 0.001014259139805581,
+    "median_excess_net3": 0.0013876820393792229,
+    "positive_event_return_rate": 0.5452127659574468,
+    "positive_excess_rate": 0.5398936170212766,
+    "worst_event_net3": -0.11913651902835243,
+    "best_event_net3": 0.0732768959393244,
+    "bootstrap_95_low_mean_excess": -0.0008700624815633405,
+    "bootstrap_95_high_mean_excess": 0.0028639650168552798,
+    "mean_predeadline_pressure": 0.0007574698999362358,
+    "matched_pressure_mean": 0.0005172590707246664,
+    "mean_pressure_excess": 0.0002402108292115692
+  },
+  "by_regime": {
+    "T+1": {
+      "n": 29,
+      "event_net3_mean": 0.0020851594290101465,
+      "event_net3_median": 0.0038275603091662003,
+      "event_net3_std": 0.014150174273084811,
+      "matched_baseline_net3_mean": 0.002325699560291353,
+      "mean_excess_net3": -0.00024054013128120606,
+      "median_excess_net3": -0.0008293953890939117,
+      "positive_event_return_rate": 0.5862068965517241,
+      "positive_excess_rate": 0.4827586206896552,
+      "worst_event_net3": -0.018568158869541107,
+      "best_event_net3": 0.03892309793453497,
+      "bootstrap_95_low_mean_excess": -0.005727716139854623,
+      "bootstrap_95_high_mean_excess": 0.0055551246852986605,
+      "mean_predeadline_pressure": -0.0007270154429734964,
+      "matched_pressure_mean": 0.0005214824020592547,
+      "mean_pressure_excess": -0.0012484978450327513
+    },
+    "T+2": {
+      "n": 80,
+      "event_net3_mean": 0.003261025384911892,
+      "event_net3_median": 0.004137613021037101,
+      "event_net3_std": 0.01474365663657664,
+      "matched_baseline_net3_mean": -0.00046057466744243785,
+      "mean_excess_net3": 0.00372160005235433,
+      "median_excess_net3": 0.0041392259791090775,
+      "positive_event_return_rate": 0.6375,
+      "positive_excess_rate": 0.6375,
+      "worst_event_net3": -0.037666995067068165,
+      "best_event_net3": 0.04929323719178624,
+      "bootstrap_95_low_mean_excess": 0.0006561065000585841,
+      "bootstrap_95_high_mean_excess": 0.006756648631678966,
+      "mean_predeadline_pressure": -0.0001976057876208137,
+      "matched_pressure_mean": 0.0003542080633626964,
+      "mean_pressure_excess": -0.0005518138509835106
+    },
+    "T+3": {
+      "n": 267,
+      "event_net3_mean": 6.262579977228241e-05,
+      "event_net3_median": 0.0004345376142400603,
+      "event_net3_std": 0.019813141586608143,
+      "matched_baseline_net3_mean": -0.0002767341110356084,
+      "mean_excess_net3": 0.0003393599108078907,
+      "median_excess_net3": 0.0007032232419404575,
+      "positive_event_return_rate": 0.5131086142322098,
+      "positive_excess_rate": 0.5168539325842697,
+      "worst_event_net3": -0.11913651902835243,
+      "best_event_net3": 0.0732768959393244,
+      "bootstrap_95_low_mean_excess": -0.002027151196477011,
+      "bootstrap_95_high_mean_excess": 0.0027526669467668676,
+      "mean_predeadline_pressure": 0.0012048711357000791,
+      "matched_pressure_mean": 0.0005656545912499643,
+      "mean_pressure_excess": 0.0006392165444501148
+    }
+  },
+  "by_subperiod": {
+    "OOS_T1_2024_2026": {
+      "n": 29,
+      "event_net3_mean": 0.0020851594290101465,
+      "event_net3_median": 0.0038275603091662003,
+      "event_net3_std": 0.014150174273084811,
+      "matched_baseline_net3_mean": 0.002325699560291353,
+      "mean_excess_net3": -0.00024054013128120606,
+      "median_excess_net3": -0.0008293953890939117,
+      "positive_event_return_rate": 0.5862068965517241,
+      "positive_excess_rate": 0.4827586206896552,
+      "worst_event_net3": -0.018568158869541107,
+      "best_event_net3": 0.03892309793453497,
+      "bootstrap_95_low_mean_excess": -0.005727716139854623,
+      "bootstrap_95_high_mean_excess": 0.0055551246852986605,
+      "mean_predeadline_pressure": -0.0007270154429734964,
+      "matched_pressure_mean": 0.0005214824020592547,
+      "mean_pressure_excess": -0.0012484978450327513
+    },
+    "OOS_T2_2017_2024": {
+      "n": 80,
+      "event_net3_mean": 0.003261025384911892,
+      "event_net3_median": 0.004137613021037101,
+      "event_net3_std": 0.01474365663657664,
+      "matched_baseline_net3_mean": -0.00046057466744243785,
+      "mean_excess_net3": 0.00372160005235433,
+      "median_excess_net3": 0.0041392259791090775,
+      "positive_event_return_rate": 0.6375,
+      "positive_excess_rate": 0.6375,
+      "worst_event_net3": -0.037666995067068165,
+      "best_event_net3": 0.04929323719178624,
+      "bootstrap_95_low_mean_excess": 0.0006561065000585841,
+      "bootstrap_95_high_mean_excess": 0.006756648631678966,
+      "mean_predeadline_pressure": -0.0001976057876208137,
+      "matched_pressure_mean": 0.0003542080633626964,
+      "mean_pressure_excess": -0.0005518138509835106
+    },
+    "TRAIN_T3_1995_2006": {
+      "n": 139,
+      "event_net3_mean": -0.000290714550405124,
+      "event_net3_median": 0.00021392477408044286,
+      "event_net3_std": 0.020932365281355635,
+      "matched_baseline_net3_mean": -0.00025411555740005175,
+      "mean_excess_net3": -3.659899300507235e-05,
+      "median_excess_net3": 0.0007032232419404575,
+      "positive_event_return_rate": 0.5179856115107914,
+      "positive_excess_rate": 0.5323741007194245,
+      "worst_event_net3": -0.11913651902835243,
+      "best_event_net3": 0.07081172773856514,
+      "bootstrap_95_low_mean_excess": -0.003501032477794659,
+      "bootstrap_95_high_mean_excess": 0.0033809701687635874,
+      "mean_predeadline_pressure": -0.0001870444606325564,
+      "matched_pressure_mean": 0.0006443507309409005,
+      "mean_pressure_excess": -0.000831395191573457
+    },
+    "VALIDATION_T3_2007_2017": {
+      "n": 128,
+      "event_net3_mean": 0.0004463313362930597,
+      "event_net3_median": 0.0007443223714910241,
+      "event_net3_std": 0.018596057115426102,
+      "matched_baseline_net3_mean": -0.0003012964466242206,
+      "mean_excess_net3": 0.0007476277829172803,
+      "median_excess_net3": 0.00011549067642125895,
+      "positive_event_return_rate": 0.5078125,
+      "positive_excess_rate": 0.5,
+      "worst_event_net3": -0.04677249567853092,
+      "best_event_net3": 0.0732768959393244,
+      "bootstrap_95_low_mean_excess": -0.002429901393085053,
+      "bootstrap_95_high_mean_excess": 0.003967861617619276,
+      "mean_predeadline_pressure": 0.0027164044785925505,
+      "matched_pressure_mean": 0.0004801955020543382,
+      "mean_pressure_excess": 0.0022362089765382122
+    }
+  },
+  "timing_test": {
+    "T+3": {
+      "expected_offset": 3,
+      "offsets": {
+        "1": {
+          "n": 267,
+          "mean_excess_net3": 0.001385887988084917
+        },
+        "2": {
+          "n": 267,
+          "mean_excess_net3": 0.0016059024127297367
+        },
+        "3": {
+          "n": 267,
+          "mean_excess_net3": 0.0003393599108078907
+        }
+      },
+      "winning_offset": 2,
+      "pass": false
+    },
+    "T+2": {
+      "expected_offset": 2,
+      "offsets": {
+        "1": {
+          "n": 80,
+          "mean_excess_net3": 0.0016734158687262972
+        },
+        "2": {
+          "n": 80,
+          "mean_excess_net3": 0.00372160005235433
+        },
+        "3": {
+          "n": 80,
+          "mean_excess_net3": 0.001879233873906945
+        }
+      },
+      "winning_offset": 2,
+      "pass": true
+    },
+    "T+1": {
+      "expected_offset": 1,
+      "offsets": {
+        "1": {
+          "n": 29,
+          "mean_excess_net3": -0.00024054013128120606
+        },
+        "2": {
+          "n": 29,
+          "mean_excess_net3": -0.0024110614836084002
+        },
+        "3": {
+          "n": 30,
+          "mean_excess_net3": -0.001562597586094642
+        }
+      },
+      "winning_offset": 1,
+      "pass": true
+    }
+  },
+  "spy_context": {
+    "start": "1995-06-27",
+    "end": "2026-09-29",
+    "cagr": 0.10727666802207958,
+    "ann_vol": 0.19044550258911044,
+    "max_drawdown": -0.551894369197588
+  },
+  "data": {
+    "instrument": "SPY",
+    "source": "Yahoo Finance adjusted close via yfinance",
+    "download_rows": 8243,
+    "first_price_date": "1994-01-03",
+    "last_price_date": "2026-10-02",
+    "first_test_event": "1995-06-27",
+    "last_test_event": "2026-09-29",
+    "settlement_business_day_proxy": "observed US equity trading sessions"
+  },
+  "costs": {
+    "one_way_bps": 5.0,
+    "round_trip_bps_nominal": 10.0
+  },
+  "notes": [
+    "No flow, Friday, funding, ownership, leverage, or cross-sectional filter is used.",
+    "No parameter search is performed.",
+    "Pre-deadline pressure is a mechanism diagnostic and is not substituted for the preregistered primary falsifier."
+  ]
+}

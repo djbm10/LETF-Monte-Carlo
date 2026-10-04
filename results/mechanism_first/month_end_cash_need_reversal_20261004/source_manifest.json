@@ -1,0 +1,13 @@
+{
+  "official_settlement_dates": {
+    "T+3_effective": "1995-06-07",
+    "T+2_compliance": "2017-09-05",
+    "T+1_compliance": "2024-05-28"
+  },
+  "official_sources": [
+    "https://www.sec.gov/rules-regulations/2004/03/securities-transactions-settlement",
+    "https://www.sec.gov/newsroom/press-releases/2017-68-0",
+    "https://www.sec.gov/newsroom/press-releases/2024-62"
+  ],
+  "freeze_commit_must_predate_results": true
+}

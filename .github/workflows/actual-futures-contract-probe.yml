@@ -1,0 +1,27 @@
+name: Actual futures contract data probe
+
+on:
+  push:
+    branches:
+      - research/actual-futures-contract-validation-20261004
+    paths:
+      - 'research/probe_expired_nq_contracts_20261004.py'
+      - '.github/workflows/actual-futures-contract-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas yfinance requests
+      - run: python research/probe_expired_nq_contracts_20261004.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: actual-futures-contract-probe
+          path: results/actual_futures_contract_probe_20261004/probe.json
+          retention-days: 30

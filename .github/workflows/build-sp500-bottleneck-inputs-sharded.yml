@@ -8,7 +8,7 @@ on:
 
 jobs:
   fundamentals:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-sharded-bottleneck-inputs]')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-sharded-bottleneck-inputs]') || contains(github.event.head_commit.message, '[build-bottleneck-fundamentals-only]')
     strategy:
       fail-fast: false
       matrix:

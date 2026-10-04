@@ -1,0 +1,8 @@
+network_workflow_run=37221395373
+network_artifact=direct-sec-item1-network-replication
+price_workflow_run=36220567098
+curated_price_gate_workflow_run=36221684401
+fundamental_workflow_run=37227780400
+executor_source_sha=5f39fc1892fa5a1fe7cbcb440f1dbc822dbdb291
+holdout_status=SEALED_NOT_READ
+generated_utc=2026-10-04T19:34:13Z

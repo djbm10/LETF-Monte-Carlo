@@ -1,0 +1,107 @@
+{
+  "firewall": "research/free_stage1/BOTTLENECK_DISCOVERY_FIREWALL.md",
+  "sample": "2009-01-01 through 2019-12-31",
+  "network_evidence": "FREE_DISCOVERY_DIRECT_SEC_NETWORK_REPLICATION",
+  "holdout_status": "READY_FOR_SINGLE_FROZEN_HOLDOUT_RUN",
+  "families": {
+    "bottleneck_core": {
+      "comparator": "momentum",
+      "positive_validation_cagr_excess_topn_count": 3,
+      "median_validation_cagr_excess": 0.0639767292945311,
+      "median_validation_sharpe_excess": 0.4614361227650825,
+      "median_validation_max_drawdown_difference": 0.11445636445138818,
+      "advance_to_holdout": true,
+      "by_top_n": {
+        "10": {
+          "validation_cagr": 0.0699308236270899,
+          "comparator_validation_cagr": 0.0459850339211453,
+          "cagr_excess": 0.023945789705944596,
+          "sharpe_excess": 0.2049863973591417,
+          "max_drawdown_difference": 0.14593980582921717
+        },
+        "20": {
+          "validation_cagr": 0.1140491879554101,
+          "comparator_validation_cagr": 0.0319032821563991,
+          "cagr_excess": 0.08214590579901099,
+          "sharpe_excess": 0.5576385876348171,
+          "max_drawdown_difference": 0.11445636445138818
+        },
+        "40": {
+          "validation_cagr": 0.1190696983637438,
+          "comparator_validation_cagr": 0.0550929690692127,
+          "cagr_excess": 0.0639767292945311,
+          "sharpe_excess": 0.4614361227650825,
+          "max_drawdown_difference": 0.10852782451822912
+        }
+      }
+    },
+    "bottleneck_momentum": {
+      "comparator": "momentum",
+      "positive_validation_cagr_excess_topn_count": 3,
+      "median_validation_cagr_excess": 0.056692967279709496,
+      "median_validation_sharpe_excess": 0.3459236718605819,
+      "median_validation_max_drawdown_difference": 0.05251335638657301,
+      "advance_to_holdout": true,
+      "by_top_n": {
+        "10": {
+          "validation_cagr": 0.1026780012008548,
+          "comparator_validation_cagr": 0.0459850339211453,
+          "cagr_excess": 0.056692967279709496,
+          "sharpe_excess": 0.3459236718605819,
+          "max_drawdown_difference": 0.0937262448774237
+        },
+        "20": {
+          "validation_cagr": 0.0974556635276777,
+          "comparator_validation_cagr": 0.0319032821563991,
+          "cagr_excess": 0.06555238137127861,
+          "sharpe_excess": 0.4102805597021671,
+          "max_drawdown_difference": 0.021366161458672372
+        },
+        "40": {
+          "validation_cagr": 0.088071279897828,
+          "comparator_validation_cagr": 0.0550929690692127,
+          "cagr_excess": 0.0329783108286153,
+          "sharpe_excess": 0.23052955150415944,
+          "max_drawdown_difference": 0.05251335638657301
+        }
+      }
+    },
+    "bottleneck_full": {
+      "comparator": "quality_momentum",
+      "positive_validation_cagr_excess_topn_count": 3,
+      "median_validation_cagr_excess": 0.0433126087368159,
+      "median_validation_sharpe_excess": 0.27164601685885464,
+      "median_validation_max_drawdown_difference": 0.021713139714070795,
+      "advance_to_holdout": true,
+      "by_top_n": {
+        "10": {
+          "validation_cagr": 0.150675755809184,
+          "comparator_validation_cagr": 0.0365499907515249,
+          "cagr_excess": 0.11412576505765909,
+          "sharpe_excess": 0.6098327351446544,
+          "max_drawdown_difference": 0.0651533035885763
+        },
+        "20": {
+          "validation_cagr": 0.1135744070250153,
+          "comparator_validation_cagr": 0.0702617982881994,
+          "cagr_excess": 0.0433126087368159,
+          "sharpe_excess": 0.27164601685885464,
+          "max_drawdown_difference": 0.021713139714070795
+        },
+        "40": {
+          "validation_cagr": 0.1051309540424483,
+          "comparator_validation_cagr": 0.0801882390544612,
+          "cagr_excess": 0.0249427149879871,
+          "sharpe_excess": 0.18006515433874937,
+          "max_drawdown_difference": 0.016447716578892296
+        }
+      }
+    }
+  },
+  "advancing_families": [
+    "bottleneck_core",
+    "bottleneck_momentum",
+    "bottleneck_full"
+  ],
+  "decision": "ADVANCE_ALL_15_TO_SINGLE_HOLDOUT_RUN"
+}

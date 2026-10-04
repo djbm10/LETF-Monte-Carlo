@@ -1,0 +1,25 @@
+name: Probe raw HF SEC corpus shards
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  probe:
+    if: contains(github.event.head_commit.message, '[hf-raw-shard-probe]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe original JSONL shard availability and sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          for split in train test validate; do
+            for i in 0 1 9; do
+              url="https://huggingface.co/datasets/JanosAudran/financial-reports-sec/resolve/main/data/large/$split/shard_$i.jsonl?download=true"
+              echo "PROBE $split $i $url"
+              curl -L -sS -I --max-time 30 "$url" | tr -d '\r' | grep -Ei 'HTTP/|content-length:|x-linked-size:|location:' | tail -8
+            done
+          done

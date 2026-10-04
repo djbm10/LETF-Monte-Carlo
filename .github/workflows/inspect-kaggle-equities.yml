@@ -1,0 +1,31 @@
+name: Inspect public Kaggle equity archives
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  inspect:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[kaggle-equity-inspect]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install kaggle
+
+      - name: List public archive files without credentials
+        shell: bash
+        run: |
+          unset KAGGLE_USERNAME KAGGLE_KEY KAGGLE_API_TOKEN
+          echo "=== TSAUSTIN ==="
+          kaggle datasets files tsaustin/us-historical-stock-prices-with-earnings-data
+          echo "=== WIKI MIRROR ==="
+          kaggle datasets files marketneutral/quandl-wiki-prices-us-equites

@@ -1,0 +1,84 @@
+name: Inspect free Stooq US bulk data
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  inspect:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[stooq-inspect]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Stooq US daily bulk archive
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/stooq
+          (
+            curl -L --fail --retry 4 --retry-delay 3 \
+              https://stooq.com/db/h/d_us_txt.zip \
+              -o /tmp/stooq/d_us_txt.zip
+          ) || (
+            curl -L --fail --retry 4 --retry-delay 3 \
+              https://static.stooq.com/db/h/d_us_txt.zip \
+              -o /tmp/stooq/d_us_txt.zip
+          )
+          ls -lh /tmp/stooq/d_us_txt.zip
+          unzip -tq /tmp/stooq/d_us_txt.zip
+
+      - name: Inspect symbols and delisted-name coverage
+        shell: bash
+        run: |
+          set -euxo pipefail
+          unzip -l /tmp/stooq/d_us_txt.zip > /tmp/stooq/listing.txt
+          echo "FILES=$(grep -c '\.txt$' /tmp/stooq/listing.txt || true)"
+          echo "LEH_MATCHES"
+          grep -iE '/leh[^/]*\.txt|/lehmq[^/]*\.txt' /tmp/stooq/listing.txt | head -20 || true
+          echo "BSC_MATCHES"
+          grep -iE '/bsc[^/]*\.txt' /tmp/stooq/listing.txt | head -20 || true
+          echo "ENRN_MATCHES"
+          grep -iE '/enrn[^/]*\.txt|/ene[^/]*\.txt' /tmp/stooq/listing.txt | head -20 || true
+          echo "SAMPLE_PATHS"
+          grep '\.txt$' /tmp/stooq/listing.txt | head -25 || true
+
+      - name: Extract archive and summarize date coverage
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/stooq/extract
+          unzip -q /tmp/stooq/d_us_txt.zip -d /tmp/stooq/extract
+          python - <<'PY'
+          from pathlib import Path
+          import csv, json
+          root=Path('/tmp/stooq/extract')
+          files=list(root.rglob('*.txt'))
+          rows=[]
+          for p in files[:500]:
+              try:
+                  with p.open(errors='ignore') as f:
+                      reader=csv.DictReader(f)
+                      data=list(reader)
+                  if not data:
+                      continue
+                  rows.append({
+                      'path':str(p.relative_to(root)),
+                      'first':data[0].get('<DATE>') or data[0].get('Date') or data[0].get('DATE'),
+                      'last':data[-1].get('<DATE>') or data[-1].get('Date') or data[-1].get('DATE'),
+                      'rows':len(data),
+                  })
+              except Exception:
+                  pass
+          print(json.dumps({
+              'file_count':len(files),
+              'sample_count':len(rows),
+              'sample':rows[:20],
+          }, indent=2))
+          PY

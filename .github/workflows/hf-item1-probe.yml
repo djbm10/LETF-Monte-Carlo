@@ -1,0 +1,42 @@
+name: Probe Hugging Face SEC Item 1 corpus
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  probe:
+    if: contains(github.event.head_commit.message, '[hf-item1-probe]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Query Hugging Face dataset server
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 4             'https://datasets-server.huggingface.co/parquet?dataset=JanosAudran%2Ffinancial-reports-sec'             -o /tmp/parquet.json
+          python - <<'PY'
+          import json
+          j=json.load(open('/tmp/parquet.json'))
+          print('TOP_KEYS',list(j))
+          files=j.get('parquet_files',[])
+          print('PARQUET_FILES',len(files))
+          for x in files[:30]:
+              print('FILE',x.get('config'),x.get('split'),x.get('url'),x.get('size'))
+          PY
+      - name: Inspect rows/features with streaming datasets
+        shell: bash
+        run: |
+          pip install -q datasets
+          python - <<'PY'
+          from datasets import load_dataset
+          ds=load_dataset('JanosAudran/financial-reports-sec','large_lite',split='train',streaming=True)
+          print('FEATURES',ds.features)
+          n=0
+          for row in ds:
+              print('ROW', {k:row.get(k) for k in ['cik','section','filingDate','docID','sentenceID','sentence']})
+              n+=1
+              if n>=3: break
+          PY

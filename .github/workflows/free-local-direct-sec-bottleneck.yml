@@ -36,10 +36,17 @@ jobs:
         shell: bash
         run: |
           NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
-            --workflow direct-sec-network-sharded.yml \
+            --workflow direct-sec-network-late-shards.yml \
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId \
             --jq '.[0].databaseId')"
+          if [ -z "$NET_RUN" ]; then
+            NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow direct-sec-network-sharded.yml \
+              --branch research/free-pit-quantconnect-stage1 \
+              --status success --limit 1 --json databaseId \
+              --jq '.[0].databaseId')"
+          fi
           if [ -z "$NET_RUN" ]; then
             NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
               --workflow direct-sec-network-replication.yml \

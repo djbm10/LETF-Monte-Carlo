@@ -1,0 +1,28 @@
+name: Frozen 35-0 actual futures PnL replication
+
+on:
+  push:
+    branches:
+      - research/actual-futures-contract-validation-20261004
+    paths:
+      - 'research/actual_futures_pnl_replication_20261004.py'
+      - '.github/workflows/actual-futures-pnl-replication.yml'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas yfinance
+      - run: python -m py_compile research/actual_futures_pnl_replication_20261004.py
+      - run: python research/actual_futures_pnl_replication_20261004.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frozen-35-0-actual-futures-pnl
+          path: results/actual_futures_pnl_replication_20261004
+          retention-days: 30

@@ -242,7 +242,7 @@ def timing_test(z: pd.DataFrame, events: pd.DataFrame, exclusion: set[int]) -> d
             vals = []
             nobs = 0
             for _, ev in months.iterrows():
-                T = pd.Timestamp(ev.T)
+                T = pd.Timestamp(ev["T"])
                 tp = pos.get(T)
                 if tp is None or tp - k < 0:
                     continue
@@ -314,7 +314,7 @@ def main() -> None:
     if ev.empty:
         raise RuntimeError("No testable event rows")
     ev["D"] = pd.to_datetime(ev.D)
-    ev["T"] = pd.to_datetime(ev.T)
+    ev["T"] = pd.to_datetime(ev["T"])
     ev["subperiod"] = ev.D.map(subperiod)
 
     overall = stats(ev)

@@ -31,6 +31,15 @@ jobs:
           echo "FREEZE_SHA=$FREEZE_SHA"
       - name: Compile
         run: python -m py_compile research/mechanism_first/month_end_cash_need_reversal_20261004.py
+      - name: Regression probe for T-column technical failure
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          x=pd.DataFrame({"T":["2024-05-31"]})
+          y=pd.to_datetime(x["T"])
+          assert str(y.iloc[0].date())=="2024-05-31"
+          print("T_COLUMN_ACCESS_PASS")
+          PY
       - name: Run frozen Stage-1 test
         run: python research/mechanism_first/month_end_cash_need_reversal_20261004.py
       - uses: actions/upload-artifact@v4

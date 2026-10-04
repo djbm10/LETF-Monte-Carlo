@@ -43,14 +43,36 @@ These live-MNQ figures cover only the post-2019 period and therefore are not a l
 3. A bounded direct probe confirmed Yahoo does not expose expired NQZ24/NQH20/NQZ10 histories through the tested symbols.
 4. Stooq's automated CSV endpoint was blocked by browser verification.
 5. QuantConnect cannot currently be used from this repository because QC_USER_ID, QC_API_TOKEN and QC_ORGANIZATION_ID are all absent.
-6. The repository already contains a correct CME DataMine contract-level settlement adapter with explicit no-look-ahead roll accounting; it cannot be executed until legitimate CME contract-level settlement exports are supplied.
+6. The repository contains a CME DataMine contract-level settlement adapter with explicit no-look-ahead roll accounting, now corrected so official futures data generate P&L only and the already-frozen QQQ signal remains the strategy signal.
+
+### Exchange-grade execution path verified 2026-10-04
+CME's own documentation states that the midnight daily **Settlements File is fee-free**, but DataMine downloads require authenticated access through a CME-associated account/API ID. Historical SFTP/API access is entitlement-scoped. The public CME Continuous Price Series catalog identifies settlement-based Active/Front series and a 2010-present date range, but does not provide anonymous downloadable history.
+
+The settlement adapter now requires:
+- official dated-contract settlement files as the P&L source;
+- an external QQQ adjusted-close signal file;
+- prior-day QQQ price vs 200DMA;
+- prior-day 20-session QQQ excess-return volatility;
+- 35% target above trend / 0% below, 3x cap;
+- explicit old-contract-through-roll-close accounting, then switch after close.
+
+Focused validation run **37225173373** passed:
+1. roll-price gaps are not counted as P&L;
+2. the crash-day position is determined by the previous day's signal, with de-risking only on the following session;
+3. external signal alignment can forward-fill already-known values but never back-fill future observations.
+
+Adapter commits:
+- freeze-safe CME adapter: eb05ecb8a3763de6aa6aa50309039b0af88d3bb9
+- focused self-test: 7e521c020281415dae7aadc6ec020ed2d4afb515
+- self-test workflow: 2b3bd979efdd542a0848bcb79a09ccb8fef8e001
 
 ### Decision
-**MONITOR.** The 35/0 economic result survives a substantially stronger futures-derived return test and survives integer-MNQ execution sensitivity. It does not earn IMPLEMENTATION-VALIDATED status until an auditable dated-contract/settlement source is run through the existing explicit-roll adapter (or an equivalent documented mapped-contract source).
+**MONITOR.** The 35/0 economic result survives a substantially stronger futures-derived return test and survives integer-MNQ execution sensitivity. The code path for an exchange-grade replication is now freeze-safe and tested, but the strategy does not earn IMPLEMENTATION-VALIDATED status until authenticated official CME settlement history (or an equivalent documented dated-contract source) is actually run through it.
 
 Runs:
 - expired-contract/source probe: 37223530738
 - QC credential probe: 37223636997
 - frozen 35/0 futures-derived P&L replication: 37223853650
+- CME adapter focused self-test: 37225173373
 
 No retuning was performed.

@@ -1,0 +1,48 @@
+name: Frozen month-end cash-need reversal test
+
+on:
+  push:
+    branches:
+      - research/month-end-cash-need-reversal-20261004
+
+jobs:
+  test:
+    if: contains(github.event.head_commit.message, '[month-end-cash-need-run]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/month-end-cash-need-reversal-20261004
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install numpy pandas yfinance
+      - name: Verify frozen spec predates run
+        shell: bash
+        run: |
+          test -f research/mechanism_first/MONTH_END_CASH_NEED_FROZEN_SPEC_2026-10-04.md
+          FREEZE_SHA="$(git log -1 --format=%H -- research/mechanism_first/MONTH_END_CASH_NEED_FROZEN_SPEC_2026-10-04.md)"
+          test "$FREEZE_SHA" = "a67266a1645f35fcfaee8d093429367caaa18bbd"
+          echo "FREEZE_SHA=$FREEZE_SHA"
+      - name: Compile
+        run: python -m py_compile research/mechanism_first/month_end_cash_need_reversal_20261004.py
+      - name: Run frozen Stage-1 test
+        run: python research/mechanism_first/month_end_cash_need_reversal_20261004.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: month-end-cash-need-reversal-stage1
+          path: results/mechanism_first/month_end_cash_need_reversal_20261004/
+          retention-days: 30
+      - name: Persist result
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/mechanism_first/month_end_cash_need_reversal_20261004
+          git commit -m "Record frozen month-end cash-need Stage-1 result [skip ci]"
+          git push origin HEAD:research/month-end-cash-need-reversal-20261004

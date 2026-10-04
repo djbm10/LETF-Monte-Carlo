@@ -1,0 +1,26 @@
+name: CME DataMine adapter selftest
+
+on:
+  push:
+    branches:
+      - research/actual-futures-contract-validation-20261004
+
+jobs:
+  selftest:
+    if: contains(github.event.head_commit.message, 'CME settlement adapter freeze selftest') || contains(github.event.head_commit.message, 'Run CME adapter selftest')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/actual-futures-contract-validation-20261004
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas
+      - name: Compile affected files
+        run: |
+          python -m py_compile research/cme_datamine_settlement_backtest.py
+          python -m py_compile research/cme_datamine_settlement_selftest.py
+      - name: Run focused CME adapter selftest
+        run: python research/cme_datamine_settlement_selftest.py

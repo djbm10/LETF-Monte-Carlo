@@ -6,10 +6,20 @@ This file does not download entitled CME data or store credentials. It ingests
 contract-level settlement files legitimately obtained from CME DataMine and
 constructs continuous returns under explicit, auditable roll rules.
 
-Expected canonical columns after normalization:
+IMPORTANT: official futures settlements are the P&L source only. Dynamic
+strategy exposure must come from the already-frozen external signal series
+(QQQ adjusted close for the 35/0 research program). This prevents a future
+settlement-grade replication from silently changing the scientific rule by
+recomputing trend/volatility from futures prices.
+
+Expected canonical CME columns after normalization:
 trade_date, contract, expiry, settle, volume, open_interest
 At minimum trade_date, contract, settle are required. expiry may be inferred
-from a supplied contract map. volume/open_interest are required for liquidity roll.
+from the contract code. volume/open_interest are required for liquidity rolls.
+
+Expected frozen-signal file:
+date, adj_close
+The price-column name is configurable with --signal-price-column.
 """
 import argparse, json, math, re
 from pathlib import Path
@@ -83,7 +93,7 @@ def choose_active(day,rule="volume_5bd",current=None):
             no=float(nxt.open_interest) if pd.notna(nxt.open_interest) else 0
             if no>co and no>0:return nxt.contract
         return current
-    # initialize nearest sufficiently live contract
+    # Initialize nearest live contract. Subsequent dates apply the selected roll rule.
     return d.sort_values("expiry").iloc[0].contract
 
 def make_continuous(z,rule="volume_5bd"):
@@ -96,8 +106,10 @@ def make_continuous(z,rule="volume_5bd"):
         rows.append((dt,nxt,row.expiry,row.settle,row.get("volume",np.nan),row.get("open_interest",np.nan),rolled))
         current=nxt
     c=pd.DataFrame(rows,columns=["date","contract","expiry","settle","volume","open_interest","rolled"]).set_index("date")
-    # Return calculation handles roll day explicitly: on a roll, use prior day's old contract to today's old-contract settlement
-    # if available; then switch the state to the new contract after close. This prevents artificial roll gaps.
+    # On a roll date, P&L is earned on the old contract through that close, then
+    # state switches to the new contract after close. The new contract's level
+    # is never spliced into that day's P&L, so the roll price gap cannot create
+    # artificial return.
     rets=[];prev_contract=None;prev_settle=None
     lookup=z.set_index(["trade_date","contract"])["settle"]
     for dt,row in c.iterrows():
@@ -121,23 +133,45 @@ def rf_series(dates,rf_file=None):
     if "annual_rate" in r:return (r.set_index("date").annual_rate/TD).reindex(dates).ffill().fillna(0)
     raise ValueError("RF file needs date + rf_daily or annual_rate")
 
-def target_exposure(c,bull=.35,bear=0.,cap=3.):
-    px=c.settle;vol=c.fut_ret.rolling(20).std()*math.sqrt(TD);ma=px.rolling(200).mean();e=pd.Series(0.,index=c.index)
-    for i in range(1,len(c)):
+def load_signal_price(signal_file,dates,price_column="adj_close"):
+    p=Path(signal_file)
+    if p.suffix.lower()==".parquet":x=pd.read_parquet(p)
+    else:x=pd.read_csv(p)
+    if "date" not in x.columns or price_column not in x.columns:
+        raise ValueError(f"signal file requires date + {price_column}; columns={list(x.columns)}")
+    x=x[["date",price_column]].copy()
+    x["date"]=pd.to_datetime(x.date)
+    x[price_column]=pd.to_numeric(x[price_column],errors="coerce")
+    x=x.dropna().sort_values("date").drop_duplicates("date",keep="last").set_index("date")[price_column]
+    # Forward-fill only from already-observed signal dates; never back-fill.
+    return x.reindex(dates).ffill()
+
+def target_exposure(signal_px,rf,bull=.35,bear=0.,cap=3.):
+    """Frozen prior-day signal: QQQ price/200DMA and 20d QQQ excess-return vol."""
+    signal_px=pd.Series(signal_px).astype(float)
+    qret=signal_px.pct_change()
+    ex=qret-rf.reindex(signal_px.index).ffill().fillna(0)
+    vol=ex.rolling(20).std()*math.sqrt(TD)
+    ma=signal_px.rolling(200).mean()
+    e=pd.Series(0.,index=signal_px.index)
+    for i in range(1,len(signal_px)):
         j=i-1
-        if np.isfinite(vol.iloc[j]) and vol.iloc[j]>0 and np.isfinite(ma.iloc[j]):
-            t=bull if px.iloc[j]>ma.iloc[j] else bear;e.iloc[i]=np.clip(t/vol.iloc[j],0,cap)
+        if np.isfinite(vol.iloc[j]) and vol.iloc[j]>0 and np.isfinite(ma.iloc[j]) and np.isfinite(signal_px.iloc[j]):
+            t=bull if signal_px.iloc[j]>ma.iloc[j] else bear
+            e.iloc[i]=np.clip(t/vol.iloc[j],0,cap)
     return e
 
-def backtest(c,rf,mode="35_0",cost_per_1x_turnover=.0002):
-    if mode=="35_0":e=target_exposure(c,.35,0)
-    elif mode=="35_12":e=target_exposure(c,.35,.12)
-    elif mode=="25":e=target_exposure(c,.25,.25)
+def backtest(c,rf,signal_px,mode="35_0",cost_per_1x_turnover=.0002):
+    if mode=="35_0":e=target_exposure(signal_px,rf,.35,0)
+    elif mode=="35_12":e=target_exposure(signal_px,rf,.35,.12)
+    elif mode=="25":e=target_exposure(signal_px,rf,.25,.25)
     elif mode=="2x_200":
-        ma=c.settle.rolling(200).mean();e=pd.Series(0.,index=c.index)
-        e.iloc[1:]=np.where((c.settle.iloc[:-1].values>ma.iloc[:-1].values)&np.isfinite(ma.iloc[:-1].values),2.,0.)
+        ma=signal_px.rolling(200).mean();e=pd.Series(0.,index=c.index)
+        prior=(signal_px.iloc[:-1].values>ma.iloc[:-1].values)&np.isfinite(ma.iloc[:-1].values)
+        e.iloc[1:]=np.where(prior,2.,0.)
     elif mode=="1x":e=pd.Series(1.,index=c.index)
     else:raise ValueError(mode)
+    e=e.reindex(c.index).fillna(0)
     # Correct collateralized futures accounting: collateral yield + notional futures P/L.
     r=rf.reindex(c.index).ffill().fillna(0)+e*c.fut_ret.fillna(0)-cost_per_1x_turnover*e.diff().abs().fillna(e.abs())
     return r,e
@@ -148,22 +182,36 @@ def metrics(r):
             "terminal":eq.iloc[-1],"worst_day":r.min()}
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument("files",nargs="+");ap.add_argument("--rule",choices=["volume_5bd","oi_5bd","fixed_5bd"],default="volume_5bd")
-    ap.add_argument("--rf-file");ap.add_argument("--out",default="results/cme_datamine_futures");a=ap.parse_args()
+    ap=argparse.ArgumentParser()
+    ap.add_argument("files",nargs="+")
+    ap.add_argument("--rule",choices=["volume_5bd","oi_5bd","fixed_5bd"],default="volume_5bd")
+    ap.add_argument("--rf-file")
+    ap.add_argument("--signal-file",required=True,
+                    help="Frozen external strategy signal history; for this research program use QQQ adjusted close.")
+    ap.add_argument("--signal-price-column",default="adj_close")
+    ap.add_argument("--out",default="results/cme_datamine_futures")
+    a=ap.parse_args()
     out=Path(a.out);out.mkdir(parents=True,exist_ok=True)
     z=canonicalize(a.files);c=make_continuous(z,a.rule);rf=rf_series(c.index,a.rf_file)
+    signal_px=load_signal_price(a.signal_file,c.index,a.signal_price_column)
     rows=[]
     for mode in ["1x","25","35_12","35_0","2x_200"]:
-        r,e=backtest(c,rf,mode);rows.append({"mode":mode,**metrics(r),"avg_exposure":e.mean(),"max_exposure":e.max(),
-                                            "turnover_per_year":e.diff().abs().sum()/(len(e)/TD)})
+        r,e=backtest(c,rf,signal_px,mode)
+        rows.append({"mode":mode,**metrics(r),"avg_exposure":e.mean(),"max_exposure":e.max(),
+                     "turnover_per_year":e.diff().abs().sum()/(len(e)/TD)})
     pd.DataFrame(rows).to_csv(out/"strategy_results.csv",index=False);c.to_csv(out/"continuous_audit.csv")
+    pd.DataFrame({"date":c.index,"signal_price":signal_px.values}).to_csv(out/"frozen_signal_audit.csv",index=False)
     (out/"manifest.json").write_text(json.dumps({
       "source_requirement":"Official CME DataMine contract-level historical settlement exports legitimately acquired by user/institution.",
+      "pnl_source":"CME contract-level settlements only.",
+      "signal_source":"External frozen signal file. For the frozen 35/0 program this must be QQQ adjusted close; futures prices must not redefine the strategy signal.",
+      "signal_rule":"prior-day QQQ adjusted close vs 200DMA; 20-session QQQ excess-return volatility; 35% target above trend / 0 below; cap 3x.",
       "roll_rule":a.rule,
       "roll_accounting":"Roll-day return is computed using old contract settlement through roll close, then state switches to new contract; no artificial level jump is counted as P/L.",
-      "return_model":"portfolio RF collateral yield + exposure * futures settlement return - explicit turnover cost",
-      "lookahead":"All signals use prior-day data.",
+      "return_model":"portfolio RF collateral yield + frozen external exposure * futures settlement return - explicit turnover cost",
+      "lookahead":"All dynamic exposures use prior-day external signal data. Signal alignment forward-fills past observations only; it never back-fills.",
       "warning":"Do not label output exchange-grade unless input provenance is verified as CME settlement data and contract/expiry fields are audited."
     },indent=2))
     print(pd.DataFrame(rows).to_string(index=False))
+
 if __name__=="__main__":main()

@@ -58,10 +58,17 @@ jobs:
         shell: bash
         run: |
           DISCOVERY_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
-            --workflow direct-sec-network-sharded.yml \
+            --workflow direct-sec-network-late-shards.yml \
             --branch research/free-pit-quantconnect-stage1 \
             --status success --limit 1 --json databaseId \
             --jq '.[0].databaseId')"
+          if [ -z "$DISCOVERY_NET_RUN" ]; then
+            DISCOVERY_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+              --workflow direct-sec-network-sharded.yml \
+              --branch research/free-pit-quantconnect-stage1 \
+              --status success --limit 1 --json databaseId \
+              --jq '.[0].databaseId')"
+          fi
           if [ -z "$DISCOVERY_NET_RUN" ]; then
             DISCOVERY_NET_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
               --workflow direct-sec-network-replication.yml \

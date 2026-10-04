@@ -1,0 +1,113 @@
+{
+  "rule": "research/free_stage1/BOTTLENECK_HOLDOUT_CONFIRMATION_RULE.md",
+  "sample": "2020-01-01 through 2023-12-31",
+  "evidence_label": "FREE_HOLDOUT_DIRECT_SEC_LARGE_CAP_EOD_PROXY",
+  "discovery_advancing_families": [
+    "bottleneck_core",
+    "bottleneck_full",
+    "bottleneck_momentum"
+  ],
+  "families": {
+    "bottleneck_core": {
+      "eligible_from_discovery": true,
+      "positive_holdout_cagr_excess_topn_count": 2,
+      "median_holdout_cagr_excess": 0.012848775380666796,
+      "median_holdout_sharpe_excess": 0.06553931297266774,
+      "median_holdout_max_drawdown_difference": 0.003644714260428894,
+      "confirmed": true,
+      "risk_interpretation": "RETURN_AND_RISK_ADJUSTED_SUPPORT",
+      "by_top_n": {
+        "10": {
+          "holdout_cagr": 0.0536524001268661,
+          "comparator_holdout_cagr": 0.0652688121088145,
+          "cagr_excess": -0.011616411981948398,
+          "sharpe_excess": -0.03033607379525488,
+          "max_drawdown_difference": -0.05406154118925899
+        },
+        "20": {
+          "holdout_cagr": 0.0801056846671739,
+          "comparator_holdout_cagr": 0.0672569092865071,
+          "cagr_excess": 0.012848775380666796,
+          "sharpe_excess": 0.06553931297266774,
+          "max_drawdown_difference": 0.003644714260428894
+        },
+        "40": {
+          "holdout_cagr": 0.1112357605925418,
+          "comparator_holdout_cagr": 0.0697466194529752,
+          "cagr_excess": 0.0414891411395666,
+          "sharpe_excess": 0.176555351700173,
+          "max_drawdown_difference": 0.009989456241329298
+        }
+      }
+    },
+    "bottleneck_momentum": {
+      "eligible_from_discovery": true,
+      "positive_holdout_cagr_excess_topn_count": 0,
+      "median_holdout_cagr_excess": -0.016979158455384696,
+      "median_holdout_sharpe_excess": -0.0518351184826254,
+      "median_holdout_max_drawdown_difference": -0.016024427351854997,
+      "confirmed": false,
+      "risk_interpretation": "NOT_CONFIRMED",
+      "by_top_n": {
+        "10": {
+          "holdout_cagr": 0.0513484024655428,
+          "comparator_holdout_cagr": 0.0652688121088145,
+          "cagr_excess": -0.013920409643271694,
+          "sharpe_excess": -0.035386012277436096,
+          "max_drawdown_difference": -0.005012594968219319
+        },
+        "20": {
+          "holdout_cagr": 0.0488658083376811,
+          "comparator_holdout_cagr": 0.0672569092865071,
+          "cagr_excess": -0.018391100948825997,
+          "sharpe_excess": -0.0518351184826254,
+          "max_drawdown_difference": -0.03831886394001249
+        },
+        "40": {
+          "holdout_cagr": 0.0527674609975905,
+          "comparator_holdout_cagr": 0.0697466194529752,
+          "cagr_excess": -0.016979158455384696,
+          "sharpe_excess": -0.054913754407265924,
+          "max_drawdown_difference": -0.016024427351854997
+        }
+      }
+    },
+    "bottleneck_full": {
+      "eligible_from_discovery": true,
+      "positive_holdout_cagr_excess_topn_count": 1,
+      "median_holdout_cagr_excess": -0.024331604198058597,
+      "median_holdout_sharpe_excess": -0.08121212334854061,
+      "median_holdout_max_drawdown_difference": -0.02076733831579114,
+      "confirmed": false,
+      "risk_interpretation": "NOT_CONFIRMED",
+      "by_top_n": {
+        "10": {
+          "holdout_cagr": 0.0046693746419359,
+          "comparator_holdout_cagr": 0.0431696505750294,
+          "cagr_excess": -0.038500275933093506,
+          "sharpe_excess": -0.13720120270704741,
+          "max_drawdown_difference": -0.05463672243815071
+        },
+        "20": {
+          "holdout_cagr": 0.0458431624055406,
+          "comparator_holdout_cagr": 0.0701747666035992,
+          "cagr_excess": -0.024331604198058597,
+          "sharpe_excess": -0.08121212334854061,
+          "max_drawdown_difference": -0.02076733831579114
+        },
+        "40": {
+          "holdout_cagr": 0.0770088442383947,
+          "comparator_holdout_cagr": 0.0578219103385553,
+          "cagr_excess": 0.0191869338998394,
+          "sharpe_excess": 0.07785950166688882,
+          "max_drawdown_difference": 0.01746405160812231
+        }
+      }
+    }
+  },
+  "confirmed_families": [
+    "bottleneck_core"
+  ],
+  "overall_stage1_support": true,
+  "conclusion": "OUT_OF_SAMPLE_SUPPORT_IN_FREE_PIT_SP500_PROXY"
+}

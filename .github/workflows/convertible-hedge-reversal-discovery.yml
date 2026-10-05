@@ -1,4 +1,5 @@
-name: Convertible hedge reversal discovery\n# trigger: 2026-10-04a
+name: Convertible hedge reversal discovery
+# trigger: 2026-10-04a
 
 on:
   workflow_dispatch:

@@ -1,0 +1,21 @@
+name: Futures exhaustive study
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba yfinance
+      - run: python -m py_compile research/futures_exhaustive.py
+      - run: PYTHONPATH=. python research/futures_exhaustive.py --paths 10000
+      - uses: actions/upload-artifact@v4
+        with:
+          name: futures-exhaustive
+          path: results/futures_exhaustive

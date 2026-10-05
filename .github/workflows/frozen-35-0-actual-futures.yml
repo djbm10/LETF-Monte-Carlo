@@ -1,0 +1,32 @@
+name: Frozen 35-0 actual futures PnL validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/clean-1926-walkforward]
+    paths:
+      - research/frozen_35_0_actual_futures_validation_20261004.py
+      - .github/workflows/frozen-35-0-actual-futures.yml
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/clean-1926-walkforward
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install numpy pandas yfinance
+      - name: Compile smallest probe
+        run: python -m py_compile research/frozen_35_0_actual_futures_validation_20261004.py
+      - name: Run frozen actual-futures comparison
+        run: PYTHONPATH=. python research/frozen_35_0_actual_futures_validation_20261004.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frozen-35-0-actual-futures-validation
+          path: results/frozen_35_0_actual_futures_validation_20261004
+          if-no-files-found: error

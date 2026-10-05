@@ -1,0 +1,47 @@
+name: Hostile LETF strategy tournament
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/clean-1926-walkforward
+    paths:
+      - research/hostile_strategy_tournament.py
+      - research/hostile_strategy_tournament_fast.py
+      - .github/workflows/hostile-strategy-tournament.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - research/hostile_strategy_tournament.py
+      - research/hostile_strategy_tournament_fast.py
+      - .github/workflows/hostile-strategy-tournament.yml
+
+jobs:
+  tournament:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas numba
+      - name: Compile
+        run: |
+          python -m py_compile research/hostile_strategy_tournament.py
+          python -m py_compile research/hostile_strategy_tournament_fast.py
+      - name: Run 7-scenario 10k-path tournament
+        run: |
+          PYTHONPATH=. python research/hostile_strategy_tournament_fast.py \
+            --paths 10000 --seed 20260821 \
+            --output results/hostile_strategy_tournament
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: hostile-strategy-tournament
+          path: results/hostile_strategy_tournament
+          if-no-files-found: error

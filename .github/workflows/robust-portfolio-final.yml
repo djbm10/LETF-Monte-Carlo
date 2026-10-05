@@ -1,0 +1,29 @@
+name: Final robust portfolio
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/clean-1926-walkforward]
+    paths:
+      - research/robust_portfolio_final.py
+      - .github/workflows/robust-portfolio-final.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - research/robust_portfolio_final.py
+      - .github/workflows/robust-portfolio-final.yml
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install numpy pandas numba yfinance
+      - run: python -m py_compile research/robust_portfolio_final.py
+      - run: PYTHONPATH=. python research/robust_portfolio_final.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: robust-portfolio-final
+          path: results/robust_portfolio_final
+          if-no-files-found: error

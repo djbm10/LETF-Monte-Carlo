@@ -1,0 +1,80 @@
+name: Convertible hedge reversal discovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/mechanism-backlog-validation-20261004]
+    paths:
+      - research/CONVERTIBLE_HEDGE_REVERSAL_PREREG.md
+      - research/convertible_hedge_reversal_discovery_20261004.py
+      - .github/workflows/convertible-hedge-reversal-discovery.yml
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/mechanism-backlog-validation-20261004
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install numpy pandas scipy requests beautifulsoup4 pyarrow yfinance
+      - name: Compile smallest probe
+        run: python -m py_compile research/convertible_hedge_reversal_discovery_20261004.py
+      - name: SEC EFTS smallest probe
+        run: PYTHONPATH=. python research/convertible_hedge_reversal_discovery_20261004.py --probe
+      - name: Download survivor-aware preexisting price panel and PIT membership
+        run: |
+          mkdir -p /tmp/prices
+          gh run download 36220567098 --repo "$GITHUB_REPOSITORY" \
+            --name free-sp500-tsaustin-recovered-price-panel --dir /tmp/prices
+          test -f /tmp/prices/sp500_hybrid_prices_2007_2023.parquet
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/components_history.csv
+      - name: Run frozen discovery only
+        run: |
+          PYTHONPATH=. python research/convertible_hedge_reversal_discovery_20261004.py \
+            --prices /tmp/prices/sp500_hybrid_prices_2007_2023.parquet \
+            --membership /tmp/components_history.csv
+      - name: Assert holdout remains sealed
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('results/convertible_hedge_reversal_discovery_20261004/advancement.json').read_text())
+          assert a['holdout_status']=='SEALED_NOT_DOWNLOADED',a
+          assert a['discovery_event_end']=='2019-12-31',a
+          assert a['data_quality']['max_price_date']<='2019-12-31',a
+          assert a['data_quality']['max_spy_date']<='2019-12-31',a
+          print('CONVERTIBLE_DISCOVERY_HOLDOUT_FIREWALL_PASS',a['decision'],a['disposition'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: convertible-hedge-reversal-discovery-20261004
+          path: results/convertible_hedge_reversal_discovery_20261004
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Persist discovery checkpoint
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/convertible_hedge_reversal_discovery_20261004
+          if git diff --cached --quiet; then
+            echo "No discovery result changes"
+          else
+            git commit -m "Record convertible hedge reversal discovery [skip ci]"
+            git push origin HEAD:research/mechanism-backlog-validation-20261004
+          fi

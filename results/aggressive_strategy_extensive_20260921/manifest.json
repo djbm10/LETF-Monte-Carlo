@@ -1,0 +1,134 @@
+{
+  "data": {
+    "source": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip",
+    "sha256": "1916d331c2c51d2aee3d00215897d2b8e5995cb387f1f4569ba46bff5fb049a8",
+    "start": "1926-07-01",
+    "end": "2026-07-31",
+    "rows": 26296
+  },
+  "paths_per_regime": 2500,
+  "n_regimes": 11,
+  "total_regime_paths": 27500,
+  "seed": 20260921,
+  "block_days": 63,
+  "warmup_days": 252,
+  "horizons_years": [
+    10,
+    20,
+    40
+  ],
+  "leverage_model": {
+    "letf": "daily-reset synthetic leverage; historical FF RF; 50bp financing spread; 91bp levered expense",
+    "futures": "cash RF + exposure*(market total return-RF), exposure 0..3x, 2bp cost per 1.0 exposure turnover"
+  },
+  "dip_proxy_warning": "Historical DIP strategies use the broad U.S. market as a blue-chip proxy. This is NOT a point-in-time individual-company backtest.",
+  "options_warning": "Deep-ITM LEAPS are intentionally not scored here because decision-grade history needs point-in-time option chains/IV surfaces (e.g. OptionMetrics IvyDB/Cboe). A synthetic reconstruction is a separate sensitivity, not observed option history.",
+  "regimes": [
+    {
+      "name": "baseline_history",
+      "mode": "baseline",
+      "drift_ann": 0.0,
+      "vol_scale": 1.0,
+      "rf_floor": null,
+      "rf_cap": null,
+      "crash_every_years": null
+    },
+    {
+      "name": "high_inflation_1966_1982",
+      "mode": "high_inflation",
+      "drift_ann": 0.0,
+      "vol_scale": 1.0,
+      "rf_floor": null,
+      "rf_cap": null,
+      "crash_every_years": null
+    },
+    {
+      "name": "crisis_heavy_empirical",
+      "mode": "crisis",
+      "drift_ann": 0.0,
+      "vol_scale": 1.0,
+      "rf_floor": null,
+      "rf_cap": null,
+      "crash_every_years": null
+    },
+    {
+      "name": "productivity_bull_empirical",
+      "mode": "productivity",
+      "drift_ann": 0.0,
+      "vol_scale": 1.0,
+      "rf_floor": null,
+      "rf_cap": null,
+      "crash_every_years": null
+    },
+    {
+      "name": "lost_decade_empirical",
+      "mode": "lost_decade",
+      "drift_ann": 0.0,
+      "vol_scale": 1.0,
+      "rf_floor": null,
+      "rf_cap": null,
+      "crash_every_years": null
+    },
+    {
+      "name": "high_rate_low_return",
+      "mode": "baseline",
+      "drift_ann": -0.03,
+      "vol_scale": 1.0,
+      "rf_floor": 0.05,
+      "rf_cap": null,
+      "crash_every_years": null
+    },
+    {
+      "name": "stagflation_stress",
+      "mode": "high_inflation",
+      "drift_ann": -0.02,
+      "vol_scale": 1.15,
+      "rf_floor": 0.05,
+      "rf_cap": null,
+      "crash_every_years": null
+    },
+    {
+      "name": "ai_boom_high_vol",
+      "mode": "baseline",
+      "drift_ann": 0.02,
+      "vol_scale": 1.15,
+      "rf_floor": 0.03,
+      "rf_cap": null,
+      "crash_every_years": null
+    },
+    {
+      "name": "soft_landing_disinflation",
+      "mode": "baseline",
+      "drift_ann": 0.005,
+      "vol_scale": 0.85,
+      "rf_floor": null,
+      "rf_cap": 0.04,
+      "crash_every_years": null
+    },
+    {
+      "name": "combined_hostile",
+      "mode": "crisis_mixed",
+      "drift_ann": -0.04,
+      "vol_scale": 1.2,
+      "rf_floor": 0.05,
+      "rf_cap": null,
+      "crash_every_years": 4.0
+    },
+    {
+      "name": "sequence_shock_first5y",
+      "mode": "sequence_shock",
+      "drift_ann": -0.01,
+      "vol_scale": 1.1,
+      "rf_floor": null,
+      "rf_cap": null,
+      "crash_every_years": null
+    }
+  ],
+  "limitations": [
+    "Scenario regimes are stress worlds, not forecast probabilities.",
+    "Empirical regime pools reuse finite historical episodes.",
+    "Synthetic drift/vol/rate transforms are assumptions.",
+    "Fama-French market is broad U.S. market, not literal SPY before inception.",
+    "Strategy parameters were fixed before this run; no optimization on these results."
+  ]
+}

@@ -47,7 +47,7 @@ def sector(px,rf):
   lr=ret[list(p.values())].rename(columns={v:k for k,v in p.items()})
   v20=lr.rolling(20).std()*np.sqrt(252)
   for cadence in ("M","W"):
-   changer=(month!=month.shift()) if cadence=="M" else (wk!=wk.shift())
+   changer=np.r_[True,month[1:]!=month[:-1]] if cadence=="M" else np.r_[True,wk[1:]!=wk[:-1]]
    for L in (63,126,252):
     score=(under/under.shift(L)-1)
     for n in (1,3,5):
@@ -88,7 +88,7 @@ def crossasset(px,rf):
   signal=price/price.shift(L)-1
   for side in ("longflat","longshort"):
    for cadence in ("M","W"):
-    changing=(monthly!=monthly.shift()) if cadence=="M" else (weekly!=weekly.shift())
+    changing=np.r_[True,monthly[1:]!=monthly[:-1]] if cadence=="M" else np.r_[True,weekly[1:]!=weekly[:-1]]
     for target in (.10,.15,.20):
      w=np.zeros((len(ix),len(used)),dtype="float32")
      for i in range(254,len(ix)):

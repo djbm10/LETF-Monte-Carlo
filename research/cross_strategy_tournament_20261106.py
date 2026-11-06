@@ -18,7 +18,7 @@ def download():
     frames={}
     for chunk in [NEEDED[i:i+7] for i in range(0,len(NEEDED),7)]:
         try:
-            x=yf.download(chunk,start="1998-01-01",end="2026-11-07",auto_adjust=True,progress=False,threads=False,group_by="ticker")
+            x=yf.download(chunk,start="1998-01-01",end="2026-11-06",auto_adjust=True,progress=False,threads=False,group_by="ticker")
         except Exception as e:
             print("DOWNLOAD-ERROR",chunk,str(e));continue
         for t in chunk:
@@ -212,8 +212,8 @@ def run():
     out["synthetic_QQQ_LEAPS_100pct"]=leaps_synthetic(px,rf,1.)
     df=pd.DataFrame(out,index=dates).sort_index().replace([np.inf,-np.inf],np.nan)
     df.to_csv(OUT/"daily_returns.csv")
-    windows={"2008plus":("2008-01-01","2026-11-06"),"2012plus":("2012-01-01","2026-11-06"),
-        "2019plus":("2019-01-01","2026-11-06"),"2023plus_descriptive":("2023-01-01","2026-11-06")}
+    windows={"2008plus":("2008-01-01","2026-11-05"),"2012plus":("2012-01-01","2026-11-05"),
+        "2019plus":("2019-01-01","2026-11-05"),"2023plus_descriptive":("2023-01-01","2026-11-05")}
     results=[]
     for cohort,(start,end) in windows.items():
         for name in df.columns:
@@ -236,7 +236,7 @@ def run():
     pd.DataFrame(stress).to_csv(OUT/"bootstrap_3y.csv",index=False)
     exp=pd.DataFrame({"base_exposure":base,"shock_exposure":shock,"graduated_exposure":graduated,"ensemble_exposure":ensemble})
     exp.to_csv(OUT/"daily_exposure.csv")
-    manifest=dict(run_date="2026-11-06",source="Yahoo Finance adjusted close via yfinance; ^IRX simple interest approximation",
+    manifest=dict(run_date="2026-11-06",last_complete_session="2026-11-05",source="Yahoo Finance adjusted close via yfinance; ^IRX simple interest approximation",
         status="Exploratory model-comparison replay; not new untouched holdout; never claim live alpha or official futures execution",
         baseline="Frozen 35/0 QQQ 20d rolling excess-return volatility, 200DMA previous-day, 3x max, risk-free collateral, 2bp per 1x turnover",
         timing="Previous-session close determines current-session close-to-close position; assumes exposure executed before current close-to-close return, without overnight execution premium; risk of market-on-open slippage omitted",
@@ -245,7 +245,7 @@ def run():
         concentrated="CURRENT surviving mega-cap cohort intentionally biased. Informational stress example only; NOT point-in-time stock selection or robust alpha evidence",
         leaps="Black-Scholes synthetic LEAPS: rolling 548 calendar-ish days via 378 sessions, vol=prior20d realized vol +10pp capped, 1% spread; NO observed historical options quote. Exclude from validated ranking",
         monte_carlo="3,000 stationary contiguous-block return resamples per strategy/window/block; not dynamic regime re-simulation. Combined blocks do not reconstruct strategy signals.",
-        holdout="Previously reviewed periods remain contaminated by earlier research; sector frozen 2017-2026 holdout deliberately not opened for model promotion; Bottleneck 2020-2023 untouched holdout not accessed.",
+        holdout="The sector 2017-2026 window is now contaminated by exploratory overlapping-period result inspection and CANNOT be considered a fresh untouched sector holdout. Bottleneck 2020-2023 holdout data not accessed.",
         limitations=["ETF vs futures carry, roll, funding, margin and borrow costs not fully matched","Volatility timing and turnover assume frictionless rebalancing at previous close","No real option implied-vol surface, bid-ask history, exercise, tax accounting","Survivorship bias in single-name screen","Cash needs and taxes require individual circumstances"])
     (OUT/"manifest.json").write_text(json.dumps(manifest,indent=2))
     print("SUMMARY 2012plus")

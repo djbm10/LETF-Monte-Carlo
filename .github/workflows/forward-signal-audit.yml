@@ -18,9 +18,9 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install public data libraries
-        run: python -m pip install 'pandas>=2,<3' 'numpy>=1.26,<3' 'yfinance>=0.2.55'
+        run: python -m pip install 'pandas>=2,<3' 'numpy>=1.26,<3' 'yfinance>=0.2.55' 'exchange_calendars>=4.8,<5'
       - name: Append forward-only signals
-        run: python research/free_validation/shadow_signals.py --ledger research/forward_signal_ledger.jsonl
+        run: python research/free_validation/shadow_signals.py --strict --ledger research/forward_signal_ledger.jsonl
       - name: Commit newly dated observation only
         run: |
           if git status --porcelain -- research/forward_signal_ledger.jsonl | grep .; then

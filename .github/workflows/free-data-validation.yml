@@ -1,0 +1,28 @@
+name: Free data validation tests
+on:
+  push:
+    paths:
+      - 'research/free_validation/**'
+      - 'research/quantconnect_free_futures/**'
+      - 'tests/test_free_data_validation.py'
+      - '.github/workflows/free-data-validation.yml'
+      - '.github/workflows/forward-signal-audit.yml'
+  pull_request:
+    paths:
+      - 'research/free_validation/**'
+      - 'research/quantconnect_free_futures/**'
+      - 'tests/test_free_data_validation.py'
+      - '.github/workflows/free-data-validation.yml'
+      - '.github/workflows/forward-signal-audit.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install 'pandas>=2,<3' 'numpy>=1.26,<3' 'pytest>=8' requests
+      - run: python -m py_compile research/free_validation/*.py research/quantconnect_free_futures/main.py
+      - run: pytest -q tests/test_free_data_validation.py

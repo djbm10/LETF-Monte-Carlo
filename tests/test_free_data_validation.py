@@ -118,3 +118,25 @@ def test_forward_signal_ledger_immutable(tmp_path):
     assert not append_immutable(r,p)
     with pytest.raises(ValueError,match='frozen signal changed'):
         append_immutable({**r,'candidate_etf':'FAKE'},p)
+
+
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from free_validation.shadow_signals import is_nyse_session, validate_prospective_run
+
+
+def test_forward_exchange_calendar_catches_nyse_holidays():
+    assert is_nyse_session('2026-11-06')
+    assert not is_nyse_session('2026-11-07')
+    assert not is_nyse_session('2026-04-03')  # Good Friday, not a US federal holiday
+    assert not is_nyse_session('2026-12-25')
+
+
+def test_forward_signal_ledger_rejects_backdating_and_preclose():
+    ny = ZoneInfo('America/New_York')
+    assert validate_prospective_run('2026-11-06',datetime(2026,11,6,20,5,tzinfo=ny))
+    with pytest.raises(ValueError,match='before 7pm'):
+        validate_prospective_run('2026-11-06',datetime(2026,11,6,16,5,tzinfo=ny))
+    with pytest.raises(ValueError,match='backdated'):
+        validate_prospective_run('2026-11-05',datetime(2026,11,6,20,5,tzinfo=ny))
+    assert not validate_prospective_run('2026-04-03',datetime(2026,4,3,20,5,tzinfo=ny))

@@ -141,7 +141,6 @@ def optionmodels(px,rf):
         if days==0:
          if position=="put":cash-=short*max(k-s,0)
          else:cash-=short*max(s-k,0)
-         if position=="put" and kind=="protective_put":cash+=2*short*max(k-s,0)
          liability=0;short=0;position=None
        wealth=cash+hold*s-liability
        if i>=250 and position is None and i-last>=21:

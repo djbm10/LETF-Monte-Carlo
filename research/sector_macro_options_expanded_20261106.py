@@ -28,7 +28,7 @@ def dl():
   except Exception as e:print("batch-fail",b,str(e)[:100],flush=True)
   print("downloaded",j+len(b),len(TICKERS),"okay",len(d),flush=True)
  if "SPY" not in d or "QQQ" not in d:raise RuntimeError("SPY/QQQ missing")
- p=pd.DataFrame(d).sort_index().loc[:"2026-11-05"];p.to_csv(OUT/"prices.csv")
+ p=pd.DataFrame(d).sort_index().loc[:"2026-11-05"];p=p.loc[p["SPY"].notna()];p.to_csv(OUT/"prices.csv")
  return p
 def met(s):
  s=s.dropna()

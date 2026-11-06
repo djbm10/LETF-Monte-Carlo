@@ -1,0 +1,44 @@
+name: Expanded sector rotation, growth-portfolio, options and macro tournament
+on:
+  push:
+    branches: ["research/expanded-sector-growth-options-20261106"]
+    paths:
+      - "research/sector_macro_options_expanded_20261106.py"
+      - "research/growth20_50_pit_proxy_20261106.py"
+      - ".github/workflows/expanded-tournament-20261106.yml"
+  workflow_dispatch:
+jobs:
+  sector_macro_options:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install numpy pandas scipy yfinance requests
+      - run: python -m py_compile research/sector_macro_options_expanded_20261106.py
+      - run: python research/sector_macro_options_expanded_20261106.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: leveraged-sector-crossasset-options-20261106
+          path: results/sector_macro_optionexp_20261106/
+          retention-days: 60
+  growth20_50:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install numpy pandas scipy yfinance requests
+      - run: python -m py_compile research/growth20_50_pit_proxy_20261106.py
+      - run: python research/growth20_50_pit_proxy_20261106.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: growth20_50_point_in_time_membership-20261106
+          path: results/growth20_50_pt_membership_20261106/
+          retention-days: 60

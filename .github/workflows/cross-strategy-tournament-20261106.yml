@@ -1,0 +1,33 @@
+name: Cross-strategy tournament isolated 2026-11-06
+on:
+  push:
+    branches:
+      - research/cross-strategy-tournament-20261106
+    paths:
+      - 'research/cross_strategy_tournament_20261106.py'
+      - '.github/workflows/cross-strategy-tournament-20261106.yml'
+  workflow_dispatch:
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install empirical research dependencies
+        run: pip install numpy pandas scipy yfinance
+      - name: Check strategy script syntax
+        run: python -m py_compile research/cross_strategy_tournament_20261106.py
+      - name: Run exploratory multi-strategy replay and block-bootstrap stress
+        run: python research/cross_strategy_tournament_20261106.py
+      - name: Upload raw outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-strategy-tournament-20261106
+          path: results/cross_strategy_tournament_20261106
+          retention-days: 30

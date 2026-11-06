@@ -23,6 +23,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m pip install 'pandas>=2,<3' 'numpy>=1.26,<3' 'pytest>=8' requests
+      - run: python -m pip install 'pandas>=2,<3' 'numpy>=1.26,<3' 'pytest>=8' requests 'exchange_calendars>=4.8,<5'
       - run: python -m py_compile research/free_validation/*.py research/quantconnect_free_futures/main.py
       - run: pytest -q tests/test_free_data_validation.py

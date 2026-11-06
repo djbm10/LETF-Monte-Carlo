@@ -1,0 +1,23 @@
+name: Sector OHLC execution audit export
+on:
+  push:
+    branches: [research/expanded-sector-growth-options-20261106]
+    paths: [research/sector_ohlc_export_20261106.py, .github/workflows/sector-ohlc-audit-20261106.yml]
+  workflow_dispatch:
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas yfinance
+      - run: python -u research/sector_ohlc_export_20261106.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sector-ohlc-execution-audit-20261106
+          path: results/sector_ohlc_20261106/
+          retention-days: 30

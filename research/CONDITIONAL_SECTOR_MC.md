@@ -25,7 +25,7 @@ All features use previously available closing prices. Executable return proxy is
 ## Run locally
 
 ```bash
-pip install numpy pandas numba pytest yfinance
+pip install numpy pandas scipy numba pytest yfinance
 PYTHONPATH=. python -m pytest -q tests/test_sector_regime.py
 # CI-only smoke using fictional market prices (NOT investment evidence)
 PYTHONPATH=. python research/run_conditional_sector_mc.py --synthetic-smoke --years 1 --blocks 21 --modes current --transition-modes semi_markov --paths 5

@@ -1,0 +1,25 @@
+name: Leveraged sector prices quick export 2026-11-06
+on:
+  push:
+    branches: [research/expanded-sector-growth-options-20261106]
+    paths:
+      - research/leveraged_sector_prices_20261106.py
+      - .github/workflows/leveraged-sector-prices-20261106.yml
+  workflow_dispatch:
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas numpy yfinance
+      - run: python -u research/leveraged_sector_prices_20261106.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: leveraged-sector-adjusted-closes-20261106
+          path: results/leveraged_sector_prices_20261106/
+          retention-days: 30

@@ -11,7 +11,8 @@ OUT.mkdir(parents=True,exist_ok=True)
 SECTORS="XLK XLF XLE XLV XLI XLP XLU XLY XLB".split()
 MACRO="SPY TLT GLD UUP DBC".split()
 SURVIVORS="AAPL MSFT AMZN NVDA GOOGL META TSLA NFLX CRM ADBE AMD AVGO".split()
-NEEDED=list(dict.fromkeys(["QQQ","SPY","VOO","TQQQ","^IRX"]+SECTORS+MACRO+SURVIVORS))
+OPTIONS_FUNDS="PBP PUTW QYLD XYLD NUSI TAIL JEPI JEPQ".split()
+NEEDED=list(dict.fromkeys(["QQQ","SPY","VOO","TQQQ","^IRX"]+SECTORS+MACRO+SURVIVORS+OPTIONS_FUNDS))
 RF_FALLBACK=0.025/252
 
 def download():
@@ -203,6 +204,11 @@ def run():
             for gate in (False,True):
                 out[f"sector_{w}_{n}_{int(gate)}"]=sector_rotation(px,rf,w,n,gate)
     out["crossasset_5proxy_TSMOM"]=crossasset(px,rf)
+    for ticker in OPTIONS_FUNDS:
+        if ticker in px:out[f"option_fund_{ticker}_buyhold"]=px[ticker].pct_change(fill_method=None)
+    if "TAIL" in px:
+        tail=px["TAIL"].pct_change(fill_method=None)
+        out["35_0_with_20pct_TAIL"]=.8*out["35_0_QQQ_proxy"]+.2*tail
     out["survivor_biased_top1"]=survivor_top1(px,rf)
     for frac in (.2,.4,.6):
         out[f"reserve_{int(frac*100)}_cash"]=frac*rf+(1-frac)*out["35_0_QQQ_proxy"]
@@ -242,6 +248,7 @@ def run():
         timing="Previous-session close determines current-session close-to-close position; assumes exposure executed before current close-to-close return, without overnight execution premium; risk of market-on-open slippage omitted",
         sector="Original nine SPDR sectors, monthly previous close ranks, 6/12m top1/top3, 10bps per dollar turnover; sector historical inception gaps",
         crossasset="SPY TLT GLD UUP DBC ETF total-return proxies only, not true dated futures; approximate borrow 1%/year on shorts and 5bps turnover; cannot validate actual managed futures",
+        options_funds="Live options-strategy ETF proxies PBP PUTW QYLD XYLD NUSI TAIL JEPI JEPQ, buy/hold adjusted distributions, not specific LEAPS or put-spread execution.",
         concentrated="CURRENT surviving mega-cap cohort intentionally biased. Informational stress example only; NOT point-in-time stock selection or robust alpha evidence",
         leaps="Black-Scholes synthetic LEAPS: rolling 548 calendar-ish days via 378 sessions, vol=prior20d realized vol +10pp capped, 1% spread; NO observed historical options quote. Exclude from validated ranking",
         monte_carlo="3,000 stationary contiguous-block return resamples per strategy/window/block; not dynamic regime re-simulation. Combined blocks do not reconstruct strategy signals.",

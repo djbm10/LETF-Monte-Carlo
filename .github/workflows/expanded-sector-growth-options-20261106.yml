@@ -1,0 +1,33 @@
+name: Expanded sector growth options and crossasset tournament 2026-11-06
+on:
+  push:
+    branches: [research/expanded-sector-growth-options-20261106]
+    paths:
+      - research/expanded_sector_growth_options_20261106.py
+      - .github/workflows/expanded-sector-growth-options-20261106.yml
+  workflow_dispatch:
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install numpy pandas scipy yfinance requests lxml
+      - name: Compile
+        run: python -m py_compile research/expanded_sector_growth_options_20261106.py
+      - name: Execute exploratory tournament
+        run: python -u research/expanded_sector_growth_options_20261106.py
+      - name: Upload all research outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: expanded-sector-growth-options-20261106
+          path: results/expanded_tournament_20261106/
+          retention-days: 30

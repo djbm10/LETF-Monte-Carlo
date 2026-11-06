@@ -1,0 +1,86 @@
+name: Conditional sector Monte Carlo validation
+on:
+  push:
+    paths:
+      - 'letf/simulation/sector_regime.py'
+      - 'research/run_conditional_sector_mc.py'
+      - 'tests/test_sector_regime.py'
+      - '.github/workflows/conditional-sector-research.yml'
+  pull_request:
+    paths:
+      - 'letf/simulation/sector_regime.py'
+      - 'research/run_conditional_sector_mc.py'
+      - 'tests/test_sector_regime.py'
+      - '.github/workflows/conditional-sector-research.yml'
+  workflow_dispatch:
+    inputs:
+      paths_per_scenario:
+        description: 'Paired paths per scenario (increase for precision; avoid confusing with independent evidence)'
+        type: number
+        required: true
+        default: 1000
+      years:
+        description: 'Comma-separated simulation horizons'
+        required: true
+        default: '3,10,20'
+      blocks:
+        description: 'Comma-separated historical block lengths'
+        required: true
+        default: '21,63,126'
+      regimes:
+        description: 'Modes current,unconditional,persistent_high,forced_high,forced_low'
+        required: true
+        default: 'current,unconditional,persistent_high,forced_high,forced_low'
+      asof:
+        description: 'Last fully complete market day (YYYY-MM-DD), not current partial session'
+        required: true
+        default: '2026-11-05'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install numpy pandas numba pytest
+      - run: PYTHONPATH=. python -m pytest -q tests/test_sector_regime.py
+      - name: Synthetic data smoke run (not research evidence)
+        run: PYTHONPATH=. python research/run_conditional_sector_mc.py --synthetic-smoke --years 1 --blocks 21 --modes current --transition-modes semi_markov --paths 5 --output results/conditional_sector_smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: conditional-sector-ci-smoke
+          path: results/conditional_sector_smoke/
+          retention-days: 14
+  full-research:
+    if: github.event_name == 'workflow_dispatch'
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install numpy pandas numba yfinance
+      - name: Download actual adjusted market data and run predeclared scenario grid
+        env:
+          YEARS: ${{ inputs.years }}
+          BLOCKS: ${{ inputs.blocks }}
+          REGIMES: ${{ inputs.regimes }}
+          ASOF: ${{ inputs.asof }}
+          NPATHS: ${{ inputs.paths_per_scenario }}
+        run: >-
+          PYTHONPATH=. python -u research/run_conditional_sector_mc.py
+          --fetch-yahoo --asof "$ASOF" --years "$YEARS" --blocks "$BLOCKS"
+          --modes "$REGIMES" --transition-modes semi_markov,block_markov
+          --paths "$NPATHS" --output results/conditional_sector_research
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: conditional-sector-full-research
+          path: results/conditional_sector_research/
+          retention-days: 60

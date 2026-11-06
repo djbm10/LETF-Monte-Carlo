@@ -45,7 +45,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m pip install numpy pandas numba pytest
+      - run: python -m pip install numpy pandas scipy numba pytest
       - run: PYTHONPATH=. python -m pytest -q tests/test_sector_regime.py
       - name: Synthetic data smoke run (not research evidence)
         run: PYTHONPATH=. python research/run_conditional_sector_mc.py --synthetic-smoke --years 1 --blocks 21 --modes current --transition-modes semi_markov --paths 5 --output results/conditional_sector_smoke
@@ -65,7 +65,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m pip install numpy pandas numba yfinance
+      - run: python -m pip install numpy pandas scipy numba yfinance
       - name: Download actual adjusted market data and run predeclared scenario grid
         env:
           YEARS: ${{ inputs.years }}

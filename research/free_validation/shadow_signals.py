@@ -19,6 +19,32 @@ SECTOR_PAIRS = {"XLK":"ROM", "SOXX":"USD", "XLF":"UYG", "XLV":"RXL",
                 "XLP":"UGE", "VNQ":"URE"}
 
 
+def is_nyse_session(asof: str) -> bool:
+    """Exchange calendar, including Good Friday and unscheduled closures when known.
+
+    This is an availability gate, not a guarantee of Yahoo settlement freshness.
+    """
+    import exchange_calendars as xcals
+    cal = xcals.get_calendar("XNYS")
+    return bool(cal.is_session(pd.Timestamp(asof)))
+
+
+def validate_prospective_run(asof: str, observed_at: datetime) -> bool:
+    """Only contemporaneous, fully closed trading days may enter the forward ledger.
+
+    A historical replay is allowed only via the explicit --dry-run path.
+    Returns False for holidays/weekends without suggesting a missing signal.
+    """
+    if not is_nyse_session(asof):
+        return False
+    ny = observed_at.astimezone(ZoneInfo("America/New_York"))
+    if asof != ny.date().isoformat():
+        raise ValueError("Prospective ledger refuses backdated or future session; use --dry-run to replay history")
+    if ny.hour < 19:
+        raise ValueError("Prospective ledger refuses to record before 7pm New York time")
+    return True
+
+
 def compute_frozen_signals(close: pd.DataFrame, asof: str) -> dict:
     required = {"QQQ", "SPY", *SECTOR_PAIRS, *SECTOR_PAIRS.values()}
     if not required.issubset(close.columns):
@@ -99,19 +125,30 @@ def main():
     parser.add_argument('--asof')
     parser.add_argument('--close-file')
     parser.add_argument('--ledger',default='research/forward_signal_ledger.jsonl')
-    parser.add_argument('--strict',action='store_true')
+    parser.add_argument('--strict',action='store_true',help='Fail the GitHub job on missing data during a valid trading session')
+    parser.add_argument('--dry-run',action='store_true',help='Print historical or current indicative signal without writing the protected ledger')
     args=parser.parse_args()
     ny=datetime.now(ZoneInfo('America/New_York'))
     asof=args.asof or str(ny.date())
-    if not args.asof and (ny.weekday() >= 5 or ny.hour < 19):
-        print('SKIP: not after 7pm local trading weekday; no record written')
-        return
+    if not args.dry_run:
+        if not is_nyse_session(asof):
+            print('SKIP: exchange closed on',asof)
+            return
+        if not args.asof and ny.hour < 19:
+            if args.strict:
+                raise ValueError('Trading day is not complete; forward journal not ready')
+            print('SKIP: not yet after 7pm New York time')
+            return
+        validate_prospective_run(asof,ny)
     prices=pd.read_csv(args.close_file,index_col=0,parse_dates=True) if args.close_file else yahoo_closes(asof)
     try:
         record=compute_frozen_signals(prices,asof)
     except ValueError as e:
         if args.strict:raise
         print('SKIP: no complete market session for',asof,'reason',str(e))
+        return
+    if args.dry_run:
+        print(json.dumps({'mode':'HISTORICAL_OR_CURRENT_DRY_RUN_NOT_FORWARD_EVIDENCE','record':record},sort_keys=True))
         return
     changed=append_immutable(record,args.ledger)
     print(json.dumps(dict(record_written=changed,record=record),sort_keys=True))

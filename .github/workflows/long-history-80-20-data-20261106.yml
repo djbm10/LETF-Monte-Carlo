@@ -1,0 +1,28 @@
+name: Frozen long-history 80-20 dataset through 2026-11-05
+on:
+  push:
+    branches: [research/long-history-80-20-comparison-20261106]
+    paths:
+      - research/long_history_80_20_price_export_20261106.py
+      - .github/workflows/long-history-80-20-data-20261106.yml
+  workflow_dispatch:
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas numpy yfinance requests
+      - run: python -m py_compile research/long_history_80_20_price_export_20261106.py
+      - run: python -u research/long_history_80_20_price_export_20261106.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: long-history-80-20-ohcl-20261106
+          path: results/long_history_80_20_20261106/
+          retention-days: 30

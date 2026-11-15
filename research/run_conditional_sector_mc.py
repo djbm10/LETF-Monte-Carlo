@@ -5,6 +5,7 @@ from dataclasses import replace
 from datetime import date, timedelta
 import itertools
 import json
+from hashlib import sha256
 from pathlib import Path
 
 import numpy as np
@@ -102,6 +103,21 @@ def parse_csv_values(s, parser):
     return [parser(x.strip()) for x in s.split(',') if x.strip()]
 
 
+def paired_scenario_seed(base_seed: int, years: int, block: int,
+                         mode: str, transition_mode: str, duration: float) -> int:
+    """Same market paths for identical market assumptions across cost scenarios.
+
+    A deterministic hash is independent of Python's randomized hash seed,
+    scenario ordering and the set of financing spreads. Costs must not affect
+    which exogenous price history is sampled.
+    """
+    identity = json.dumps([int(years), int(block), str(mode),
+                           str(transition_mode), float(duration)],
+                          separators=(",", ":"))
+    salt = int.from_bytes(sha256(identity.encode()).digest()[:4], "big")
+    return (int(base_seed) + salt) % (2**32 - 1)
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     source = p.add_mutually_exclusive_group()
@@ -135,7 +151,8 @@ def main(argv=None):
     for i, (yr, bl, mode, tm, multiplier, spread) in enumerate(grid):
         c = Scenario(years=yr, paths=args.paths, block_days=bl, mode=mode,
                      transition_mode=tm, high_duration_multiplier=multiplier,
-                     funding_spread_bps_annual=spread, seed=args.seed + i * 7919)
+                     funding_spread_bps_annual=spread,
+                     seed=paired_scenario_seed(args.seed, yr, bl, mode, tm, multiplier))
         configs.append(c)
         row = evaluate(market, c)
         row['scenario_id'] = i
@@ -145,6 +162,7 @@ def main(argv=None):
               f'blend_wealthier={row["p_blend_higher_terminal_wealth"]:.1%}', flush=True)
     details = manifest(market, configs)
     details['source_provenance'] = provenance
+    details['paired_seed_method'] = 'sha256(exogenous market configuration), identical across financing spread variants'
     (out / 'manifest.json').write_text(json.dumps(details, indent=2))
     print(f'COMPLETE {len(rows)} scenarios; sample={market.source_start}–{market.source_end} '
           f'asof={market.asof}; output={out}', flush=True)

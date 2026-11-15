@@ -39,3 +39,17 @@ def test_no_future_data_changes_past_signal():
     x.iloc[-1,0]=10
     changed=run.signals(run.indicators(x)).iloc[-2].perry
     assert original==changed
+
+
+def test_rolling_dca_differs_from_lump_sum():
+    idx=pd.bdate_range('2010-01-04',periods=3000)
+    paths=pd.DataFrame({
+        'perry_next_close':(1.0005)**np.arange(3000),
+        'spy_band_next_close':np.ones(3000),
+        'tqqq_buy_hold':np.ones(3000)
+    },index=idx)
+    summary=run.rolling_10year_dca(paths,monthly_usd=1500)
+    assert summary['perry_next_close']['rolling_10y_cohorts']>0
+    assert summary['perry_next_close']['median_money_weighted_irr']>0.1
+    assert abs(summary['spy_band_next_close']['median_money_weighted_irr'])<1e-9
+    assert summary['spy_band_next_close']['loss_cohort_fraction']==0

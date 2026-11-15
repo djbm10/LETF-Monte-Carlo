@@ -1,4 +1,4 @@
-# Retry 3: align data to NYSE calendar without price imputation.
+# Retry 4: official NYSE session alignment within installed calendar coverage, no price imputation.
 name: Registered market-data regime simulations (Nov 15)
 on:
   push:

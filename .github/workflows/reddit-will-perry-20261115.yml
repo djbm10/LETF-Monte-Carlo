@@ -2,11 +2,16 @@ name: Will Perry Reddit gate independent test (real TQQQ only)
 on:
   push:
     branches:
+      - main
       - research/will-perry-reddit-audit-20261115
+      - research/weekly-perry-monitor-20261115
     paths:
       - research/reddit_will_perry_20261115.py
       - tests/test_reddit_will_perry_20261115.py
       - .github/workflows/reddit-will-perry-20261115.yml
+  schedule:
+    # Late Monday Eastern, enough time for Yahoo's prior session close.
+    - cron: '30 3 * * 2'
   workflow_dispatch:
 permissions:
   contents: read

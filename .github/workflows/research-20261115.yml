@@ -1,8 +1,8 @@
 # Retry 4: official NYSE session alignment within installed calendar coverage, no price imputation.
-name: Registered market-data regime simulations (Nov 15)
+name: Paired financing & persistent-high real-data scenarios (Nov 15)
 on:
   push:
-    branches: [research/verified-sector-mc-20261115]
+    branches: [research/paired-financing-stress-20261115]
     paths:
       - '.github/workflows/research-20261115.yml'
   workflow_dispatch:
@@ -25,23 +25,23 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          mkdir -p results/registered_sector_20261115
+          mkdir -p results/paired_sector_20261115
           echo "SCRIPT_SHA=$(git rev-parse HEAD)"
           PYTHONPATH=. python -u research/run_conditional_sector_mc.py \
             --fetch-yahoo --asof 2026-11-13 \
             --years 3,10 --blocks 21,63 \
-            --modes current,unconditional --transition-modes semi_markov \
-            --funding-spread-bps 100,300 --paths 200 --seed 20261115 \
-            --max-scenarios 24 \
-            --output results/registered_sector_20261115 \
-            | tee results/registered_sector_20261115/console.log
+            --modes current,unconditional,persistent_high --transition-modes semi_markov \
+            --funding-spread-bps 100,300 --paths 500 --seed 20261115 \
+            --max-scenarios 30 \
+            --output results/paired_sector_20261115 \
+            | tee results/paired_sector_20261115/console.log
       - name: Upload only model summaries, hashes and logs (not vendor prices)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: registered-real-data-sector-mc-nov15
+          name: paired-financing-highvol-real-mc-nov15
           path: |
-            results/registered_sector_20261115/scenario_results.csv
-            results/registered_sector_20261115/manifest.json
-            results/registered_sector_20261115/console.log
+            results/paired_sector_20261115/scenario_results.csv
+            results/paired_sector_20261115/manifest.json
+            results/paired_sector_20261115/console.log
           retention-days: 45

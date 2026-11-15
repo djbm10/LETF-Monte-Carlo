@@ -72,7 +72,8 @@ def get_data(args):
         # fail the historical data-quality gates.
         import exchange_calendars as xcals
         exchange = xcals.get_calendar("XNYS")
-        sessions = exchange.sessions_in_range(pd.Timestamp('2005-01-01'), pd.Timestamp(args.asof))
+        calendar_start = max(pd.Timestamp('2005-01-01'), exchange.first_session)
+        sessions = exchange.sessions_in_range(calendar_start, pd.Timestamp(args.asof))
         sessions = sessions.tz_localize(None)
         closes = closes.reindex(sessions)
         opens = opens.reindex(sessions)

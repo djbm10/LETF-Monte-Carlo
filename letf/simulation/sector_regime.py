@@ -140,7 +140,9 @@ def build_market_data(
     anchor_date = ix[-1]
     seed = c.loc[:, list(names)].iloc[-270:].to_numpy(dtype=np.float64)
     if not np.isfinite(seed).all() or (seed <= 0).any():
-        raise ValueError("Incomplete or nonpositive 270-session as-of anchor")
+        invalid = (~np.isfinite(seed)) | (seed <= 0)
+        affected = {name: int(invalid[:, j].sum()) for j, name in enumerate(names) if invalid[:, j].any()}
+        raise ValueError(f"Incomplete or nonpositive 270-session as-of anchor: counts_by_ticker={affected}")
     raw = pd.DataFrame(index=ix)
     for name in names:
         raw[f"open_{name}"] = o[name].shift(-1) / o[name] - 1

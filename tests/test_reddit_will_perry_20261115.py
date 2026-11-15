@@ -1,9 +1,9 @@
 import sys
 from pathlib import Path
-sys.path.insert(0,str(Path(__file__).resolve().parent))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1] / "research"))
 import numpy as np
 import pandas as pd
-import run
+import reddit_will_perry_20261115 as run
 
 def test_two_session_confirmation():
     idx=pd.bdate_range('2020-01-01',periods=11)

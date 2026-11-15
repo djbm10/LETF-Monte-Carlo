@@ -1,3 +1,4 @@
+# Retry 2: pinpoint absent historical instruments; do not impute source prices.
 name: Registered market-data regime simulations (Nov 15)
 on:
   push:

@@ -1,9 +1,16 @@
 name: Prospective frozen-signal shadow journal (no trades)
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'research/free_validation/shadow_signals.py'
+      - '.github/workflows/forward-signal-audit.yml'
   workflow_dispatch:
   schedule:
-    # 02:30 UTC Tue-Sat = prior US trading day late evening.
-    - cron: '30 2 * * 2-6'
+    # 01:30 UTC Tue-Sat is after 7pm ET of the PRIOR NYSE session.
+    # GitHub cron can run hours late; code selects last completed session
+    # and refuses to append after its NEXT session's regular opening.
+    - cron: '30 1 * * 2-6'
 permissions:
   contents: write
 jobs:

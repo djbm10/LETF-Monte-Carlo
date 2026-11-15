@@ -30,19 +30,45 @@ def is_nyse_session(asof: str) -> bool:
 
 
 def validate_prospective_run(asof: str, observed_at: datetime) -> bool:
-    """Only contemporaneous, fully closed trading days may enter the forward ledger.
+    """Permit a frozen signal only after its close and before its next NYSE open.
 
-    A historical replay is allowed only via the explicit --dry-run path.
-    Returns False for holidays/weekends without suggesting a missing signal.
+    A delayed GitHub Actions schedule may execute after midnight UTC/NY.
+    In that case the LAST finished session (not today's incomplete session)
+    is still prospective if the next market session has not started.
+    All records retain the ACTUAL observation time. No retroactive fills.
     """
     if not is_nyse_session(asof):
         return False
+    if observed_at.tzinfo is None or observed_at.utcoffset() is None:
+        raise ValueError("Observation time must be timezone-aware")
+    import exchange_calendars as xcals
+    from datetime import time, timezone
+    cal = xcals.get_calendar("XNYS")
+    session = pd.Timestamp(asof)
     ny = observed_at.astimezone(ZoneInfo("America/New_York"))
-    if asof != ny.date().isoformat():
-        raise ValueError("Prospective ledger refuses backdated or future session; use --dry-run to replay history")
-    if ny.hour < 19:
-        raise ValueError("Prospective ledger refuses to record before 7pm New York time")
+    cutoff = datetime.combine(session.date(), time(19, 0), tzinfo=ZoneInfo("America/New_York"))
+    if ny < cutoff:
+        raise ValueError("Prospective ledger refuses to record before 7pm New York time on signal session")
+    next_open_utc = cal.session_open(cal.next_session(session)).to_pydatetime()
+    if observed_at.astimezone(timezone.utc) >= next_open_utc:
+        raise ValueError("Prospective ledger refuses backdated observations after next NYSE open")
     return True
+
+
+def latest_publishable_session(observed_at: datetime) -> str:
+    """Choose the latest legally observable completed XNYS session."""
+    import exchange_calendars as xcals
+    cal = xcals.get_calendar("XNYS")
+    ny = observed_at.astimezone(ZoneInfo("America/New_York"))
+    today = pd.Timestamp(ny.date())
+    if cal.is_session(today):
+        session = today if ny.hour >= 19 else cal.previous_session(today)
+    else:
+        session = cal.date_to_session(today, direction="previous")
+    asof = str(session.date())
+    if not validate_prospective_run(asof, observed_at):
+        raise ValueError("No eligible market session to record")
+    return asof
 
 
 def compute_frozen_signals(close: pd.DataFrame, asof: str) -> dict:
@@ -90,7 +116,10 @@ def append_immutable(record: dict, ledger_file: str | Path) -> bool:
     for raw in existing:
         obj=json.loads(raw)
         if obj['asof']==record['asof']:
-            if obj!=record:
+            # A re-run receives a new observation timestamp. Compare only
+            # immutable signal inputs, never allow a previous signal to change.
+            stable = lambda row: {k:v for k,v in row.items() if k != "observed_at_utc"}
+            if stable(obj) != stable(record):
                 raise ValueError("An existing frozen signal changed: would overwrite historical evidence")
             return False
         if obj['asof'] > record['asof']:
@@ -129,17 +158,11 @@ def main():
     parser.add_argument('--dry-run',action='store_true',help='Print historical or current indicative signal without writing the protected ledger')
     args=parser.parse_args()
     ny=datetime.now(ZoneInfo('America/New_York'))
-    asof=args.asof or str(ny.date())
+    asof=args.asof or (str(ny.date()) if args.dry_run else latest_publishable_session(ny))
     if not args.dry_run:
-        if not is_nyse_session(asof):
-            print('SKIP: exchange closed on',asof)
+        if not validate_prospective_run(asof, ny):
+            print('SKIP: exchange closed on', asof)
             return
-        if not args.asof and ny.hour < 19:
-            if args.strict:
-                raise ValueError('Trading day is not complete; forward journal not ready')
-            print('SKIP: not yet after 7pm New York time')
-            return
-        validate_prospective_run(asof,ny)
     prices=pd.read_csv(args.close_file,index_col=0,parse_dates=True) if args.close_file else yahoo_closes(asof)
     try:
         record=compute_frozen_signals(prices,asof)
@@ -150,6 +173,9 @@ def main():
     if args.dry_run:
         print(json.dumps({'mode':'HISTORICAL_OR_CURRENT_DRY_RUN_NOT_FORWARD_EVIDENCE','record':record},sort_keys=True))
         return
+    from datetime import timezone
+    record['observed_at_utc'] = ny.astimezone(timezone.utc).isoformat()
+    record['signal_ruleset'] = 'frozen_qqq35_0_sector_20261106'
     changed=append_immutable(record,args.ledger)
     print(json.dumps(dict(record_written=changed,record=record),sort_keys=True))
 

@@ -140,3 +140,34 @@ def test_forward_signal_ledger_rejects_backdating_and_preclose():
     with pytest.raises(ValueError,match='backdated'):
         validate_prospective_run('2026-11-05',datetime(2026,11,6,20,5,tzinfo=ny))
     assert not validate_prospective_run('2026-04-03',datetime(2026,4,3,20,5,tzinfo=ny))
+
+
+from free_validation.shadow_signals import latest_publishable_session
+
+def test_scheduler_selects_last_completed_market_session():
+    tz = ZoneInfo("America/New_York")
+    # Delay past midnight does not create a new market-day price observation.
+    assert latest_publishable_session(datetime(2026,11,11,4,30,tzinfo=tz)) == "2026-11-10"
+    assert latest_publishable_session(datetime(2026,11,14,4,30,tzinfo=tz)) == "2026-11-13"
+    # On weekend, Friday's close remains eligible until the next NYSE open.
+    assert latest_publishable_session(datetime(2026,11,15,15,0,tzinfo=tz)) == "2026-11-13"
+    # Good Friday closure: the previous Thursday remains the last session.
+    assert latest_publishable_session(datetime(2026,4,6,5,0,tzinfo=tz)) == "2026-04-02"
+
+def test_forward_signal_must_precede_next_regular_market_open():
+    tz = ZoneInfo("America/New_York")
+    assert validate_prospective_run("2026-11-13", datetime(2026,11,16,9,29,tzinfo=tz))
+    with pytest.raises(ValueError, match="backdated"):
+        validate_prospective_run("2026-11-13",datetime(2026,11,16,9,30,tzinfo=tz))
+    with pytest.raises(ValueError,match="before 7pm"):
+        validate_prospective_run("2026-11-13",datetime(2026,11,13,18,59,tzinfo=tz))
+    with pytest.raises(ValueError,match="timezone-aware"):
+        validate_prospective_run("2026-11-13",datetime(2026,11,13,20,0))
+
+def test_repeat_observation_ignores_timestamp_but_not_changed_strategy(tmp_path):
+    p=tmp_path/"ledger.jsonl"
+    row={"asof":"2026-11-13","candidate_etf":"CASH","observed_at_utc":"2026-11-14T10:00:00+00:00"}
+    assert append_immutable(row,p)
+    assert not append_immutable({**row,"observed_at_utc":"2026-11-15T20:00:00+00:00"},p)
+    with pytest.raises(ValueError,match="frozen signal changed"):
+        append_immutable({**row,"candidate_etf":"RXL"},p)

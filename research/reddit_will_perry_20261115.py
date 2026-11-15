@@ -160,6 +160,60 @@ def bootstrap(real_prices, reps=150, path_days=2520, blocks=(21,63), seed=202611
             'perry_beat_spy_band_frequency':float((test.terminal_multiple>base.terminal_multiple).mean())}
     return out
 
+
+def rolling_10year_dca(curves: pd.DataFrame, monthly_usd: float = 1500) -> dict:
+    """Money-weighted 10-year rolling $1500 monthly contributions, actual fund history only.
+
+    Each deposit occurs after the close's portfolio return on the first trading
+    day of the month. The next day's return applies to that deposit. Costs are
+    already embedded in the equity curves. Never confuse this with lump-sum CAGR.
+    """
+    if monthly_usd <= 0: raise ValueError("Positive contributions required")
+    days=curves.index
+    if len(days)<2520:raise ValueError("Need >=10 years of daily real prices")
+    first_month_days=[d for k,d in enumerate(days) if k==0 or d.month!=days[k-1].month or d.year!=days[k-1].year]
+    # Exclude first partial month so every cohort begins at month start.
+    first_month_days=first_month_days[1:]
+    first_set=set(first_month_days)
+    daily=curves.pct_change().fillna(0.0)
+    output={}
+    for name in ["perry_next_close","spy_band_next_close","tqqq_buy_hold"]:
+        cases=[]
+        for start in first_month_days:
+            target=start+pd.DateOffset(years=10)
+            if target>days[-1]+pd.Timedelta(days=2): continue
+            segment=daily.loc[start:target, name]
+            if len(segment)<2450:continue
+            finish=segment.index[-1]
+            balance=0.0
+            deposits=[]
+            for d,change in segment.items():
+                balance*=1+float(change)
+                if d in first_set:
+                    balance+=monthly_usd
+                    deposits.append(d)
+            total=monthly_usd*len(deposits)
+            if not deposits:continue
+            lo,hi=-0.99,5.0
+            # Solve future value of actual dated deposits for annual IRR.
+            for _ in range(56):
+                mid=(lo+hi)/2
+                projected=sum(monthly_usd*((1+mid)**((finish-d).days/365.25)) for d in deposits)
+                if projected>balance:hi=mid
+                else:lo=mid
+            irr=(lo+hi)/2
+            cases.append((irr,balance,balance<total))
+        if not cases:raise ValueError("No full ten-year contribution cohorts")
+        output[name]={
+            "rolling_10y_cohorts":len(cases),
+            "monthly_contribution_usd":monthly_usd,
+            "median_money_weighted_irr":float(np.median([c[0] for c in cases])),
+            "worst_money_weighted_irr":float(min(c[0] for c in cases)),
+            "median_final_balance_usd":float(np.median([c[1] for c in cases])),
+            "loss_cohort_fraction":float(np.mean([c[2] for c in cases]))
+        }
+    return output
+
 def run(output, reps=150):
     allp,real=prices_from_yahoo()
     stats,curves,sigs=compare(allp)
@@ -177,6 +231,7 @@ def run(output, reps=150):
               'Two-day confirmation and drawdown hystereses reconstructed from BestFolio',
               'Monte Carlo resamples known sample and cannot validate strategy edge'],
             'historical_comparison':stats,
+            'rolling_10yr_monthly_1500_dca':rolling_10year_dca(curves),
             'paired_block_bootstrap':bootstrap(real,reps=reps),
             'last_signal_date':str(sigs.index[-1].date()),
             'last_signal_raw':{k:float(v) for k,v in sigs.iloc[-1].to_dict().items()}}
@@ -186,6 +241,7 @@ def run(output, reps=150):
     print('REAL_DATA',result['start'],result['end'],'prices_hash',result['prices_hash'])
     for k,v in stats.items():print('RESULT',k,'CAGR',round(100*v['cagr'],2),'MDD',round(100*v['max_drawdown'],2),'Sharpe0',None if v['sharpe_vs_zero'] is None else round(v['sharpe_vs_zero'],3),'Invested',round(v['fraction_in_tqqq'],3))
     print('BOOTSTRAP',json.dumps(result['paired_block_bootstrap']))
+    print('ROLLING_DCA',json.dumps(result['rolling_10yr_monthly_1500_dca']))
     return result
 
 if __name__=='__main__':

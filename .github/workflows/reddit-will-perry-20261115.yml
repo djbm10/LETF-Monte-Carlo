@@ -12,6 +12,11 @@ on:
   schedule:
     # Late Monday Eastern, enough time for Yahoo's prior session close.
     - cron: '30 3 * * 2'
+  pull_request:
+    paths:
+      - research/reddit_will_perry_20261115.py
+      - tests/test_reddit_will_perry_20261115.py
+      - .github/workflows/reddit-will-perry-20261115.yml
   workflow_dispatch:
 permissions:
   contents: read

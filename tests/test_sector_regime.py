@@ -101,3 +101,19 @@ def test_asof_anchor_rejects_missing():
     v.loc['2019-05-31'] = np.nan
     with pytest.raises(ValueError, match='As-of date'):
         build_market_data(c, o, v, asof='2019-05-31', sector_pairs={'XLK':'ROM'})
+
+
+def test_same_paths_across_funding_spread_and_grid_order():
+    from research.run_conditional_sector_mc import paired_scenario_seed
+    seed = paired_scenario_seed(20261115, 10, 63, "current", "semi_markov", 1.0)
+    assert seed == paired_scenario_seed(20261115, 10, 63, "current", "semi_markov", 1.0)
+    assert 0 <= seed < 2**32
+    assert seed != paired_scenario_seed(20261115, 10, 63, "unconditional", "semi_markov", 1.0)
+    assert seed != paired_scenario_seed(20261115, 10, 21, "current", "semi_markov", 1.0)
+    market = build()
+    low_cost = Scenario(paths=5, years=1, block_days=63, mode="current",
+                        seed=seed, funding_spread_bps_annual=100)
+    high_cost = Scenario(paths=5, years=1, block_days=63, mode="current",
+                         seed=seed, funding_spread_bps_annual=300)
+    np.testing.assert_array_equal(sample_joint_indices(market,low_cost),
+                                  sample_joint_indices(market,high_cost))

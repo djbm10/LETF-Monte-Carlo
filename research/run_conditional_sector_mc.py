@@ -65,6 +65,18 @@ def get_data(args):
         closes = pd.DataFrame({n: all_price[(n, 'Close')] for n in names if n != '^VIX'})
         opens = pd.DataFrame({n: all_price[(n, 'Open')] for n in names if n not in ('^VIX', '^IRX')})
         vix = all_price[('^VIX', 'Close')]
+        # The price provider merges index observations from non-equity-market
+        # sessions. Reindex to the authoritative NYSE calendar rather than
+        # treating a weekend/closure as a missing equity session. REINDEX,
+        # don't fill: genuine missing trading-session prices remain NaN and
+        # fail the historical data-quality gates.
+        import exchange_calendars as xcals
+        exchange = xcals.get_calendar("XNYS")
+        sessions = exchange.sessions_in_range(pd.Timestamp('2005-01-01'), pd.Timestamp(args.asof))
+        sessions = sessions.tz_localize(None)
+        closes = closes.reindex(sessions)
+        opens = opens.reindex(sessions)
+        vix = vix.reindex(sessions)
         out = Path(args.output)
         out.mkdir(parents=True, exist_ok=True)
         closes.to_csv(out / 'source_adjusted_close.csv')

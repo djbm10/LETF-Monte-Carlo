@@ -6,6 +6,7 @@ No live trading, no parameter search, no claim of untouched holdout.
 """
 from __future__ import annotations
 import argparse, hashlib, json
+from datetime import date, timedelta
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -15,7 +16,10 @@ RULES = {"vol20_cap": 0.35, "vol_ratio_cap": 1.10, "dd_exit": -0.20,
          "dd_reentry": -0.10, "confirm_sessions": 2, "spy_entry_buffer": 0.04,
          "spy_exit_buffer": -0.03, "cost_per_side": 0.001, "days_per_year": 252}
 
-def prices_from_yahoo(end='2026-11-14'):
+def prices_from_yahoo(end=None):
+    # Inclusive latest downloaded session, explicitly named and hashed in every run.
+    if end is None:
+        end=(date.today()+timedelta(days=1)).isoformat()
     import yfinance as yf
     raw=yf.download(list(TICKERS), start='2008-01-01', end=end,
                     auto_adjust=True, threads=False, progress=False, group_by='ticker')

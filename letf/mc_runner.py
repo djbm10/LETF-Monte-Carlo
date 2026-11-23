@@ -124,13 +124,15 @@ def parallel_monte_carlo_fixed(strategy_ids, time_horizon, regime_model, correla
     else:
         print(f"\n  Randomized start dates DISABLED (fixed start in low vol)")
 
+    if cfg.USE_ANTITHETIC_VARIATES and cfg.SIM_ENGINE_MODE != 'institutional_v1':
+        raise ValueError('Antithetic pairing is implemented only for institutional_v1')
     all_results = {sid: [] for sid in strategy_ids}
 
     # ========================================================================
     # ANTITHETIC VARIATES (optional, 30-50% variance reduction)
     # ========================================================================
     if cfg.USE_ANTITHETIC_VARIATES:
-        print(f"  Antithetic variates ENABLED (30-50% variance reduction)")
+        print(f"  Antithetic innovations enabled; estimator variance reduction has not been presumed")
         print(f"  Pairing simulations: (0,1), (2,3), ...\n")
         # Ensure even number of simulations for proper pairing
         effective_sims = cfg.NUM_SIMULATIONS if cfg.NUM_SIMULATIONS % 2 == 0 else cfg.NUM_SIMULATIONS + 1
@@ -166,10 +168,10 @@ def parallel_monte_carlo_fixed(strategy_ids, time_horizon, regime_model, correla
 
         # Organize results by strategy
         for path_results in results_list:
-            if path_results is not None:  # Skip failed simulations
-                for sid in strategy_ids:
-                    if sid in path_results:
-                        all_results[sid].append(path_results[sid])
+            if path_results is None or any(sid not in path_results for sid in strategy_ids):
+                raise ValueError('Missing strategy/path result')
+            for sid in strategy_ids:
+                all_results[sid].append(path_results[sid])
 
     else:
         # Fallback to ProcessPoolExecutor
@@ -192,19 +194,22 @@ def parallel_monte_carlo_fixed(strategy_ids, time_horizon, regime_model, correla
             futures = {executor.submit(simulate_single_path_fixed, arg): i
                       for i, arg in enumerate(sim_args)}
 
+            ordered_results = {}
             with tqdm(total=cfg.NUM_SIMULATIONS, desc=f"{time_horizon}Y MC", unit="sim") as pbar:
                 for future in as_completed(futures):
                     try:
                         path_results = future.result(timeout=300)  # 5 minute timeout per simulation
-                        if path_results is not None:
-                            for sid in strategy_ids:
-                                if sid in path_results:
-                                    all_results[sid].append(path_results[sid])
+                        if path_results is None or any(sid not in path_results for sid in strategy_ids):
+                            raise ValueError('Missing strategy/path result')
+                        ordered_results[futures[future]] = path_results
                         pbar.update(1)
                     except Exception as e:
                         print(f"\n[!] Simulation error: {e}")
                         import traceback
                         traceback.print_exc()
-                        pbar.update(1)
+                        raise RuntimeError('Monte Carlo batch failed; no failed paths may be omitted') from e
+            for index in sorted(ordered_results):
+                for sid in strategy_ids:
+                    all_results[sid].append(ordered_results[index][sid])
 
     return all_results

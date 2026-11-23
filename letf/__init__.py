@@ -5,6 +5,7 @@ Entry point: letf.run()
 """
 
 import time
+import numpy as np
 from letf import config as cfg
 
 
@@ -237,18 +238,12 @@ def run():
                 if not _rp:
                     continue
                 _n = len(_rp)
-                # Reconstruct a simple SPY proxy from regime-path stats for scoring.
-                # We use a regime-linked normal approximation because the actual
-                # per-day SPY returns are not stored in path_results (only final wealth).
-                _rng_r = np.random.default_rng(hash(str(_path.get('Metadata', {}))) & 0xFFFFFFFF)
-                _rp_arr = np.array(_rp, dtype=int)
-                _spy_proxy = np.where(_rp_arr == 0,
-                                      _rng_r.normal(0.0004, 0.010, _n),
-                                      _rng_r.normal(-0.0002, 0.025, _n))
-                _vix_proxy = np.where(_rp_arr == 0, 15.0, 35.0)
-                _realism_results.append(
-                    validate_forward_scenario_realism(_spy_proxy, _vix_proxy)
-                )
+                # Score the actual generated path diagnostics from metadata.
+                # Never generate a new Gaussian path to "validate" another run.
+                measured = _path.get('Metadata', {}).get('forward_realism')
+                if measured is None:
+                    raise ValueError('Actual path realism diagnostics are missing')
+                _realism_results.append(measured)
 
             if _realism_results:
                 _agg = aggregate_forward_realism_across_paths(_realism_results)

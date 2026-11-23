@@ -63,16 +63,16 @@ def compute_high_vol_probability(vix_series, realized_vol=None, term_spread=None
     n = len(vix)
 
     if realized_vol is None:
-        rv = pd.Series(vix).rolling(20, min_periods=5).std().bfill().fillna(0).values / 100.0
+        rv = pd.Series(vix).rolling(20, min_periods=5).std().fillna(0).values / 100.0
     else:
         rv = np.asarray(realized_vol, dtype=float)
-        rv = pd.Series(rv).ffill().bfill().fillna(np.nanmedian(rv)).values
+        rv = pd.Series(rv).ffill().fillna(0.).values
 
     if term_spread is None:
         ts = np.zeros(n)
     else:
         ts = np.asarray(term_spread, dtype=float)
-        ts = pd.Series(ts).ffill().bfill().fillna(0.0).values
+        ts = pd.Series(ts).ffill().fillna(0.0).values
 
     # Logistic score: higher VIX, higher realized vol, and flatter/inverted curve
     # imply higher stress probability.
@@ -128,8 +128,11 @@ def infer_regime_from_vix(vix_series, realized_vol=None, term_spread=None, hyste
 
 
 def fill_missing_with_dynamic_factor(df: pd.DataFrame, target_col: str, factor_col: str,
-                                     default_beta: float, seed: int = 1234) -> pd.Series:
+                                     default_beta: float, seed: int = 1234, *, allow_hypothetical=False) -> pd.Series:
     """Fill missing returns using overlap-calibrated dynamic beta + residual sampling."""
+    if not allow_hypothetical and (target_col not in df or df[target_col].isna().any()):
+        from letf.accuracy import UnsupportedModelError
+        raise UnsupportedModelError('Overlap-fitted missing history is hypothetical and may use future information')
     if target_col not in df.columns:
         df[target_col] = np.nan
 
@@ -146,7 +149,7 @@ def fill_missing_with_dynamic_factor(df: pd.DataFrame, target_col: str, factor_c
     beta = beta.clip(-3.0, 3.0).ffill().bfill().fillna(default_beta)
 
     alpha = (target - beta * factor).rolling(252, min_periods=40).mean()
-    alpha = alpha.ffill().bfill().fillna(0.0)
+    alpha = alpha.ffill().fillna(0.0)
 
     fitted = alpha + beta * factor
     residuals = (target - fitted)[valid].dropna().values

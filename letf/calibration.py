@@ -31,7 +31,7 @@ def calibrate_regime_model_volatility(df):
     print(f"  Fitting {cfg.N_REGIMES}-regime model to VIX levels...")
 
     vix_series = df['VIX'].values
-    realized_vol = df['SPY_Ret'].rolling(20, min_periods=5).std().bfill().fillna(0) * np.sqrt(252)
+    realized_vol = df['SPY_Ret'].rolling(20, min_periods=5).std().fillna(0) * np.sqrt(252)
     term_spread = (df['TNX'] - df['IRX']).values if 'TNX' in df.columns and 'IRX' in df.columns else None
 
     regimes = infer_regime_from_vix(vix_series=vix_series, realized_vol=realized_vol.values, term_spread=term_spread)
@@ -516,16 +516,16 @@ def simulate_joint_returns_t(n_days: int, regime_path: np.ndarray, joint_model: 
         dcc_a = float(p.get('dcc_a', 0.02))
         dcc_b = float(p.get('dcc_b', 0.95))
 
-        # Student-t variance correction: Var(t_v) = S * v/(v-2), so the
-        # scale matrix S must be cov * (v-2)/v to match historical variance.
-        t_var_scale = (nu - 2.0) / nu if nu > 2.0 else 0.5
-        reg_long_var = np.clip(np.diag(cov) * t_var_scale, 1e-8, None)
-
-        # GARCH stationarity with t-innovations: alpha*v/(v-2) + beta < 1.
-        # If violated, cap beta to maintain stationary dynamics.
-        effective_alpha = alpha * nu / (nu - 2.0) if nu > 2.0 else alpha * 2.0
-        if effective_alpha + beta >= 1.0:
-            beta = max(0.70, 0.98 - effective_alpha)
+        # h is conditional VARIANCE, not an unnormalised t scale matrix.
+        # Unit-variance Student-t innovations keep GARCH stationarity at
+        # alpha + beta < 1 and target the empirical covariance once.
+        if nu <= 2 or alpha < 0 or beta < 0 or alpha + beta >= 1:
+            raise ValueError('Invalid finite-variance stationary GARCH parameters')
+        if dcc_a < 0 or dcc_b < 0 or dcc_a + dcc_b >= 1:
+            raise ValueError('Invalid stationary DCC parameters')
+        reg_long_var = np.diag(cov).copy()
+        if not np.isfinite(cov).all() or np.any(reg_long_var <= 0):
+            raise ValueError('Invalid empirical covariance')
         reg_Rbar = cov / np.outer(np.sqrt(np.diag(cov)), np.sqrt(np.diag(cov)))
         reg_Rbar = nearest_psd_matrix(reg_Rbar)
 
@@ -563,9 +563,11 @@ def simulate_joint_returns_t(n_days: int, regime_path: np.ndarray, joint_model: 
         if antithetic:
             z = -z
         u = rng.chisquare(df=nu)
-        scale = np.sqrt(nu / max(u, 1e-12))
+        scale = np.sqrt((nu - 2.0) / max(u, 1e-12))
         x = mu + z * scale
-        x_clipped = np.clip(x, -0.95, 4.0)
+        if not np.isfinite(x).all() or np.any(x <= -1):
+            raise ValueError('Parametric simple-return path left its financial domain; no silent clipping')
+        x_clipped = x
 
         # Standardized residual for next step dynamics
         prev_z = (x_clipped - mu) / np.sqrt(np.clip(h, 1e-10, None))
@@ -575,17 +577,8 @@ def simulate_joint_returns_t(n_days: int, regime_path: np.ndarray, joint_model: 
             # Keep single-day returns within plausible numerical bounds.
             out[a][t] = float(x_clipped[i])
 
-    # Apply moment matching for numerical stability (if enabled)
-    if cfg.USE_MOMENT_MATCHING:
-        for a in assets:
-            returns = out[a]
-            # Adjust returns to match theoretical mean (reduces drift in long simulations)
-            # This is especially important for 30-year horizons
-            theoretical_mean = np.mean([joint_model['regimes'][r]['mu'][assets.index(a)]
-                                       for r in range(len(joint_model['regimes']))])
-            actual_mean = np.mean(returns)
-            # Apply small correction to eliminate systematic drift
-            out[a] = returns + (theoretical_mean - actual_mean) * 0.1  # 10% correction factor
+    # Do not shift each realised path toward its full-sample mean. Doing so
+    # changes the Monte Carlo distribution and uses future path information.
 
     return out
 
@@ -611,18 +604,18 @@ def calibrate_funding_spread_model(df: pd.DataFrame, bypass_cache: bool = False)
             save_cache(model, cfg.FUNDING_MODEL_CACHE)
         return model
 
-    vix = df['VIX'].ffill().bfill().fillna(20.0).to_numpy(dtype=float)
-    irx = df.get('IRX', pd.Series(4.5, index=df.index)).ffill().bfill().fillna(4.5).to_numpy(dtype=float)
+    vix = df['VIX'].ffill().fillna(20.0).to_numpy(dtype=float)
+    irx = df.get('IRX', pd.Series(4.5, index=df.index)).ffill().fillna(4.5).to_numpy(dtype=float)
 
     if 'TNX' in df.columns:
-        tnx = df['TNX'].ffill().bfill().fillna(irx + 1.0).to_numpy(dtype=float)
+        tnx = df['TNX'].ffill().fillna(irx + 1.0).to_numpy(dtype=float)
     else:
         tnx = irx + 1.0
 
     term_spread = tnx - irx
     stress = np.maximum(vix - 20.0, 0.0)
     inv_curve = np.maximum(-term_spread, 0.0)
-    rv = (df['SPY_Ret'].rolling(20, min_periods=5).std().bfill().fillna(0.15 / np.sqrt(252)).to_numpy(dtype=float) * np.sqrt(252))
+    rv = (df['SPY_Ret'].rolling(20, min_periods=5).std().fillna(0.15 / np.sqrt(252)).to_numpy(dtype=float) * np.sqrt(252))
     liquidity_proxy = np.maximum(vix - 18.0, 0.0) / 25.0 + np.maximum(rv - 0.18, 0.0)
     credit_proxy = np.maximum(-term_spread, 0.0)
 
@@ -714,8 +707,8 @@ def calibrate_stress_state_model(df: pd.DataFrame, regimes: np.ndarray) -> Dict:
         return cached
 
     # Build simple proxies from available columns.
-    vix = df['VIX'].ffill().bfill().fillna(20.0).values
-    rv = (df['SPY_Ret'].rolling(20, min_periods=5).std().bfill().fillna(0.15 / np.sqrt(252)).values * np.sqrt(252))
+    vix = df['VIX'].ffill().fillna(20.0).values
+    rv = (df['SPY_Ret'].rolling(20, min_periods=5).std().fillna(0.15 / np.sqrt(252)).values * np.sqrt(252))
 
     if 'TNX' in df.columns and 'IRX' in df.columns:
         credit_proxy = np.maximum(-(df['TNX'] - df['IRX']).fillna(0.0).values, 0.0)
@@ -833,7 +826,7 @@ def simulate_latent_stress_state(n_days: int, regime_path: np.ndarray,
 def predict_borrow_spread_series(df: pd.DataFrame, funding_model: Dict[str, float],
                                  stress_state: Optional[Dict[str, np.ndarray]] = None) -> np.ndarray:
     """Predict annual borrow spread (decimal) from stress covariates."""
-    vix = df['VIX'].ffill().bfill().fillna(20.0).values
+    vix = df['VIX'].ffill().fillna(20.0).values
     stress = np.maximum(vix - 20.0, 0.0)
 
     inv_curve = np.zeros(len(df))

@@ -58,7 +58,7 @@ def validate_zero_drift_vol_drag():
 
     # Expected drag (theoretical formula for ABSOLUTE drag)
     # With zero drift: Expected return = -0.5*L^2*sigma^2
-    expected_drag = -0.5 * leverage**2 * annual_vol**2
+    expected_drag = np.expm1(-0.5 * leverage**2 * annual_vol**2)
 
     # Actual drag (simulated)
     actual_drag = np.median(sim_returns)
@@ -136,7 +136,7 @@ def validate_flat_market_decay():
 
         # Expected absolute return from vol drag formula
         # With zero drift: E[return] = -0.5 * L^2 * sigma^2
-        expected_drag = -0.5 * leverage**2 * annual_vol**2
+        expected_drag = np.expm1(-0.5 * leverage**2 * annual_vol**2)
 
         # Use median (more robust than mean for fat-tailed distributions)
         actual_median = np.median(sim_returns)
@@ -386,37 +386,11 @@ def run_forward_realism_tests() -> Dict:
     # ── Shared helpers ─────────────────────────────────────────────────────
 
     def _make_realistic_path(n_days: int = 5040, seed: int = 42) -> tuple:
-        """
-        Generate a realistic synthetic path using a 2-state Markov regime-switching
-        model with Normal innovations.
+        """Illustrative regime fixture, not a fitted historical market.
 
-        The previous GARCH(1,1) + Student-t(5) approach produced time_in_dd ≈ 0.93
-        because t(5) outliers create multi-year drawdowns.  Normal innovations within
-        each regime avoid this while still producing realistic vol clustering via
-        regime persistence.
-
-        Calibration (stationary fractions: 78% low-vol, 22% high-vol):
-          State 0 (low-vol):  mu=+0.0020/day (~50% annual), sigma=0.009 (~14.3% annual)
-          State 1 (high-vol): mu=-0.0003/day (~-7.5% annual), sigma=0.022 (~34.9% annual)
-          P(0→1)=0.010 → expected ~100 days in low-vol
-          P(1→0)=0.035 → expected ~29 days in high-vol
-          Student-t(10) innovations: mild fat tails, avoids Student-t(5) extreme blowouts
-          VIX assigned directly from regime (low: N(17,2.5) clipped [10,24.9];
-                                             high: N(38,8) clipped [25.1,80])
-
-        Note: mu0 is unrealistically high (~50%/year) but is needed to push time_in_dd
-        down to ~0.84 (within the 3×tolerance penalty zone of the 0.62 target).
-        The high mu0 is a test-path artefact — it does not affect any production simulation.
-        Seed=42 gives composite score ≈ 68 (threshold: ≥ 65).
-
-        Observed metrics at seed=42:
-          abs_ret_ac1    ≈ 0.189 (target 0.19 ±0.07): regime persistence → |ret| clustering
-          high_vol_frac  ≈ 0.207 (target 0.22 ±0.08): regime fraction drives high-vol days
-          time_in_dd_pct ≈ 0.840 (target 0.62 ±0.12): within 3×tol (err=0.22, 3×tol=0.36)
-          tail_freq_3s   ≈ 0.010 (target 0.04 ±0.02): rolling-sigma lag + t(10) fat tails
-          vol_ac1        ≈ 0.987 (target 0.87 ±0.10): within 3×tol (err=0.12, 3×tol=0.30)
-
-        Uses 5040 days (≈20 years) for stable AC estimates.
+        Parameters are fixed independently of scoring. The old fixture used
+        +50% annual arithmetic drift to force a favorable drawdown score.
+        A failing score is retained rather than raising drift to pass it.
         """
         rng = np.random.default_rng(seed)
 
@@ -439,11 +413,7 @@ def run_forward_realism_tests() -> Dict:
         # df=10 gives mild fat tails (P(|z|>3) ≈ 1.5× Normal) without the
         # extreme multi-year drawdowns of t(5).  Combined with regime transitions,
         # this produces tail_freq_3s ≈ 0.010 (within the ±0.02 tolerance of 0.04).
-        # mu0=0.0020 (~50%/yr arithmetic, ~49%/yr geometric) is calibrated to
-        # produce time_in_dd_pct ≈ 0.84 for seed=42 which, while above the 0.62
-        # target, is within the 3× penalty zone (err=0.22 vs 3×tol=0.36) and
-        # scores ~7.8/20 pts for that component, giving total ≥ 68 overall.
-        mu_arr    = np.where(regime == 0,  0.0020, -0.0003)
+        mu_arr = np.where(regime == 0, 0.0004, -0.0003)
         sigma_arr = np.where(regime == 0,  0.009,   0.022)
         z   = rng.standard_t(df=10, size=n_days)
         spy = mu_arr + sigma_arr * z
@@ -794,7 +764,7 @@ def run_validation_tests(df: Optional[pd.DataFrame] = None, regime_model: Option
 
     if zero_drift_passed:
         print("CRITICAL TEST PASSED: Vol drag formula is mathematically correct")
-        print("  -> Simulation results are reliable")
+        print("  -> This mathematical test alone does not validate historical data, execution or taxes")
     else:
         print("CRITICAL TEST FAILED: Vol drag formula is WRONG")
         print("  -> DO NOT USE THIS CODE - Results are invalid")
@@ -821,4 +791,14 @@ def run_validation_tests(df: Optional[pd.DataFrame] = None, regime_model: Option
 
     print(f"\n{'='*80}\n")
 
+    failed = []
+    if not results['zero_drift_test']['test_passed']:
+        failed.append('zero_drift_test')
+    if not results['flat_market_test']['all_passed']:
+        failed.append('flat_market_test')
+    for key in ('institutional_sanity', 'forward_realism'):
+        if key in results and not results[key].get('all_passed', False):
+            failed.append(key)
+    if failed:
+        raise AssertionError(f'Validation confidence gate failed: {failed}')
     return results

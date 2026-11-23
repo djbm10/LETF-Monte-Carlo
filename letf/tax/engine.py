@@ -19,7 +19,7 @@ class TaxRule:
     notes: Optional[str] = None
 
 class CapitalLossUsageStrategy(Enum):
-    """How to apply carryforwards - THESE ARE ACTUALLY IMPLEMENTED"""
+    """Legacy configuration values. Statutory ordering is mandatory."""
     MAXIMIZE_CURRENT_YEAR = "use_all_asap"
     MINIMIZE_ST_FIRST = "offset_st_first"  # Statutory safe
     MINIMIZE_LT_FIRST = "offset_lt_first"
@@ -40,7 +40,7 @@ class LotSelectionMethod(Enum):
     LTFO: Long-Term First Out (sell long-term lots first - preferential tax rates)
     STFO: Short-Term First Out (sell short-term lots first)
     MINTAX: Minimum Tax (smart selection to minimize current year tax)
-    SPEC_ID: Specific Identification (manual selection - for simulation, uses MINTAX)
+    SPEC_ID: Specific Identification (requires explicit lot identifiers)
     """
     FIFO = "fifo"           # First In, First Out (current default)
     LIFO = "lifo"           # Last In, First Out
@@ -49,7 +49,7 @@ class LotSelectionMethod(Enum):
     LTFO = "ltfo"           # Long-term lots first (preferential rates)
     STFO = "stfo"           # Short-term lots first
     MINTAX = "mintax"       # Algorithmic minimum tax selection
-    SPEC_ID = "specific"    # Specific identification (uses MINTAX in simulation)
+    SPEC_ID = "specific"    # Requires explicit lot identifiers
 
 class AMTCreditTiming(Enum):
     USE_IMMEDIATELY = "immediate"
@@ -78,250 +78,67 @@ class CapitalGainsResult:
 
 
 def compute_capital_gains(
-    st_gains: float,
-    st_losses: float,
-    lt_gains: float,
-    lt_losses: float,
-    st_loss_cf_in: float,
-    lt_loss_cf_in: float,
-    elections: TaxpayerElections,
-    trace: bool = False
+    st_gains: float, st_losses: float, lt_gains: float, lt_losses: float,
+    st_loss_cf_in: float, lt_loss_cf_in: float, elections: TaxpayerElections,
+    trace: bool = False, *, filing_status: str = 'single',
+    taxable_income_before_loss: Optional[float] = None,
 ) -> CapitalGainsResult:
+    """Schedule D netting, including carryovers in their original character.
+
+    Sources: Schedule D lines 6/14 and Capital Loss Carryover Worksheet;
+    IRC 1211(b), 1212(b), 1222. See docs/accuracy-audit/TAX_RULES.md.
+    ``taxable_income_before_loss`` is the worksheet's nonnegative income
+    available to absorb the deduction, before deducting the capital loss.
+    If omitted, sufficient income is assumed (legacy low-level API only).
     """
-    THE ACTUAL IRC §1222/§1211/§1212 NETTING ENGINE
+    values = (st_gains, st_losses, lt_gains, lt_losses,
+              st_loss_cf_in, lt_loss_cf_in)
+    if any(not np.isfinite(x) or x < 0 for x in values):
+        raise ValueError('Gains, losses and carryovers must be finite nonnegative amounts')
+    if elections.capital_loss_strategy not in (
+        CapitalLossUsageStrategy.MINIMIZE_ST_FIRST,
+        CapitalLossUsageStrategy.MAXIMIZE_CURRENT_YEAR,
+    ):
+        raise ValueError('Capital-loss netting is statutory; deferral/character ordering is not an election')
+    if filing_status not in ('single', 'married', 'married_filing_jointly',
+                              'head_of_household', 'married_filing_separately'):
+        raise ValueError('Unsupported filing status')
+    if taxable_income_before_loss is not None and (
+        not np.isfinite(taxable_income_before_loss) or taxable_income_before_loss < 0
+    ):
+        raise ValueError('Income available for the carryover worksheet must be nonnegative')
 
-    This is the single most important function.
-    All correctness flows from this.
-
-    Order (critical - per IRS instructions):
-    1. Net current-year ST
-    2. Net current-year LT
-    3. Cross-net current-year ST <-> LT
-    4. Apply carryforwards AFTER current-year netting
-    5. Apply loss ordering election
-    6. Apply $3k deduction
-    7. Calculate new carryforwards
-
-    Statutory basis: IRC §1222, §1211(b), §1212(b)
-    """
-
-    steps = []
-    rules_applied = ["IRC §1222", "IRC §1211(b)", "IRC §1212(b)"]
-
-    # Step 1: Net current-year ST
-    curr_st = st_gains - st_losses
-    steps.append(f"Step 1: Net current ST: ${st_gains:,.0f} - ${st_losses:,.0f} = ${curr_st:,.0f}")
-
-    # Step 2: Net current-year LT
-    curr_lt = lt_gains - lt_losses
-    steps.append(f"Step 2: Net current LT: ${lt_gains:,.0f} - ${lt_losses:,.0f} = ${curr_lt:,.0f}")
-
-    # Step 3: Cross-net current year BEFORE applying carryforwards
-    # This is critical - carryforwards apply AFTER cross-netting
-    if curr_st > 0 and curr_lt < 0:
-        offset = min(curr_st, abs(curr_lt))
-        curr_st -= offset
-        curr_lt += offset
-        steps.append(f"Step 3a: Cross-net ST gain vs LT loss: offset ${offset:,.0f}")
-        steps.append(f"         Result: ST ${curr_st:,.0f}, LT ${curr_lt:,.0f}")
-    elif curr_lt > 0 and curr_st < 0:
-        offset = min(curr_lt, abs(curr_st))
-        curr_lt -= offset
-        curr_st += offset
-        steps.append(f"Step 3b: Cross-net LT gain vs ST loss: offset ${offset:,.0f}")
-        steps.append(f"         Result: ST ${curr_st:,.0f}, LT ${curr_lt:,.0f}")
-    else:
-        steps.append(f"Step 3: No cross-netting needed")
-
-    # Step 4: Apply carryforwards AFTER cross-netting
-    # This is where elections matter
-    net_st = curr_st
-    net_lt = curr_lt
-    cf_st_remaining = st_loss_cf_in
-    cf_lt_remaining = lt_loss_cf_in
-
-    steps.append(f"Step 4: Apply carryforwards (strategy: {elections.capital_loss_strategy.value})")
-    steps.append(f"        CF in: ST ${st_loss_cf_in:,.0f}, LT ${lt_loss_cf_in:,.0f}")
-
-    # Step 5: Apply loss ordering per election
-    if elections.capital_loss_strategy == CapitalLossUsageStrategy.MINIMIZE_ST_FIRST:
-        # Offset ST gains first (highest marginal rate)
-        # This is the statutory-safe default
-
-        # ST CF offsets ST gains
-        if cf_st_remaining > 0 and net_st > 0:
-            offset = min(cf_st_remaining, net_st)
-            net_st -= offset
-            cf_st_remaining -= offset
-            steps.append(f"        ST CF -> ST gains: ${offset:,.0f}")
-
-        # LT CF offsets LT gains
-        if cf_lt_remaining > 0 and net_lt > 0:
-            offset = min(cf_lt_remaining, net_lt)
-            net_lt -= offset
-            cf_lt_remaining -= offset
-            steps.append(f"        LT CF -> LT gains: ${offset:,.0f}")
-
-        # Cross-application: ST CF -> LT gains
-        if cf_st_remaining > 0 and net_lt > 0:
-            offset = min(cf_st_remaining, net_lt)
-            net_lt -= offset
-            cf_st_remaining -= offset
-            steps.append(f"        ST CF -> LT gains (cross): ${offset:,.0f}")
-
-        # Cross-application: LT CF -> ST gains
-        if cf_lt_remaining > 0 and net_st > 0:
-            offset = min(cf_lt_remaining, net_st)
-            net_st -= offset
-            cf_lt_remaining -= offset
-            steps.append(f"        LT CF -> ST gains (cross): ${offset:,.0f}")
-
-        rules_applied.append("Election: MINIMIZE_ST_FIRST")
-
-    elif elections.capital_loss_strategy == CapitalLossUsageStrategy.MINIMIZE_LT_FIRST:
-        # Offset LT gains first
-
-        # LT CF offsets LT gains
-        if cf_lt_remaining > 0 and net_lt > 0:
-            offset = min(cf_lt_remaining, net_lt)
-            net_lt -= offset
-            cf_lt_remaining -= offset
-            steps.append(f"        LT CF -> LT gains: ${offset:,.0f}")
-
-        # ST CF offsets ST gains
-        if cf_st_remaining > 0 and net_st > 0:
-            offset = min(cf_st_remaining, net_st)
-            net_st -= offset
-            cf_st_remaining -= offset
-            steps.append(f"        ST CF -> ST gains: ${offset:,.0f}")
-
-        # Cross-application: LT CF -> ST gains
-        if cf_lt_remaining > 0 and net_st > 0:
-            offset = min(cf_lt_remaining, net_st)
-            net_st -= offset
-            cf_lt_remaining -= offset
-            steps.append(f"        LT CF -> ST gains (cross): ${offset:,.0f}")
-
-        # Cross-application: ST CF -> LT gains
-        if cf_st_remaining > 0 and net_lt > 0:
-            offset = min(cf_st_remaining, net_lt)
-            net_lt -= offset
-            cf_st_remaining -= offset
-            steps.append(f"        ST CF -> LT gains (cross): ${offset:,.0f}")
-
-        rules_applied.append("Election: MINIMIZE_LT_FIRST")
-
-    elif elections.capital_loss_strategy == CapitalLossUsageStrategy.DEFER_TO_FUTURE:
-        # Use minimum required
-        # Only offset to avoid creating new losses
-        # This is aggressive but legal
-
-        # Only offset if we have gains
-        if net_st > 0 and cf_st_remaining > 0:
-            offset = min(cf_st_remaining, net_st)
-            net_st -= offset
-            cf_st_remaining -= offset
-            steps.append(f"        ST CF -> ST gains (minimal): ${offset:,.0f}")
-
-        if net_lt > 0 and cf_lt_remaining > 0:
-            offset = min(cf_lt_remaining, net_lt)
-            net_lt -= offset
-            cf_lt_remaining -= offset
-            steps.append(f"        LT CF -> LT gains (minimal): ${offset:,.0f}")
-
-        rules_applied.append("Election: DEFER_TO_FUTURE (aggressive)")
-
-    else:  # MAXIMIZE_CURRENT_YEAR
-        # Use everything possible
-        # Apply all CFs aggressively
-
-        # Same as MINIMIZE_ST_FIRST but more aggressive on cross-application
-        if cf_st_remaining > 0 and net_st > 0:
-            offset = min(cf_st_remaining, net_st)
-            net_st -= offset
-            cf_st_remaining -= offset
-            steps.append(f"        ST CF -> ST gains: ${offset:,.0f}")
-
-        if cf_lt_remaining > 0 and net_lt > 0:
-            offset = min(cf_lt_remaining, net_lt)
-            net_lt -= offset
-            cf_lt_remaining -= offset
-            steps.append(f"        LT CF -> LT gains: ${offset:,.0f}")
-
-        if cf_st_remaining > 0 and net_lt > 0:
-            offset = min(cf_st_remaining, net_lt)
-            net_lt -= offset
-            cf_st_remaining -= offset
-            steps.append(f"        ST CF -> LT gains (cross): ${offset:,.0f}")
-
-        if cf_lt_remaining > 0 and net_st > 0:
-            offset = min(cf_lt_remaining, net_st)
-            net_st -= offset
-            cf_lt_remaining -= offset
-            steps.append(f"        LT CF -> ST gains (cross): ${offset:,.0f}")
-
-        rules_applied.append("Election: MAXIMIZE_CURRENT_YEAR")
-
-    steps.append(f"        After CF: ST ${net_st:,.0f}, LT ${net_lt:,.0f}")
-
-    # Step 6: Apply $3,000 capital loss deduction
-    total_net = net_st + net_lt
-    capital_loss_deduction = 0
-
-    if total_net < 0:
-        # Net loss - can deduct up to $3,000
-        capital_loss_deduction = min(3000, abs(total_net))
-        steps.append(f"Step 6: Capital loss deduction: ${capital_loss_deduction:,.0f}")
-        steps.append(f"        (Total net loss: ${total_net:,.0f})")
-        rules_applied.append("IRC §1211(b) - $3k limit")
-    else:
-        steps.append(f"Step 6: No capital loss deduction (net gain)")
-
-    # Step 7: Calculate new carryforwards
-    # Any remaining losses (after $3k deduction) carry forward
-
-    # Add unused CF to any new losses
-    new_st_cf = cf_st_remaining
-    new_lt_cf = cf_lt_remaining
-
-    if net_st < 0:
-        # ST loss after CF application
-        # Deduct the $3k from ST first (by convention)
-        st_loss_after_deduction = abs(net_st) - capital_loss_deduction
-        new_st_cf += max(0, st_loss_after_deduction)
-
-    if net_lt < 0:
-        # LT loss after CF application
-        # If we already used $3k on ST, this all carries forward
-        # If not, deduct remaining $3k allowance from LT
-        remaining_deduction = capital_loss_deduction - min(capital_loss_deduction, abs(min(0, net_st)))
-        lt_loss_after_deduction = abs(net_lt) - remaining_deduction
-        new_lt_cf += max(0, lt_loss_after_deduction)
-
-    steps.append(f"Step 7: New carryforwards: ST ${new_st_cf:,.0f}, LT ${new_lt_cf:,.0f}")
-
-    # Taxable amounts (only positive amounts are taxable)
-    taxable_st = max(0, net_st)
-    taxable_lt = max(0, net_lt)
-
-    steps.append(f"Final: Taxable ST ${taxable_st:,.0f}, Taxable LT ${taxable_lt:,.0f}")
-
-    if trace:
-        print("\n=== CAPITAL GAINS NETTING TRACE ===")
-        for step in steps:
-            print(step)
-        print(f"\nRules applied: {', '.join(rules_applied)}")
-        print("=" * 50)
-
-    return CapitalGainsResult(
-        taxable_st=taxable_st,
-        taxable_lt=taxable_lt,
-        st_loss_cf_out=new_st_cf,
-        lt_loss_cf_out=new_lt_cf,
-        capital_loss_deduction=capital_loss_deduction,
-        steps=steps,
-        rules_applied=rules_applied
+    net_st = st_gains - st_losses - st_loss_cf_in
+    net_lt = lt_gains - lt_losses - lt_loss_cf_in
+    steps = [f'Net by character including carryovers: ST {net_st}, LT {net_lt}']
+    if net_st > 0 > net_lt:
+        offset = min(net_st, -net_lt)
+        net_st -= offset
+        net_lt += offset
+    elif net_lt > 0 > net_st:
+        offset = min(net_lt, -net_st)
+        net_lt -= offset
+        net_st += offset
+    limit = 1500.0 if filing_status == 'married_filing_separately' else 3000.0
+    deduction = min(limit, max(0.0, -(net_st + net_lt)))
+    # Low taxable income can preserve otherwise deductible losses in the
+    # carryover worksheet. This is not a discretionary deferral election.
+    used = deduction if taxable_income_before_loss is None else min(
+        deduction, taxable_income_before_loss)
+    st_loss = max(0.0, -net_st)
+    lt_loss = max(0.0, -net_lt)
+    st_used = min(used, st_loss)
+    result = CapitalGainsResult(
+        taxable_st=max(0.0, net_st), taxable_lt=max(0.0, net_lt),
+        st_loss_cf_out=st_loss - st_used,
+        lt_loss_cf_out=max(0.0, lt_loss - (used - st_used)),
+        capital_loss_deduction=deduction, steps=steps,
+        rules_applied=['IRC 1222', 'IRC 1211(b)', 'IRC 1212(b)',
+                       'Schedule D lines 6/14; Capital Loss Carryover Worksheet'],
     )
+    if trace:
+        print('\n'.join(steps))
+    return result
 
 
 @dataclass
@@ -338,7 +155,7 @@ class GoldenTestCase:
     st_carryforward_in: float
     lt_carryforward_in: float
 
-    # Expected outputs (HAND-CALCULATED)
+    # Expected outputs (hand-calculated regression cases, not IRS certification)
     expected_taxable_st: float
     expected_taxable_lt: float
     expected_st_cf_out: float
@@ -401,7 +218,7 @@ class GoldenTestCase:
             return True, f"PASSED: {self.name}"
 
 
-# Golden tests (hand-calculated, locked forever)
+# Regression cases; original baseline preserved in docs/accuracy-audit/baseline.json
 GOLDEN_TESTS = [
     GoldenTestCase(
         name="Basic Netting",
@@ -452,7 +269,7 @@ GOLDEN_TESTS = [
 
     GoldenTestCase(
         name="Carryforward Application Order",
-        description="CF applied AFTER current-year cross-netting",
+        description="Carryovers enter Schedule D by character before cross-netting",
         st_gains=100000, st_losses=0,
         lt_gains=0, lt_losses=60000,
         st_carryforward_in=25000, lt_carryforward_in=15000,
@@ -488,12 +305,12 @@ GOLDEN_TESTS = [
     ),
 
     GoldenTestCase(
-        name="Election Test: DEFER_TO_FUTURE",
-        description="Conservative CF usage",
+        name="Same-character carryovers",
+        description="Both characters remain gains after their own carryovers",
         st_gains=50000, st_losses=0,
         lt_gains=30000, lt_losses=0,
         st_carryforward_in=40000, lt_carryforward_in=25000,
-        election_strategy=CapitalLossUsageStrategy.DEFER_TO_FUTURE,
+        election_strategy=CapitalLossUsageStrategy.MINIMIZE_ST_FIRST,
         # With DEFER: only offset to zero, don't cross-apply
         # ST: +50k - 40k CF = +10k taxable
         # LT: +30k - 25k CF = +5k taxable
@@ -503,7 +320,7 @@ GOLDEN_TESTS = [
         expected_st_cf_out=0,
         expected_lt_cf_out=0,
         expected_capital_loss_deduction=0,
-        statutory_basis=["IRC §1212 - Election"]
+        statutory_basis=["IRC §1212(b); Schedule D lines 6 and 14"]
     )
 ]
 
@@ -551,8 +368,10 @@ def run_golden_tests(trace_failures: bool = False) -> Dict:
         print(f"CRITICAL: {results['failed']} TESTS FAILED - SYSTEM BROKEN")
         print(f"DO NOT USE UNTIL ALL TESTS PASS")
     else:
-        print("ALL TESTS PASSED - CORRECTNESS GUARANTEED")
-        print("Capital gains netting engine is CORRECT")
+        print("Covered regression cases passed; this is not comprehensive tax certification")
+        print("See docs/accuracy-audit/TAX_RULES.md for scope and limitations")
     print("="*80)
 
+    if results['failed']:
+        raise AssertionError(f"{results['failed']} capital-gains regression cases failed")
     return results

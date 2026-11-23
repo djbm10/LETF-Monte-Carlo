@@ -1,0 +1,202 @@
+{
+  "python": "3.14.4",
+  "seed": 20261123,
+  "strategy_comparisons_run": false,
+  "reason": "Relevant historical data/execution/tax gates are incomplete or failed",
+  "tests": {
+    "pytest": {
+      "exit_code": 0,
+      "output": "........................................................................ [ 73%]\n..........................                                               [100%]\n=============================== warnings summary ===============================\n.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:11\n  /home/djmann/projects/letf-monte-carlo/.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:11: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.\n    PANDAS_VERSION = LooseVersion(pd.__version__)\n\n.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:13\n  /home/djmann/projects/letf-monte-carlo/.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:13: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.\n    PANDAS_0210 = PANDAS_VERSION >= LooseVersion(\"0.21.0\")\n\n.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:14\n  /home/djmann/projects/letf-monte-carlo/.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:14: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.\n    PANDAS_0220 = PANDAS_VERSION >= LooseVersion(\"0.22.0\")\n\n.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:15\n  /home/djmann/projects/letf-monte-carlo/.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:15: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.\n    PANDAS_0230 = PANDAS_VERSION >= LooseVersion(\"0.23.0\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n98 passed, 4 warnings in 5.09s"
+    },
+    "netting_regressions": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "details": [
+        {
+          "test": "Basic Netting",
+          "passed": true,
+          "message": "PASSED: Basic Netting"
+        },
+        {
+          "test": "$3k Loss Deduction",
+          "passed": true,
+          "message": "PASSED: $3k Loss Deduction"
+        },
+        {
+          "test": "Cross-Offset Current Year",
+          "passed": true,
+          "message": "PASSED: Cross-Offset Current Year"
+        },
+        {
+          "test": "Carryforward Application Order",
+          "passed": true,
+          "message": "PASSED: Carryforward Application Order"
+        },
+        {
+          "test": "Large Loss Year",
+          "passed": true,
+          "message": "PASSED: Large Loss Year"
+        },
+        {
+          "test": "Same-character carryovers",
+          "passed": true,
+          "message": "PASSED: Same-character carryovers"
+        }
+      ]
+    },
+    "zero_drift": {
+      "test_passed": true,
+      "expected_drag": -0.09629292212680393,
+      "actual_drag": -0.09558688396333692,
+      "error_pct": 0.07060381634670099
+    },
+    "flat_market": {
+      "2.0x": {
+        "expected": -0.04400251816690009,
+        "actual_median": -0.033888299060428395,
+        "actual_mean": 0.008279869645967886,
+        "actual_std": 0.3086229764248495,
+        "error": 0.010114219106471693,
+        "passed": true
+      },
+      "3.0x": {
+        "expected": -0.09629292212680393,
+        "actual_median": -0.10015284362069216,
+        "actual_mean": 0.0013142852775728908,
+        "actual_std": 0.48800882490272324,
+        "error": 0.0038599214938882243,
+        "passed": true
+      },
+      "all_passed": true
+    },
+    "legacy_forward_realism": {
+      "T18": {
+        "passed": true,
+        "missing_keys": []
+      },
+      "T19": {
+        "passed": true,
+        "score": 59.50749533337072
+      },
+      "T20": {
+        "passed": false,
+        "score": 59.50749533337072
+      },
+      "T21": {
+        "passed": true,
+        "score": 24.727474032254722
+      },
+      "T22": {
+        "passed": true,
+        "aggregate": {
+          "median_score": 42.11748468281272,
+          "p10_score": 28.205476162366324,
+          "p90_score": 56.02949320325912,
+          "n_paths": 2.0
+        }
+      },
+      "T23": {
+        "passed": true,
+        "median_score": 24.727474032254722
+      },
+      "T24": {
+        "passed": true
+      },
+      "T25": {
+        "passed": true
+      },
+      "T26": {
+        "passed": true
+      },
+      "T27": {
+        "passed": true,
+        "score_before": 28.914155505551257,
+        "score_after": 39.161307331881574,
+        "improvement": 10.247151826330317
+      },
+      "all_passed": false
+    },
+    "legacy_quick_test": {
+      "exit_code": 1,
+      "expected_accuracy_gate": true
+    }
+  },
+  "before_after": {
+    "character": {
+      "before": {
+        "taxable_st": 0,
+        "taxable_lt": 0,
+        "st_loss_cf_out": 10000,
+        "lt_loss_cf_out": 0,
+        "capital_loss_deduction": 0
+      },
+      "after": {
+        "taxable_st": 0.0,
+        "taxable_lt": 0.0,
+        "st_loss_cf_out": 0.0,
+        "lt_loss_cf_out": 7000.0,
+        "capital_loss_deduction": 3000.0
+      }
+    },
+    "carry_only": {
+      "before": {
+        "taxable_st": 0,
+        "taxable_lt": 0,
+        "st_loss_cf_out": 5000,
+        "lt_loss_cf_out": 0,
+        "capital_loss_deduction": 0
+      },
+      "after": {
+        "taxable_st": 0.0,
+        "taxable_lt": 0.0,
+        "st_loss_cf_out": 2000.0,
+        "lt_loss_cf_out": 0.0,
+        "capital_loss_deduction": 3000.0
+      }
+    },
+    "unused_deduction_tax": {
+      "before": 1946.25,
+      "after": 0.0
+    },
+    "student_t_garch_variance": {
+      "target": 0.0001,
+      "n": 30000,
+      "before": 0.00012188863429195663,
+      "after": 0.00010163796740269875,
+      "relative_tolerance": 0.1,
+      "before_passed": false,
+      "after_passed": true
+    }
+  },
+  "protected_input_sha256": {
+    "LETF35_analysis.py": "66a5868c40782d0e5f592348f86170709ffa71167fd904ade44ae38f3bdd2710",
+    "validation_metadata.json": "4eb51ca20f7271e9650ff152caaa74f957bd7ab9af46d6ea013edcde1a115dc2",
+    "docs/accuracy-audit/reconstruction-gate.json": "2c01b56a9583d4fe28df9d721bbafb745edb86fbe0c6fe2483f27c478ae7cda3",
+    "requirements-audit.lock": "76146540a1c883a3b67cfcaaf0a9ea18dd24e8ad9c5e3aee0095d6681c2c37aa",
+    "data/corrected_cache_v8/bootstrap_data_20150101_20260219_historical_backtest_6b3846659d3c.pkl": "537b2a972e2e443719a4509cba6708c361f5750a5c24cb6a9507d586eaf9ecf3",
+    "data/corrected_cache_v8/correlations_20150101_20260219_historical_backtest_6b3846659d3c.pkl": "35f2687648c786b05ac00120b1a7834b33882f447b15f159718896f531b2b8fc",
+    "data/corrected_cache_v8/ff_factors_daily_local.pkl": "9214b69a70df3f5c58f76f348b3c31e01624a1939a5c62cc2df783194565fef7",
+    "data/corrected_cache_v8/fred_dff_daily_local.pkl": "d92f6f1b27201535fc9c2a4f51bc955d159038ee61970c4862f45aee8b95b76b",
+    "data/corrected_cache_v8/funding_spread_model.pkl": "90a1f653f6357de51b2043e6da13077e287d2f6b9f7d33ec24df2aed2ebd7d95",
+    "data/corrected_cache_v8/funding_spread_model_20150101_20260219_historical_backtest_6b3846659d3c.pkl": "af0c0287adbc8c31fb1acb67e1a73367d92c63341f951dde3633f5315f7d6f92",
+    "data/corrected_cache_v8/historical_data_19850101_20251231_historical_backtest_6b3846659d3c.pkl": "c7c42ad91a984ae66e053daabc8cdcea957e55bfc1155b5ae4a390881e9b2a8d",
+    "data/corrected_cache_v8/historical_data_20150101_20260219_historical_backtest_6b3846659d3c.pkl": "72514424be998aedd5fc299feab486e7642c7f69cc0e340d8680147b1a1b1377",
+    "data/corrected_cache_v8/joint_return_model_20150101_20260219_historical_backtest_6b3846659d3c.pkl": "0066a58600a55b09399cbdaf540d524062657fe240769b8d05e55d6651a46549",
+    "data/corrected_cache_v8/regime_model.pkl": "ac7303f94eee61f317ad7c6313237aa983bc5f8adb716f9c15ebdcb6102cce60",
+    "data/corrected_cache_v8/regime_model_20150101_20260219_historical_backtest_6b3846659d3c.pkl": "ac7303f94eee61f317ad7c6313237aa983bc5f8adb716f9c15ebdcb6102cce60",
+    "data/corrected_cache_v8/stress_state_model_20150101_20260219_historical_backtest_6b3846659d3c.pkl": "26c0051b11434c3cb8add9053606caf398877f6ffa7ccd06d3e672898dcda55f",
+    "data/corrected_cache_v8/tracking_residual_model.pkl": "277f98b83a3a52f7784963daf989c18173cf356ee86053368ca98ec595512c3c",
+    "data/corrected_cache_v8/tracking_residual_model_20150101_20260219_historical_backtest_6b3846659d3c.pkl": "d0262a665328b82aee142b4b61d3f827dedde16e5243b5ca2c7f676e56b2c058",
+    "data/tqqq_improved_cache/backtest_results.pkl": "b781f18c1c64554ee7c5911931c9d1d5a607d00a8d2ee37b34f70a8b693f80d8",
+    "data/tqqq_improved_cache/market_data.pkl": "f913dbee08f28f901a6b7b40bb2a15a0dec956df92bf2ae8e7b033911b2eeec8",
+    "data/tqqq_improved_cache/monte_carlo_results.pkl": "74b7568f985cf8c4615e5a683b542d3ffb81e5dfb06b83f369e564d19bf9fc99",
+    "data/tqqq_improved_cache/stress_results.pkl": "d18d7df0a43c5738e37fc563bd8b2fb99a631700aeaa7bcd90d2c294c1e53503",
+    "data/tqqq_realistic_cache/backtest_results.pkl": "ae26b5560b63205965705f3af66e2351f07bebb75833ca6ad7eaeebda31593b4",
+    "data/tqqq_realistic_cache/market_data.pkl": "bc534ea31fe171ea87fc61737d5e6839aec8c01a75366554fd2b5089d2e4367d",
+    "data/tqqq_realistic_cache/monte_carlo_results.pkl": "792669607d63e5e45ece239043d11160cfe296b25bf7def9f62c18b9cae26172",
+    "data/tqqq_realistic_cache/stress_results.pkl": "ac520ad8bea39e06754f0147056c8b4b36b0a13a259b96970aa19b64fc8f25fb"
+  },
+  "implementation_tests_passed": true,
+  "full_mission_verified": false
+}

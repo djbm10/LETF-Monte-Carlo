@@ -64,7 +64,7 @@ def run_strategy_fixed(df, strategy_id, regime_path, correlation_matrices,
     if regime_path is None or len(regime_path) != len(df):
         if 'VIX' in df.columns:
             # Infer regime from probabilistic stress model (same logic as calibration)
-            realized_vol = df['SPY_Ret'].rolling(20, min_periods=5).std().bfill().fillna(0) * np.sqrt(252)
+            realized_vol = df['SPY_Ret'].rolling(20, min_periods=5).std().fillna(0) * np.sqrt(252)
             term_spread = None
             if 'TNX' in df.columns and 'IRX' in df.columns:
                 term_spread = (df['TNX'] - df['IRX']).values

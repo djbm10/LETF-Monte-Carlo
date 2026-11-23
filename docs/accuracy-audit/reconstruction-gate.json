@@ -1,0 +1,14 @@
+{
+  "registered_before_evaluation": "2026-11-23",
+  "training_end": "2019-12-31",
+  "evaluation_start": "2020-01-01",
+  "evaluation_end": "2025-12-31",
+  "min_observations": 504,
+  "daily_rmse": 0.003,
+  "daily_bias": 0.0002,
+  "annual_tracking_error": 0.05,
+  "cagr_error": 0.02,
+  "drawdown_error": 0.05,
+  "terminal_relative_error": 0.15,
+  "scope": "New audit diagnostic; does not modify or replace any pre-existing sealed holdout. Numerical pass alone does not verify data provenance or historical tax/execution support."
+}

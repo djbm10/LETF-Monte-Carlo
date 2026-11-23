@@ -205,7 +205,7 @@ def combine_data_sources(ff_data: pd.DataFrame, yf_data: pd.DataFrame,
 
     return combined
 
-def fetch_historical_data():
+def fetch_historical_data(*, allow_hypothetical=False):
     """
     Fetch historical data with CORRECT volatility drag implementation.
 
@@ -217,10 +217,15 @@ def fetch_historical_data():
 
     FIX: Pre-2010 TQQQ data is SYNTHETIC and clearly labeled.
     """
+    if not allow_hypothetical:
+        from letf.accuracy import UnsupportedModelError
+        raise UnsupportedModelError(
+            'Legacy extended-history loader uses unverified proxies. For audit inputs use '
+            'scripts/capture_daily_audit_inputs.py; allow_hypothetical=True enables exploratory data only.')
     cached = load_cache(cfg.DATA_CACHE)
     if cached is not None:
         print("[OK]Using cached data")
-        return cached
+        return label_legacy_data(cached.copy())
 
     print(f"\n{'='*80}")
     print("FETCHING HISTORICAL DATA (EXTENDED HISTORY)")
@@ -248,7 +253,7 @@ def fetch_historical_data():
     print("  " + "-"*50)
 
     print("  Downloading market data from Yahoo Finance...")
-    tickers = ['^GSPC', '^IXIC', '^VIX', '^IRX', '^TNX', 'TLT', 'QQQ', 'TQQQ', 'UPRO', 'SSO']
+    tickers = ['SPY', '^GSPC', '^IXIC', '^VIX', '^IRX', '^TNX', 'TLT', 'QQQ', 'TQQQ', 'QLD', 'UPRO', 'SSO', 'TMF']
 
     try:
         data = yf.download(tickers, start=cfg.YFINANCE_START_DATE, end=cfg.DATA_END_DATE,
@@ -268,38 +273,50 @@ def fetch_historical_data():
         # S&P 500
         if '^GSPC' in data['Close'].columns:
             yf_df['SPY_Price'] = data['Close']['^GSPC']
-            yf_df['SPY_Ret'] = yf_df['SPY_Price'].pct_change()
+            yf_df['SP500_Price_Index_Ret'] = yf_df['SPY_Price'].pct_change(fill_method=None)
+            yf_df['SPY_Ret'] = yf_df['SP500_Price_Index_Ret']
         else:
             print("  [WARN] No S&P 500 data from yfinance")
             if not use_fama_french:
                 return None
 
+        if 'SPY' in data['Close'].columns:
+            yf_df['SPY_Real_Price'] = data['Close']['SPY']
+            yf_df['SPY_Real_Ret'] = yf_df['SPY_Real_Price'].pct_change(fill_method=None)
+            genuine_spy = yf_df['SPY_Real_Price'].notna()
+            yf_df.loc[genuine_spy, 'SPY_Price'] = yf_df.loc[genuine_spy, 'SPY_Real_Price']
+            yf_df.loc[genuine_spy, 'SPY_Ret'] = yf_df.loc[genuine_spy, 'SPY_Real_Ret']
+        for symbol in ('QLD', 'TMF', 'QQQ'):
+            if symbol in data['Close'].columns:
+                yf_df[f'{symbol}_Real_Price'] = data['Close'][symbol]
+                yf_df[f'{symbol}_Real_Ret'] = yf_df[f'{symbol}_Real_Price'].pct_change(fill_method=None)
+
         # NASDAQ
         if '^IXIC' in data['Close'].columns:
             yf_df['NASDAQ_Price'] = data['Close']['^IXIC']
-            yf_df['NASDAQ_Ret'] = yf_df['NASDAQ_Price'].pct_change()
+            yf_df['NASDAQ_Ret'] = yf_df['NASDAQ_Price'].pct_change(fill_method=None)
         else:
             yf_df['NASDAQ_Ret'] = yf_df['SPY_Ret'] * 1.3 if 'SPY_Ret' in yf_df.columns else np.nan
 
         # QQQ (for TQQQ validation)
         if 'QQQ' in data['Close'].columns:
             yf_df['QQQ_Price'] = data['Close']['QQQ']
-            yf_df['QQQ_Ret'] = yf_df['QQQ_Price'].pct_change()
+            yf_df['QQQ_Ret'] = yf_df['QQQ_Price'].pct_change(fill_method=None)
         else:
             yf_df['QQQ_Ret'] = yf_df['NASDAQ_Ret'] if 'NASDAQ_Ret' in yf_df.columns else np.nan
 
                 # Real TQQQ / UPRO / SSO prices (for true post-inception history)
         if 'TQQQ' in data['Close'].columns:
             yf_df['TQQQ_Real_Price'] = data['Close']['TQQQ']
-            yf_df['TQQQ_Real_Ret'] = yf_df['TQQQ_Real_Price'].pct_change()
+            yf_df['TQQQ_Real_Ret'] = yf_df['TQQQ_Real_Price'].pct_change(fill_method=None)
 
         if 'UPRO' in data['Close'].columns:
             yf_df['UPRO_Real_Price'] = data['Close']['UPRO']
-            yf_df['UPRO_Real_Ret'] = yf_df['UPRO_Real_Price'].pct_change()
+            yf_df['UPRO_Real_Ret'] = yf_df['UPRO_Real_Price'].pct_change(fill_method=None)
 
         if 'SSO' in data['Close'].columns:
             yf_df['SSO_Real_Price'] = data['Close']['SSO']
-            yf_df['SSO_Real_Ret'] = yf_df['SSO_Real_Price'].pct_change()
+            yf_df['SSO_Real_Ret'] = yf_df['SSO_Real_Price'].pct_change(fill_method=None)
 
 
         # VIX
@@ -322,7 +339,7 @@ def fetch_historical_data():
         # Treasury data for TMF
         if 'TLT' in data['Close'].columns:
             yf_df['TLT_Price'] = data['Close']['TLT']
-            yf_df['TLT_Ret'] = yf_df['TLT_Price'].pct_change()
+            yf_df['TLT_Ret'] = yf_df['TLT_Price'].pct_change(fill_method=None)
         else:
             if '^TNX' in data['Close'].columns:
                 yf_df['TNX'] = data['Close']['^TNX']
@@ -365,7 +382,7 @@ def fetch_historical_data():
         df['NASDAQ_Ret'] = np.nan
     if df['NASDAQ_Ret'].isna().any():
         df['NASDAQ_Ret'] = fill_missing_with_dynamic_factor(
-            df, target_col='NASDAQ_Ret', factor_col='SPY_Ret', default_beta=1.25, seed=1101
+            df, target_col='NASDAQ_Ret', factor_col='SPY_Ret', default_beta=1.25, seed=1101, allow_hypothetical=True
         )
         print("  [OK]NASDAQ filled via overlap-calibrated dynamic factor model")
 
@@ -374,7 +391,7 @@ def fetch_historical_data():
         df['QQQ_Ret'] = np.nan
     if df['QQQ_Ret'].isna().any():
         df['QQQ_Ret'] = fill_missing_with_dynamic_factor(
-            df, target_col='QQQ_Ret', factor_col='NASDAQ_Ret', default_beta=1.0, seed=1102
+            df, target_col='QQQ_Ret', factor_col='NASDAQ_Ret', default_beta=1.0, seed=1102, allow_hypothetical=True
         )
         print("  [OK]QQQ filled via overlap-calibrated dynamic factor model")
 
@@ -407,7 +424,7 @@ def fetch_historical_data():
         df['TLT_Ret'] = np.nan
     if df['TLT_Ret'].isna().any():
         tlt_filled = fill_missing_with_dynamic_factor(
-            df, target_col='TLT_Ret', factor_col='SPY_Ret', default_beta=-0.20, seed=1103
+            df, target_col='TLT_Ret', factor_col='SPY_Ret', default_beta=-0.20, seed=1103, allow_hypothetical=True
         )
         rf_daily = df['IRX'] / 100 / 252
         df['TLT_Ret'] = tlt_filled.fillna(rf_daily)
@@ -514,7 +531,11 @@ def fetch_historical_data():
             te_series[i] = rho * te_series[i-1] + innovation
 
         # Tracking error is MULTIPLICATIVE (funds don't perfectly replicate)
-        synthetic_ret = (1 + net_return_before_te) * (1 + te_series) - 1
+        synthetic_ret = net_return_before_te + te_series
+        failure = np.flatnonzero(synthetic_ret.to_numpy() <= -1.)
+        if len(failure):
+            synthetic_ret.iloc[failure[0]] = -1.
+            synthetic_ret.iloc[failure[0] + 1:] = 0.
 
         # Start with synthetic series (works for full history if no real data exists)
         df[f'{asset_id}_Ret'] = synthetic_ret
@@ -547,7 +568,7 @@ def fetch_historical_data():
             df[f'{asset_id}_IsSynthetic'] = ~real_mask
         else:
             # Fallback: all data is synthetic before inception
-            df[f'{asset_id}_IsSynthetic'] = df.index < inception_date
+            df[f'{asset_id}_IsSynthetic'] = True
 
     # Technical indicators
     print("  Computing technical indicators...")
@@ -626,5 +647,28 @@ def fetch_historical_data():
     print(f"\n[WARN]  WARNING: Pre-inception LETF data is SYNTHETIC simulation.")
     print(f"  Do NOT treat pre-2010 TQQQ results as historical validation!")
 
+    df = label_legacy_data(df)
     save_cache(df, cfg.DATA_CACHE)
+    return df
+
+
+def label_legacy_data(df):
+    """Conservative per-observation labels; old caches are not recertified.
+
+    A vendor Real_Ret column establishes that a return was captured, not that
+    its source/vintage was independently reconciled. No inferred daily index
+    or fitted pre-inception value is labelled validated reconstruction.
+    """
+    from letf.accuracy import Evidence
+    for asset in ('SPY', 'QQQ', 'TQQQ', 'QLD', 'UPRO', 'SSO', 'TMF', 'TLT'):
+        real_col = f'{asset}_Real_Ret'
+        real_mask = df[real_col].notna() if real_col in df else pd.Series(False, index=df.index)
+        if f'{asset}_Ret' in df:
+            df[f'{asset}_Evidence'] = np.where(real_mask, Evidence.OBSERVED.value, Evidence.HYPOTHETICAL.value)
+            df[f'{asset}_IsSynthetic'] = ~real_mask
+    df.attrs['evidence'] = Evidence.HYPOTHETICAL.value
+    df.attrs['source_manifest_verified'] = False
+    df.attrs['historical_comparison_authorized'] = False
+    df.attrs['limitations'] = ['Legacy factor fills may use future overlap; do not use for historical decisions',
+                               'Current fees, inferred funding and unverified index substitutions are scenarios']
     return df

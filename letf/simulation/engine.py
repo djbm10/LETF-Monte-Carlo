@@ -71,9 +71,9 @@ def generate_fat_tailed_returns(n_days: int, regime_path: np.ndarray,
             spy_std = regime_params[reg].get('daily_std', 0.01)
             qqq_std = 1.35 * spy_std
             tlt_std = 0.55 * spy_std
-            spy_noise[t] = noise_w * spy_std * 0.55 * x[0]
-            qqq_noise[t] = noise_w * qqq_std * 0.45 * x[1]
-            tlt_noise[t] = noise_w * tlt_std * 0.35 * x[2]
+            spy_noise[t] = spy_std * 0.55 * x[0]
+            qqq_noise[t] = qqq_std * 0.45 * x[1]
+            tlt_noise[t] = tlt_std * 0.35 * x[2]
 
         spy_returns = cfg.BOOTSTRAP_WEIGHT * spy_boot + (1.0 - cfg.BOOTSTRAP_WEIGHT) * (spy_boot + spy_noise)
         qqq_returns = cfg.BOOTSTRAP_WEIGHT * qqq_boot + (1.0 - cfg.BOOTSTRAP_WEIGHT) * (qqq_boot + qqq_noise)
@@ -186,14 +186,8 @@ def generate_tracking_error_ar1(n_days, regime_path, vix_series, underlying_retu
         innovation *= base_te * vix_multipliers[i] * regime_multipliers[i] * liq_mults[i]
         te_series[i] = rho * te_series[i-1] + np.sqrt(max(1 - rho**2, 1e-6)) * innovation * move_multipliers[i]
 
-    # Demean: the asymmetric scaling (downside_asymmetry > upside) causes non-zero
-    # drift that compounds over long horizons. Remove slowly-adapting bias via EMA
-    # (half-life ~126 days) to force zero long-run mean while preserving serial structure.
-    alpha = 2.0 / (126 + 1)
-    bias = 0.0
-    for i in range(n_days):
-        bias = alpha * te_series[i] + (1 - alpha) * bias
-        te_series[i] -= bias
+    # Conditional innovations already have zero expectation. Sample demeaning
+    # would alter persistence and the distribution of holding-period returns.
 
     if clip_limit is None or clip_limit <= 0:
         return te_series
@@ -222,7 +216,7 @@ def validate_simulation_layers(sim_df: pd.DataFrame) -> Dict[str, float]:
         and checks['nonfinite_returns'] == 0
         and checks['nonfinite_prices'] == 0
         and np.isfinite(checks['min_price'])
-        and checks['min_price'] > 0.0
+        and checks['min_price'] >= 0.0
         and np.isfinite(checks['min_vix'])
         and np.isfinite(checks['max_vix'])
         and checks['min_vix'] >= 5.0
@@ -238,6 +232,8 @@ def build_simulation_metadata(sim_id: int, regime_path: np.ndarray,
     regime_counts = {int(r): int((regime_path == r).sum()) for r in np.unique(regime_path)}
     meta = {
         'model_version': cfg.SIM_ENGINE_MODE,
+        'evidence': 'HYPOTHETICAL STRESS MODEL',
+        'account_execution_verified': False,
         'sim_id': int(sim_id),
         'regime_counts': regime_counts,
         'start_method': start_conditions.get('start_method'),
@@ -417,7 +413,12 @@ def simulate_etf_returns_from_layers(asset: str,
     # Tracking error is measured in basis points of return drag, so we simply add it
     etf_ret = leveraged_before_te + tracking_errors
     # Prevent economically impossible daily loss below -100%.
-    return np.clip(etf_ret, -0.999, 10.0)
+    failed = np.flatnonzero(etf_ret <= -1.)
+    if len(failed):
+        first = failed[0]
+        etf_ret[first] = -1.
+        etf_ret[first + 1:] = 0.  # absorbing hypothetical fund liquidation
+    return etf_ret
 
 
 def simulate_single_path_fixed(args):
@@ -508,14 +509,17 @@ def simulate_single_path_fixed(args):
         # tail volatility, not one-directional drag
         jump_signs = rng.choice([-1.0, 1.0], size=sim_days)
         signed_jump = jump * jump_signs
-        spy_returns = np.clip(spy_returns - signed_jump, -0.95, 3.0)
-        qqq_returns_raw = np.clip(qqq_returns_raw - 1.12 * signed_jump, -0.95, 4.0)
+        spy_returns = spy_returns - signed_jump
+        qqq_returns_raw = qqq_returns_raw - 1.12 * signed_jump
 
     irx_boot = generated.get('IRX', None)
     if irx_boot is not None:
         risk_free_annual = np.clip(irx_boot[start_offset:start_offset + sim_days], 0.0, 20.0) / 100.0
     else:
         risk_free_annual = np.where(regime_path == 0, 0.045, 0.015)
+
+    if np.any(spy_returns <= -1) or np.any(qqq_returns_raw <= -1) or np.any(tlt_returns_raw <= -1):
+        raise ValueError('Generated underlying return <= -100%; no silent clipping')
 
     asset_returns = {}
     for asset, config in cfg.LETF_CONFIGS.items():
@@ -537,10 +541,8 @@ def simulate_single_path_fixed(args):
     assets_order = ['TQQQ', 'UPRO', 'SPY', 'QQQ', 'TMF', 'SSO']
     sim_df = pd.DataFrame({f'{k}_Ret': v for k, v in asset_returns.items()})
 
-    cash_ret = np.zeros(sim_days)
-    for regime in range(cfg.N_REGIMES):
-        m = regime_path == regime
-        cash_ret[m] = cfg.CASH_RATE_BY_REGIME[regime] / 252
+    # Cash yield and financing must share the simulated short-rate path.
+    cash_ret = risk_free_annual / 252
     sim_df['Cash_Ret'] = cash_ret
 
     for asset in assets_order:
@@ -551,17 +553,12 @@ def simulate_single_path_fixed(args):
 
     layer_checks = validate_simulation_layers(sim_df)
     if not layer_checks.get('is_valid', False):
-        # Hard safety pass: bound returns and rebuild prices to avoid invalid path propagation.
-        for c in [col for col in sim_df.columns if col.endswith('_Ret')]:
-            sim_df[c] = np.clip(sim_df[c].astype(float), -0.999, 10.0)
-        for asset in assets_order:
-            sim_df[f'{asset}_Price'] = (1 + sim_df[f'{asset}_Ret'].fillna(0)).cumprod() * 100
-        sim_df['TLT_Ret'] = np.clip(tlt_returns_raw, -0.999, 10.0)
-        sim_df['TLT_Price'] = (1 + sim_df['TLT_Ret'].fillna(0)).cumprod() * 100
-        layer_checks = validate_simulation_layers(sim_df)
-        layer_checks['repaired_after_validation'] = True
+        raise ValueError(f'Simulation confidence gate failed: {layer_checks}')
 
     metadata = build_simulation_metadata(sim_id, regime_path, start_conditions, stress_state, layer_checks)
+    metadata['antithetic'] = bool(antithetic)
+    from letf.simulation.realism import validate_forward_scenario_realism
+    metadata['forward_realism'] = validate_forward_scenario_realism(spy_returns, vix)
 
     from letf.trade import TradeJournal, TAXABLE_IDS
 
@@ -607,13 +604,7 @@ def simulate_single_path_fixed(args):
             import traceback
             print(f"  [ERR] Sim {sim_id} strategy {sid}: {e}")
             traceback.print_exc()
-            path_results[sid] = {
-                'Final_Wealth': 0,
-                'Num_Trades': 0,
-                'Trades_Per_Year': 0.0,
-                'Max_DD': 0.0,
-                'Error': str(e),
-                'Regime_Path': regime_path.tolist()
-            }
+            raise RuntimeError(f'Simulation {sim_id}, strategy {sid} failed') from e
+
 
     return path_results

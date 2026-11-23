@@ -86,7 +86,7 @@ ASSETS = {
     },
     'SSO': {
         'name': '2x S&P 500',
-        'inception': '2006-07-11',
+        'inception': '2006-06-19',  # ProShares fund inception; captured trading prices start 2006-06-21
         'leverage': 2.0,
         'expense_ratio': 0.0089,
         'underlying': 'SPY',
@@ -152,8 +152,8 @@ N_WORKERS = max(1, multiprocessing.cpu_count() - 2)
 NUM_SIMULATIONS = 200
 
 # Variance reduction techniques (NEW - for improved accuracy)
-USE_ANTITHETIC_VARIATES = True   # 30-50% variance reduction, minimal cost
-USE_MOMENT_MATCHING = True       # Improves long-horizon numerical stability
+USE_ANTITHETIC_VARIATES = True   # Variance reduction must be measured for each estimator
+USE_MOMENT_MATCHING = False       # Improves long-horizon numerical stability
 USE_LATIN_HYPERCUBE = False      # 20-40% variance reduction via quasi-Monte Carlo (QMC)
                                   # NOTE: Disable when using antithetic variates (incompatible)
 
@@ -197,7 +197,7 @@ def get_cache_filenames(start_date: str, end_date: str):
     This ensures different date selections use different caches.
     """
     # Create a short hash from the dates for the filename
-    date_suffix = f"{start_date[:4]}_{end_date[:4]}"
+    date_suffix = f"{start_date.replace(chr(45), chr(95))}_{end_date.replace(chr(45), chr(95))}_accuracy_v1"
 
     return {
         'data': CACHE_DIR / f"historical_data_{date_suffix}.pkl",
@@ -465,3 +465,6 @@ def init_plotting():
     sns.set_style("whitegrid")
     plt.rcParams['figure.figsize'] = (14, 8)
     plt.rcParams['figure.dpi'] = 100
+
+# Restored audit diagnostic control; no synthetic score is a historical certification.
+FORWARD_REALISM_VERBOSITY = 1

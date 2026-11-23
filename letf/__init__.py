@@ -5,6 +5,7 @@ Entry point: letf.run()
 """
 
 import time
+import numpy as np
 from letf import config as cfg
 
 
@@ -167,6 +168,45 @@ def run():
         _step(f"Historical comparison {horizon}Y")
         compare_simulated_vs_historical(df, mc_results, horizon)
         compare_simulated_vs_synthetic_historical(df, mc_results, horizon)
+
+        # ── Forward realism evaluation (diagnostic, not a gate) ──────────
+        if cfg.FORWARD_REALISM_VERBOSITY > 0:
+            from letf.simulation.realism import (
+                validate_forward_scenario_realism,
+                compute_realism_score,
+                aggregate_forward_realism_across_paths,
+                print_realism_score_attribution,
+                ScenarioRealismMode,
+                check_aggregate_realism,
+            )
+            # Extract SPY returns from S1 (TQQQ buy-hold) paths as a proxy for
+            # the underlying return distribution — these carry VIX-linked metadata.
+            _s2_paths = mc_results.get('S2', [])  # SPY benchmark paths
+            _realism_results = []
+            for _path in _s2_paths[:50]:           # limit to 50 for speed
+                _rp = _path.get('Regime_Path', [])
+                if not _rp:
+                    continue
+                _n = len(_rp)
+                # Score the actual generated path diagnostics from metadata.
+                # Never generate a new Gaussian path to "validate" another run.
+                measured = _path.get('Metadata', {}).get('forward_realism')
+                if measured is None:
+                    raise ValueError('Actual path realism diagnostics are missing')
+                _realism_results.append(measured)
+
+            if _realism_results:
+                _agg = aggregate_forward_realism_across_paths(_realism_results)
+                print_realism_score_attribution(
+                    _agg,
+                    verbosity=cfg.FORWARD_REALISM_VERBOSITY,
+                    title=f'FORWARD REALISM — {horizon}Y PATHS',
+                )
+                # Gate check in STRICT mode (neutral scenario default)
+                _gate = check_aggregate_realism(_agg, ScenarioRealismMode.STRICT)
+                if _gate['should_block']:
+                    print(f"  [WARN] Forward realism gate FAILED: {_gate['reason']}")
+                    print(f"         Review bootstrap settings (cfg.BOOTSTRAP_MAX_CRISIS_CHAIN, etc.)")
 
     # Print final step timing
     _step("done")

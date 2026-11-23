@@ -191,19 +191,17 @@ def calculate_historical_rolling_cagrs(df: pd.DataFrame, asset: str,
         print(f"  Warning: {asset}: Price column not found")
         return None
 
-    # Use only REAL data if synthetic column exists
-    if synthetic_col in df.columns:
-        df_real = df[~df[synthetic_col]].copy()
-        data_type = "REAL"
-    else:
-        df_real = df.copy()
-        data_type = "ALL"
-
+    from letf.accuracy import UnsupportedModelError
+    if synthetic_col not in df:
+        raise UnsupportedModelError('Explicit observation flags are required; missing flags do not prove historical data')
+    # Preserve calendar rows so gaps do not collapse into a fictitious
+    # contiguous holding period. Reject each contaminated window instead.
+    df_real = df.copy()
+    data_type = 'OBSERVED WINDOWS ONLY'
     window_days = int(years * 252)
-
-    if len(df_real) < window_days:
-        print(f"  Warning: {asset}: Insufficient {data_type} data "
-              f"({len(df_real)/252:.2f}Y available, {years}Y needed)")
+    if years <= 0 or window_days < 1 or step_days <= 0:
+        raise ValueError('Positive horizon and step required')
+    if len(df_real) < window_days + 1:
         return None
 
     # Calculate rolling CAGRs
@@ -214,8 +212,14 @@ def calculate_historical_rolling_cagrs(df: pd.DataFrame, asset: str,
     prices = df_real[price_col].values
     dates = df_real.index
 
-    for start_idx in range(0, len(df_real) - window_days + 1, step_days):
-        end_idx = start_idx + window_days - 1
+    for start_idx in range(0, len(df_real) - window_days, step_days):
+        end_idx = start_idx + window_days
+        window = df_real.iloc[start_idx:end_idx + 1]
+        if window[synthetic_col].fillna(True).any() or window[price_col].isna().any():
+            continue
+        elapsed_years = (dates[end_idx] - dates[start_idx]).days / 365.2425
+        if elapsed_years <= 0:
+            continue
 
         start_price = prices[start_idx]
         end_price = prices[end_idx]
@@ -223,7 +227,7 @@ def calculate_historical_rolling_cagrs(df: pd.DataFrame, asset: str,
         if start_price > 0 and end_price > 0:
             # Calculate CAGR
             total_return = end_price / start_price
-            cagr = total_return ** (1/years) - 1
+            cagr = total_return ** (1/elapsed_years) - 1
 
             cagrs.append(cagr)
             start_dates.append(dates[start_idx])
@@ -670,7 +674,7 @@ def calculate_rolling_cagrs_all_data(df: pd.DataFrame, asset: str,
 
     window_days = int(years * 252)
 
-    if len(df_all) < window_days:
+    if len(df_all) < window_days + 1:
         print(f"  Warning: {asset}: Insufficient data "
               f"({len(df_all)/252:.2f}Y available, {years}Y needed)")
         return None
@@ -689,8 +693,8 @@ def calculate_rolling_cagrs_all_data(df: pd.DataFrame, asset: str,
     if has_synthetic_col:
         is_synthetic = df_all[synthetic_col].values
 
-    for start_idx in range(0, len(df_all) - window_days + 1, step_days):
-        end_idx = start_idx + window_days - 1
+    for start_idx in range(0, len(df_all) - window_days, step_days):
+        end_idx = start_idx + window_days
 
         start_price = prices[start_idx]
         end_price = prices[end_idx]
@@ -698,7 +702,8 @@ def calculate_rolling_cagrs_all_data(df: pd.DataFrame, asset: str,
         if start_price > 0 and end_price > 0 and not np.isnan(start_price) and not np.isnan(end_price):
             # Calculate CAGR
             total_return = end_price / start_price
-            cagr = total_return ** (1/years) - 1
+            elapsed_years = (dates[end_idx] - dates[start_idx]).days / 365.2425
+            cagr = total_return ** (1/elapsed_years) - 1
 
             cagrs.append(cagr)
             start_dates.append(dates[start_idx])
@@ -741,7 +746,7 @@ def calculate_rolling_cagrs_all_data(df: pd.DataFrame, asset: str,
         'min': np.min(cagrs),
         'max': np.max(cagrs),
         'count': len(cagrs),
-        'data_type': 'ALL (Real + Synthetic)',
+        'data_type': 'HYPOTHETICAL STRESS MODEL (mixed observed/proxy data)',
         'synthetic_count': synthetic_count,
         'real_count': real_count,
         'synthetic_pct': (synthetic_count / len(cagrs) * 100) if len(cagrs) > 0 else 0

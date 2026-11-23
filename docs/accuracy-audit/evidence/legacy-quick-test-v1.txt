@@ -1,0 +1,38 @@
+================================================================================
+QUICK TEST - 10 SIMULATIONS x 10 YEAR HORIZON
+================================================================================
+
+### VALIDATING TAX ENGINE ###
+
+================================================================================
+GOLDEN-CASE REGRESSION TESTS (WIRED TO REAL ENGINE)
+================================================================================
+Running 6 hand-crafted test cases...
+NO MOCKING - Tests can actually fail
+
+  PASS: Basic Netting
+  PASS: $3k Loss Deduction
+  PASS: Cross-Offset Current Year
+  PASS: Carryforward Application Order
+  PASS: Large Loss Year
+  PASS: Same-character carryovers
+
+================================================================================
+RESULTS: 6/6 passed
+Covered regression cases passed; this is not comprehensive tax certification
+See docs/accuracy-audit/TAX_RULES.md for scope and limitations
+================================================================================
+Tax engine: PASSED
+
+### FETCHING DATA ###
+Traceback (most recent call last):
+  File "/home/djmann/projects/letf-monte-carlo/quick_test.py", line 114, in <module>
+    main()
+    ~~~~^^
+  File "/home/djmann/projects/letf-monte-carlo/quick_test.py", line 55, in main
+    df = fetch_historical_data()
+  File "/home/djmann/projects/letf-monte-carlo/letf/data.py", line 222, in fetch_historical_data
+    raise UnsupportedModelError(
+        'Legacy extended-history loader uses unverified proxies. For audit inputs use '
+        'scripts/capture_daily_audit_inputs.py; allow_hypothetical=True enables exploratory data only.')
+letf.accuracy.UnsupportedModelError: Legacy extended-history loader uses unverified proxies. For audit inputs use scripts/capture_daily_audit_inputs.py; allow_hypothetical=True enables exploratory data only.

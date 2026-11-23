@@ -1,0 +1,159 @@
+{
+  "character": {
+    "taxable_st": 0,
+    "taxable_lt": 0,
+    "st_loss_cf_out": 10000,
+    "lt_loss_cf_out": 0,
+    "capital_loss_deduction": 0,
+    "steps": [
+      "Step 1: Net current ST: $10,000 - $0 = $10,000",
+      "Step 2: Net current LT: $0 - $10,000 = $-10,000",
+      "Step 3a: Cross-net ST gain vs LT loss: offset $10,000",
+      "         Result: ST $0, LT $0",
+      "Step 4: Apply carryforwards (strategy: offset_st_first)",
+      "        CF in: ST $10,000, LT $0",
+      "        After CF: ST $0, LT $0",
+      "Step 6: No capital loss deduction (net gain)",
+      "Step 7: New carryforwards: ST $10,000, LT $0",
+      "Final: Taxable ST $0, Taxable LT $0"
+    ],
+    "rules_applied": [
+      "IRC \u00a71222",
+      "IRC \u00a71211(b)",
+      "IRC \u00a71212(b)",
+      "Election: MINIMIZE_ST_FIRST"
+    ]
+  },
+  "carry_only": {
+    "taxable_st": 0,
+    "taxable_lt": 0,
+    "st_loss_cf_out": 5000,
+    "lt_loss_cf_out": 0,
+    "capital_loss_deduction": 0,
+    "steps": [
+      "Step 1: Net current ST: $0 - $0 = $0",
+      "Step 2: Net current LT: $0 - $0 = $0",
+      "Step 3: No cross-netting needed",
+      "Step 4: Apply carryforwards (strategy: offset_st_first)",
+      "        CF in: ST $5,000, LT $0",
+      "        After CF: ST $0, LT $0",
+      "Step 6: No capital loss deduction (net gain)",
+      "Step 7: New carryforwards: ST $5,000, LT $0",
+      "Final: Taxable ST $0, Taxable LT $0"
+    ],
+    "rules_applied": [
+      "IRC \u00a71222",
+      "IRC \u00a71211(b)",
+      "IRC \u00a71212(b)",
+      "Election: MINIMIZE_ST_FIRST"
+    ]
+  },
+  "golden_order": {
+    "taxable_st": 0,
+    "taxable_lt": 0,
+    "st_loss_cf_out": 0,
+    "lt_loss_cf_out": 0,
+    "capital_loss_deduction": 0,
+    "steps": [
+      "Step 1: Net current ST: $100,000 - $0 = $100,000",
+      "Step 2: Net current LT: $0 - $60,000 = $-60,000",
+      "Step 3a: Cross-net ST gain vs LT loss: offset $60,000",
+      "         Result: ST $40,000, LT $0",
+      "Step 4: Apply carryforwards (strategy: offset_st_first)",
+      "        CF in: ST $25,000, LT $15,000",
+      "        ST CF -> ST gains: $25,000",
+      "        LT CF -> ST gains (cross): $15,000",
+      "        After CF: ST $0, LT $0",
+      "Step 6: No capital loss deduction (net gain)",
+      "Step 7: New carryforwards: ST $0, LT $0",
+      "Final: Taxable ST $0, Taxable LT $0"
+    ],
+    "rules_applied": [
+      "IRC \u00a71222",
+      "IRC \u00a71211(b)",
+      "IRC \u00a71212(b)",
+      "Election: MINIMIZE_ST_FIRST"
+    ]
+  },
+  "unused_deduction": {
+    "federal_ordinary": 0,
+    "federal_st": 0,
+    "federal_ltcg": 1946.25,
+    "federal_total": 1946.25,
+    "state_tax": 0,
+    "niit_tax": 0,
+    "total_tax": 1946.25,
+    "effective_rate": 0.0324375,
+    "marginal_rate_used": true,
+    "ltcg_breakdown": {
+      "breakdown": [
+        {
+          "bracket_num": 1,
+          "bracket_ceiling": 47025,
+          "rate": 0.0,
+          "rate_pct": "0%",
+          "ltcg_in_bracket": 47025,
+          "tax_in_bracket": 0.0,
+          "income_range": [
+            0,
+            47025
+          ]
+        },
+        {
+          "bracket_num": 2,
+          "bracket_ceiling": 518900,
+          "rate": 0.15,
+          "rate_pct": "15%",
+          "ltcg_in_bracket": 12975,
+          "tax_in_bracket": 1946.25,
+          "income_range": [
+            47025,
+            60000
+          ]
+        }
+      ],
+      "total": 1946.25,
+      "ordinary_income_base": 0,
+      "ltcg_amount": 60000,
+      "effective_ltcg_rate": 0.0324375
+    },
+    "ltcg_stacking_used": true
+  },
+  "baseline_tests": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "details": [
+      {
+        "test": "Basic Netting",
+        "passed": true,
+        "message": "PASSED: Basic Netting"
+      },
+      {
+        "test": "$3k Loss Deduction",
+        "passed": true,
+        "message": "PASSED: $3k Loss Deduction"
+      },
+      {
+        "test": "Cross-Offset Current Year",
+        "passed": true,
+        "message": "PASSED: Cross-Offset Current Year"
+      },
+      {
+        "test": "Carryforward Application Order",
+        "passed": true,
+        "message": "PASSED: Carryforward Application Order"
+      },
+      {
+        "test": "Large Loss Year",
+        "passed": true,
+        "message": "PASSED: Large Loss Year"
+      },
+      {
+        "test": "Election Test: DEFER_TO_FUTURE",
+        "passed": true,
+        "message": "PASSED: Election Test: DEFER_TO_FUTURE"
+      }
+    ]
+  }
+}

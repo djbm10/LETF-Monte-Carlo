@@ -97,78 +97,15 @@ def monte_carlo_tax_regimes(
     seed: Optional[int] = None
 ) -> Dict:
     """Monte Carlo over tax interpretations (samples rules, not outcomes)."""
-    samples = []
-    regime_results = defaultdict(list)
-    rng = np.random.default_rng(seed)
-
-    for _ in range(n_samples):
-        regime = rng.choice(TAX_REGIMES, p=[r.probability for r in TAX_REGIMES])
-        base_result = compute_capital_gains(
-            st_gains=st_gains,
-            st_losses=st_losses,
-            lt_gains=lt_gains,
-            lt_losses=lt_losses,
-            st_loss_cf_in=st_cf_in,
-            lt_loss_cf_in=lt_cf_in,
-            elections=elections
-        )
-        regime_result = regime.apply_to_capital_gains(base_result, 0)
-        outcome = regime_result.taxable_st + regime_result.taxable_lt
-        samples.append(outcome)
-        regime_results[regime.name].append(outcome)
-
-    samples = np.array(samples)
-    return {
-        'expected_taxable': np.mean(samples),
-        'std_dev': np.std(samples),
-        'percentiles': {
-            'p10': np.percentile(samples, 10),
-            'p25': np.percentile(samples, 25),
-            'p50': np.percentile(samples, 50),
-            'p75': np.percentile(samples, 75),
-            'p90': np.percentile(samples, 90)
-        },
-        'regime_breakdown': {
-            name: {
-                'mean': np.mean(outcomes),
-                'std': np.std(outcomes),
-                'probability': next(r.probability for r in TAX_REGIMES if r.name == name)
-            }
-            for name, outcomes in regime_results.items()
-        }
-    }
+    from letf.accuracy import UnsupportedModelError
+    raise UnsupportedModelError('Tax-law obligations are not sampled from arbitrary favorable/audit probabilities')
 
 
 def get_system_guarantees() -> Dict[str, str]:
-    """
-    What we can GUARANTEE, not claim.
-
-    MUST-FIX: No more "96% accurate" - say what we can prove.
-    """
-
+    """Only supported claims; passing regression examples is not certification."""
     return {
-        'capital_gains_netting': (
-            "Correct for all statutory capital gain cases covered by golden tests. "
-            "6/6 tests passing. IRC §1222, §1211(b), §1212(b) compliant."
-        ),
-        'taxpayer_elections': (
-            "All elective strategies implemented and tested. "
-            "MINIMIZE_ST_FIRST is statutory-safe default."
-        ),
-        'ambiguous_areas': (
-            "Tax computed under conservative/strict IRS interpretation (full wash sale "
-            "disallowance, standard capital gains treatment). Regime Monte Carlo not yet wired."
-        ),
-        'rule_basis': (
-            "Every calculation marked as STATUTORY (IRC), HEURISTIC (approximation), "
-            "AMBIGUOUS (gray area), or ELECTIVE (taxpayer choice)."
-        ),
-        'regression_protection': (
-            "6 golden tests lock correctness forever. "
-            "If any test fails, system is broken and unusable."
-        ),
-        'not_guaranteed': (
-            "Future law changes, individual circumstances beyond capital gains, "
-            "IRS interpretation of novel situations, court decisions not yet rendered."
-        )
+        'capital_gains_netting': 'Schedule D character netting; covered cases tested, see TAX_RULES.md',
+        'taxpayer_elections': 'Loss ordering is statutory. FIFO/HIFO/explicit share identification supported.',
+        'regression_protection': 'Run python -m pytest tests; original baselines are preserved.',
+        'not_guaranteed': 'Full return preparation, state conformity, AMT, complex derivative taxes or broker eligibility.',
     }

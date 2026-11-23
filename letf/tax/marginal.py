@@ -133,151 +133,74 @@ def calculate_ltcg_tax_stacked(
 
 
 def calculate_comprehensive_tax_v6(
-    taxable_st: float,
-    taxable_lt: float,
-    capital_loss_deduction: float,
-    ordinary_income: float = 0,
-    include_state: bool = True,
-    include_niit: bool = True,
-    filing_status: str = 'single',
-    bracket_multiplier: float = 1.0,  # Inflate brackets for future years
-    state_code: str = 'CA'  # State for tax calculation (was hardcoded to CA)
+    taxable_st: float, taxable_lt: float, capital_loss_deduction: float,
+    ordinary_income: float = 0, include_state: bool = True,
+    include_niit: bool = True, filing_status: str = 'single',
+    bracket_multiplier: float = 1.0, state_code: str = None, *,
+    tax_year: int = 2026, qualified_dividends: float = 0,
+    ordinary_dividends: float = 0, interest_income: float = 0,
+    itemized_deduction: float = None,
 ) -> Dict:
+    """Regular federal income tax + NIIT for the explicitly supported scope.
+
+    No AMT, credits, foreign tax, collectibles/1250 rates, SALT optimization,
+    or investment-interest election is inferred. State models fail closed
+    unless independently implemented. See TAX_RULES.md for restrictions.
+    ``ordinary_dividends`` means NONQUALIFIED dividends only (1099-DIV box
+    1a minus box 1b), so qualified income is not counted a second time.
     """
-    Calculate ACTUAL tax liability with proper marginal rates.
-
-    THIS REPLACES THE BROKEN FLAT-RATE CALCULATION.
-
-    Args:
-        taxable_st: Short-term capital gains
-        taxable_lt: Long-term capital gains
-        capital_loss_deduction: Capital loss deduction (reduces ordinary income)
-        ordinary_income: W-2, interest, etc.
-        include_state: Include state tax
-        include_niit: Include Net Investment Income Tax (3.8%)
-        bracket_multiplier: Multiplier for bracket thresholds (for inflation adjustment)
-
-    Returns:
-        Dict with federal, state, NIIT, and total tax
-    """
-    ordinary_brackets = FEDERAL_TAX_BRACKETS_2024.get(filing_status, FEDERAL_TAX_BRACKETS_2024['single'])
-    std_deduction = STANDARD_DEDUCTION_2024.get(filing_status, STANDARD_DEDUCTION_2024['single'])
-    ltcg_brackets = LTCG_BRACKETS_2024.get(filing_status, LTCG_BRACKETS_2024['single'])
-    state_data = STATE_TAX_BRACKETS.get(state_code, STATE_TAX_BRACKETS['CA'])
-    state_brackets = state_data.get(filing_status, state_data['single'])
-    state_std_ded = state_data['std_deduction'].get(filing_status, state_data['std_deduction']['single'])
-    niit_threshold = NIIT_THRESHOLD_2024.get(filing_status, NIIT_THRESHOLD_2024['single'])
-
-    # Apply bracket inflation if needed (for future years)
+    import math
+    from letf.tax.years import federal_parameters
+    from letf.accuracy import UnsupportedModelError
+    values = (taxable_st, taxable_lt, capital_loss_deduction, ordinary_income,
+              qualified_dividends, ordinary_dividends, interest_income)
+    if any(not math.isfinite(x) or x < 0 for x in values):
+        raise ValueError('Income inputs must be finite and nonnegative')
     if bracket_multiplier != 1.0:
-        # Inflate ordinary income brackets
-        ordinary_brackets = [(threshold * bracket_multiplier, rate)
-                             for threshold, rate in ordinary_brackets]
-
-        # Inflate LTCG brackets
-        ltcg_brackets = [(threshold * bracket_multiplier, rate)
-                         for threshold, rate in ltcg_brackets]
-
-        # Inflate standard deduction
-        std_deduction = std_deduction * bracket_multiplier
-
-        # Inflate NIIT threshold
-        niit_threshold = niit_threshold * bracket_multiplier
-
-        # Inflate state brackets
-        state_brackets = [(threshold * bracket_multiplier, rate)
-                          for threshold, rate in state_brackets]
-        state_std_ded = state_std_ded * bracket_multiplier
-
-    # Ordinary income (includes W-2, interest, capital loss deduction offset)
-    # Capital loss deduction REDUCES ordinary income
-    adjusted_ordinary = max(0, ordinary_income - capital_loss_deduction)
-
-    # Federal tax on ordinary income (progressive brackets)
-    federal_ordinary = calculate_marginal_tax(
-        adjusted_ordinary,
-        ordinary_brackets,
-        std_deduction
-    )
-
-    # Short-term capital gains taxed as ordinary income
-    # Stack on top of ordinary income for proper marginal rate
-    total_ordinary_income = adjusted_ordinary + taxable_st
-    federal_with_st = calculate_marginal_tax(
-        total_ordinary_income,
-        ordinary_brackets,
-        std_deduction
-    )
-    federal_st_tax = federal_with_st - federal_ordinary
-
-    # Long-term capital gains (preferential rates)
-    # Based on total income (ordinary + LTCG)
-    total_income = total_ordinary_income + taxable_lt
-
-    # ========================================================================
-    # LTCG TAX WITH PROPER BRACKET STACKING
-    # ========================================================================
-    # LTCG is "stacked" on top of ordinary income (including ST gains) and
-    # taxed progressively through each LTCG bracket.
-    #
-    # This is the CORRECT method. The old flat-rate method was WRONG.
-    #
-    # Example: Single, $40k ordinary income, $50k LTCG
-    #   - First $7,025 of LTCG fills 0% bracket ($40k -> $47,025) = $0
-    #   - Remaining $42,975 at 15% ($47,025 -> $90k) = $6,446
-    #   - Total: $6,446 (NOT $7,500 from flat 15% rate!)
-
-    # The "base" for LTCG stacking is ordinary income AFTER standard deduction
-    # (This includes both W-2 income and short-term capital gains)
-    ordinary_income_for_ltcg_stacking = max(0, total_ordinary_income - std_deduction)
-
-    federal_ltcg_tax = 0
-    ltcg_breakdown = None
-
-    if taxable_lt > 0:
-        federal_ltcg_tax, ltcg_breakdown = calculate_ltcg_tax_stacked(
-            ltcg_amount=taxable_lt,
-            ordinary_income_after_deduction=ordinary_income_for_ltcg_stacking,
-            ltcg_brackets=ltcg_brackets
-        )
-
-    federal_total = federal_ordinary + federal_st_tax + federal_ltcg_tax
-
-    # State tax
-    state_tax = 0
+        raise UnsupportedModelError('Use an enacted tax-year table; bracket extrapolation is hypothetical')
+    ordinary_brackets, ltcg_brackets, standard, threshold = federal_parameters(tax_year, filing_status)
+    loss_limit = 1500 if filing_status == 'married_filing_separately' else 3000
+    if capital_loss_deduction > loss_limit:
+        raise ValueError('Capital loss deduction exceeds statutory limit')
+    if itemized_deduction is not None and (not math.isfinite(itemized_deduction) or itemized_deduction < 0):
+        raise ValueError('Itemized deduction must be a verified nonnegative amount')
+    deduction = standard if itemized_deduction is None else max(standard, itemized_deduction)
+    ordinary_gross = ordinary_income + ordinary_dividends + interest_income
+    # A capital-loss deduction can also reduce AGI consisting of qualified
+    # dividends. Preserve a negative ordinary component for that allocation.
+    ordinary_base = ordinary_gross - capital_loss_deduction
+    with_st = ordinary_base + taxable_st
+    preferred = taxable_lt + qualified_dividends
+    # The part of the deduction unused by ordinary income shelters preferred
+    # income too (Qualified Dividends and Capital Gain Tax Worksheet).
+    ordinary_taxable = max(0., with_st - deduction)
+    preferred_taxable = max(0., preferred - max(0., deduction - with_st))
+    federal_ordinary = calculate_marginal_tax(ordinary_base, ordinary_brackets, deduction)
+    federal_st = calculate_marginal_tax(with_st, ordinary_brackets, deduction) - federal_ordinary
+    federal_ltcg, breakdown = calculate_ltcg_tax_stacked(
+        preferred_taxable, ordinary_taxable, ltcg_brackets)
+    federal_total = federal_ordinary + federal_st + federal_ltcg
+    magi = ordinary_gross + taxable_st + preferred - capital_loss_deduction
+    investment_income = max(0., taxable_st + preferred + ordinary_dividends + interest_income
+                             - capital_loss_deduction)
+    niit_tax = .038 * min(investment_income, max(0., magi - threshold)) if include_niit else 0.
     if include_state:
-        if state_data.get('cap_gains_only', False):
-            # States like WA: tax applies ONLY to capital gains, not ordinary income.
-            # The $250K threshold is a separate deduction against capital gains alone.
-            cap_gains = taxable_st + taxable_lt
-            state_tax = calculate_marginal_tax(cap_gains, state_brackets, state_std_ded)
-        else:
-            # Most states (CA, NY, NJ, IL, MA): all income taxed through state brackets
-            state_income = total_income
-            state_tax = calculate_marginal_tax(state_income, state_brackets, state_std_ded)
-
-    # NIIT (3.8% on investment income over threshold)
-    niit_tax = 0
-    if include_niit and total_income > niit_threshold:
-        investment_income = taxable_st + taxable_lt
-        niit_base = min(investment_income, total_income - niit_threshold)
-        niit_tax = niit_base * NIIT_RATE
-
-    total_tax = federal_total + state_tax + niit_tax
-
+        if state_code is None:
+            raise UnsupportedModelError('Select a state explicitly, or request federal-only tax')
+        # No general individual income tax in these three states. Other
+        # states require dated capital-gain, conformity and surcharge rules.
+        if state_code not in ('TX', 'FL', 'NV'):
+            raise UnsupportedModelError(f'No validated state model for {state_code}/{tax_year}')
+    total_tax = federal_total + niit_tax
     return {
-        'federal_ordinary': federal_ordinary,
-        'federal_st': federal_st_tax,
-        'federal_ltcg': federal_ltcg_tax,
-        'federal_total': federal_total,
-        'state_tax': state_tax,
-        'niit_tax': niit_tax,
-        'total_tax': total_tax,
-        'effective_rate': (total_tax / total_income) if total_income > 0 else 0,
-        'marginal_rate_used': True,
-        # NEW: LTCG bracket breakdown for analysis
-        'ltcg_breakdown': ltcg_breakdown,
-        'ltcg_stacking_used': True
+        'federal_ordinary': federal_ordinary, 'federal_st': federal_st,
+        'federal_ltcg': federal_ltcg, 'federal_total': federal_total,
+        'state_tax': 0., 'niit_tax': niit_tax, 'total_tax': total_tax,
+        'effective_rate': total_tax / magi if magi > 0 else 0.,
+        'marginal_rate_used': True, 'ltcg_breakdown': breakdown,
+        'ltcg_stacking_used': True, 'tax_year': tax_year,
+        'scope': 'regular federal tax and NIIT; excludes AMT/credits/special-rate gains',
+        'state_scope': state_code if include_state else 'FEDERAL ONLY',
     }
 
 

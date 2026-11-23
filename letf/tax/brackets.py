@@ -1,3 +1,9 @@
+"""Historical legacy constants, retained for archived callers only.
+
+These undated state approximations are NOT the audited tax engine. Current
+federal parameters are in years.py; unsupported state models now fail closed.
+"""
+
 STATE_TAX_BRACKETS = {
     'CA': {  # California
         'single': [

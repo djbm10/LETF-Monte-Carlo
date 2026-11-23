@@ -158,7 +158,7 @@ def select_lot_mintax(positions: List[Dict], shares_needed: float,
 
 def get_lots_to_sell(positions: List[Dict], shares_needed: float,
                      method: 'LotSelectionMethod', sale_day: int,
-                     sale_price: float = None) -> List[int]:
+                     sale_price: float = None, specific_lots: Optional[List[int]] = None) -> List[int]:
     """Master function to select lots based on the chosen method."""
     if method == LotSelectionMethod.FIFO:
         return select_lot_fifo(positions, shares_needed)
@@ -172,9 +172,17 @@ def get_lots_to_sell(positions: List[Dict], shares_needed: float,
         return select_lot_ltfo(positions, shares_needed, sale_day)
     elif method == LotSelectionMethod.STFO:
         return select_lot_stfo(positions, shares_needed, sale_day)
-    elif method in (LotSelectionMethod.MINTAX, LotSelectionMethod.SPEC_ID):
+    elif method == LotSelectionMethod.SPEC_ID:
+        if specific_lots is None or len(set(specific_lots)) != len(specific_lots):
+            raise ValueError('Specific identification requires unique explicit lot indices')
+        if any(i < 0 or i >= len(positions) for i in specific_lots):
+            raise ValueError('Unknown specific lot')
+        if sum(positions[i]['shares'] for i in specific_lots) < shares_needed - 1e-9:
+            raise ValueError('Insufficient shares in identified lots')
+        return specific_lots
+    elif method == LotSelectionMethod.MINTAX:
         if sale_price is None:
             return select_lot_hifo(positions, shares_needed)
         return select_lot_mintax(positions, shares_needed, sale_day, sale_price)
     else:
-        return select_lot_fifo(positions, shares_needed)
+        raise ValueError(f'Unknown lot selection method: {method}')

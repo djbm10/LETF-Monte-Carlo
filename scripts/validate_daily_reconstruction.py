@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from letf.reconstruction import SourceRecord, ReconstructionGate, daily_reset_returns, validate_reconstruction, reconstruction_errors
+from letf.accuracy import Evidence
 
 # Fixed ex ante. These are fee scenarios, NOT certified historical fee schedules.
 PRODUCTS = {'TQQQ': ('QQQ', 3., .0086), 'QLD': ('QQQ', 2., .0095),
@@ -86,14 +87,19 @@ def run(inputs, output):
                                             elapsed_calendar_days=evaluation['days'], source=source)
             result = validate_reconstruction(evaluation['actual'], predicted['return'],
                                              training_end=spec['training_end'], gate=gate,
-                                             provenance_verified=True)
+                                             provenance_verified=False)
+            result['source_checksum_verified'] = True
+            result['certification_blockers'] = [
+                'Benchmark is a vendor ETF total-return proxy, not the official product target index',
+                'Historical fee, funding spread, swap and closure schedules are not independently sourced',
+                'Current revised vendor history is not an immutable point-in-time publication vintage']
             result['fitted_training_spread'] = fitted_spread
             result['training_observations'] = len(training)
             result['fee_assumption_annual'] = fee
             result['benchmark'] = benchmark
             # Validation confirms post-inception proxy errors only. Extension
             # before inception remains hypothetical without dated fund terms.
-            result['pre_inception_evidence'] = 'HYPOTHETICAL STRESS MODEL'
+            result['pre_inception_evidence'] = Evidence.HYPOTHETICAL.value
             result['pre_inception_start_available'] = str(underlying.first_valid_index().date())
             result['by_regime'] = {}
             vol = evaluation['underlying'].rolling(21, min_periods=21).std().shift(1) * np.sqrt(252)
@@ -119,12 +125,12 @@ def run(inputs, output):
                 proxy.to_csv(proxy_path, index_label='Date')
                 result['pre_inception_proxy'] = {'path': proxy_path.name, 'rows': len(proxy),
                                                 'sha256': sha256(proxy_path.read_bytes()).hexdigest(),
-                                                'evidence': 'HYPOTHETICAL STRESS MODEL',
+                                                'evidence': Evidence.HYPOTHETICAL.value,
                                                 'parameter_vintage': spec['training_end'],
                                                 'tradable_historically': False}
             report['products'][product] = result
         except Exception as exc:
-            report['products'][product] = {'passed': False, 'evidence': 'UNSUPPORTED', 'error': str(exc)}
+            report['products'][product] = {'passed': False, 'evidence': Evidence.UNSUPPORTED.value, 'error': str(exc)}
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
     return report

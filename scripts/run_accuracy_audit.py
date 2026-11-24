@@ -82,7 +82,10 @@ def run(output):
     hashes = {}
     for name in ('LETF35_analysis.py', 'validation_metadata.json', 'docs/accuracy-audit/reconstruction-gate.json',
                  'requirements-audit.lock'):
-        hashes[name] = sha256(Path(name).read_bytes()).hexdigest()
+        # Updated main removed some baseline-only metadata. Its absence is an
+        # audit fact, not a reason to manufacture a replacement sealed report.
+        hashes[name] = sha256(Path(name).read_bytes()).hexdigest() if Path(name).is_file() else None
+    report['baseline_files_absent_from_integrated_checkout'] = [name for name, value in hashes.items() if value is None]
     for path in sorted(Path('data').rglob('*.pkl')):
         hashes[str(path)] = sha256(path.read_bytes()).hexdigest()
     report['protected_input_sha256'] = hashes

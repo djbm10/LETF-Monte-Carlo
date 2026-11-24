@@ -250,6 +250,9 @@ class OptionContract:
 
     def __post_init__(self):
         positive(self.strike, 'strike')
+        calendar_date(self.expiry)
+        if not self.symbol or not self.underlying:
+            raise ValueError('Explicit option and underlying identities required')
         if self.right not in ('call', 'put') or self.style not in ('american', 'european'):
             raise ValueError('Invalid option contract')
         if self.settlement not in ('physical', 'cash') or type(self.multiplier) is not int or self.multiplier <= 0:
@@ -399,6 +402,10 @@ class LongOptionBook:
             # A valuation does not assume enough displayed depth to liquidate
             # the full position. Fill size is checked only on actual orders.
             quote = quotes[symbol]
+            if quote.contract_symbol != symbol:
+                raise ValueError('Valuation quote does not match the held option contract')
+            if timestamp.date() > contract.expiry:
+                raise UnsupportedModelError('Expired position requires explicit expiry/exercise settlement')
             quote.fill(timestamp, 'SELL', 1)
             value += quote.bid * quantity * contract.multiplier
         return value

@@ -148,3 +148,16 @@ def test_roth_long_leaps_respects_premium_cash_and_actual_quotes():
     options.trade(now, contract, 'SELL', 1, q)
     assert book.accounts['r'].cash == 1898
     assert book.annual_tax('r', 2025, 100000)['tax'] == 0
+
+
+def test_option_mark_cannot_use_another_contracts_bid():
+    ledger=PortfolioLedger()
+    ledger.add_account('r',replace(CONSERVATIVE_ROTH,allowed_kinds=frozenset({'option'})),10000.)
+    book=LongOptionBook(ledger,'r')
+    contract=OptionContract('X_CALL','X',100.,date(2025,12,19),'call','european','cash')
+    ts=datetime(2025,1,2,15,0,tzinfo=timezone.utc)
+    quote=OptionQuote(ts,9.,10.,10,10,'Independent quote fixture',contract_symbol='X_CALL')
+    book.trade(ts,contract,'BUY',1,quote)
+    wrong=replace(quote,contract_symbol='OTHER_CALL',bid=99.,ask=100.)
+    with pytest.raises(ValueError,match='Valuation quote'):
+        book.mark(ts,{'X_CALL':wrong})

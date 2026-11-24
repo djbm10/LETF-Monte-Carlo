@@ -1,0 +1,2 @@
+MC 24/24
+SELF_TEST_OK

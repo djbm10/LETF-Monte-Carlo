@@ -1,0 +1,9 @@
+{
+  "original_checkout": "/home/djmann/projects/letf-monte-carlo",
+  "tracked_patch_matches_initial_backup": true,
+  "current_patch_sha256": "cdfc7abc3fad06b2091653279c64cbd2a4de8e69fd5a5753a73491b9246289eb",
+  "backup_patch_sha256": "cdfc7abc3fad06b2091653279c64cbd2a4de8e69fd5a5753a73491b9246289eb",
+  "original_branch": "audit/financial-accuracy-2026-11-23",
+  "user_archive": "/tmp/letf-integration-preservation/user-edits.tar.gz",
+  "archive_sha256": "92d202ae507d62a1bb376d9571970591eded80519b78a3a0b5061fda396576d5"
+}

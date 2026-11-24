@@ -1,0 +1,1 @@
+{"evidence": "HYPOTHETICAL_STRESS", "independent_paths": 2, "account_runs": 20, "investment_performance_certification": "BLOCKED"}

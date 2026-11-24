@@ -1,0 +1,40 @@
+{
+  "retrieved_at": "2026-11-24T12:14:39.662745+00:00",
+  "symbol": "BRK-B",
+  "instrument_kind": "stock",
+  "currency": "USD",
+  "frequency": "daily",
+  "price_convention": "as_traded",
+  "distributions_complete": true,
+  "corporate_actions_checked_through": "2026-11-23",
+  "data_status": "OBSERVED",
+  "execution_status": "HYPOTHETICAL_STRESS",
+  "scope": "One corporate stock; no vendor or issuer distributions/splits during the captured period",
+  "issuer_distribution_sources": [
+    "https://www.berkshirehathaway.com/2024ar/2024ar.pdf",
+    "https://www.berkshirehathaway.com/2025ar/2025ar.pdf"
+  ],
+  "files": {
+    "prices": {
+      "path": "BRK-B.csv",
+      "sha256": "4298212d68a363c9c27de6c6add9461e74334598de5cf45bec8fa030485b8457",
+      "provider": "Yahoo Finance via yfinance 0.2.66",
+      "url": "https://finance.yahoo.com/quote/BRK-B/history/",
+      "first_observation": "2023-01-03",
+      "last_observation": "2025-12-31",
+      "rows": 752,
+      "license": "Vendor personal-use terms; local research capture; no redistribution certified"
+    },
+    "cpi": {
+      "path": "CPIAUCNS.csv",
+      "sha256": "9729efe37b5cef01b07afbabb676c3424de7b4b2cb8c1042ebf1bd25a953bd38",
+      "provider": "BLS via FRED",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS&cosd=2023-01-01&coed=2025-12-31",
+      "convention": "CPI-U NSA monthly levels, ex-post performance only"
+    }
+  },
+  "limitations": [
+    "Observed daily OHLC does not establish executable NBBO fills",
+    "Current vendor/revised CPI vintage, not a preserved historical release vintage"
+  ]
+}

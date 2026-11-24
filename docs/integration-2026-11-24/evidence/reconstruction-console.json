@@ -1,0 +1,132 @@
+{
+  "TQQQ": {
+    "passed": false,
+    "evidence": "HYPOTHETICAL_STRESS",
+    "errors": {
+      "n": 1508,
+      "daily_rmse": 0.0022240261641083064,
+      "daily_bias": 0.00010060164545503794,
+      "annual_tracking_error": 0.03528088278556079,
+      "cagr_error": 0.023033671869225225,
+      "drawdown_error": 0.0053585591338292105,
+      "terminal_relative_error": 0.10970647265423827,
+      "actual": {
+        "cagr": 0.31265028358796165,
+        "max_drawdown": -0.8165984705262102,
+        "annual_volatility": 0.7489481613095917,
+        "terminal": 5.093529652639667
+      },
+      "proxy": {
+        "cagr": 0.3356839554571869,
+        "max_drawdown": -0.8112399113923809,
+        "annual_volatility": 0.7593129185185902,
+        "terminal": 5.652322824190533
+      }
+    },
+    "error": null
+  },
+  "QLD": {
+    "passed": false,
+    "evidence": "HYPOTHETICAL_STRESS",
+    "errors": {
+      "n": 1508,
+      "daily_rmse": 0.0011218918528435383,
+      "daily_bias": 1.5653798826497735e-05,
+      "annual_tracking_error": 0.017813654683058178,
+      "cagr_error": 0.005539056913659746,
+      "drawdown_error": 0.00384739141193724,
+      "terminal_relative_error": 0.02589069590792703,
+      "actual": {
+        "cagr": 0.2939795065082338,
+        "max_drawdown": -0.6368448485510723,
+        "annual_volatility": 0.5067602542602007,
+        "terminal": 4.675066188983751
+      },
+      "proxy": {
+        "cagr": 0.29951856342189354,
+        "max_drawdown": -0.632997457139135,
+        "annual_volatility": 0.506210541358265,
+        "terminal": 4.79610690603216
+      }
+    },
+    "error": null
+  },
+  "UPRO": {
+    "passed": false,
+    "evidence": "HYPOTHETICAL_STRESS",
+    "errors": {
+      "n": 1508,
+      "daily_rmse": 0.0018112320310103068,
+      "daily_bias": 6.442635332005672e-05,
+      "annual_tracking_error": 0.02874375376399141,
+      "cagr_error": 0.02082449624147964,
+      "drawdown_error": 0.006132746748549467,
+      "terminal_relative_error": 0.1057970132000321,
+      "actual": {
+        "cagr": 0.22876326101281874,
+        "max_drawdown": -0.7681682927072943,
+        "annual_volatility": 0.6222792591671589,
+        "terminal": 3.430750826284867
+      },
+      "proxy": {
+        "cagr": 0.24958775725429838,
+        "max_drawdown": -0.7620355459587448,
+        "annual_volatility": 0.6223248885301892,
+        "terminal": 3.793714016739348
+      }
+    },
+    "error": null
+  },
+  "SSO": {
+    "passed": false,
+    "evidence": "HYPOTHETICAL_STRESS",
+    "errors": {
+      "n": 1508,
+      "daily_rmse": 0.0011597955210782154,
+      "daily_bias": 1.575901945107974e-05,
+      "annual_tracking_error": 0.018415590419904183,
+      "cagr_error": 0.0053656037263492,
+      "drawdown_error": 0.004859328523147632,
+      "terminal_relative_error": 0.02678357379812879,
+      "actual": {
+        "cagr": 0.21211409545231197,
+        "max_drawdown": -0.5934106414174249,
+        "annual_volatility": 0.41561648581216554,
+        "terminal": 3.16180383741432
+      },
+      "proxy": {
+        "cagr": 0.21747969917866117,
+        "max_drawdown": -0.5885513128942773,
+        "annual_volatility": 0.4148840126806037,
+        "terminal": 3.2464882438289133
+      }
+    },
+    "error": null
+  },
+  "TMF": {
+    "passed": false,
+    "evidence": "HYPOTHETICAL_STRESS",
+    "errors": {
+      "n": 1508,
+      "daily_rmse": 0.002498091254706497,
+      "daily_bias": 4.824221205767961e-05,
+      "annual_tracking_error": 0.039661726575691295,
+      "cagr_error": 0.005464440801964177,
+      "drawdown_error": 0.0031429395082509526,
+      "terminal_relative_error": 0.04484554503412297,
+      "actual": {
+        "cagr": -0.2573311078840357,
+        "max_drawdown": -0.9246296557213746,
+        "annual_volatility": 0.5036586913805648,
+        "terminal": 0.16858629578352854
+      },
+      "proxy": {
+        "cagr": -0.2518666670820715,
+        "max_drawdown": -0.9214867162131236,
+        "annual_volatility": 0.5135184637702765,
+        "terminal": 0.17614664010322476
+      }
+    },
+    "error": null
+  }
+}

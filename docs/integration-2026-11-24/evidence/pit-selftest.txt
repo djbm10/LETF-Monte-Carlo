@@ -1,0 +1,1 @@
+{'rows': 1152, 'jan_fund_available': '1999-11-30 00:00:00', 'jan_date': '2000-01-31 00:00:00', 'pre_tnic_year': 1998, 'post_tnic_year': 1999, 'backtest_months': 384, 'terminal': 45.78452452205129}

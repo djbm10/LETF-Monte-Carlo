@@ -1,0 +1,462 @@
+{
+  "evidence": "HYPOTHETICAL_STRESS",
+  "investment_performance_certification": "BLOCKED",
+  "seed": 20261124,
+  "independent_paths": 2,
+  "frozen_tax_year": 2026,
+  "source_manifest_sha256": "329c5b8b279bdb65cbbe2865671ddea39dc1d641034b564f4ca4cfe3a3da6b03",
+  "strategy": "buy_hold",
+  "block_sessions": 21,
+  "rows": [
+    {
+      "path": 0,
+      "horizon_years_252_sessions": 5,
+      "actual_calendar_years": 5.010369822788969,
+      "sample_indices_sha256": "e13cf1e4f02dc18674464b2058f83e09d381f1f711b026942d87f1d11462bef9",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 197165.1771394746,
+          "metrics": {
+            "ending_wealth": 197165.1771394746,
+            "max_drawdown": 0.20873093743905635,
+            "max_underwater_sessions": 239,
+            "cagr": 0.14510154935445163,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.14510154935445163,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 17816.568106183775,
+          "costs": 63.000950838969835
+        },
+        "roth": {
+          "ending_wealth": 214981.74524565839,
+          "metrics": {
+            "ending_wealth": 214981.74524565839,
+            "max_drawdown": 0.16354095887785958,
+            "max_underwater_sessions": 239,
+            "cagr": 0.16504506444322287,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.16504506444322287,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 63.000950838969835
+        }
+      }
+    },
+    {
+      "path": 0,
+      "horizon_years_252_sessions": 10,
+      "actual_calendar_years": 10.028953366598904,
+      "sample_indices_sha256": "db6f684bc62092b6bb6c8f8da6adaba792fb42448bd1c0133e7ece2bbcf43f55",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 337205.38444798806,
+          "metrics": {
+            "ending_wealth": 337205.38444798806,
+            "max_drawdown": 0.23928973049926416,
+            "max_underwater_sessions": 557,
+            "cagr": 0.1288521074462663,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.1288521074462663,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 50239.67029091349,
+          "costs": 97.50051264996554
+        },
+        "roth": {
+          "ending_wealth": 387445.05473890156,
+          "metrics": {
+            "ending_wealth": 387445.05473890156,
+            "max_drawdown": 0.23928973049926416,
+            "max_underwater_sessions": 557,
+            "cagr": 0.1445932943360302,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.1445932943360302,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 97.50051264996554
+        }
+      }
+    },
+    {
+      "path": 0,
+      "horizon_years_252_sessions": 20,
+      "actual_calendar_years": 20.07159626823275,
+      "sample_indices_sha256": "6cbfc8ae20538f204b58424799b322adec0a2636cbcc7cbbb985a5b499468b2e",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 1255088.2811516558,
+          "metrics": {
+            "ending_wealth": 1255088.2811516558,
+            "max_drawdown": 0.26366507733539635,
+            "max_underwater_sessions": 557,
+            "cagr": 0.13432567624935388,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.13432567624935388,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 325500.0143229582,
+          "costs": 336.1768960738454
+        },
+        "roth": {
+          "ending_wealth": 1580588.295474614,
+          "metrics": {
+            "ending_wealth": 1580588.295474614,
+            "max_drawdown": 0.23928973049926416,
+            "max_underwater_sessions": 557,
+            "cagr": 0.14743244554386492,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.14743244554386492,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 336.1768960738454
+        }
+      }
+    },
+    {
+      "path": 0,
+      "horizon_years_252_sessions": 30,
+      "actual_calendar_years": 30.108763355852616,
+      "sample_indices_sha256": "e9bdd4258082db366a4eab261781fd50554ddf4d48e0eef1053fe04d95f57c1b",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 2995784.7817698186,
+          "metrics": {
+            "ending_wealth": 2995784.7817698186,
+            "max_drawdown": 0.24890518487448177,
+            "max_underwater_sessions": 695,
+            "cagr": 0.11953901066487083,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.11953901066487083,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 869182.1234399171,
+          "costs": 793.1440114438382
+        },
+        "roth": {
+          "ending_wealth": 3864966.9052097355,
+          "metrics": {
+            "ending_wealth": 3864966.9052097355,
+            "max_drawdown": 0.24890518487448177,
+            "max_underwater_sessions": 695,
+            "cagr": 0.12905149074235478,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.12905149074235478,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 793.1440114438382
+        }
+      }
+    },
+    {
+      "path": 0,
+      "horizon_years_252_sessions": 40,
+      "actual_calendar_years": 40.1431925364655,
+      "sample_indices_sha256": "4074e5bf5c4969558e7027a6abd0310d823bb274fd3354c6647547a36ca3580c",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 10265237.61611488,
+          "metrics": {
+            "ending_wealth": 10265237.61611488,
+            "max_drawdown": 0.28431194279568783,
+            "max_underwater_sessions": 695,
+            "cagr": 0.1222893950549413,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.1222893950549413,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 3139693.638629058,
+          "costs": 2701.5185562602865
+        },
+        "roth": {
+          "ending_wealth": 13404931.25474394,
+          "metrics": {
+            "ending_wealth": 13404931.25474394,
+            "max_drawdown": 0.24890518487448177,
+            "max_underwater_sessions": 695,
+            "cagr": 0.12977487853147474,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.12977487853147474,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 2701.5185562602865
+        }
+      }
+    },
+    {
+      "path": 1,
+      "horizon_years_252_sessions": 5,
+      "actual_calendar_years": 5.010369822788969,
+      "sample_indices_sha256": "4133846ef384116e49ba0ed880d671123d16b263442d4c25ef918d63a246e919",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 173236.15777929805,
+          "metrics": {
+            "ending_wealth": 173236.15777929805,
+            "max_drawdown": 0.1383006700384104,
+            "max_underwater_sessions": 186,
+            "cagr": 0.11590937929768019,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.11590937929768019,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 12924.02784340554,
+          "costs": 57.23548582137019
+        },
+        "roth": {
+          "ending_wealth": 186160.1856227036,
+          "metrics": {
+            "ending_wealth": 186160.1856227036,
+            "max_drawdown": 0.1383006700384104,
+            "max_underwater_sessions": 186,
+            "cagr": 0.13205009430239234,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.13205009430239234,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 57.23548582137019
+        }
+      }
+    },
+    {
+      "path": 1,
+      "horizon_years_252_sessions": 10,
+      "actual_calendar_years": 10.028953366598904,
+      "sample_indices_sha256": "4e4cef4bfc5abe481a5fd76a317f40ac12512037c8a01a93faa6bd2becf20610",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 427873.8494907581,
+          "metrics": {
+            "ending_wealth": 427873.8494907581,
+            "max_drawdown": 0.17547305515542888,
+            "max_underwater_sessions": 272,
+            "cagr": 0.15597732416382803,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.15597732416382803,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 71231.87648308191,
+          "costs": 119.83711421727763
+        },
+        "roth": {
+          "ending_wealth": 499105.72597384,
+          "metrics": {
+            "ending_wealth": 499105.72597384,
+            "max_drawdown": 0.17547305515542888,
+            "max_underwater_sessions": 272,
+            "cagr": 0.17386374236402835,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.17386374236402835,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 119.83711421727763
+        }
+      }
+    },
+    {
+      "path": 1,
+      "horizon_years_252_sessions": 20,
+      "actual_calendar_years": 20.07159626823275,
+      "sample_indices_sha256": "a86b4fe26d9d5558427defcaffc8850ea515758958d10f359e9a77b9cdf554b6",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 2098208.6150495443,
+          "metrics": {
+            "ending_wealth": 2098208.6150495443,
+            "max_drawdown": 0.23627285722028346,
+            "max_underwater_sessions": 272,
+            "cagr": 0.16374192008259003,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.16374192008259003,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 588836.8115246608,
+          "costs": 557.5125894322804
+        },
+        "roth": {
+          "ending_wealth": 2687045.426574205,
+          "metrics": {
+            "ending_wealth": 2687045.426574205,
+            "max_drawdown": 0.17547305515542888,
+            "max_underwater_sessions": 272,
+            "cagr": 0.17817237665606722,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.17817237665606722,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 557.5125894322804
+        }
+      }
+    },
+    {
+      "path": 1,
+      "horizon_years_252_sessions": 30,
+      "actual_calendar_years": 30.108763355852616,
+      "sample_indices_sha256": "8d251a8730a36089f86153ba95829c340aa0677a38516aa4a4a784f023e0370d",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 6104077.384281392,
+          "metrics": {
+            "ending_wealth": 6104077.384281392,
+            "max_drawdown": 0.22826527224828586,
+            "max_underwater_sessions": 318,
+            "cagr": 0.14631944203304137,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.14631944203304137,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 1840013.6712059993,
+          "costs": 1609.1320391045608
+        },
+        "roth": {
+          "ending_wealth": 7944091.055487392,
+          "metrics": {
+            "ending_wealth": 7944091.055487392,
+            "max_drawdown": 0.211308997743339,
+            "max_underwater_sessions": 318,
+            "cagr": 0.1563945060430565,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.1563945060430565,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 1609.1320391045608
+        }
+      }
+    },
+    {
+      "path": 1,
+      "horizon_years_252_sessions": 40,
+      "actual_calendar_years": 40.1431925364655,
+      "sample_indices_sha256": "9c38d84579b3f893a2851c8a1ef18e94677142c4f6856fddfcb476224c0e36b2",
+      "accounts": {
+        "taxable": {
+          "ending_wealth": 17700547.88245238,
+          "metrics": {
+            "ending_wealth": 17700547.88245238,
+            "max_drawdown": 0.30623345350592246,
+            "max_underwater_sessions": 498,
+            "cagr": 0.13762519296180487,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.13762519296180487,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 5462008.393731845,
+          "costs": 4653.4339436234895
+        },
+        "roth": {
+          "ending_wealth": 23162556.276184224,
+          "metrics": {
+            "ending_wealth": 23162556.276184224,
+            "max_drawdown": 0.2646463342012436,
+            "max_underwater_sessions": 498,
+            "cagr": 0.14527236043282743,
+            "real_cagr": null,
+            "money_weighted_return": null,
+            "time_weighted_cagr": 0.14527236043282743,
+            "real_time_weighted_cagr": null
+          },
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "costs": 4653.4339436234895
+        }
+      }
+    }
+  ],
+  "paired_terminal_difference_ci": {
+    "5": {
+      "mean_difference": 15370.297974794667,
+      "low": 12924.02784340555,
+      "high": 17816.568106183782,
+      "confidence": 0.95,
+      "independent_path_count": 2,
+      "seed": 20261124
+    },
+    "10": {
+      "mean_difference": 60735.773386997695,
+      "low": 50239.67029091349,
+      "high": 71231.8764830819,
+      "confidence": 0.95,
+      "independent_path_count": 2,
+      "seed": 20261124
+    },
+    "20": {
+      "mean_difference": 457168.4129238095,
+      "low": 325500.0143229582,
+      "high": 588836.8115246608,
+      "confidence": 0.95,
+      "independent_path_count": 2,
+      "seed": 20261124
+    },
+    "30": {
+      "mean_difference": 1354597.897322958,
+      "low": 869182.1234399169,
+      "high": 1840013.6712059993,
+      "confidence": 0.95,
+      "independent_path_count": 2,
+      "seed": 20261124
+    },
+    "40": {
+      "mean_difference": 4300851.016180451,
+      "low": 3139693.6386290584,
+      "high": 5462008.393731844,
+      "confidence": 0.95,
+      "independent_path_count": 2,
+      "seed": 20261124
+    }
+  },
+  "limitations": [
+    "All future law is the explicit frozen-year stress assumption",
+    "Generic US cash accounts, federal regular tax/NIIT only; no state or future eligibility predictions",
+    "Resampled stock assumes no future dividends/splits/closures; not an investable forecast",
+    "Calendar is a projected XNYS calendar; unexpected closures are not modeled",
+    "Intervals quantify sampling variation conditional on one short source history, not model/source uncertainty",
+    "Small demonstration path counts do not establish Monte Carlo convergence; no full strategy rankings authorized"
+  ]
+}

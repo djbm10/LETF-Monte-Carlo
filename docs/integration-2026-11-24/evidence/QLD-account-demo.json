@@ -1,0 +1,156 @@
+{
+  "data_status": "OBSERVED",
+  "execution_status": "HYPOTHETICAL_STRESS",
+  "investment_performance_certification": "BLOCKED",
+  "reason": "Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return",
+  "strategy": {
+    "rule": "buy_hold",
+    "lookback_sessions": 50,
+    "symbol": "QLD"
+  },
+  "start": "2024-01-02",
+  "end": "2024-12-31",
+  "source_manifest_sha256": "f15c5f43a506e248ecbfa74615cf1caea93f94520267ff2a567f80f9d2a4d962",
+  "identical_pre_tax_trades": true,
+  "pre_tax_trade_count": 6,
+  "pre_tax_wealth": 145355.60766855165,
+  "accounts": {
+    "taxable": {
+      "ending_wealth_net_payable": 134805.85829391627,
+      "tax_paid": 0.0,
+      "terminal_tax_payable": 10549.749374635387,
+      "metrics": {
+        "ending_wealth": 134805.85829391627,
+        "max_drawdown": 0.26195032133997065,
+        "max_underwater_sessions": 84,
+        "cagr": 0.34943360666599865,
+        "real_cagr": null,
+        "money_weighted_return": null,
+        "time_weighted_cagr": 0.34943360666599865,
+        "real_time_weighted_cagr": null
+      },
+      "trading_costs": 49.14647071613024,
+      "tax_rows": [
+        {
+          "tax": 10549.749374635387,
+          "st_cf": 0.0,
+          "lt_cf": 0.0,
+          "taxable_st": 44987.869159473776,
+          "taxable_lt": 0.0,
+          "capital_loss_deduction": 0.0,
+          "state_st_cf": 0.0,
+          "state_lt_cf": 0.0,
+          "calculation": {
+            "federal_ordinary": 13841.0,
+            "federal_st": 10494.588598273705,
+            "federal_ltcg": 55.16077636168207,
+            "federal_total": 24390.749374635387,
+            "state_tax": 0.0,
+            "state_calculation": null,
+            "niit_tax": 0.0,
+            "total_tax": 24390.749374635387,
+            "effective_rate": 0.167800539420898,
+            "marginal_rate_used": true,
+            "ltcg_breakdown": {
+              "breakdown": [
+                {
+                  "bracket_num": 2,
+                  "bracket_ceiling": 518900,
+                  "rate": 0.15,
+                  "rate_pct": "15%",
+                  "ltcg_in_bracket": 367.73850907788045,
+                  "tax_in_bracket": 55.16077636168207,
+                  "income_range": [
+                    130387.86915947378,
+                    130755.60766855166
+                  ]
+                }
+              ],
+              "total": 55.16077636168207,
+              "ordinary_income_base": 130387.86915947378,
+              "ltcg_amount": 367.73850907788045,
+              "effective_ltcg_rate": 0.15
+            },
+            "ltcg_stacking_used": true,
+            "tax_year": 2024,
+            "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+            "state_scope": "FEDERAL ONLY"
+          },
+          "baseline": {
+            "federal_ordinary": 13841.0,
+            "federal_st": 0.0,
+            "federal_ltcg": 0.0,
+            "federal_total": 13841.0,
+            "state_tax": 0.0,
+            "state_calculation": null,
+            "niit_tax": 0.0,
+            "total_tax": 13841.0,
+            "effective_rate": 0.13841,
+            "marginal_rate_used": true,
+            "ltcg_breakdown": {
+              "breakdown": [],
+              "total": 0.0
+            },
+            "ltcg_stacking_used": true,
+            "tax_year": 2024,
+            "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+            "state_scope": "FEDERAL ONLY"
+          },
+          "evidence": "OBSERVED",
+          "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+          "year": 2024,
+          "paid_on": null
+        }
+      ],
+      "trade_count": 6,
+      "max_cash_residual": 0.0,
+      "max_nav_residual": 5.820766091346741e-11,
+      "ending_positions": {
+        "QLD": 3.697042672001771e-14
+      },
+      "final_cash": 0.0,
+      "unsettled_liquidation_proceeds": 145355.60766855165,
+      "days": 252,
+      "external_flows_investor": []
+    },
+    "roth": {
+      "ending_wealth_net_payable": 145355.60766855165,
+      "tax_paid": 0.0,
+      "terminal_tax_payable": 0.0,
+      "metrics": {
+        "ending_wealth": 145355.60766855165,
+        "max_drawdown": 0.26195032133997065,
+        "max_underwater_sessions": 84,
+        "cagr": 0.45541298637943606,
+        "real_cagr": null,
+        "money_weighted_return": null,
+        "time_weighted_cagr": 0.45541298637943606,
+        "real_time_weighted_cagr": null
+      },
+      "trading_costs": 49.14647071613024,
+      "tax_rows": [],
+      "trade_count": 6,
+      "max_cash_residual": 0.0,
+      "max_nav_residual": 5.820766091346741e-11,
+      "ending_positions": {
+        "QLD": 3.697042672001771e-14
+      },
+      "final_cash": 0.0,
+      "unsettled_liquidation_proceeds": 145355.60766855165,
+      "days": 252,
+      "external_flows_investor": []
+    }
+  },
+  "assumptions": {
+    "state": "FEDERAL_ONLY",
+    "ordinary_income": 100000.0,
+    "settlement": "US T+2/T+1 effective dates",
+    "spread_bps": 2.0,
+    "slippage_bps": 1.0,
+    "commission": 0.0,
+    "cash_sweep_yield": 0.0,
+    "initial_roth_basis": "Supplied existing regular basis; no new above-limit contribution",
+    "tax_timing": "Annual settlement funded; sufficient external salary withholding assumed for safe harbor",
+    "cpi": "Monthly CPI-U NSA mapped to its observation month for ex-post metrics only"
+  }
+}

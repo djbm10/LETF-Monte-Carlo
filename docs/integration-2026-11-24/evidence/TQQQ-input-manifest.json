@@ -1,0 +1,64 @@
+{
+  "symbol": "TQQQ",
+  "instrument_kind": "etf",
+  "tax_structure": "corporation",
+  "currency": "USD",
+  "frequency": "daily",
+  "data_status": "OBSERVED",
+  "price_convention": "as_traded",
+  "distributions_complete": true,
+  "account_coverage_start": "2024-01-02",
+  "account_coverage_end": "2024-12-31",
+  "supported_tax_states": [
+    "FEDERAL_ONLY",
+    "TX",
+    "FL",
+    "NV"
+  ],
+  "retrieved_at": "2026-11-24T21:40:36.331043+00:00",
+  "files": {
+    "prices": {
+      "path": "prices.csv",
+      "sha256": "a4005ea7f1ab004ef9c083baf97a46b581ce043240fa509189475bce5b2eabaa",
+      "provider": "Yahoo Finance via yfinance 0.2.66",
+      "url": "https://finance.yahoo.com/quote/TQQQ/history/",
+      "format": "csv"
+    },
+    "distributions": {
+      "path": "distributions.csv",
+      "sha256": "4c0217076ed1372ee59132f6de26a5178a8c8d029e09f9bf919761d3ebc25c21",
+      "provider": "ProShares dated 2024 ICI primary supplement",
+      "url": "https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_2024.xlsx",
+      "format": "csv"
+    },
+    "issuer_tax_original": {
+      "path": "ici_primary_2024.xlsx",
+      "sha256": "edcfbffd1613dafd11e6de5531bbb7be98167ea6b4af730064eecfeb934fb9c9",
+      "provider": "ProShares",
+      "url": "https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_2024.xlsx",
+      "format": "xlsx"
+    },
+    "issuer_restated": {
+      "path": "issuer-restated-distributions.json",
+      "sha256": "11f2de13b4c814a7c4d9ff0d1449c71575cd8b4c4ca127089252c02807669a61",
+      "provider": "ProShares",
+      "url": "https://www.proshares.com/api/distributionsummary/?fund=TQQQ&year=2024",
+      "format": "json"
+    }
+  },
+  "nominal_price_scaling": {
+    "factor": 2.0,
+    "method": "Dated nominal/current restated issuer payouts crosschecked against dated vendor splits",
+    "original_vendor_sha256": "90eb10e5e5982d7320a39779f0c6c67a38db7e598c13fb0d3a2a6f36e6bd4dc3",
+    "original_vendor_capture": "2026-11-23T21:33:48.638564+00:00",
+    "relative_tolerance_frozen": 2e-05,
+    "in_period_splits": false
+  },
+  "limitations": [
+    "Vendor daily OHLC is not NBBO execution evidence",
+    "Rounded vendor dividend amounts are replaced by dated issuer tax-supplement amounts",
+    "Qualified classification requires separate investor holding-period proof at each ex-date",
+    "No support for state government-obligation exclusions or special distribution components",
+    "2024 tax classification is ex-post information; never used in strategy signals"
+  ]
+}

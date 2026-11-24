@@ -1,0 +1,51 @@
+{
+  "implementation_tests_passed": true,
+  "before_after": {
+    "character": {
+      "before": {
+        "taxable_st": 0,
+        "taxable_lt": 0,
+        "st_loss_cf_out": 10000,
+        "lt_loss_cf_out": 0,
+        "capital_loss_deduction": 0
+      },
+      "after": {
+        "taxable_st": 0.0,
+        "taxable_lt": 0.0,
+        "st_loss_cf_out": 0.0,
+        "lt_loss_cf_out": 7000.0,
+        "capital_loss_deduction": 3000.0
+      }
+    },
+    "carry_only": {
+      "before": {
+        "taxable_st": 0,
+        "taxable_lt": 0,
+        "st_loss_cf_out": 5000,
+        "lt_loss_cf_out": 0,
+        "capital_loss_deduction": 0
+      },
+      "after": {
+        "taxable_st": 0.0,
+        "taxable_lt": 0.0,
+        "st_loss_cf_out": 2000.0,
+        "lt_loss_cf_out": 0.0,
+        "capital_loss_deduction": 3000.0
+      }
+    },
+    "unused_deduction_tax": {
+      "before": 1946.25,
+      "after": 0.0
+    },
+    "student_t_garch_variance": {
+      "target": 0.0001,
+      "n": 30000,
+      "before": 0.00012188863429195663,
+      "after": 0.00010163796740269875,
+      "relative_tolerance": 0.1,
+      "before_passed": false,
+      "after_passed": true
+    }
+  },
+  "full_mission_verified": false
+}

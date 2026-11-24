@@ -1,0 +1,1 @@
+96 workflows: unique YAML mappings and jobs structure PASS

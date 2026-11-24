@@ -1,0 +1,26 @@
+{
+  "implementation_commit": "11f57067a2b47a03f60893fc09af3794647db86e",
+  "checks": {
+    "account-demo": {
+      "exact_summary_match": true,
+      "cash_reconciled": true
+    },
+    "account-demo-flows": {
+      "exact_summary_match": true,
+      "cash_reconciled": true
+    },
+    "TQQQ-account-demo": {
+      "exact_summary_match": true,
+      "cash_reconciled": true
+    },
+    "QLD-account-demo": {
+      "exact_summary_match": true,
+      "cash_reconciled": true
+    }
+  },
+  "paired_scenarios": {
+    "exact_report_match": true,
+    "account_runs": 20,
+    "seed": 20261124
+  }
+}

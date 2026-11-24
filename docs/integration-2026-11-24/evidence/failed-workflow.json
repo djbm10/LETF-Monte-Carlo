@@ -1,0 +1,16 @@
+{
+  "id": 45311541299,
+  "head_sha": "fe8e1b28cb0275396a0b9b6c30a3ab29b1e25365",
+  "event": "push",
+  "conclusion": "failure",
+  "created_at": "2026-11-24T02:19:39Z",
+  "check_suite_id": 122611267552,
+  "run_attempt": 1,
+  "jobs": [],
+  "check_runs": 0,
+  "failure_phase": "workflow validation before jobs",
+  "confirmed_yaml_defect": "duplicate jobs.bottleneck_leaps_futures",
+  "url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45311541299",
+  "gh_run_view_diagnostic": "This run likely failed because of a workflow file issue.",
+  "not_claimed": "No runtime test failure or runtime logs existed for that run"
+}

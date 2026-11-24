@@ -1,0 +1,37 @@
+{
+  "rows_total": 6,
+  "rows_clean_calls": 4,
+  "rows_long_calls_365d_plus": 2,
+  "dates": [
+    "2005-09-15"
+  ],
+  "tickers": [
+    "SPX"
+  ],
+  "max_dte": 639,
+  "min_long_strike": 700.0,
+  "max_long_strike": 850.0,
+  "example_long_calls": [
+    {
+      "secid": 108105,
+      "date": "2005-09-15 00:00:00",
+      "exdate": "2007-06-16 00:00:00",
+      "strike": 700.0,
+      "best_bid": 538.3,
+      "best_offer": 541.3,
+      "optionid": 26643070
+    },
+    {
+      "secid": 108105,
+      "date": "2005-09-15 00:00:00",
+      "exdate": "2007-06-16 00:00:00",
+      "strike": 850.0,
+      "best_bid": 406.1,
+      "best_offer": 409.1,
+      "optionid": 26643074
+    }
+  ],
+  "performance_testable": false,
+  "longitudinal_schema_available": false,
+  "performance_blocker": "EOD rows alone do not establish quote timestamps/depth, contract actions, permissions or account taxation"
+}

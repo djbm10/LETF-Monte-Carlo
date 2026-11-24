@@ -1,0 +1,20 @@
+{
+  "TQQQ": {
+    "status": "OBSERVED",
+    "nominal_price_factor": 2.0,
+    "distributions": 8
+  },
+  "QLD": {
+    "status": "OBSERVED",
+    "nominal_price_factor": 2.0,
+    "distributions": 4
+  },
+  "SSO": {
+    "status": "BLOCKED",
+    "reason": "SSO: special distribution components require additional tax rules"
+  },
+  "UPRO": {
+    "status": "BLOCKED",
+    "reason": "UPRO: special distribution components require additional tax rules"
+  }
+}

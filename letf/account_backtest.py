@@ -145,6 +145,9 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         calendar = xcals.get_calendar('XNYS', start=str(first - timedelta(days=15)), end=str(last + timedelta(days=30)))
         if any(not calendar.is_session(pd.Timestamp(d)) for d in trading.index):
             raise ValueError('Market rows include a non-XNYS session')
+        expected_sessions=calendar.sessions_in_range(pd.Timestamp(first),pd.Timestamp(last)).tz_localize(None)
+        if not trading.index.equals(expected_sessions):
+            raise UnsupportedModelError('Missing exchange sessions: a daily-close path cannot silently skip observations')
 
     @lru_cache(maxsize=None)
     def settlement(when):

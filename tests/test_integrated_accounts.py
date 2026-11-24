@@ -136,3 +136,9 @@ def test_daily_engine_owner_linked_roth_purchase_permanently_disallows_taxable_l
     assert linked['terminal_tax_payable']==pytest.approx(-22.)
     assert linked['ledger'].realizations[0].permanent_disallowed==pytest.approx(100.)
     assert linked['reconciliation'].cash_residual.abs().max()==0.
+
+
+def test_missing_daily_session_is_not_silently_accepted_as_a_valid_path():
+    m=frame('2024-06-03','2024-06-10').drop(pd.Timestamp('2024-06-05'))
+    with pytest.raises(UnsupportedModelError,match='Missing exchange sessions'):
+        replay(m,lambda h,w:{'X':1.})

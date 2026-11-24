@@ -91,8 +91,6 @@ def prepare_crsp(crsp):
  g=c.groupby("permno",group_keys=False)
  c["mom12_1"]=g.ret.transform(lambda s:((1+s).rolling(11,min_periods=9).apply(np.prod,raw=True)-1).shift(1))
  c["mom6_1"]=g.ret.transform(lambda s:((1+s).rolling(5,min_periods=4).apply(np.prod,raw=True)-1).shift(1))
- c["mom12_1"]=g.ret.apply(lambda s:(1+s).rolling(11,min_periods=9).apply(np.prod,raw=True)-1).shift(1)
- c["mom6_1"]=g.ret.apply(lambda s:(1+s).rolling(5,min_periods=4).apply(np.prod,raw=True)-1).shift(1)
  c["price_idx"]=g.ret.transform(lambda s:(1+s).cumprod())
  c["high12"]=g.price_idx.transform(lambda s:s.rolling(12,min_periods=9).max())
  c["high_ratio"]=c.price_idx/c.high12
@@ -112,10 +110,10 @@ def prepare_fund(f):
  f["op_margin"]=f.oibdp/f.sale.replace(0,np.nan)
  f["op_margin_change_yoy"]=g.op_margin.diff(4)
  f["fcf"]=(f.oancf-f.capx);f["fcf_margin"]=f.fcf/f.sale.replace(0,np.nan)
- f["leverage"]=(f.lt/f.at.replace(0,np.nan))
+ f["leverage"]=(f['lt']/f['at'].replace(0,np.nan))
  f["share_growth_yoy"]=g.csho.pct_change(4)
- f["asset_growth_yoy"]=g.at.pct_change(4)
- f["ev_sales_proxy"]=(f.prcc*f.csho+f.lt)/f.sale.replace(0,np.nan)
+ f["asset_growth_yoy"]=g['at'].pct_change(4)
+ f["ev_sales_proxy"]=(f.prcc*f.csho+f['lt'])/f.sale.replace(0,np.nan)
  return f
 
 def prepare_tnic(t):

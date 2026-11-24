@@ -1,0 +1,269 @@
+name: Build free S&P historical price panel
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-sp500-price-panel]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install pandas pyarrow yfinance requests
+
+      - name: Download PIT membership
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 --retry-delay 2             https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv             -o /tmp/components_history.csv
+
+      - name: Build 2007-2023 historical-symbol panel
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, random, time
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+          import requests
+          import yfinance as yf
+
+          SAMPLE_START=pd.Timestamp("2009-01-01")
+          SAMPLE_END=pd.Timestamp("2023-12-31")
+          WARMUP_START=pd.Timestamp("2007-12-01")
+          DOWNLOAD_END=pd.Timestamp("2024-01-02")
+
+          m=pd.read_csv("/tmp/components_history.csv",dtype={"cik":str})
+          def clean_date(s):
+              return pd.to_datetime(
+                  s.astype(str).str.replace("*","",regex=False).str.strip()
+                   .replace({"":"", "nan":""}),
+                  errors="coerce",
+              ).dt.normalize()
+          m["date_added"]=clean_date(m["date_added"])
+          m["date_removed"]=clean_date(m["date_removed"])
+          m["symbol"]=m["symbol"].astype(str).str.upper().str.strip()
+          m["cik"]=m["cik"].astype(str).str.replace(r"\.0$","",regex=True).str.zfill(10)
+          relevant=m[
+              (m.date_added<=SAMPLE_END)
+              & (m.date_removed.isna() | (m.date_removed>=WARMUP_START))
+          ].copy()
+          union=sorted(relevant.symbol.dropna().unique().tolist())
+          print("MEMBERSHIP_ROWS",len(relevant),"UNION_SYMBOLS",len(union),flush=True)
+
+          def ysym(s):
+              return s.replace(".","-")
+          inv={ysym(t):t for t in union}
+          parts=[]
+          failed_batch_symbols=set()
+
+          # First pass: efficient batches.
+          ytickers=list(inv)
+          for i in range(0,len(ytickers),60):
+              batch=ytickers[i:i+60]
+              got=set()
+              try:
+                  x=yf.download(
+                      batch,
+                      start=WARMUP_START.strftime("%Y-%m-%d"),
+                      end=DOWNLOAD_END.strftime("%Y-%m-%d"),
+                      auto_adjust=False,
+                      actions=False,
+                      progress=False,
+                      threads=True,
+                      group_by="column",
+                  )
+                  if x is not None and not x.empty:
+                      if isinstance(x.columns,pd.MultiIndex):
+                          z=x.stack(level=1,future_stack=True).rename_axis(["Date","YahooTicker"]).reset_index()
+                      else:
+                          z=x.reset_index()
+                          z["YahooTicker"]=batch[0]
+                      z["symbol"]=z["YahooTicker"].map(inv)
+                      z=z[z.symbol.notna()].copy()
+                      if "Close" in z:
+                          z=z.dropna(subset=["Close"])
+                      if len(z):
+                          parts.append(z)
+                          got=set(z.symbol.unique())
+              except Exception as exc:
+                  print("BATCH_ERROR",i,repr(exc),flush=True)
+              for t in batch:
+                  orig=inv[t]
+                  if orig not in got:
+                      failed_batch_symbols.add(orig)
+              print("BATCH",i,"GOT",len(got),"MISSING",len(batch)-len(got),flush=True)
+              time.sleep(0.3)
+
+          if parts:
+              prices=pd.concat(parts,ignore_index=True)
+          else:
+              prices=pd.DataFrame()
+          have=set(prices.symbol.unique()) if len(prices) else set()
+          missing=sorted(set(union)-have)
+          print("FIRST_PASS_HAVE",len(have),"ZERO_SYMBOLS",len(missing),flush=True)
+
+          # Second pass: direct chart endpoint for historical/delisted symbols.
+          session=requests.Session()
+          session.headers.update({
+              "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/153 Safari/537.36",
+              "Accept":"application/json,text/plain,*/*",
+          })
+          p1=int(pd.Timestamp(WARMUP_START,tz="UTC").timestamp())
+          p2=int(pd.Timestamp(DOWNLOAD_END,tz="UTC").timestamp())
+
+          def chart_one(original):
+              ticker=ysym(original)
+              last=None
+              for host in ("query1.finance.yahoo.com","query2.finance.yahoo.com"):
+                  for attempt in range(5):
+                      try:
+                          r=session.get(
+                              f"https://{host}/v8/finance/chart/{ticker}",
+                              params={
+                                  "period1":p1,"period2":p2,"interval":"1d",
+                                  "events":"div,splits","includeAdjustedClose":"true",
+                              },
+                              timeout=30,
+                          )
+                          if r.status_code==429:
+                              time.sleep(min(12,2**attempt)+random.random())
+                              continue
+                          if r.status_code==404:
+                              last=f"{host}:404"; break
+                          r.raise_for_status()
+                          payload=r.json()
+                          result=(payload.get("chart") or {}).get("result")
+                          if not result:
+                              last=str((payload.get("chart") or {}).get("error")); break
+                          x=result[0]
+                          ts=x.get("timestamp") or []
+                          q=((x.get("indicators") or {}).get("quote") or [{}])[0]
+                          adj=((x.get("indicators") or {}).get("adjclose") or [{}])[0].get("adjclose") or [None]*len(ts)
+                          rows=[]
+                          for j,t in enumerate(ts):
+                              close=(q.get("close") or [None]*len(ts))[j]
+                              if close is None: continue
+                              rows.append({
+                                  "Date":pd.to_datetime(t,unit="s",utc=True).tz_convert(None).normalize(),
+                                  "symbol":original,
+                                  "Open":(q.get("open") or [None]*len(ts))[j],
+                                  "High":(q.get("high") or [None]*len(ts))[j],
+                                  "Low":(q.get("low") or [None]*len(ts))[j],
+                                  "Close":close,
+                                  "Adj Close":adj[j] if j<len(adj) and adj[j] is not None else close,
+                                  "Volume":(q.get("volume") or [None]*len(ts))[j],
+                                  "YahooTicker":ticker,
+                              })
+                          if rows:
+                              return pd.DataFrame(rows),None
+                          last=f"{host}:empty"
+                      except Exception as exc:
+                          last=repr(exc)
+                          time.sleep(min(12,2**attempt)+random.random())
+              return None,last
+
+          recovered=[]
+          failures={}
+          for i,t in enumerate(missing,1):
+              df,err=chart_one(t)
+              if df is not None and len(df):
+                  recovered.append(df)
+                  print("RECOVERED",t,len(df),flush=True)
+              else:
+                  failures[t]=err
+                  print("STILL_MISSING",t,err,flush=True)
+              time.sleep(0.15 if i%10 else 1.0)
+
+          if recovered:
+              prices=pd.concat([prices,*recovered],ignore_index=True)
+
+          # Normalize columns after mixed yfinance/chart sources.
+          prices["Date"]=pd.to_datetime(prices["Date"]).dt.tz_localize(None).dt.normalize()
+          prices["symbol"]=prices["symbol"].astype(str).str.upper().str.strip()
+          for c in ["Open","High","Low","Close","Adj Close","Volume"]:
+              if c not in prices:
+                  prices[c]=np.nan
+              prices[c]=pd.to_numeric(prices[c],errors="coerce")
+          prices=prices.dropna(subset=["Date","symbol","Close"])
+          prices=prices.sort_values(["Date","symbol"]).drop_duplicates(["Date","symbol"],keep="last")
+          prices=prices[(prices.Date>=WARMUP_START)&(prices.Date<=SAMPLE_END)]
+          prices.to_parquet("/tmp/sp500_prices_2007_2023.parquet",index=False)
+
+          # SPY defines real US trading sessions.
+          spy=yf.download(
+              "SPY",start=SAMPLE_START.strftime("%Y-%m-%d"),
+              end=DOWNLOAD_END.strftime("%Y-%m-%d"),
+              auto_adjust=False,progress=False,threads=False,
+          )
+          sessions=pd.DatetimeIndex(spy.index).tz_localize(None).normalize()
+
+          price_dates={t:set(g.Date) for t,g in prices.groupby("symbol")}
+          rows=[]
+          for r in relevant.itertuples(index=False):
+              lo=max(pd.Timestamp(r.date_added),SAMPLE_START)
+              hi=min(pd.Timestamp(r.date_removed) if pd.notna(r.date_removed) else SAMPLE_END,SAMPLE_END)
+              if hi < lo: continue
+              ss=sessions[(sessions>=lo)&(sessions<hi if pd.notna(r.date_removed) else sessions<=hi)]
+              n=len(ss)
+              if n==0: continue
+              dates=price_dates.get(r.symbol,set())
+              c=sum(d in dates for d in ss)
+              rows.append({
+                  "symbol":r.symbol,"cik":r.cik,
+                  "date_added":r.date_added,"date_removed":r.date_removed,
+                  "member_sessions":n,"covered_sessions":c,
+                  "coverage":c/n,
+              })
+          cov=pd.DataFrame(rows)
+          cov.to_csv("/tmp/sp500_price_coverage_2009_2023.csv",index=False)
+          weighted=float(cov.covered_sessions.sum()/cov.member_sessions.sum())
+          zero=cov[cov.covered_sessions==0]
+          partial=cov[(cov.covered_sessions>0)&(cov.coverage<0.95)]
+          reused=(
+              relevant.groupby("symbol").cik.nunique()
+              .loc[lambda x:x>1].sort_values(ascending=False)
+          )
+          summary={
+              "sample_start":str(SAMPLE_START.date()),
+              "sample_end":str(SAMPLE_END.date()),
+              "warmup_start":str(WARMUP_START.date()),
+              "membership_rows":int(len(relevant)),
+              "membership_union_symbols":int(len(union)),
+              "price_symbols":int(prices.symbol.nunique()),
+              "price_rows":int(len(prices)),
+              "chart_recovered_symbols":int(len(recovered)),
+              "chart_still_missing_symbols":int(len(failures)),
+              "weighted_member_session_coverage":weighted,
+              "completely_missing_membership_rows":int(len(zero)),
+              "partial_under_95pct_membership_rows":int(len(partial)),
+              "missing_member_sessions":int((cov.member_sessions-cov.covered_sessions).sum()),
+              "total_member_sessions":int(cov.member_sessions.sum()),
+              "symbols_reused_across_ciks":{str(k):int(v) for k,v in reused.items()},
+              "still_missing_symbols":sorted(failures),
+              "zero_coverage_rows":zero.to_dict("records"),
+              "partial_under_95pct_rows":partial.to_dict("records"),
+          }
+          Path("/tmp/sp500_price_panel_summary.json").write_text(json.dumps(summary,indent=2,default=str))
+          print(json.dumps(summary,indent=2,default=str))
+          PY
+
+      - name: Upload historical panel
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-sp500-price-panel
+          path: |
+            /tmp/sp500_prices_2007_2023.parquet
+            /tmp/sp500_price_coverage_2009_2023.csv
+            /tmp/sp500_price_panel_summary.json
+          retention-days: 30

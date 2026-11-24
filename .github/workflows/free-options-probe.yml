@@ -1,0 +1,50 @@
+name: Free options dataset probe
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  probe:
+    if: contains(github.event.head_commit.message, '[free-options-probe]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install pandas pyarrow
+      - name: Download small real-data probe
+        shell: bash
+        run: |
+          mkdir -p /tmp/free-options
+          for ticker in spy qqq; do
+            curl -L --fail --retry 3 -o "/tmp/free-options/${ticker}_2012.parquet"               "https://raw.githubusercontent.com/anahatsingh-ui/options-dataset-hist/main/${ticker}/options_2012.parquet"
+            curl -L --fail --retry 3 -o "/tmp/free-options/${ticker}_underlying.parquet"               "https://raw.githubusercontent.com/anahatsingh-ui/options-dataset-hist/main/${ticker}/underlying_prices.parquet"
+          done
+      - name: Inspect schema and coverage
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from pathlib import Path
+          for ticker in ("spy","qqq"):
+              op=Path(f"/tmp/free-options/{ticker}_2012.parquet")
+              up=Path(f"/tmp/free-options/{ticker}_underlying.parquet")
+              o=pd.read_parquet(op)
+              u=pd.read_parquet(up)
+              print(f"=== {ticker.upper()} OPTIONS ===")
+              print("shape",o.shape)
+              print("dtypes",o.dtypes.astype(str).to_dict())
+              print("min_date",o["date"].min(),"max_date",o["date"].max())
+              print("types",o["type"].value_counts(dropna=False).to_dict())
+              print("sample",o.head(2).to_dict("records"))
+              print(f"=== {ticker.upper()} UNDERLYING ===")
+              print("shape",u.shape)
+              print("dtypes",u.dtypes.astype(str).to_dict())
+              print("columns",list(u.columns))
+              print("sample",u.head(3).to_dict("records"))
+          PY

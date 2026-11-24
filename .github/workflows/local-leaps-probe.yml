@@ -1,0 +1,55 @@
+name: Free local LEAPS dataset probe
+
+on:
+  push:
+    branches: [research/free-pit-quantconnect-stage1]
+
+jobs:
+  probe:
+    if: contains(github.event.head_commit.message, '[local-leaps-probe]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install parquet tooling
+        run: pip install pandas pyarrow
+      - name: Download small real-data sample
+        shell: bash
+        run: |
+          mkdir -p /tmp/leaps-probe
+          curl -L --fail --retry 3 -o /tmp/leaps-probe/spy2012.parquet https://raw.githubusercontent.com/anahatsingh-ui/options-dataset-hist/main/spy/options_2012.parquet
+          curl -L --fail --retry 3 -o /tmp/leaps-probe/spy_under.parquet https://raw.githubusercontent.com/anahatsingh-ui/options-dataset-hist/main/spy/underlying_prices.parquet
+          curl -L --fail --retry 3 -o /tmp/leaps-probe/qqq2012.parquet https://raw.githubusercontent.com/anahatsingh-ui/options-dataset-hist/main/qqq/options_2012.parquet
+          curl -L --fail --retry 3 -o /tmp/leaps-probe/qqq_under.parquet https://raw.githubusercontent.com/anahatsingh-ui/options-dataset-hist/main/qqq/underlying_prices.parquet
+      - name: Inspect schema and long-dated availability
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from pathlib import Path
+          for name in ["spy2012","qqq2012"]:
+              p=Path("/tmp/leaps-probe")/(name+".parquet")
+              df=pd.read_parquet(p)
+              print("OPTION_FILE",name,"rows",len(df))
+              print("COLUMNS",list(df.columns))
+              print("DTYPES",df.dtypes.astype(str).to_dict())
+              print("HEAD",df.head(3).to_dict("records"))
+              d=pd.to_datetime(df["date"])
+              e=pd.to_datetime(df["expiration"])
+              x=df.assign(_d=d,_e=e,_dte=(e-d).dt.days)
+              calls=x[x["type"].astype(str).str.lower().str.startswith("c")]
+              print("DATE_RANGE",d.min(),d.max())
+              print("CALL_DTE_MAX",int(calls["_dte"].max()))
+              print("CALLS_270_900",int(calls["_dte"].between(270,900).sum()))
+              print("CALLS_270_900_OI100",int((calls["_dte"].between(270,900)&(pd.to_numeric(calls["open_interest"],errors="coerce")>=100)).sum()))
+              print("DELTA_RANGE_LONG",pd.to_numeric(calls.loc[calls["_dte"].between(270,900),"delta"],errors="coerce").describe().to_dict())
+          for name in ["spy_under","qqq_under"]:
+              df=pd.read_parquet(Path("/tmp/leaps-probe")/(name+".parquet"))
+              print("UNDER_FILE",name,"rows",len(df))
+              print("COLUMNS",list(df.columns))
+              print("DTYPES",df.dtypes.astype(str).to_dict())
+              print("HEAD",df.head(3).to_dict("records"))
+          PY

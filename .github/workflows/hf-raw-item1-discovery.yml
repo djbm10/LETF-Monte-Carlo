@@ -1,0 +1,221 @@
+name: Build complete raw-HF Item1 Bottleneck discovery proxy
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: contains(github.event.head_commit.message, '[hf-raw-item1]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install requests orjson numpy pandas scipy scikit-learn beautifulsoup4 pyarrow
+
+      - name: Download PIT membership
+        shell: bash
+        run: |
+          curl -L --fail --retry 5             https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv             -o /tmp/components_history.csv
+
+      - name: Stream complete raw corpus and extract only S&P Item 1 filings
+        shell: bash
+        run: |
+          python - <<'PY'
+          import concurrent.futures
+          import json
+          import re
+          import threading
+          from pathlib import Path
+          import requests, orjson, pandas as pd
+
+          m=pd.read_csv('/tmp/components_history.csv',dtype={'cik':str})
+          ciks=(
+              m.cik.dropna().astype(str).str.replace(r'\.0$','',regex=True)
+              .str.zfill(10)
+          )
+          wanted=set(ciks[ciks.str.fullmatch(r'\d{10}')])
+          print('WANTED_CIKS',len(wanted),flush=True)
+
+          base='https://huggingface.co/datasets/JanosAudran/financial-reports-sec/resolve/main/data/large'
+          urls=[(split,i,f'{base}/{split}/shard_{i}.jsonl?download=true')
+                for split in ('train','test','validate') for i in range(10)]
+          cik_re=re.compile(rb'"cik"\s*:\s*"([0-9]+)"')
+          start=pd.Timestamp('2007-09-01')
+          end=pd.Timestamp('2019-12-31')
+
+          def norm_cik(x):
+              s=str(x).strip()
+              return s.zfill(10) if s.isdigit() else s
+
+          def process(spec):
+              split,i,url=spec
+              session=requests.Session()
+              rows=[]
+              firms=0
+              matched_firms=0
+              bytes_seen=0
+              with session.get(url,stream=True,timeout=(30,600)) as r:
+                  r.raise_for_status()
+                  for raw in r.iter_lines(chunk_size=1024*1024):
+                      if not raw:
+                          continue
+                      bytes_seen += len(raw)
+                      firms += 1
+                      mm=cik_re.search(raw[:4096])
+                      if mm is None:
+                          # Fallback in case field order differs.
+                          mm=cik_re.search(raw)
+                      if mm is None:
+                          continue
+                      cik=norm_cik(mm.group(1).decode())
+                      if cik not in wanted:
+                          continue
+                      matched_firms += 1
+                      data=orjson.loads(raw)
+                      cik=norm_cik(data.get('cik',''))
+                      for filing in data.get('filings') or []:
+                          fd=pd.to_datetime(filing.get('filingDate'),errors='coerce')
+                          if pd.isna(fd) or fd < start or fd > end:
+                              continue
+                          form=str(filing.get('form') or '').upper()
+                          if form not in ('10-K','10-K/A'):
+                              continue
+                          report=filing.get('report') or {}
+                          sentences=report.get('section_1')
+                          if not sentences:
+                              continue
+                          text=' '.join(str(x).strip() for x in sentences if x)
+                          wc=len(text.split())
+                          if wc < 250:
+                              continue
+                          report_date=str(filing.get('reportDate') or '')
+                          rows.append({
+                              'cik':cik,
+                              'filing_date':fd,
+                              'filename':f'HF_RAW:{cik}:{form}:{report_date}',
+                              'item1':text,
+                              'word_count':wc,
+                              'error':None,
+                              'form':form,
+                              'report_date':report_date,
+                              'source_split':split,
+                              'source_shard':i,
+                          })
+              print('RAW_SHARD_DONE',split,i,'bytes',bytes_seen,'firms',firms,
+                    'matched_firms',matched_firms,'valid_filings',len(rows),flush=True)
+              return rows, {'split':split,'shard':i,'bytes':bytes_seen,'firms':firms,
+                            'matched_firms':matched_firms,'valid_filings':len(rows)}
+
+          all_rows=[]
+          stats=[]
+          # HF CDN traffic is independent of SEC. Six workers balance speed and
+          # public-host load while keeping memory bounded to one line per worker.
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+              for rows,st in ex.map(process,urls):
+                  all_rows.extend(rows); stats.append(st)
+
+          f=pd.DataFrame(all_rows)
+          if f.empty:
+              raise RuntimeError('No S&P Item1 filings extracted from raw corpus')
+          f['filing_date']=pd.to_datetime(f.filing_date)
+          f=f.sort_values(['cik','filing_date','filename']).drop_duplicates(
+              ['cik','filing_date','filename'],keep='last'
+          )
+          Path('/tmp/hfraw').mkdir(exist_ok=True)
+          f.to_parquet('/tmp/hfraw/item1_filings.parquet',index=False)
+          manifest={
+              'source':'JanosAudran/financial-reports-sec original data/large JSONL shards',
+              'license':'Apache-2.0 per dataset card',
+              'evidence_label':'FREE_DISCOVERY_HF_RAW_ITEM1_PROXY',
+              'source_shards':30,
+              'bytes_streamed':sum(x['bytes'] for x in stats),
+              'matched_firm_records':sum(x['matched_firms'] for x in stats),
+              'valid_item1_filings':int(len(f)),
+              'unique_ciks':int(f.cik.nunique()),
+              'min_filing_date':str(f.filing_date.min()),
+              'max_filing_date':str(f.filing_date.max()),
+              'shard_stats':stats,
+          }
+          Path('/tmp/hfraw/extraction_manifest.json').write_text(
+              json.dumps(manifest,indent=2,default=str)
+          )
+          print('HF_RAW_EXTRACTION',json.dumps({
+              k:manifest[k] for k in [
+                  'bytes_streamed','matched_firm_records','valid_item1_filings',
+                  'unique_ciks','min_filing_date','max_filing_date'
+              ]
+          }),flush=True)
+          PY
+
+      - name: Build exact frozen 44-snapshot network
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          import pandas as pd
+          sys.path.insert(0,'research/free_stage1')
+          import sec_item1_network as net
+          import sec_item1_sp500_network as sp
+
+          filings=pd.read_parquet('/tmp/hfraw/item1_filings.parquet')
+          filings['filing_date']=pd.to_datetime(filings.filing_date)
+          membership=sp.load_membership(Path('/tmp/components_history.csv'))
+          dates=pd.date_range('2009-03-31','2019-12-31',freq='QE')
+          out=Path('/tmp/hfraw/network'); out.mkdir(parents=True,exist_ok=True)
+          allm=[]; cov=[]; manifests=[]
+          for fd in dates:
+              active=sp.active_ciks(membership,fd)
+              sample=net.latest_asof(
+                  filings[filings.cik.isin(active)],fd,max_age_days=550
+              )
+              cov.append({
+                  'formation_date':str(fd.date()),
+                  'active_ciks':len(active),
+                  'valid_item1_ciks':int(sample.cik.nunique()) if len(sample) else 0,
+              })
+              if len(sample)<20:
+                  raise RuntimeError(f'{fd.date()}: only {len(sample)} valid raw-HF Item1 issuers')
+              metrics,edges,manifest=net.build_network(sample,fd,pair_density=.0205)
+              manifest['source']='HF original raw JSONL section_1 + frozen TF-IDF builder'
+              manifest['universe']='PIT_S_AND_P_500_ISSUER_PROXY'
+              allm.append(metrics); manifests.append(manifest)
+              print('HF_RAW_NET',fd.date(),'ACTIVE',len(active),'VALID',len(sample),
+                    'EDGES',len(edges),flush=True)
+
+          metrics=pd.concat(allm,ignore_index=True).sort_values(['formation_date','cik'])
+          coverage=pd.DataFrame(cov)
+          metrics.to_csv(out/'network_metrics_all.csv',index=False)
+          coverage.to_csv(out/'membership_network_coverage.csv',index=False)
+          manifest={
+              'network_runs':manifests,
+              'source':'JanosAudran/financial-reports-sec original large JSONL + frozen TF-IDF',
+              'evidence_label':'FREE_DISCOVERY_HF_RAW_ITEM1_PROXY',
+              'valid_item1_min':int(coverage.valid_item1_ciks.min()),
+              'valid_item1_median':float(coverage.valid_item1_ciks.median()),
+              'warning':'Independent raw-corpus proxy; raw SEC EDGAR replication remains authoritative.',
+          }
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2,default=str))
+          print('HF_RAW_NETWORK_COVERAGE',json.dumps({
+              'min':int(coverage.valid_item1_ciks.min()),
+              'median':float(coverage.valid_item1_ciks.median()),
+              'rows':len(metrics)
+          }),flush=True)
+          assert coverage.valid_item1_ciks.min()>=200
+          assert coverage.valid_item1_ciks.median()>=350
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hf-raw-item1-bottleneck-discovery-network
+          path: /tmp/hfraw/
+          retention-days: 30

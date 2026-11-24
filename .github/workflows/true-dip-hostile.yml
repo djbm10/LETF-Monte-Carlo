@@ -1,0 +1,21 @@
+name: True dip hostile confirmation
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/true_dip_hostile.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: true-dip-hostile
+          path: |
+            results/true_dip_hostile.csv
+            results/true_dip_hostile_ranking.csv

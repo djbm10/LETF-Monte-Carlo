@@ -1,0 +1,200 @@
+name: Recover missing S&P Yahoo histories
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  recover:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[sp500-yahoo-recover]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas pyarrow requests
+
+      - name: Download first-pass Yahoo audit artifact
+        shell: bash
+        run: |
+          mkdir -p /tmp/yahoo-audit
+          gh run download 36081809740             --repo "$GITHUB_REPOSITORY"             --name sp500-yahoo-pit-audit             --dir /tmp/yahoo-audit
+          ls -lh /tmp/yahoo-audit
+
+      - name: Download PIT S&P membership
+        shell: bash
+        run: |
+          curl -L --fail --retry 5             https://raw.githubusercontent.com/leandroloi/historical_sp500_constituents/main/sp_500_historical_components.csv             -o /tmp/sp500_components.csv
+
+      - name: Recover zero-coverage tickers from Yahoo chart API
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, time, random
+          from pathlib import Path
+          from datetime import timezone
+          import pandas as pd
+          import requests
+
+          START=pd.Timestamp("2013-12-01", tz="UTC")
+          END=pd.Timestamp("2024-01-02", tz="UTC")
+          p1=int(START.timestamp())
+          p2=int(END.timestamp())
+
+          coverage=pd.read_csv("/tmp/yahoo-audit/sp500_yahoo_coverage.csv")
+          missing=coverage.loc[coverage.coverage==0,"Ticker"].astype(str).tolist()
+          prices=pd.read_parquet("/tmp/yahoo-audit/sp500_yahoo_prices.parquet")
+          prices["Date"]=pd.to_datetime(prices["Date"]).dt.tz_localize(None).dt.normalize()
+          prices["Ticker"]=prices["Ticker"].astype(str)
+
+          session=requests.Session()
+          session.headers.update({
+              "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/153 Safari/537.36",
+              "Accept":"application/json,text/plain,*/*",
+          })
+
+          def fetch_one(original):
+              yahoo=original.replace(".","-")
+              last_error=None
+              for host in ("query1.finance.yahoo.com","query2.finance.yahoo.com"):
+                  url=f"https://{host}/v8/finance/chart/{yahoo}"
+                  for attempt in range(6):
+                      try:
+                          r=session.get(url,params={
+                              "period1":p1,
+                              "period2":p2,
+                              "interval":"1d",
+                              "events":"div,splits",
+                              "includeAdjustedClose":"true",
+                          },timeout=30)
+                          if r.status_code in (429,):
+                              time.sleep(min(20,2**attempt)+random.random())
+                              continue
+                          if r.status_code in (404,):
+                              last_error=f"{host}:404"
+                              break
+                          r.raise_for_status()
+                          payload=r.json()
+                          result=(payload.get("chart") or {}).get("result")
+                          if not result:
+                              last_error=str((payload.get("chart") or {}).get("error"))
+                              break
+                          x=result[0]
+                          ts=x.get("timestamp") or []
+                          quote=((x.get("indicators") or {}).get("quote") or [{}])[0]
+                          adj=((x.get("indicators") or {}).get("adjclose") or [{}])[0].get("adjclose") or [None]*len(ts)
+                          rows=[]
+                          for i,t in enumerate(ts):
+                              try:
+                                  close=quote.get("close",[None]*len(ts))[i]
+                              except Exception:
+                                  close=None
+                              if close is None:
+                                  continue
+                              rows.append({
+                                  "Date":pd.to_datetime(t,unit="s",utc=True).tz_convert(None).normalize(),
+                                  "Ticker":original,
+                                  "Open":quote.get("open",[None]*len(ts))[i],
+                                  "High":quote.get("high",[None]*len(ts))[i],
+                                  "Low":quote.get("low",[None]*len(ts))[i],
+                                  "Close":close,
+                                  "Adj Close":adj[i] if i < len(adj) else close,
+                                  "Volume":quote.get("volume",[None]*len(ts))[i],
+                              })
+                          if rows:
+                              return pd.DataFrame(rows),None
+                          last_error=f"{host}:empty"
+                      except Exception as exc:
+                          last_error=repr(exc)
+                          time.sleep(min(20,2**attempt)+random.random())
+              return None,last_error
+
+          recovered=[]
+          failures={}
+          for i,ticker in enumerate(missing,1):
+              df,err=fetch_one(ticker)
+              if df is not None and not df.empty:
+                  recovered.append(df)
+                  print(f"RECOVERED {ticker} rows={len(df)}",flush=True)
+              else:
+                  failures[ticker]=err
+                  print(f"MISSING {ticker} err={err}",flush=True)
+              if i % 10 == 0:
+                  time.sleep(1.5)
+              else:
+                  time.sleep(0.15)
+
+          if recovered:
+              prices=pd.concat([prices,*recovered],ignore_index=True)
+              prices=prices.sort_values(["Date","Ticker"]).drop_duplicates(["Date","Ticker"],keep="last")
+          prices.to_parquet("/tmp/sp500_yahoo_prices_recovered.parquet",index=False)
+
+          comp=pd.read_csv("/tmp/sp500_components.csv")
+          comp["date"]=pd.to_datetime(comp["date"]).dt.normalize()
+          comp=comp[(comp.date>="2015-01-01")&(comp.date<="2023-12-31")].copy()
+          comp["members"]=comp.tickers.fillna("").map(lambda s:set(x.strip() for x in str(s).split(",") if x.strip()))
+          dates=comp.date.tolist()
+          members=comp.members.tolist()
+
+          # trading sessions from the recovered price panel using SPY if present;
+          # otherwise use weekdays with at least 300 member observations.
+          spy_dates=set(prices.loc[prices.Ticker=="SPY","Date"])
+          sessions=sorted(d for d in spy_dates if pd.Timestamp("2015-01-01")<=d<=pd.Timestamp("2023-12-31"))
+          if not sessions:
+              counts=prices[(prices.Date>="2015-01-01")&(prices.Date<="2023-12-31")].groupby("Date").Ticker.nunique()
+              sessions=sorted(counts[counts>=300].index)
+
+          price_dates={t:set(g.Date) for t,g in prices.groupby("Ticker")}
+          member_days={}
+          covered_days={}
+          for d in sessions:
+              idx=comp.date.searchsorted(d,side="right")-1
+              if idx<0: continue
+              for t in members[idx]:
+                  member_days[t]=member_days.get(t,0)+1
+                  if d in price_dates.get(t,set()):
+                      covered_days[t]=covered_days.get(t,0)+1
+
+          rows=[]
+          for t,n in member_days.items():
+              c=covered_days.get(t,0)
+              rows.append({"Ticker":t,"member_sessions":n,"covered_sessions":c,"coverage":c/n if n else None})
+          cov=pd.DataFrame(rows).sort_values(["coverage","member_sessions"],ascending=[True,False])
+          cov.to_csv("/tmp/sp500_yahoo_coverage_recovered.csv",index=False)
+          zero=cov[cov.coverage==0]
+          partial=cov[(cov.coverage>0)&(cov.coverage<0.95)]
+          summary={
+              "initial_zero_tickers":len(missing),
+              "chart_api_recovered_tickers":len(recovered),
+              "chart_api_still_missing":len(failures),
+              "weighted_member_session_coverage":float(cov.covered_sessions.sum()/cov.member_sessions.sum()),
+              "completely_missing_member_tickers":int(len(zero)),
+              "partial_under_95pct_member_tickers":int(len(partial)),
+              "missing_member_sessions":int((cov.member_sessions-cov.covered_sessions).sum()),
+              "total_member_sessions":int(cov.member_sessions.sum()),
+              "still_missing":zero.to_dict("records"),
+              "partial_under_95pct":partial.to_dict("records"),
+              "fetch_failures":failures,
+          }
+          Path("/tmp/sp500_yahoo_recovery.json").write_text(json.dumps(summary,indent=2,default=str))
+          print(json.dumps(summary,indent=2,default=str))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sp500-yahoo-pit-recovered
+          path: |
+            /tmp/sp500_yahoo_recovery.json
+            /tmp/sp500_yahoo_coverage_recovered.csv
+            /tmp/sp500_yahoo_prices_recovered.parquet
+          retention-days: 30

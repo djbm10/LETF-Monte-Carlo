@@ -1,0 +1,190 @@
+name: Complete direct SEC Item1 late shards and merge
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  late:
+    if: contains(github.event.head_commit.message, '[direct-sec-network-late-shards]')
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - id: e2018
+            start_year: 2016
+            end_year: 2018
+            formation_start: 2018-03-31
+            formation_end: 2018-12-31
+          - id: e2019
+            start_year: 2017
+            end_year: 2019
+            formation_start: 2019-03-31
+            formation_end: 2019-12-31
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      FALLBACK_CACHE_RUN: '36245144257'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas scipy scikit-learn beautifulsoup4 requests pyarrow
+
+      - name: Download preserved direct-SEC seed and curated membership
+        shell: bash
+        run: |
+          rm -rf /tmp/cache /tmp/member /tmp/out
+          mkdir -p /tmp/cache /tmp/member /tmp/out
+          gh run download "$FALLBACK_CACHE_RUN" --repo "$GITHUB_REPOSITORY" --name cache-only-curated-item1-network --dir /tmp/cache
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow curated-sp500-membership.yml --branch research/free-pit-quantconnect-stage1 --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN"
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" --name curated-sp500-cik-membership --dir /tmp/member
+          test -f /tmp/cache/cached_sec_filings.parquet
+          test -f /tmp/member/curated_sp500_membership_intervals.csv
+
+      - name: Complete authoritative direct-SEC late shard
+        shell: bash
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          python research/free_stage1/direct_sec_cache_completion.py \
+            --membership /tmp/member/curated_sp500_membership_intervals.csv \
+            --cached-sec /tmp/cache/cached_sec_filings.parquet \
+            --out /tmp/out \
+            --start-year ${{ matrix.start_year }} \
+            --end-year ${{ matrix.end_year }} \
+            --formation-start ${{ matrix.formation_start }} \
+            --formation-end ${{ matrix.formation_end }} \
+            --max-item1-age-days 550 \
+            --pair-density 0.0205 \
+            --rps 3.0
+
+      - name: Validate late shard
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path('/tmp/out/manifest.json').read_text())
+          assert m['quality_gate']['passed'] is True,m
+          assert m['valid_item1_min']>=200,m
+          assert m['valid_item1_median']>=350,m
+          print('DIRECT_SEC_LATE_SHARD_PASS','${{ matrix.id }}',
+                m['valid_item1_min'],m['valid_item1_median'],
+                m['new_index_rows'],m['new_direct_sec_success'],flush=True)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: direct-sec-late-${{ matrix.id }}
+          path: |
+            /tmp/out/network_metrics_all.csv
+            /tmp/out/membership_network_coverage.csv
+            /tmp/out/manifest.json
+            /tmp/out/direct_sec_filings_all.parquet
+          retention-days: 30
+
+  merge:
+    needs: late
+    if: always() && needs.late.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRIOR_SHARDED_RUN: '36328417860'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas pyarrow
+      - name: Download preserved successful A-D shards
+        shell: bash
+        run: |
+          mkdir -p /tmp/shards
+          for id in a b c d; do
+            mkdir -p "/tmp/shards/$id"
+            gh run download "$PRIOR_SHARDED_RUN" --repo "$GITHUB_REPOSITORY" --name "direct-sec-shard-$id" --dir "/tmp/shards/$id"
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: direct-sec-late-*
+          path: /tmp/late
+
+      - name: Merge exact 2009-2019 formation coverage
+        shell: bash
+        run: |
+          mkdir -p /tmp/merged
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+
+          dirs=[Path('/tmp/shards')/x for x in ('a','b','c','d')]
+          dirs += sorted([p for p in Path('/tmp/late').iterdir() if p.is_dir()])
+          assert len(dirs)==6,dirs
+          nets=[]; covs=[]; fils=[]; mans=[]
+          for d in dirs:
+              nets.append(pd.read_csv(d/'network_metrics_all.csv',dtype={'cik':str}))
+              covs.append(pd.read_csv(d/'membership_network_coverage.csv'))
+              fils.append(pd.read_parquet(d/'direct_sec_filings_all.parquet'))
+              mans.append(json.loads((d/'manifest.json').read_text()))
+
+          n=pd.concat(nets,ignore_index=True).sort_values(['formation_date','cik'])
+          c=pd.concat(covs,ignore_index=True).sort_values('formation_date')
+          assert not c.formation_date.duplicated().any(), c[c.formation_date.duplicated(keep=False)]
+          f=pd.concat(fils,ignore_index=True,sort=False)
+          f['cik']=f['cik'].astype(str).str.replace(r'\.0$','',regex=True).str.zfill(10)
+          f['filing_date']=pd.to_datetime(f['filing_date'])
+          f=f.sort_values(['cik','filing_date','filename']).drop_duplicates(['cik','filing_date','filename'],keep='last')
+
+          dates=pd.to_datetime(c.formation_date)
+          assert len(c)==44,len(c)
+          assert dates.min()==pd.Timestamp('2009-03-31'),dates.min()
+          assert dates.max()==pd.Timestamp('2019-12-31'),dates.max()
+          minv=int(c.valid_item1_ciks.min()); med=float(c.valid_item1_ciks.median())
+          assert minv>=200,(minv,med)
+          assert med>=350,(minv,med)
+
+          n.to_csv('/tmp/merged/network_metrics_all.csv',index=False)
+          c.to_csv('/tmp/merged/membership_network_coverage.csv',index=False)
+          f.to_parquet('/tmp/merged/direct_sec_filings_all.parquet',index=False)
+          out={
+            'source':'direct SEC EDGAR original 10-K submissions only',
+            'universe':'CURATED_PIT_S_AND_P_500_ISSUER_PROXY',
+            'evidence_label':'FREE_DISCOVERY_DIRECT_SEC_NETWORK_REPLICATION',
+            'formation_start':'2009-03-31',
+            'formation_end':'2019-12-31',
+            'forms':['10-K'],
+            'max_item1_age_days':550,
+            'pair_density':0.0205,
+            'valid_item1_min':minv,
+            'valid_item1_median':med,
+            'network_rows':int(len(n)),
+            'combined_direct_sec_rows':int(len(f)),
+            'combined_direct_sec_ciks':int(f.cik.nunique()),
+            'shard_manifests':mans,
+            'quality_gate':{'min_valid_item1_ciks_required':200,'median_valid_item1_ciks_required':350,'passed':True},
+            'build_mode':'preserved A-D shards plus two non-overlapping late formation shards; direct SEC parser only',
+          }
+          Path('/tmp/merged/manifest.json').write_text(json.dumps(out,indent=2,default=str)+'\n')
+          print('DIRECT_SEC_LATE_MERGE_PASS',minv,med,len(n),len(f),f.cik.nunique(),flush=True)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: direct-sec-item1-network-replication
+          path: /tmp/merged/
+          retention-days: 30

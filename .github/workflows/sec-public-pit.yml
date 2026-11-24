@@ -1,0 +1,36 @@
+name: Optional public SEC point-in-time data audit
+on:
+  workflow_dispatch:
+    inputs:
+      cik:
+        required: true
+        description: 'SEC numeric CIK (e.g., 320193 for Apple)'
+      asof:
+        required: true
+        description: 'Point-in-time cutoff YYYY-MM-DD'
+      tag:
+        required: true
+        default: 'Revenues'
+        description: 'Specific us-gaap fact tag, if present'
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install 'pandas>=2,<3' requests
+      - name: Fetch official public SEC record without look-ahead
+        run: PYTHONPATH=research python -m free_validation.run_sec_pit --cik "${{ inputs.cik }}" --asof "${{ inputs.asof }}" --tag "${{ inputs.tag }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sec-point-in-time-research
+          path: results/SEC_PIT/
+          retention-days: 30

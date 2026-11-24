@@ -1,0 +1,48 @@
+{
+  "cells": 162,
+  "sample_start": "2012-01-03",
+  "sample_end": "2025-12-15",
+  "best_cagr_cell": {
+    "underlying": "QQQ",
+    "target_delta": 0.7,
+    "target_dte": 548,
+    "allocation": 1.0,
+    "slippage_bps": 0,
+    "cagr": 0.5764034352786163,
+    "max_drawdown": -0.8910544650669764,
+    "sharpe_0rf": 0.9447469949734576
+  },
+  "median_cagr": 0.24137467236130794,
+  "median_max_drawdown": -0.49001584077274374,
+  "by_underlying": {
+    "QQQ": {
+      "cells": 81,
+      "median_cagr": 0.257904368222849,
+      "max_cagr": 0.5764034352786163,
+      "min_cagr": 0.11253443659702711,
+      "median_max_drawdown": -0.5188653233890197
+    },
+    "SPY": {
+      "cells": 81,
+      "median_cagr": 0.2107109359309669,
+      "max_cagr": 0.4855304591400009,
+      "min_cagr": 0.1029991412846365,
+      "median_max_drawdown": -0.4653074550969667
+    }
+  },
+  "frozen_grid_cells_expected": 162,
+  "frozen_grid_cells_completed": 162,
+  "frozen_original_end": "2026-09-21",
+  "free_dataset_end": "2025-12-16",
+  "requested_end": "2025-12-16",
+  "actual_end": "2025-12-16",
+  "execution_difference": "Free source is a 4:00 PM ET EOD chain. Contract selection uses the completed close and execution uses the next trading day's actual quote-side close, not an unavailable next-open QuoteBar.",
+  "sizing_difference": "Quantity is never increased after selection; it may be resized downward at next-close execution to remain within the frozen premium allocation after an overnight move.",
+  "missing_quote_rule": "Daily call marks are bounded by hard no-arbitrage limits [intrinsic, underlying]. If a held contract is absent from the preserved EOD snapshot, mark-to-market uses current intrinsic plus the last observed non-negative time value. Entry quotes violating intrinsic/underlying bounds are rejected; exit bids are bounded by the exercise floor and underlying upper bound. A fully missing roll-exit quote remains intrinsic-only.",
+  "collateral": "BIL adjusted-close total-return sleeve from manisahni/marketdata; BIL trading fees are omitted in this local proxy.",
+  "option_fee_model": "QuantConnect InteractiveBrokersFeeModel low-volume equity-option tier: $0.65/contract for premium >= $0.10, $1 minimum.",
+  "source_options": "anahatsingh-ui/options-dataset-hist preservation mirror",
+  "trade_audit_rows": 13500,
+  "local_proxy_version": "2026-09-25-r5-subperiod-excess-risk",
+  "evidence_label": "FREE_DISCOVERY_LOCAL_EOD_PROXY"
+}

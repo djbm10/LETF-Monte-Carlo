@@ -1,0 +1,55 @@
+name: Persist audited LEAPS results
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  persist:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[persist-leaps-results]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - name: Download audited conservative LEAPS artifact
+        shell: bash
+        run: |
+          rm -rf /tmp/leaps-persist
+          mkdir -p /tmp/leaps-persist
+          gh run download 36082122597 \
+            --repo "$GITHUB_REPOSITORY" \
+            --name free-local-leaps-results \
+            --dir /tmp/leaps-persist
+          test -f /tmp/leaps-persist/leaps_local_eod_surface.csv
+          test -f /tmp/leaps-persist/leaps_local_eod_summary.json
+          test -f /tmp/leaps-persist/leaps_local_trade_audit.csv
+          rm -rf results/free_stage1/local_leaps
+          mkdir -p results/free_stage1/local_leaps
+          cp /tmp/leaps-persist/* results/free_stage1/local_leaps/
+
+      - name: Commit and rebase result snapshot
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/free_stage1/local_leaps
+          if git diff --cached --quiet; then
+            echo "No result changes to commit"
+            exit 0
+          fi
+          git commit -m "Record audited free local LEAPS results [skip ci]"
+          git fetch origin research/free-pit-quantconnect-stage1
+          git rebase origin/research/free-pit-quantconnect-stage1
+          git push origin HEAD:research/free-pit-quantconnect-stage1

@@ -1,0 +1,51 @@
+name: Build curated PIT S&P CIK membership
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: contains(github.event.head_commit.message, '[curated-membership-cik]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas
+      - name: Download independent membership and CIK crosswalk sources
+        shell: bash
+        run: |
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/thuningxu/sp500nq100/main/sp500_components_history.csv \
+            -o /tmp/curated.csv
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/lawcal.csv
+      - name: Build CIK-mapped curated intervals and enforce mapping gate
+        shell: bash
+        run: |
+          rm -rf /tmp/curated-membership
+          python research/free_stage1/curated_sp500_membership.py \
+            --curated /tmp/curated.csv \
+            --lawcal /tmp/lawcal.csv \
+            --out /tmp/curated-membership \
+            --start 2007-12-01 \
+            --end 2023-12-31 \
+            --audit-start 2009-03-31 \
+            --audit-end 2019-12-31 \
+            --mapping-gate 0.97
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: curated-sp500-cik-membership
+          path: /tmp/curated-membership/
+          if-no-files-found: warn
+          retention-days: 30

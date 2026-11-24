@@ -1,0 +1,9 @@
+network_workflow_run=36245144257
+network_artifact=cache-only-curated-item1-network
+network_kind=cache_only_hf_sec_parser_proxy
+price_workflow_run=36220567098
+curated_price_gate_workflow_run=36221684401
+fundamental_workflow_run=36126965348
+executor_source_sha=e00ac621e880948c2995bdf1eb36263fd87164c4
+holdout_status=SEALED_NOT_READ
+generated_utc=2026-09-26T17:47:30Z

@@ -1,0 +1,110 @@
+name: Inspect public Hugging Face US equity panel
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  inspect:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[hf-equity-inspect]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas pyarrow
+
+      - name: Download public US and delisted panels
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/hf-equities
+          for f in us_unified.parquet delisted_unified.parquet; do
+            curl -L --fail --retry 5 --retry-delay 3 \
+              "https://huggingface.co/datasets/cedwyh/jinjing-shared-data/resolve/main/$f?download=true" \
+              -o "/tmp/hf-equities/$f"
+          done
+          ls -lh /tmp/hf-equities
+
+      - name: Census and quality audit
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          import pandas as pd
+
+          out={}
+          all_frames=[]
+          for name in ["us_unified","delisted_unified"]:
+              p=Path("/tmp/hf-equities")/(name+".parquet")
+              df=pd.read_parquet(p)
+              df.columns=[str(c).lower() for c in df.columns]
+              df["date"]=pd.to_datetime(df["date"], errors="coerce")
+              for c in ["open","high","low","close","adj_close","volume"]:
+                  if c in df:
+                      df[c]=pd.to_numeric(df[c], errors="coerce")
+              df["symbol"]=df["symbol"].astype(str).str.upper().str.strip()
+              df["source_panel"]=name
+              by_year=(
+                  df.dropna(subset=["date"])
+                    .assign(year=lambda x:x.date.dt.year)
+                    .groupby("year")
+                    .agg(rows=("symbol","size"),symbols=("symbol","nunique"))
+                    .reset_index()
+              )
+              dup=int(df.duplicated(["date","symbol"]).sum())
+              invalid_ohlc=0
+              if {"open","high","low","close"} <= set(df.columns):
+                  invalid_ohlc=int((
+                      (df["high"] < df[["open","close","low"]].max(axis=1))
+                      | (df["low"] > df[["open","close","high"]].min(axis=1))
+                      | (df[["open","high","low","close"]] <= 0).any(axis=1)
+                  ).fillna(False).sum())
+              out[name]={
+                  "bytes":p.stat().st_size,
+                  "rows":int(len(df)),
+                  "symbols":int(df.symbol.nunique()),
+                  "min_date":str(df.date.min().date()) if df.date.notna().any() else None,
+                  "max_date":str(df.date.max().date()) if df.date.notna().any() else None,
+                  "duplicate_date_symbol_rows":dup,
+                  "invalid_ohlc_rows":invalid_ohlc,
+                  "missing_adj_close":int(df.get("adj_close",pd.Series(dtype=float)).isna().sum()),
+                  "missing_volume":int(df.get("volume",pd.Series(dtype=float)).isna().sum()),
+                  "market_values":sorted(df.get("market",pd.Series(dtype=str)).dropna().astype(str).unique().tolist())[:50],
+                  "by_year":by_year.to_dict("records"),
+              }
+              all_frames.append(df)
+
+          combo=pd.concat(all_frames,ignore_index=True)
+          combo=combo[(combo.date >= "2009-01-01") & (combo.date <= "2023-12-31")]
+          year=(
+              combo.assign(year=combo.date.dt.year)
+                   .groupby("year")
+                   .agg(rows=("symbol","size"),symbols=("symbol","nunique"))
+                   .reset_index()
+          )
+          overlap=set(all_frames[0].symbol.unique()) & set(all_frames[1].symbol.unique())
+          out["combined_2009_2023"]={
+              "rows":int(len(combo)),
+              "symbols":int(combo.symbol.nunique()),
+              "overlap_symbols_between_panels":len(overlap),
+              "by_year":year.to_dict("records"),
+          }
+          print(json.dumps(out,indent=2,default=str))
+          Path("/tmp/hf-equities/audit.json").write_text(json.dumps(out,indent=2,default=str))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hf-equity-panel-audit
+          path: /tmp/hf-equities/audit.json
+          retention-days: 30

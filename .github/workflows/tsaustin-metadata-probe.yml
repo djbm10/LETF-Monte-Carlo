@@ -1,0 +1,88 @@
+name: Probe tsaustin former-member coverage
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  probe:
+    if: contains(github.event.head_commit.message, '[tsaustin-metadata-probe]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install kaggle pandas
+      - name: Download metadata and prior coverage audit
+        shell: bash
+        run: |
+          unset KAGGLE_USERNAME KAGGLE_KEY KAGGLE_API_TOKEN
+          mkdir -p /tmp/tsaustin /tmp/prior
+          cd /tmp/tsaustin
+          kaggle datasets download tsaustin/us-historical-stock-prices-with-earnings-data -f dataset_summary.csv
+          if [ -f dataset_summary.csv.zip ]; then unzip -o dataset_summary.csv.zip; fi
+          gh run download 36126965413 --repo "$GITHUB_REPOSITORY" --name free-sp500-hybrid-price-panel --dir /tmp/prior
+          test -f /tmp/tsaustin/dataset_summary.csv
+          test -f /tmp/prior/sp500_hybrid_price_coverage.csv
+      - name: Analyze metadata overlap
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import pandas as pd
+          s=pd.read_csv('/tmp/tsaustin/dataset_summary.csv')
+          c=pd.read_csv('/tmp/prior/sp500_hybrid_price_coverage.csv',dtype={'cik':str})
+          print('SUMMARY_COLUMNS',list(s.columns))
+          print('SUMMARY_HEAD',s.head(10).to_dict('records'))
+          # Detect ticker/symbol column.
+          lower={str(x).lower():x for x in s.columns}
+          tc=next((lower[k] for k in ['ticker','symbol','stock','code'] if k in lower),None)
+          if tc is None:
+              for col in s.columns:
+                  vals=s[col].astype(str).str.upper()
+                  if vals.str.fullmatch(r'[A-Z][A-Z0-9.\-]{0,9}').mean()>0.5:
+                      tc=col; break
+          if tc is None:
+              raise SystemExit('No ticker-like column in summary')
+          def norm(x): return str(x).upper().strip().replace('-','.')
+          ss=set(s[tc].dropna().map(norm))
+          c['symbol']=c.symbol.map(norm)
+          zero=c[c.covered_sessions==0].copy()
+          partial=c[(c.covered_sessions>0)&(c.coverage<0.97)].copy()
+          zhit=zero[zero.symbol.isin(ss)]
+          phit=partial[partial.symbol.isin(ss)]
+          potential_sessions=int(zhit.member_sessions.sum()+((phit.member_sessions-phit.covered_sessions).sum()))
+          missing_sessions=int((c.member_sessions-c.covered_sessions).sum())
+          total_sessions=int(c.member_sessions.sum())
+          upper=(c.covered_sessions.sum()+potential_sessions)/total_sessions
+          out={
+            'summary_rows':int(len(s)),
+            'ticker_column':str(tc),
+            'unique_symbols':int(len(ss)),
+            'prior_zero_rows':int(len(zero)),
+            'prior_zero_rows_in_tsaustin':int(len(zhit)),
+            'prior_partial_under97_rows':int(len(partial)),
+            'prior_partial_rows_in_tsaustin':int(len(phit)),
+            'potential_recovered_member_sessions_upper_bound':potential_sessions,
+            'prior_missing_member_sessions':missing_sessions,
+            'prior_weighted_coverage':float(c.covered_sessions.sum()/total_sessions),
+            'potential_weighted_coverage_upper_bound':float(upper),
+            'zero_symbols_hit':sorted(zhit.symbol.unique().tolist()),
+            'zero_symbols_missed':sorted(set(zero.symbol)-ss),
+          }
+          print(json.dumps(out,indent=2))
+          open('/tmp/tsaustin/metadata_probe.json','w').write(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsaustin-metadata-probe
+          path: /tmp/tsaustin/metadata_probe.json
+          retention-days: 30

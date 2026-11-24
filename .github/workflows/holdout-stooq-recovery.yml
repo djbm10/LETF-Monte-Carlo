@@ -1,0 +1,162 @@
+name: Recover sealed holdout prices from Stooq individuals
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  recover:
+    if: contains(github.event.head_commit.message, '[holdout-stooq-recovery]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRIOR_PRICE_RUN: '36267290583'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas pyarrow requests
+
+      - name: Download prior recovered panel and identity sources
+        shell: bash
+        run: |
+          rm -rf /tmp/prior /tmp/recovered /tmp/audit /tmp/member
+          mkdir -p /tmp/prior /tmp/recovered /tmp/audit /tmp/member
+          gh run download "$PRIOR_PRICE_RUN" --repo "$GITHUB_REPOSITORY"             --name sealed-holdout-recovered-sp500-prices --dir /tmp/prior
+          cp /tmp/prior/recovered/sp500_holdout_recovered_prices_2007_2023.parquet              /tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet
+
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow curated-sp500-membership.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN"
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY"             --name curated-sp500-cik-membership --dir /tmp/member
+          curl -L --fail --retry 5             https://raw.githubusercontent.com/thuningxu/sp500nq100/main/sp500_components_history.csv             -o /tmp/curated.csv
+          curl -L --fail --retry 5             https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv             -o /tmp/lawcal.csv
+
+      - name: Try Stooq individual CSV for Yahoo failures
+        shell: bash
+        run: |
+          python - <<'PY'
+          import io, time
+          from pathlib import Path
+          import pandas as pd
+          import requests
+
+          failures=Path('/tmp/prior/recovered/individual_retry_failures.txt')
+          symbols=[]
+          for line in failures.read_text().splitlines():
+              if not line.strip(): continue
+              symbols.append(line.split('\t',1)[0].strip().upper())
+
+          session=requests.Session()
+          session.headers.update({'User-Agent':'Mozilla/5.0 historical research'})
+          parts=[]; audit=[]
+          for i,sym in enumerate(symbols,1):
+              candidates=[
+                  sym.lower().replace('.','-')+'.us',
+                  sym.lower().replace('.','_')+'.us',
+                  sym.lower()+'.us',
+              ]
+              got=None; used=None; err=None
+              for stooq_sym in dict.fromkeys(candidates):
+                  url='https://stooq.com/q/d/l/'
+                  try:
+                      r=session.get(url,params={
+                          's':stooq_sym,'d1':'20180101','d2':'20240102','i':'d'
+                      },timeout=30)
+                      txt=r.text
+                      if r.status_code!=200 or 'Date' not in txt[:100]:
+                          err=f'HTTP{r.status_code}:{txt[:80]!r}'
+                          continue
+                      z=pd.read_csv(io.StringIO(txt))
+                      cols={str(c).strip().lower():c for c in z.columns}
+                      if 'date' not in cols or 'close' not in cols:
+                          err=f'bad_columns:{list(z.columns)}'; continue
+                      ren={cols['date']:'Date',cols['close']:'Close'}
+                      for k,out in [('open','Open'),('high','High'),('low','Low'),('volume','Volume')]:
+                          if k in cols: ren[cols[k]]=out
+                      z=z.rename(columns=ren)
+                      z['Date']=pd.to_datetime(z['Date'],errors='coerce').dt.normalize()
+                      z['Close']=pd.to_numeric(z['Close'],errors='coerce')
+                      z=z.dropna(subset=['Date','Close'])
+                      z=z[(z.Close>0)&(z.Date>=pd.Timestamp('2018-07-01'))&(z.Date<=pd.Timestamp('2023-12-31'))]
+                      if z.empty:
+                          err='empty_after_parse'; continue
+                      for c in ['Open','High','Low','Volume']:
+                          if c not in z: z[c]=pd.NA
+                          z[c]=pd.to_numeric(z[c],errors='coerce')
+                      z['Adj Close']=z['Close']
+                      z['symbol']=sym
+                      z['source']='STOOQ_INDIVIDUAL_HOLDOUT_FILL'
+                      got=z[['Date','symbol','Open','High','Low','Close','Adj Close','Volume','source']]
+                      used=stooq_sym
+                      break
+                  except Exception as exc:
+                      err=repr(exc)
+              if got is not None:
+                  parts.append(got)
+                  audit.append({'symbol':sym,'status':'FOUND','stooq_symbol':used,'rows':len(got)})
+                  print('STOOQ_FOUND',i,'/',len(symbols),sym,used,len(got),flush=True)
+              else:
+                  audit.append({'symbol':sym,'status':'MISSING','error':err})
+                  print('STOOQ_MISSING',i,'/',len(symbols),sym,err,flush=True)
+              time.sleep(.12)
+
+          fresh=pd.concat(parts,ignore_index=True) if parts else pd.DataFrame()
+          base=pd.read_parquet('/tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet')
+          ren={}
+          for c in base.columns:
+              k=str(c).strip().lower()
+              if k=='date':ren[c]='Date'
+              elif k=='symbol':ren[c]='symbol'
+              elif k=='open':ren[c]='Open'
+              elif k=='high':ren[c]='High'
+              elif k=='low':ren[c]='Low'
+              elif k=='close':ren[c]='Close'
+              elif k in ('adj close','adj_close','adjusted_close'):ren[c]='Adj Close'
+              elif k=='volume':ren[c]='Volume'
+          base=base.rename(columns=ren)
+          base['Date']=pd.to_datetime(base.Date).dt.normalize()
+          base['symbol']=base.symbol.astype(str).str.upper().str.strip().str.replace('-','.',regex=False)
+          if 'source' not in base: base['source']='PRIOR_RECOVERED'
+          base['_priority']=2
+          if len(fresh):
+              fresh['_priority']=1
+              out=pd.concat([fresh,base],ignore_index=True,sort=False)
+          else:
+              out=base
+          out=out.sort_values(['symbol','Date','_priority']).drop_duplicates(['symbol','Date'],keep='last')
+          out=out.drop(columns=['_priority']).sort_values(['symbol','Date'])
+          out.to_parquet('/tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet',index=False)
+          pd.DataFrame(audit).to_csv('/tmp/recovered/stooq_recovery_audit.csv',index=False)
+          print('STOOQ_TOTAL',len(fresh),'SYMBOLS',fresh.symbol.nunique() if len(fresh) else 0,flush=True)
+          PY
+
+      - name: Enforce unchanged sealed holdout coverage gate
+        shell: bash
+        run: |
+          python research/free_stage1/curated_sp500_price_coverage.py             --curated /tmp/curated.csv             --mapped-membership /tmp/member/curated_sp500_membership_intervals.csv             --lawcal /tmp/lawcal.csv             --prices /tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet             --out /tmp/audit             --start 2020-01-01             --end 2023-12-31             --coverage-gate 0.97
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads((Path('/tmp/audit')/'curated_sp500_price_coverage_summary.json').read_text())
+          assert s['gate_passed'] is True,s
+          print('SEALED_HOLDOUT_STOOQ_RECOVERY_PASS',s['effective_identity_plus_price_coverage'],flush=True)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sealed-holdout-stooq-recovered-prices
+          path: |
+            /tmp/recovered/
+            /tmp/audit/
+          if-no-files-found: warn
+          retention-days: 30

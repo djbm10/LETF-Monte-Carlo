@@ -1,0 +1,8 @@
+direct_discovery_run=37234784573
+direct_discovery_network_run=37221395373
+direct_holdout_network_run=37229757229
+holdout_price_recovery_run=37228861774
+fundamental_workflow_run=37227780400
+executor_source_sha=b92ad02efeae9a5d5254ec2fe3ce4eb1cb7f257c
+holdout_execution=single_all_15_cells
+generated_utc=2026-10-04T21:17:38Z

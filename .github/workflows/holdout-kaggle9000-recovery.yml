@@ -1,0 +1,247 @@
+name: Recover sealed holdout prices from Kaggle 9000
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  recover:
+    if: contains(github.event.head_commit.message, '[holdout-kaggle9000-recovery]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRIOR_PRICE_RUN: '36267290583'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install kaggle pandas pyarrow duckdb
+
+      - name: Download prior panel, membership, and public 9000-ticker parquet
+        shell: bash
+        run: |
+          unset KAGGLE_USERNAME KAGGLE_KEY KAGGLE_API_TOKEN
+          rm -rf /tmp/prior /tmp/member /tmp/k9 /tmp/recovered /tmp/audit
+          mkdir -p /tmp/prior /tmp/member /tmp/k9 /tmp/recovered /tmp/audit
+          gh run download "$PRIOR_PRICE_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name sealed-holdout-recovered-sp500-prices --dir /tmp/prior
+          cp /tmp/prior/recovered/sp500_holdout_recovered_prices_2007_2023.parquet \
+             /tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet
+
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow curated-sp500-membership.yml \
+            --branch research/free-pit-quantconnect-stage1 \
+            --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN"
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name curated-sp500-cik-membership --dir /tmp/member
+
+          cd /tmp/k9
+          kaggle datasets files jakewright/9000-tickers-of-stock-market-data-full-history | head -50
+          kaggle datasets download jakewright/9000-tickers-of-stock-market-data-full-history \
+            -f all_stock_data.parquet
+          if [ -f all_stock_data.parquet.zip ]; then unzip -o all_stock_data.parquet.zip; fi
+          test -f all_stock_data.parquet
+          ls -lh all_stock_data.parquet
+
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/thuningxu/sp500nq100/main/sp500_components_history.csv \
+            -o /tmp/curated.csv
+          curl -L --fail --retry 5 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/lawcal.csv
+
+      - name: Filter missing symbols and construct total-return price series
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import duckdb
+          import numpy as np
+          import pandas as pd
+
+          missing=[]
+          for line in Path('/tmp/prior/recovered/individual_retry_failures.txt').read_text().splitlines():
+              if line.strip():
+                  missing.append(line.split('\t',1)[0].strip().upper())
+          controls=['AAPL','MSFT','SPY']
+          wanted=sorted(set(missing+controls))
+
+          con=duckdb.connect()
+          desc=con.execute("DESCRIBE SELECT * FROM read_parquet('/tmp/k9/all_stock_data.parquet')").fetchdf()
+          print('K9_SCHEMA',desc.to_dict('records'),flush=True)
+          cols={str(x).lower():str(x) for x in desc.column_name}
+          tcol=cols.get('ticker') or cols.get('symbol')
+          dcol=cols.get('date')
+          if not tcol or not dcol:
+              raise RuntimeError(f'no ticker/date columns {cols}')
+          escaped=','.join("'" + x.replace("'","''") + "'" for x in wanted)
+          q=f"""
+          SELECT *
+          FROM read_parquet('/tmp/k9/all_stock_data.parquet')
+          WHERE upper({tcol}) IN ({escaped})
+            AND CAST({dcol} AS DATE) BETWEEN DATE '2018-07-01' AND DATE '2023-12-31'
+          """
+          x=con.execute(q).fetchdf()
+          x.columns=[str(c).strip() for c in x.columns]
+          lower={c.lower():c for c in x.columns}
+          x=x.rename(columns={
+              lower[tcol.lower()]:'symbol',
+              lower[dcol.lower()]:'Date',
+              **({lower['open']:'Open'} if 'open' in lower else {}),
+              **({lower['high']:'High'} if 'high' in lower else {}),
+              **({lower['low']:'Low'} if 'low' in lower else {}),
+              **({lower['close']:'Close'} if 'close' in lower else {}),
+              **({lower['volume']:'Volume'} if 'volume' in lower else {}),
+              **({lower['dividends']:'Dividends'} if 'dividends' in lower else {}),
+              **({lower['stock splits']:'Stock Splits'} if 'stock splits' in lower else {}),
+              **({lower['stock_splits']:'Stock Splits'} if 'stock_splits' in lower else {}),
+          })
+          if 'Close' not in x:
+              raise RuntimeError(f'no Close in {list(x.columns)}')
+          for c in ['Open','High','Low','Close','Volume','Dividends','Stock Splits']:
+              if c not in x: x[c]=0.0 if c in ['Dividends','Stock Splits'] else np.nan
+              x[c]=pd.to_numeric(x[c],errors='coerce')
+          x['Date']=pd.to_datetime(x.Date,errors='coerce').dt.tz_localize(None).dt.normalize()
+          x['symbol']=x.symbol.astype(str).str.upper().str.strip().str.replace('-','.',regex=False)
+          x=x.dropna(subset=['Date','symbol','Close'])
+          x=x[x.Close>0].sort_values(['symbol','Date']).drop_duplicates(['symbol','Date'])
+
+          # Determine whether Close is already total-return adjusted using control
+          # overlap with the prior panel. If it is, use directly. Otherwise
+          # construct a total-return index from raw close + dividends + split ratios.
+          base=pd.read_parquet('/tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet')
+          ren={}
+          for c in base.columns:
+              k=str(c).strip().lower()
+              if k=='date':ren[c]='Date'
+              elif k=='symbol':ren[c]='symbol'
+              elif k=='close':ren[c]='Close_base'
+              elif k in ('adj close','adj_close','adjusted_close'):ren[c]='Adj_base'
+          b=base.rename(columns=ren)
+          b['Date']=pd.to_datetime(b.Date).dt.tz_localize(None).dt.normalize()
+          b['symbol']=b.symbol.astype(str).str.upper().str.strip().str.replace('-','.',regex=False)
+          ctrl=x[x.symbol.isin(controls)][['Date','symbol','Close']].merge(
+              b[['Date','symbol','Close_base','Adj_base']],on=['Date','symbol'],how='inner'
+          )
+          ctrl=ctrl.dropna()
+          raw_err=float(np.median(np.abs(ctrl.Close/ctrl.Close_base-1))) if len(ctrl) else np.inf
+          adj_err=float(np.median(np.abs(ctrl.Close/ctrl.Adj_base-1))) if len(ctrl) else np.inf
+          close_is_adjusted=bool(adj_err < raw_err and adj_err < 0.02)
+          print('K9_CONTROL_OVERLAP',len(ctrl),'RAW_ERR',raw_err,'ADJ_ERR',adj_err,
+                'CLOSE_IS_ADJUSTED',close_is_adjusted,flush=True)
+
+          def tr_adjust(g):
+              g=g.sort_values('Date').copy()
+              if close_is_adjusted:
+                  g['Adj Close']=g['Close']
+                  return g
+              vals=[float(g.iloc[0].Close)]
+              rows=list(g.itertuples(index=False))
+              for i in range(1,len(rows)):
+                  prev=rows[i-1]; cur=rows[i]
+                  split=float(getattr(cur,'_7',0) if False else 0)
+                  # robust named access from dataframe instead of tuple mangling
+                  sr=float(g.iloc[i]['Stock Splits']) if pd.notna(g.iloc[i]['Stock Splits']) else 0.0
+                  div=float(g.iloc[i]['Dividends']) if pd.notna(g.iloc[i]['Dividends']) else 0.0
+                  mult=sr if sr and sr>0 else 1.0
+                  prev_close=float(g.iloc[i-1].Close)
+                  cur_close=float(g.iloc[i].Close)
+                  ret=(cur_close*mult + div)/prev_close if prev_close>0 else 1.0
+                  vals.append(vals[-1]*ret)
+              g['Adj Close']=vals
+              return g
+
+          z=pd.concat([tr_adjust(g) for _,g in x.groupby('symbol')],ignore_index=True)
+          found=sorted(set(z.symbol)&set(missing))
+          absent=sorted(set(missing)-set(found))
+          print('K9_FOUND_MISSING_SYMBOLS',len(found),found,flush=True)
+          print('K9_ABSENT_SYMBOLS',len(absent),absent,flush=True)
+          print('K9_DATE_RANGES',z[z.symbol.isin(missing)].groupby('symbol').Date.agg(['min','max','count']).to_dict('index'),flush=True)
+
+          z=z[z.symbol.isin(missing)].copy()
+          z['source']='KAGGLE_9000_HOLDOUT_FILL'
+          for c in ['Open','High','Low','Volume']:
+              if c not in z: z[c]=np.nan
+          fresh=z[['Date','symbol','Open','High','Low','Close','Adj Close','Volume','source']]
+
+          # Fill-only. Existing sources have higher priority.
+          base2=pd.read_parquet('/tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet')
+          ren={}
+          for c in base2.columns:
+              k=str(c).strip().lower()
+              if k=='date':ren[c]='Date'
+              elif k=='symbol':ren[c]='symbol'
+              elif k=='open':ren[c]='Open'
+              elif k=='high':ren[c]='High'
+              elif k=='low':ren[c]='Low'
+              elif k=='close':ren[c]='Close'
+              elif k in ('adj close','adj_close','adjusted_close'):ren[c]='Adj Close'
+              elif k=='volume':ren[c]='Volume'
+          base2=base2.rename(columns=ren)
+          base2['Date']=pd.to_datetime(base2.Date).dt.normalize()
+          base2['symbol']=base2.symbol.astype(str).str.upper().str.strip().str.replace('-','.',regex=False)
+          if 'source' not in base2: base2['source']='PRIOR_RECOVERED'
+          base2['_priority']=2; fresh['_priority']=1
+          out=pd.concat([fresh,base2],ignore_index=True,sort=False)
+          out=out.sort_values(['symbol','Date','_priority']).drop_duplicates(['symbol','Date'],keep='last')
+          out=out.drop(columns=['_priority']).sort_values(['symbol','Date'])
+          out.to_parquet('/tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet',index=False)
+
+          audit={
+            'wanted_missing_symbols':len(missing),
+            'found_missing_symbols':found,
+            'absent_symbols':absent,
+            'rows_added_candidate':int(len(fresh)),
+            'control_overlap_rows':int(len(ctrl)),
+            'median_error_to_raw_close':raw_err,
+            'median_error_to_prior_adj_close':adj_err,
+            'close_was_inferred_adjusted':close_is_adjusted,
+            'adjustment_method':(
+                'dataset Close matched prior adjusted close'
+                if close_is_adjusted
+                else 'chained close total return using declared Dividends and Stock Splits'
+            ),
+          }
+          Path('/tmp/recovered/kaggle9000_recovery_audit.json').write_text(json.dumps(audit,indent=2,default=str))
+          PY
+
+      - name: Enforce unchanged sealed holdout coverage gate
+        shell: bash
+        run: |
+          python research/free_stage1/curated_sp500_price_coverage.py \
+            --curated /tmp/curated.csv \
+            --mapped-membership /tmp/member/curated_sp500_membership_intervals.csv \
+            --lawcal /tmp/lawcal.csv \
+            --prices /tmp/recovered/sp500_holdout_recovered_prices_2007_2023.parquet \
+            --out /tmp/audit \
+            --start 2020-01-01 \
+            --end 2023-12-31 \
+            --coverage-gate 0.97
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads((Path('/tmp/audit')/'curated_sp500_price_coverage_summary.json').read_text())
+          assert s['gate_passed'] is True,s
+          print('SEALED_HOLDOUT_KAGGLE9000_PASS',s['effective_identity_plus_price_coverage'],flush=True)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sealed-holdout-kaggle9000-recovered-prices
+          path: |
+            /tmp/recovered/
+            /tmp/audit/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,124 @@
+name: Build free S&P Bottleneck inputs
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build-sp500-bottleneck-inputs]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install numpy pandas scipy scikit-learn beautifulsoup4 requests pyarrow
+
+      - name: Download PIT S&P membership with CIKs
+        shell: bash
+        run: |
+          mkdir -p /tmp/sp500
+          curl -L --fail --retry 5 --retry-delay 2 \
+            https://raw.githubusercontent.com/lawcal/sp500-components-history/main/data/components_history.csv \
+            -o /tmp/sp500/components_history.csv
+          python - <<'PY'
+          import pandas as pd
+          p="/tmp/sp500/components_history.csv"
+          x=pd.read_csv(p,dtype={"cik":str})
+          assert {"symbol","cik","date_added","date_removed"} <= set(x.columns)
+          assert len(x)>500
+          print("membership rows",len(x),"ciks",x.cik.nunique())
+          PY
+
+      - name: Create frozen quarterly formation calendar
+        shell: bash
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          from pathlib import Path
+          d=pd.date_range("2009-03-31","2023-12-31",freq="QE")
+          s=",".join(x.strftime("%Y-%m-%d") for x in d)
+          Path("/tmp/sp500/formation_dates.txt").write_text(s)
+          print("formation dates",len(d),d[0].date(),d[-1].date())
+          PY
+
+      - name: Build full SEC as-filed fundamentals 2009-2023
+        shell: bash
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          python research/free_stage1/sec_fsd_pit.py \
+            --start-year 2009 \
+            --end-year 2023 \
+            --quarters 1,2,3,4 \
+            --out results/free_stage1/sp500_bottleneck_inputs/sec_fundamentals
+
+          python research/free_stage1/sec_formation_features.py \
+            --input results/free_stage1/sp500_bottleneck_inputs/sec_fundamentals/sec_pit_fundamentals.parquet \
+            --formation-dates "$(cat /tmp/sp500/formation_dates.txt)" \
+            --out results/free_stage1/sp500_bottleneck_inputs/sec_fundamentals/sec_formation_features.csv
+
+      - name: Build PIT S&P-only Item 1 network 2009-2023
+        shell: bash
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          python research/free_stage1/sec_item1_sp500_network.py \
+            --membership /tmp/sp500/components_history.csv \
+            --start-year 2007 \
+            --end-year 2023 \
+            --formation-dates "$(cat /tmp/sp500/formation_dates.txt)" \
+            --pair-density 0.0205 \
+            --max-item1-age-days 550 \
+            --rps 4 \
+            --out results/free_stage1/sp500_bottleneck_inputs/sec_item1_network
+
+      - name: Validate full proxy inputs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+
+          root=Path("results/free_stage1/sp500_bottleneck_inputs")
+          fm=json.loads((root/"sec_fundamentals/manifest.json").read_text())
+          assert not fm["failed_quarters"], fm["failed_quarters"]
+          f=pd.read_csv(root/"sec_fundamentals/sec_formation_features.csv",dtype={"cik":str})
+          assert len(f)>100000, len(f)
+          assert (pd.to_datetime(f.information_date)<=pd.to_datetime(f.formation_date)).all()
+
+          nm=json.loads((root/"sec_item1_network/manifest.json").read_text())
+          assert len(nm["network_runs"])==60, len(nm["network_runs"])
+          cov=pd.read_csv(root/"sec_item1_network/membership_network_coverage.csv")
+          assert len(cov)==60
+          assert cov.valid_item1_ciks.min()>=200, cov.nsmallest(5,"valid_item1_ciks")
+          assert cov.valid_item1_ciks.median()>=350, cov.valid_item1_ciks.median()
+          n=pd.read_csv(root/"sec_item1_network/network_metrics_all.csv",dtype={"cik":str})
+          assert len(n)>15000, len(n)
+          print("SP500 BOTTLENECK INPUTS PASS",
+                "fund_rows",len(f),
+                "network_rows",len(n),
+                "min_item1",int(cov.valid_item1_ciks.min()),
+                "median_item1",float(cov.valid_item1_ciks.median()))
+          PY
+
+      - name: Upload compact Bottleneck inputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: free-sp500-bottleneck-inputs
+          path: |
+            results/free_stage1/sp500_bottleneck_inputs/sec_fundamentals/sec_formation_features.csv
+            results/free_stage1/sp500_bottleneck_inputs/sec_fundamentals/manifest.json
+            results/free_stage1/sp500_bottleneck_inputs/sec_item1_network/network_metrics_all.csv
+            results/free_stage1/sp500_bottleneck_inputs/sec_item1_network/membership_network_coverage.csv
+            results/free_stage1/sp500_bottleneck_inputs/sec_item1_network/manifest.json
+          retention-days: 30

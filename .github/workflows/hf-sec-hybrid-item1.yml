@@ -1,0 +1,97 @@
+name: Build HF plus SEC hybrid Item1 discovery network
+
+on:
+  push:
+    branches:
+      - research/free-pit-quantconnect-stage1
+
+jobs:
+  build:
+    if: contains(github.event.head_commit.message, '[hf-sec-hybrid-item1]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRIOR_CACHE_RUN: '36220643553'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/free-pit-quantconnect-stage1
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: pip install requests orjson numpy pandas scipy scikit-learn beautifulsoup4 pyarrow
+
+      - name: Resolve curated CIK membership
+        shell: bash
+        run: |
+          MEMBER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY"             --workflow curated-sp500-membership.yml             --branch research/free-pit-quantconnect-stage1             --status success --limit 1 --json databaseId             --jq '.[0].databaseId')"
+          test -n "$MEMBER_RUN" || { echo "No successful curated membership build"; exit 2; }
+          echo "MEMBER_RUN=$MEMBER_RUN" >> "$GITHUB_ENV"
+          echo "Using MEMBER_RUN=$MEMBER_RUN PRIOR_CACHE_RUN=$PRIOR_CACHE_RUN"
+
+      - name: Reuse expensive historical filing caches
+        shell: bash
+        run: |
+          rm -rf /tmp/hf-sec-hybrid /tmp/member
+          mkdir -p /tmp/hf-sec-hybrid /tmp/member
+          gh run download "$PRIOR_CACHE_RUN" --repo "$GITHUB_REPOSITORY"             --name hf-sec-hybrid-item1-discovery-network --dir /tmp/hf-sec-hybrid
+          gh run download "$MEMBER_RUN" --repo "$GITHUB_REPOSITORY"             --name curated-sp500-cik-membership --dir /tmp/member
+
+          test -f /tmp/hf-sec-hybrid/hf_item1_filings.parquet
+          test -d /tmp/hf-sec-hybrid/sec_index_cache
+          test -d /tmp/hf-sec-hybrid/sec_item1_cache
+          test -f /tmp/member/curated_sp500_membership_intervals.csv
+
+          echo "HF cache:"
+          ls -lh /tmp/hf-sec-hybrid/hf_item1_filings.parquet
+          echo "SEC cached Item1 files: $(find /tmp/hf-sec-hybrid/sec_item1_cache -type f | wc -l)"
+          echo "Curated membership:"
+          wc -l /tmp/member/curated_sp500_membership_intervals.csv
+
+      - name: Build curated-universe hybrid discovery network
+        shell: bash
+        run: |
+          export SEC_USER_AGENT="LETF-Monte-Carlo research $(git log -1 --pretty=format:'%ae')"
+          python research/free_stage1/hf_sec_hybrid_item1.py             --membership /tmp/member/curated_sp500_membership_intervals.csv             --out /tmp/hf-sec-hybrid             --hf-cache /tmp/hf-sec-hybrid/hf_item1_filings.parquet             --formation-start 2009-03-31             --formation-end 2019-12-31             --hf-start 2007-09-01             --sec-start-year 2007             --sec-end-year 2019             --max-item1-age-days 550             --pair-density 0.0205             --sec-rps 3.0             --hf-workers 6
+
+      - name: Verify curated-network provenance and gates
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          root=Path('/tmp/hf-sec-hybrid')
+          m=json.loads((root/'manifest.json').read_text())
+          c=pd.read_csv(root/'membership_network_coverage.csv')
+          assert m['quality_gate']['passed'] is True,m['quality_gate']
+          assert int(c.valid_item1_ciks.min())>=200,c.nsmallest(5,'valid_item1_ciks')
+          assert float(c.valid_item1_ciks.median())>=350,c.valid_item1_ciks.median()
+          assert m['formation_end']=='2019-12-31',m['formation_end']
+          print(
+              'CURATED HYBRID ITEM1 PASS',
+              'min',int(c.valid_item1_ciks.min()),
+              'median',float(c.valid_item1_ciks.median()),
+              'network_rows',m['network_rows'],
+              'sec_new_rows',m['sec_new_rows'],
+              flush=True,
+          )
+          PY
+
+      - name: Upload hybrid network
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hf-sec-hybrid-item1-discovery-network
+          path: /tmp/hf-sec-hybrid/
+          if-no-files-found: warn
+          retention-days: 30

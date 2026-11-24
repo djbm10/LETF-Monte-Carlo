@@ -34,7 +34,8 @@ def load_bundle(folder):
             raise ValueError(f'Source checksum mismatch: {name}')
         if not item.get('provider') or not item.get('url'):
             raise ValueError('Provider and source URL required')
-        files[name] = pd.read_csv(path, index_col=0, parse_dates=True)
+        if item.get('format','csv') == 'csv':
+            files[name] = pd.read_csv(path, index_col=0, parse_dates=True)
     symbol = manifest['symbol']
     prices = files['prices']
     if not manifest.get('distributions_complete'):
@@ -98,6 +99,10 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
                      initial_capital=100000., state='MA', ordinary_income=100000.,
                      cash_flows=(), output=None):
     market, manifest, distributions, cpi = load_bundle(bundle)
+    if start < manifest.get('account_coverage_start',start) or end > manifest.get('account_coverage_end',end):
+        raise UnsupportedModelError('Replay dates exceed reviewed corporate-action/distribution coverage')
+    if state not in manifest.get('supported_tax_states',[state]):
+        raise UnsupportedModelError('Distribution state-tax adjustments have not been reviewed for this input bundle')
     market = market.loc[:end]
     cpi = cpi.reindex(market.index) if cpi is not None else None
     symbol = manifest['symbol']

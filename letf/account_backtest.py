@@ -256,6 +256,11 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 expected_quantities[action['security']] *= action['ratio']
         for distribution in schedules:
             if distribution.ex_date == when:
+                if taxable and distribution.category == 'qualified_dividend':
+                    entitled=[lot for lot in book.lots if lot.account==account_id and
+                              lot.security==distribution.security and lot.shares>1e-10]
+                    if any((when-lot.acquired).days<=60 for lot in entitled):
+                        raise UnsupportedModelError('Qualified dividend needs investor holding-period proof; future 121-day eligibility is not inferred')
                 receivables.append((distribution, book.quantity(account_id, distribution.security) * distribution.amount_per_share))
         for distribution, amount in list(receivables):
             if distribution.pay_date <= when:

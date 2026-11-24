@@ -57,8 +57,12 @@ def portfolio_metrics(equity, initial_capital, *, start_date, inflation_index=No
     elif years > 0:
         result['cagr'] = (values[-1] / initial_capital) ** (1 / years) - 1
         if inflation_index is not None:
-            if not inflation_index.index.equals(equity.index) or not np.isfinite(inflation_index).all() or (inflation_index <= 0).any():
-                raise ValueError('Inflation index must be positive, finite and exactly aligned')
+            endpoints = inflation_index.iloc[[0, -1]]
+            if (not inflation_index.index.equals(equity.index) or not np.isfinite(endpoints).all()
+                or (endpoints <= 0).any() or (inflation_index.dropna() <= 0).any()):
+                raise ValueError('Inflation endpoints must be positive, finite and exactly aligned')
+            result['inflation_missing_interior_observations'] = int(inflation_index.isna().sum())
+            result['inflation_scope'] = 'Observed endpoints only; no missing daily/monthly CPI path inferred'
             ratio = inflation_index.iloc[-1] / inflation_index.iloc[0]
             result['real_cagr'] = (values[-1] / initial_capital / ratio) ** (1 / years) - 1
     return result

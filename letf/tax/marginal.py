@@ -139,7 +139,7 @@ def calculate_comprehensive_tax_v6(
     bracket_multiplier: float = 1.0, state_code: str = None, *,
     tax_year: int = 2026, qualified_dividends: float = 0,
     ordinary_dividends: float = 0, interest_income: float = 0,
-    itemized_deduction: float = None,
+    itemized_deduction: float = None, state_inputs: Dict = None,
 ) -> Dict:
     """Regular federal income tax + NIIT for the explicitly supported scope.
 
@@ -184,18 +184,28 @@ def calculate_comprehensive_tax_v6(
     investment_income = max(0., taxable_st + preferred + ordinary_dividends + interest_income
                              - capital_loss_deduction)
     niit_tax = .038 * min(investment_income, max(0., magi - threshold)) if include_niit else 0.
+    state_tax = 0.
+    state_calculation = None
     if include_state:
         if state_code is None:
             raise UnsupportedModelError('Select a state explicitly, or request federal-only tax')
         # No general individual income tax in these three states. Other
         # states require dated capital-gain, conformity and surcharge rules.
-        if state_code not in ('TX', 'FL', 'NV'):
+        if state_code == 'MA':
+            from letf.tax.massachusetts import massachusetts_tax
+            if state_inputs is None and capital_loss_deduction:
+                raise UnsupportedModelError('MA losses require raw activity and independent state carryovers')
+            activity = state_inputs if state_inputs is not None else dict(st_gains=taxable_st, lt_gains=taxable_lt)
+            state_calculation = massachusetts_tax(tax_year, ordinary_income, interest=interest_income,
+                dividends=ordinary_dividends + qualified_dividends, filing_status=filing_status, **activity)
+            state_tax = state_calculation['total_tax']
+        elif state_code not in ('TX', 'FL', 'NV'):
             raise UnsupportedModelError(f'No validated state model for {state_code}/{tax_year}')
-    total_tax = federal_total + niit_tax
+    total_tax = federal_total + niit_tax + state_tax
     return {
         'federal_ordinary': federal_ordinary, 'federal_st': federal_st,
         'federal_ltcg': federal_ltcg, 'federal_total': federal_total,
-        'state_tax': 0., 'niit_tax': niit_tax, 'total_tax': total_tax,
+        'state_tax': state_tax, 'state_calculation': state_calculation, 'niit_tax': niit_tax, 'total_tax': total_tax,
         'effective_rate': total_tax / magi if magi > 0 else 0.,
         'marginal_rate_used': True, 'ltcg_breakdown': breakdown,
         'ltcg_stacking_used': True, 'tax_year': tax_year,

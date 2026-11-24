@@ -346,7 +346,7 @@ class PortfolioLedger:
 
     def annual_tax(self, account_id, year, ordinary_income, *, state_code=None,
                    federal_only=False, filing_status='single', st_cf=0., lt_cf=0.,
-                   as_of=None, freeze_tax_year=None):
+                   as_of=None, freeze_tax_year=None, state_st_cf=0., state_lt_cf=0.):
         account = self.accounts[account_id]
         if account.profile.account_type == 'roth':
             return {'tax': 0., 'st_cf': 0., 'lt_cf': 0., 'scope': 'Roth internal trades only'}
@@ -379,15 +379,18 @@ class PortfolioLedger:
             result.taxable_st, result.taxable_lt, result.capital_loss_deduction,
             qualified_dividends=inc.get('qualified_dividend', 0.),
             ordinary_dividends=inc.get('ordinary_dividend', 0.),
-            interest_income=inc.get('interest', 0.), **kwargs)
+            interest_income=inc.get('interest', 0.),
+            state_inputs=dict(activity, st_cf=state_st_cf, lt_cf=state_lt_cf) if state_code == 'MA' else None, **kwargs)
         # Loss deductions may reduce household taxes: preserve the negative
         # incremental liability; cash refunds require a separate payment event.
         return {'tax': total['total_tax'] - baseline['total_tax'],
                 'st_cf': result.st_loss_cf_out, 'lt_cf': result.lt_loss_cf_out,
                 'taxable_st': result.taxable_st, 'taxable_lt': result.taxable_lt,
                 'capital_loss_deduction': result.capital_loss_deduction,
+                'state_st_cf': (total.get('state_calculation') or {}).get('st_cf', 0.),
+                'state_lt_cf': (total.get('state_calculation') or {}).get('lt_cf', 0.),
                 'calculation': total, 'baseline': baseline,
-                'evidence': 'HYPOTHETICAL STRESS MODEL' if freeze_tax_year is not None else 'OBSERVED',
+                'evidence': 'HYPOTHETICAL_STRESS' if freeze_tax_year is not None else 'OBSERVED',
                 'scope': 'regular federal tax/NIIT, supplied income; excludes AMT/credits'}
 
     def pay_tax(self, when, account_id, amount):

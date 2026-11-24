@@ -1,0 +1,23 @@
+{
+  "original_audit_remote_branch": "audit/financial-accuracy-2026-11-23",
+  "original_audit_sha": "96af497cc5a9432b3298623fb16a69ce069153fa",
+  "integration_branch": "integrate/financial-engine-2026-11-23",
+  "financial_implementation_sha": "11f57067a2b47a03f60893fc09af3794647db86e",
+  "initial_upstream_main": "fe8e1b28cb0275396a0b9b6c30a3ab29b1e25365",
+  "independent_upstream_append": "79fcaa6e240dcaa2ede7fe3069d4cf0bc8bb1390",
+  "integration_merge_sha": "9b895306e21d889dd8136dd307d7f66cefc9dfe9",
+  "upstream_changes": [
+    "research/forward_signal_ledger.jsonl"
+  ],
+  "journal_old_rows_preserved_as_exact_prefix": true,
+  "github_ci": {
+    "id": 45495063247,
+    "head_sha": "cfeeae331f8aa1ebc5caae6fa05713c39e4c932a",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45495063247",
+    "workflow_summary": "96 workflows: unique YAML mappings and jobs structure PASS",
+    "pytest_summary": "152 passed, 4 warnings in 17.19s"
+  },
+  "scope": "Observed hosted result applies to all final financial code; subsequent main merge appends one prospectively observed journal row. Final publication commit SHA is obtained from git rev-parse HEAD; no self-referential SHA is embedded."
+}

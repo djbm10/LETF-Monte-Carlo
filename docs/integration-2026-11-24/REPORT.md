@@ -6,7 +6,7 @@
 
 ## Repository reconciliation
 
-Updated GitHub `main` was verified at `fe8e1b28cb0275396a0b9b6c30a3ab29b1e25365`. The checkout initially pointed `origin` at TomerButbul and `fork` at djbm10. Both were preserved: djbm10 is now `origin`; the original remote is `upstream-original`. No main branch was overwritten or merged.
+Updated GitHub `main` was verified at `fe8e1b28cb0275396a0b9b6c30a3ab29b1e25365`. The checkout initially pointed `origin` at TomerButbul and `fork` at djbm10. Both were preserved: djbm10 is now `origin`; the original remote is `upstream-original`. This work did not modify main or merge a PR. During final verification its scheduled bot independently advanced main to `79fcaa6e240dcaa2ede7fe3069d4cf0bc8bb1390`, appending one prospective signal observation. This was merged into the integration branch as `9b895306e21d889dd8136dd307d7f66cefc9dfe9`; all old journal rows remain an exact prefix and no financial code changed.
 
 The original unpublished audit commits were found in local branch/reflog history; they were **not recreated from summaries**:
 
@@ -122,7 +122,7 @@ The canonical scenario CLI completed **20 account runs**: two independent seeded
 | Legacy T27 crisis-damping diagnostic | **FAIL**: calls `sample_returns(max_crisis_chain=...)`, which the retained bootstrap interface does not accept |
 | Legacy `quick_test.py` | Explicit unverified historical-proxy gate; no false ranking |
 | TQQQ / UPRO reconstruction CAGR gate | **FAIL**, thresholds unchanged |
-| Remote CI | Reported separately after publication; local checks are not a claim of a hosted green run |
+| Hosted regression CI | **SUCCESS**, [run 45495063247](https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45495063247) on `cfeeae3`: 152 passed, four warnings; all 96 workflow structures pass |
 
 [Actual failed run 45311541299](https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45311541299) failed before jobs: GitHub returned no jobs and zero check runs; `gh run view` identified a workflow-file issue. The duplicated job key was confirmed in the checked-in file. After making it parse, the local PIT self-test exposed the additional pandas attribute crash described above. There were **no runtime logs from the original failed run** to attribute to a numerical test. [Metadata](evidence/failed-workflow.json).
 
@@ -131,5 +131,7 @@ T27 is an additional unresolved legacy diagnostic/interface mismatch in `letf/va
 Remaining **engineering** includes pre-2024 tax tables; full personal/state returns (AMT, credits, special assets, government-obligation passthrough, Section 199A and residency adjustments); explicit estimated-tax safe-harbor/penalty calculations; automatic TLH strategy; fully specified per-order specific-lot selection in the strategy runner; dynamic forward qualified-dividend reclassification; tax-funded derivative replay; S8 and S11–S19 migration; exercise/assignment and interacting derivative tax laws; UBTI/prohibited-transaction consequences; full inflation/stress/funding/correlation scenario framework and convergence studies. These are not all paid-data blockers.
 
 Remaining **evidence/access** includes authenticated broker-specific historical permissions/margin vintages, independent dated CME prices, longitudinal option quotes/actions and historical issuer index/fee/swap inputs. [Support matrix](SUPPORT_MATRIX.md) gives individual strategy status and genuine captured start dates. No real trades, purchases, credentials, tax filings, deployments, main merge or sealed-holdout writes occurred.
+
+Publication and the independently appended upstream journal reconciliation are recorded in [publication evidence](evidence/publication.json). The post-merge test log is [here](evidence/pytest-post-merge.txt); no financial source code differs from the hosted passing revision.
 
 Reproduction commands and exact-input limitations are in [REPRODUCE.md](REPRODUCE.md). Dependencies are pinned in `requirements-audit.lock`. New output directories/files are required; commands refuse to overwrite evaluation evidence.

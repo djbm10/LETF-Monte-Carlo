@@ -1,0 +1,35 @@
+{
+  "T3": {
+    "n": 292,
+    "mean_deadline_pressure_excess": 0.0012212517734677725,
+    "median_deadline_pressure_excess": 0.00047841031512130543,
+    "bootstrap_ci_low": -0.00017840426236148162,
+    "bootstrap_ci_high": 0.002774194692878711
+  },
+  "T2": {
+    "n": 28,
+    "mean_deadline_pressure_excess": 0.00014788274706364337,
+    "median_deadline_pressure_excess": 0.0003927520091797485,
+    "bootstrap_ci_low": -0.003039555990989952,
+    "bootstrap_ci_high": 0.003320471000086328
+  },
+  "deadline_vs_nearby_offsets": {
+    "offsets_sessions": [
+      -2,
+      -1,
+      1,
+      2
+    ],
+    "n": 320,
+    "mean_deadline_minus_nearby_pressure": 0.0009797281106224782,
+    "median_deadline_minus_nearby_pressure": -0.00010947706174394001
+  },
+  "falsifier": {
+    "sufficient_T3": true,
+    "sufficient_T2": true,
+    "negative_pressure_T3": false,
+    "negative_pressure_T2": false,
+    "deadline_more_negative_than_nearby": false,
+    "passed": false
+  }
+}

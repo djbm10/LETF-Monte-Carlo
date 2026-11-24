@@ -1,0 +1,61 @@
+name: Month-end cash reversal discovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/clean-1926-walkforward]
+    paths:
+      - research/MONTH_END_CASH_REVERSAL_PREREG.md
+      - research/month_end_cash_reversal_discovery_20261004.py
+      - .github/workflows/month-end-cash-reversal-discovery.yml
+
+permissions:
+  contents: write
+
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/clean-1926-walkforward
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install numpy pandas scipy yfinance
+      - name: Compile smallest probe
+        run: python -m py_compile research/month_end_cash_reversal_discovery_20261004.py
+      - name: Run frozen discovery only
+        run: PYTHONPATH=. python research/month_end_cash_reversal_discovery_20261004.py
+      - name: Assert holdout remains sealed
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('results/month_end_cash_reversal_discovery_20261004/advancement.json').read_text())
+          assert a['holdout_status']=='SEALED_NOT_DOWNLOADED', a
+          assert a['discovery_price_max_date']<='2019-12-31', a
+          print('DISCOVERY_HOLDOUT_FIREWALL_PASS',a['discovery_price_max_date'],a['decision'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: month-end-cash-reversal-discovery-20261004
+          path: results/month_end_cash_reversal_discovery_20261004
+          if-no-files-found: error
+          retention-days: 90
+      - name: Persist discovery checkpoint
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/month_end_cash_reversal_discovery_20261004
+          if git diff --cached --quiet; then
+            echo "No discovery result changes"
+          else
+            git commit -m "Record frozen month-end cash reversal discovery [skip ci]"
+            git fetch origin research/clean-1926-walkforward
+            git rebase origin/research/clean-1926-walkforward
+            git push origin HEAD:research/clean-1926-walkforward
+          fi

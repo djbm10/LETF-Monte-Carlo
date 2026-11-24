@@ -1,0 +1,19 @@
+{
+  "preregistration": "research/MONTH_END_CASH_REVERSAL_PREREG.md",
+  "preregistration_sha256": "dc680d41e921e5079046713c4e2f0736aaeb2322dd331fa35429b690af1d1d84",
+  "discovery_price_max_date": "2019-12-31",
+  "holdout_status": "SEALED_NOT_DOWNLOADED",
+  "frozen_horizons": [
+    1,
+    3,
+    5
+  ],
+  "round_trip_cost": 0.0005,
+  "validation_positive_mean_excess_horizons": 1,
+  "median_validation_mean_excess": -0.001341022658509646,
+  "median_train_mean_excess": 0.0005137024838664618,
+  "mechanism_falsifier_passed": false,
+  "data_quality_passed": true,
+  "decision": "DO_NOT_OPEN_HOLDOUT",
+  "disposition": "KILL"
+}

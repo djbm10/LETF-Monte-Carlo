@@ -1,0 +1,38 @@
+name: Modern real ETF validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/clean-1926-walkforward
+    paths:
+      - research/modern_real_etf_validation.py
+      - .github/workflows/modern-real-etf-validation.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - research/modern_real_etf_validation.py
+      - .github/workflows/modern-real-etf-validation.yml
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install numpy pandas yfinance
+      - name: Compile
+        run: python -m py_compile research/modern_real_etf_validation.py
+      - name: Run real-ETF validation
+        run: PYTHONPATH=. python research/modern_real_etf_validation.py --output results/modern_real_etf_validation
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: modern-real-etf-validation
+          path: results/modern_real_etf_validation
+          if-no-files-found: error

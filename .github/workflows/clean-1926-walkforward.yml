@@ -1,0 +1,106 @@
+name: Clean 1926 LETF walk-forward
+# bottleneck-leaps-futures-validation: 2026-09-21
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/clean-1926-walkforward
+    paths:
+      - research/clean_1926_walkforward.py
+      - research/final_strategy_screen.py
+      - research/aggressive_strategy_extensive_20260921.py
+      - research/actual_futures_continuous_validation_20260921.py
+      - research/bottleneck_winner_tournament.py
+      - research/optionmetrics_leaps_backtest.py
+      - research/wrds_extract_bottleneck_leaps.py
+      - research/fixtures/optionmetrics_public_sample_20050915.csv
+      - .github/workflows/clean-1926-walkforward.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - research/clean_1926_walkforward.py
+      - research/final_strategy_screen.py
+      - research/aggressive_strategy_extensive_20260921.py
+      - .github/workflows/clean-1926-walkforward.yml
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install research dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scipy pandas-datareader yfinance numba
+      - name: Self-test
+        run: python research/clean_1926_walkforward.py --self-test
+      - name: Run 10,000-path corrected evaluation
+        run: |
+          python research/clean_1926_walkforward.py             --paths 10000             --seed 20260821             --output results/clean_1926_walkforward
+      - name: Run all-strategy historical screen
+        run: PYTHONPATH=. python research/final_strategy_screen.py --output results/final_strategy_screen
+      - name: Upload scored outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: clean-1926-walkforward-results
+          path: |
+            results/clean_1926_walkforward
+            results/final_strategy_screen
+          if-no-files-found: error
+
+  aggressive_extensive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas
+      - name: Compile extension
+        run: python -m py_compile research/aggressive_strategy_extensive_20260921.py
+      - name: Run historical plus 11-regime Monte Carlo
+        run: python research/aggressive_strategy_extensive_20260921.py --paths 2500 --seed 20260921 --output results/aggressive_strategy_extensive_20260921
+      - name: Upload extension outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: aggressive-strategy-extensive-20260921
+          path: results/aggressive_strategy_extensive_20260921
+          if-no-files-found: error
+
+
+  bottleneck_leaps_futures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install
+        run: pip install numpy pandas pyarrow yfinance
+      - name: Compile research modules
+        run: python -m py_compile research/actual_futures_continuous_validation_20260921.py research/bottleneck_winner_tournament.py research/optionmetrics_leaps_backtest.py research/wrds_extract_bottleneck_leaps.py
+      - name: Run TNIC acquisition smoke
+        run: python research/bottleneck_winner_tournament.py --download-tnic-smoke --out results/bottleneck_winner_tournament
+      - name: Test published real OptionMetrics sample
+        run: python research/optionmetrics_leaps_backtest.py --input research/fixtures/optionmetrics_public_sample_20050915.csv --out results/optionmetrics_real_sample --smoke-only
+      - name: Run actual futures-derived continuous validation
+        run: python research/actual_futures_continuous_validation_20260921.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bottleneck-leaps-futures-research
+          path: |
+            results/bottleneck_winner_tournament
+            results/optionmetrics_real_sample
+            results/actual_futures_continuous_validation_20260921
+          if-no-files-found: error

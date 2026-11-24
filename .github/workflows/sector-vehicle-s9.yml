@@ -1,0 +1,21 @@
+name: Sector leveraged ETF S9 comparison
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas yfinance
+      - run: python -m py_compile research/sector_vehicle_s9.py
+      - run: PYTHONPATH=. python research/sector_vehicle_s9.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sector-vehicle-s9
+          path: results/sector_vehicle_s9

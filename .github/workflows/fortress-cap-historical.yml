@@ -1,0 +1,21 @@
+name: Fortress cap historical crises
+on:
+  push:
+    branches: ['research/fortress-cap-sweep']
+  pull_request:
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/fortress_cap_historical.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fortress-cap-historical
+          path: results/fortress_cap_historical.csv

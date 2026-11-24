@@ -1,0 +1,23 @@
+name: One shot recovery boost
+on:
+  push:
+    branches: ['research/aggressive-micro-sweep']
+  pull_request:
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy pandas numba
+      - run: mkdir -p results && PYTHONPATH=. python research/one_shot_recovery_boost.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: one-shot-recovery-boost
+          path: |
+            results/one_shot_recovery_boost.csv
+            results/one_shot_recovery_ranking.csv

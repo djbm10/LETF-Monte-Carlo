@@ -49,3 +49,27 @@ def test_terminal_projection_reconciles_to_full_daily_canonical_engine():
             assert r['terminal_tax_payable']==pytest.approx(reference['tax'],abs=1e-8)
             actual=[e['settlement_date'] for e in r['ledger'].events if e['action'] in ('BUY','SELL')]
             assert actual==[e['settlement_date'] for e in reference['events'] if e['action'] in ('BUY','SELL')]
+def test_account_interval_family_covers_possible_upstream_stopping_looks(tmp_path):
+    """A passed upstream stop is data-selected, not an independent fixed look."""
+    import json
+    from letf.macro.account_precision import project_accounts
+    from letf.macro.precision_run import file_hash
+    protocol={'horizons':[5],'leverages':[1],'checkpoints_per_seed':[4,8],
+              'family_alpha_quantiles':.025,'family_alpha_probabilities':.025}
+    identities=[]
+    for seed in (1,2):
+        values=np.zeros((8,1,5));values[:,0,0]=np.linspace(-1,1,8)+seed*.01
+        values[:,0,1]=.6;values[:,0,3]=.7;values[:,0,4]=values[:,0,0]-.2
+        path=tmp_path/f'{seed}.bin';path.write_bytes(values.astype('<f8').tobytes())
+        identities.append({'path':path.name,'sha256':file_hash(path),'dtype':'<f8','shape':[8,1,5]})
+    # Deliberately small synthetic fixture; no claim this market gate was passed
+    # in real data. Only downstream family allocation is under test.
+    upstream=tmp_path/'market.json';upstream.write_text(json.dumps({'passed':True,
+        'registration':{'protocol':protocol,'source_catalog_sha256':'a'*64},'samples':identities}))
+    report=project_accounts(upstream,output=tmp_path/'accounts.json')
+    qalphas=[q['alpha'] for row in report['results'] for intervals in row['log_asset_sampling_intervals'].values() for q in intervals]
+    palphas=[q['alpha'] for row in report['results'] for q in row['probabilities_conditional'].values()]
+    assert sum(qalphas)*2==pytest.approx(.025)
+    assert sum(palphas)*2==pytest.approx(.025)
+    assert report['family_error_control']['possible_upstream_stopping_looks']==2
+

@@ -1,0 +1,15 @@
+{
+  "purpose": "Separate model/cost specification dispersion from within-specification Monte Carlo uncertainty; no model approval or fitted scenario probabilities",
+  "paths_per_seed": 65536,
+  "checkpoints": [32768, 65536],
+  "common_root_seeds": [20261127, 20261128],
+  "cases": {
+    "shorter_history": {"training_months": 240},
+    "longer_regime_duration": {"stationary_mean_months": 24},
+    "lower_cost": {"annual_fee_leveraged": 0.005, "borrowing_spread": 0.005},
+    "higher_cost": {"annual_fee_leveraged": 0.02, "borrowing_spread": 0.03}
+  },
+  "baseline": "Registered 480-month/mean-12-month/1%-fee/1.5%-spread reference, already frozen",
+  "family_error": "Allocate 0.025 quantile and 0.025 probability error across four specifications and each child study's quantities/looks",
+  "comparison": "Report every specification, its intervals and all failures. Across-model dispersion is sensitivity, not a posterior confidence interval. No new forecasting model or strategy."
+}

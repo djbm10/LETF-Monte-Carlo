@@ -14,3 +14,11 @@ local archives, full ensembles and account exports stay under ignored private
 Record exact test commands/results, source snapshot hashes and coverage, stage
 commits, output classifications and known failures here. Hosted fixture CI is
 not a substitute for large local source-dependent economic replays.
+
+Stage 1: `python -m pytest -q tests/test_lab_sources.py`: 10 passed.
+Full suite: 292 passed / four inherited warnings (48.86s), private stdout
+`audit-output/master-mission-baseline/stage1-tests.txt`. Baseline 282 passed
+(54.12s), workflow structure 97 pass. Inventory SHA-256
+`9ea899da4c603c7c24f6a984801af2fd7f1c0025058bd7d47d9837fc60bfad14`;
+the preserved legacy LETF33 source has a pre-existing parse error at line 1833.
+Source-lake import receipt is private under the baseline output directory.

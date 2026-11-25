@@ -151,9 +151,8 @@ def run_observed(request, *, output, progress=None):
     if required-set(request['bundles']): raise UnsupportedModelError('Strategy missing reviewed instruments: '+','.join(sorted(required-set(request['bundles']))))
     tax=request.get('tax',{});capital=request.get('initial_capital',10000.)
     tax_year=tax.get('freeze_year');law=tax.get('law_mode','ACTUAL_DATED')
-    calendar=equity_calendar(pd.Timestamp(request['start']).date(),pd.Timestamp(request['end']).date())
-    payments={year:calendar.date_to_session(pd.Timestamp(date(year+1,4,15)),direction='previous').date()
-              for year in range(pd.Timestamp(request['start']).year,pd.Timestamp(request['end']).year)}
+    from letf.account_cli import modeled_tax_payment_dates
+    payments=modeled_tax_payment_dates(request['start'],request['end'])
     costs=dict(spread_bps=2.,slippage_bps=1.,commission=0.,fractional_shares=True)
     costs.update(request.get('costs',{}))
     results={};controls={};summaries={};completed=0

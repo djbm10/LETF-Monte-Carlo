@@ -32,7 +32,8 @@ def check_rounded_cash(original,vendor,known_split_factor):
     Never estimate a split factor from rounded cash. Exact issuer cash is used
     for all tax/income events, even when vendor cash is compatible by rounding.
     """
-    if vendor<=0 or abs(original-vendor*known_split_factor)>.000500001*known_split_factor:
+    if (not np.isfinite([original,vendor,known_split_factor]).all() or original<=0 or vendor<0 or known_split_factor<=0
+            or abs(original-vendor*known_split_factor)>.000500001*known_split_factor):
         raise ValueError('Dated issuer cash is inconsistent with split actions and vendor reporting precision')
 
 
@@ -40,6 +41,19 @@ def ici_date(value):
     if '/' in str(value):
         return pd.to_datetime(value,format='%m/%d/%Y')
     return pd.Timestamp('1899-12-30')+pd.Timedelta(days=float(value))
+
+
+def verify_zero_payout(components,api_events,vendor_cash):
+    """An affirmative zero ICI row is a scheduled placeholder, not a payout.
+
+    Never infer zero from a missing issuer row. All reviewed components, any
+    API cash and independent vendor action must be exactly zero.
+    """
+    if any(v!=0 or not np.isfinite(v) for v in components) or vendor_cash!=0:
+        raise ValueError('Zero issuer row conflicts with tax components/vendor cash')
+    for event in api_events:
+        if any(float(event.get(k) or 0)!=0 for k in ('CashDividendPerShare','LongTermCapGains','ShortTermCapGains','ReturnOfCapital','OtherPerShare','SpecialPerShare')):
+            raise ValueError('Zero issuer row conflicts with API cash')
 
 
 def build(inputs, issuer_dir, output, symbol,*,macro_sources=None,years=None):
@@ -63,8 +77,9 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None,years=None):
     for year in reviewed_years:
         issuer=OTHER_ISSUERS.get(symbol)
         provider=issuer['provider'] if issuer else 'ProShares'
-        original=issuer_dir/(issuer['files'][year][0] if issuer else f'letf-ici-primary-{year}.xlsx')
-        original_url=issuer['files'][year][1] if issuer else f'https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_{year}.xlsx'
+        extension='xls' if year==2022 else 'xlsx'
+        original=issuer_dir/(issuer['files'][year][0] if issuer else f'letf-ici-primary-{year}.{extension}')
+        original_url=issuer['files'][year][1] if issuer else f'https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_{year}.{extension}'
         restated=issuer_dir/f'letf-{symbol}-issuer-{year}.json'
         api=None if issuer else json.loads(restated.read_text())
         ici=[r for r in ici_rows(original,year=year) if r.get('C')==symbol]
@@ -92,14 +107,22 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None,years=None):
                 timing={'tax_date':f'{year}-12-31','issuer_tax_year':year,'record_date':str(record.date()),
                     'tax_date_source':original_url+f'; final {year} ICI column M tax-year allocation, IRC 852(b)(7)'}
             restatement=None
+            if total==0:
+                matches=[a for a in api if pd.Timestamp(a['ExDate'])==ex] if api is not None else []
+                if ex not in raw.index:raise ValueError('Zero payout date absent from reviewed source calendar')
+                verify_zero_payout((ordinary,qdi,cg,reit),matches,float(raw.loc[ex,'Dividends']))
+                source_checks.append({'ex_date':str(ex.date()),'nominal_cash':0.,
+                    'zero_payout_affirmed_by_dated_issuer':True,'api_omission_is_not_missing_cash':True})
+                continue
             if api is not None:
                 matches=[a for a in api if pd.Timestamp(a['ExDate'])==ex]
                 if len(matches)!=1 or pd.Timestamp(matches[0]['PayableDate'])!=pay:raise ValueError('Issuer date disagreement')
                 api_total=sum(float(matches[0].get(k) or 0) for k in ('CashDividendPerShare','LongTermCapGains','ShortTermCapGains','ReturnOfCapital'))
+                if not np.isfinite(api_total) or api_total<=0:raise ValueError('Positive issuer tax payout conflicts with missing/zero API cash')
                 restatement=total/api_total
                 if not np.isclose(restatement,scale.loc[ex],rtol=2e-5,atol=1e-8):
                     raise ValueError('Dated/current issuer payouts conflict with split scaling')
-            else:check_rounded_cash(total,float(raw.loc[ex,'Dividends']),float(scale.loc[ex]))
+            check_rounded_cash(total,float(raw.loc[ex,'Dividends']),float(scale.loc[ex]))
             source_checks.append({'ex_date':str(ex.date()),'nominal_cash':total,'issuer_restatement':restatement,
                 'dated_split_factor':float(scale.loc[ex]),'rounded_vendor_cash':float(raw.loc[ex,'Dividends'])})
             for category,amount in [('ordinary_dividend',ordinary-qdi-reit),('qualified_dividend',qdi),
@@ -108,8 +131,9 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None,years=None):
                     'category':category,'qualified_verified':category=='qualified_dividend',
                     'section199a_verified':category=='section199a_dividend',
                     'source':original_url,**timing})
-        issuer_dates={ici_date(r['H']) for r in ici}
-        if issuer_dates!=set(raw.loc[str(year)].loc[lambda f:f.Dividends.ne(0)].index):raise ValueError('Incomplete cash payout coverage')
+        issuer_dates={ici_date(r['H']) for r in ici if num(r,'J')!=0}
+        if set(raw.loc[str(year)].loc[lambda f:f.Dividends.ne(0)].index)-issuer_dates:
+            raise ValueError('Vendor cash lacks corresponding positive dated issuer tax records')
         source_files=[(original,original_url)]
         if api is not None:source_files.append((restated,f'https://www.proshares.com/api/distributionsummary/?fund={symbol}&year={year}'))
         for src,url in source_files:

@@ -27,7 +27,19 @@ TAX_URL='https://www.proshares.com/globalassets/proshares/documents/tax/ici_prim
 
 
 def ici_rows(path, *, year=2024):
-    """Explicit 2024 issuer layout; reject a changed schema rather than guess."""
+    """Explicit issuer primary layouts; unrecognized fields fail closed.
+
+    The 2021/22 two-line header has the same reviewed column meanings. Legacy
+    binary XLS uses pinned xlrd; no formula execution or spreadsheet macros.
+    """
+    if Path(path).suffix.lower()=='.xls':
+        try:import xlrd
+        except ImportError as error:raise UnsupportedModelError('Binary issuer XLS requires pinned xlrd from requirements-audit.lock') from error
+        book=xlrd.open_workbook(path)
+        if book.datemode!=0:raise UnsupportedModelError('Unreviewed 1904 Excel date system')
+        sheet=book.sheet_by_index(0)
+        rows=[{xlrd.formula.colname(j):str(sheet.cell_value(i,j)) for j in range(sheet.ncols)} for i in range(sheet.nrows)]
+        return validate_ici_headers(rows,year)
     ns={'m':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
     with zipfile.ZipFile(path) as z:
         strings=[''.join(el.itertext()) for el in ET.fromstring(z.read('xl/sharedStrings.xml')).findall('m:si',ns)]
@@ -41,7 +53,22 @@ def ici_rows(path, *, year=2024):
             if cell.get('t')=='s' and text:text=strings[int(text)]
             row[re.sub(r'\d','',cell.get('r'))]=text
         rows.append(row)
+    return validate_ici_headers(rows,year)
+
+
+def validate_ici_headers(rows,year):
     headers=[r for r in rows if r.get('A')=='Security Description (Fund Name)']
+    if not headers and year in (2021,2022):
+        candidates=[i for i,r in enumerate(rows[:-1]) if r.get('A')=='Security' and rows[i+1].get('A')=='Description']
+        required={'C':'Ticker','H':'Ex-Dividend','I':'Payable','J':'Per Share','M':'(Current Year)',
+                  'Q':'Dividends','U':'Dividends*','V':'Gain Distr.','Z':'Nondividend',
+                  'AB':'Liquidation','AC':'Liquidation','AD':'Interest','AJ':'Dividends*'}
+        if len(candidates)!=1:raise UnsupportedModelError('Unknown legacy issuer primary header')
+        i=candidates[0];top,bottom=rows[i],rows[i+1]
+        if (float(top.get('M',0))!=year or top.get('Q','').strip()!='Ordinary' or
+            any(bottom.get(c,'').strip()!=v for c,v in required.items())):
+            raise UnsupportedModelError('Legacy issuer primary columns/year do not match reviewed layout')
+        return rows
     if len(headers)!=1 or headers[0].get('H')!='Ex-Dividend Date' or headers[0].get('M','').split()[0]!=str(year) or headers[0].get('Q')!='Ordinary Dividends (14+15+16)':
         raise UnsupportedModelError('Unrecognized issuer ICI primary 2024 column layout')
     return rows

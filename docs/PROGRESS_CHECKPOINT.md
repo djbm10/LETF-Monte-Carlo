@@ -13,8 +13,9 @@ LETF33 parse error remains documented. Stage 1 commit `13fb73c`: ten new tests,
 Stage 2: official 2021–23 federal/Roth parameters and MA 2023 scope; preserve
 unreviewed-year rejection (MA test now uses 2022, because 2023 is sourced).
 2023–25 TQQQ/UPRO real source bundles built and paired-account cohort completed.
-QLD/SSO extension rejects missing three 2023 cash API rows; 2022 ICI URL HTTP404,
-2021 ICI layout differs and is not guessed. Three-year replay revealed and fixed
+Initial QLD/SSO and2021/22 importer failures were preserved. Official tax-page links
+subsequently established2022 binary XLS and the reviewed2021/22 two-line header.
+SSO2023 explicit zero payouts reconcile; QLD September2023 conflicts and stays blocked. Three-year replay revealed and fixed
 unbounded legal bracket JSON export; nonfinite financial outputs still rejected.
 Full 308-test regression passed before the additional serialization fixture;
 final stage regression **309 passed**, four inherited warnings. Raw sources and failed experiments remain
@@ -49,3 +50,16 @@ source-dependent tournament. QLD2023 positive vendor cash conflicts with zero
 ICI/API; explicit zero rows alone cannot excuse that. SSO zero rows may be
 affirmatively supported; earlier strict importer failures preserved.
 This file is updated with achieved acceptance tests after each stage.
+
+Stage5 full regression: **335 passed**, four inherited warnings. Secured Roth
+covered-call/CSP mechanics now reserve canonical shares/cash, require explicit
+assignment/nonassignment evidence and reject taxable/adjusted/naked cases.
+Independent fixture tests cover strike delivery, settlement, liability and
+collateral; this is not historical quote or broker certification.
+
+TQQQ2021–25 observed-data reinvestment replay completed after fixing the old
+CLI April15 holiday funding bug. Both CLI paths now pay on the last exchange
+session on/before April15, explicitly modeled early payment. Five-year
+taxable/Roth daily identities independently reconcile. No old result was
+overwritten. Next: derivative source-boundary tests, new-source NAV diagnostic,
+source-dependent tournament, final report/CI/recovery checkpoint.

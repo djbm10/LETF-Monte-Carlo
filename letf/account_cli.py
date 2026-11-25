@@ -18,6 +18,19 @@ from letf.account_backtest import run_account_backtest, Distribution
 from letf.accuracy import UnsupportedModelError
 
 
+def modeled_tax_payment_dates(start,end):
+    """Early modeled payments, not a claim about household filing deadlines.
+
+    April15 may be a holiday/weekend. Use the preceding exchange session so
+    the canonical engine can schedule settlement-safe funding sales.
+    """
+    from letf.account_backtest import equity_calendar
+    first,last=pd.Timestamp(start),pd.Timestamp(end)
+    calendar=equity_calendar(first.date(),last.date())
+    return {year:calendar.date_to_session(pd.Timestamp(date(year+1,4,15)),direction='previous').date()
+            for year in range(first.year,last.year)}
+
+
 def _verified_flag(value):
     if value is None or pd.isna(value):return False
     if isinstance(value,(bool,np.bool_)):return bool(value)
@@ -154,7 +167,7 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
     # Equal ex ante costs for equal instruments in the compared cash accounts.
     profiles = {'taxable': replace(TAXABLE_CASH, spread_bps=2., slippage_bps=1.),
                 'roth': replace(CONSERVATIVE_ROTH, spread_bps=2., slippage_bps=1.)}
-    payments = {year: date(year + 1, 4, 15) for year in range(pd.Timestamp(start).year, market.index[-1].year)}
+    payments = modeled_tax_payment_dates(start,market.index[-1])
     common = dict(initial_capital=initial_capital, allocator=rules, price_convention='as_traded',
         distributions_complete=True, distributions=distributions, trade_start=start,
         terminal_liquidation=True, inflation_index=cpi, settlement_policy='us_equity',

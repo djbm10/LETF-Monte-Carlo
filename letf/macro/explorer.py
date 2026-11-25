@@ -93,13 +93,14 @@ def scenario_market(daily,*,annual_fee,borrowing_spread,distribution_yield,sourc
             funding_rate_at_previous_close=rates,borrowing_spread=borrowing_spread,
             elapsed_calendar_days=elapsed,source=source)
         opens=[];closes=[];div_cash=[];previous=100.;closed=False
+        fees=r.fund_fee.to_numpy();financing=r.financing.to_numpy();returns=r['return'].to_numpy();days=elapsed.to_numpy()
         for t,day in enumerate(dates):
             if closed:opens.append(0.);closes.append(0.);div_cash.append(0.);continue
             # Market-price scenario with no observed overnight alpha. Accrued
             # nontrading-day internal costs enter opening NAV before fills.
-            overnight_cost=(r.fund_fee.iloc[t]+r.financing.iloc[t])*max(0,elapsed.iloc[t]-1)/elapsed.iloc[t]
+            overnight_cost=(fees[t]+financing[t])*max(0,days[t]-1)/days[t]
             opening=max(0.,previous*(1-overnight_cost))
-            before_distribution=previous*(1+r['return'].iloc[t])
+            before_distribution=previous*(1+returns[t])
             amount=min(previous*distribution_yield/4,max(0.,before_distribution)*.5) if day in pay_days else 0.
             close=before_distribution-amount
             if close<=0 or opening<=0:
@@ -123,7 +124,10 @@ def _cost_attribution(result,market,costs):
     events={}
     for e in result['ledger'].events:
         if e.get('account')=='main':events.setdefault(e['date'],[]).append(e)
-    for timestamp in market.index:
+    symbols=list(held);opening=market[[f'{s}_Open' for s in symbols]].to_numpy(float)
+    fees=np.column_stack([costs[s].fund_fee_rate.reindex(market.index).to_numpy(float) for s in symbols])
+    funding=np.column_stack([costs[s].financing_rate.reindex(market.index).to_numpy(float) for s in symbols])
+    for i,timestamp in enumerate(market.index):
         day=timestamp.date()
         # Open fills determine interval exposure. Close liquidations happen
         # after the interval; the next row starts from the canonical snapshot.
@@ -132,10 +136,10 @@ def _cost_attribution(result,market,costs):
             if symbol not in held or event.get('reason') in ('TERMINAL_LIQUIDATION','FUND_LIQUIDATION'):continue
             if event['action']=='BUY':held[symbol]+=event['shares']
             if event['action']=='SELL':held[symbol]-=event['shares']
-        for symbol in held:
-            value=held[symbol]*market.loc[timestamp,f'{symbol}_Open']
-            fee+=value*costs[symbol].loc[timestamp,'fund_fee_rate']
-            financing+=value*costs[symbol].loc[timestamp,'financing_rate']
+        for j,symbol in enumerate(symbols):
+            value=held[symbol]*opening[i,j]
+            fee+=value*fees[i,j]
+            financing+=value*funding[i,j]
         for event in events.get(day,[]):
             if event.get('reason') in ('TERMINAL_LIQUIDATION','FUND_LIQUIDATION'):
                 held[event['security']]-=event['shares']
@@ -153,7 +157,11 @@ def explore(sources,*,calibration_end,output,paths=16,horizons=(5,10,20,30,40),s
             stock_bond_correlation=None,crash_month=None,crash_return=None,
             annual_fee=.01,borrowing_spread=.015,distribution_yield=.01,strategies=STRATEGIES):
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
-    protocol=json.loads((Path(__file__).resolve().parents[2]/'docs/macro-learning-2026-11-24/protocol.json').read_text())
+    from letf.macro.resampling import EXTENDED_BOOTSTRAPS,sample_with_lineage
+    from letf.macro.daily_tails import VARIANCE_COLUMN,realized_monthly_variance,training_templates,daily_bridge
+    extended=model_type in EXTENDED_BOOTSTRAPS
+    protocol_file='docs/tail-validation-2026-11-24/protocol.json' if extended else 'docs/macro-learning-2026-11-24/protocol.json'
+    protocol=json.loads((Path(__file__).resolve().parents[2]/protocol_file).read_text())
     horizons=sorted(set(horizons))
     if not horizons or any(type(y)is not int or not 1<=y<=40 for y in horizons):raise ValueError('Integer horizons 1-40 required')
     if set(strategies)-set(STRATEGIES):raise UnsupportedModelError('This explorer does not fabricate futures/options or unsupported portfolio instruments')
@@ -167,7 +175,12 @@ def explore(sources,*,calibration_end,output,paths=16,horizons=(5,10,20,30,40),s
     if annual_contribution and (roth_magi is None or annual_compensation is None):
         raise UnsupportedModelError('Roth contributions require separate supplied MAGI and eligible compensation; ordinary income alone is insufficient')
     panel,metadata=sources.panel(calibration_end,include_long_yield=stock_bond_correlation is not None)
-    training=train_slice(panel,calibration_end,240,protocol['minimum_conditional_months'] if model_type=='conditional_var_t' else protocol['minimum_bootstrap_months'],allow_missing_transitions=True)
+    if extended:
+        ff=sources.daily_factors().loc[:pd.Timestamp(calibration_end)]
+        observed_logs=np.log1p(ff['Mkt-RF']+ff.RF)
+        panel[VARIANCE_COLUMN]=realized_monthly_variance(observed_logs).reindex(panel.index)
+    window=protocol['training_window_by_model'][model_type] if extended else 240
+    training=train_slice(panel,calibration_end,window,protocol['minimum_conditional_months'] if model_type=='conditional_var_t' else protocol['minimum_bootstrap_months'],allow_missing_transitions=True)
     protocol=dict(protocol,allow_incomplete_training=True)
     model=MacroModel.fit(model_type,training,protocol);columns=model.columns
     constraints={}
@@ -195,26 +208,38 @@ def explore(sources,*,calibration_end,output,paths=16,horizons=(5,10,20,30,40),s
     if rate is not None:initial[:,columns.index('short_rate')]=rate
     monthly=model.simulate(12*max(horizons),paths,seed,constraints=constraints,vol_multiplier=volatility_scale,
         intercept_shifts=shifts,correlation_overrides=overrides,constraint_schedule=schedule,initial_state=initial)
+    lineage=None
+    if extended:
+        monthly,lineage=sample_with_lineage(model,12*max(horizons),paths,seed,initial_state=initial)
     store=ArtifactStore(output/'artifacts')
     model_id=store.put('models',{'kind':model_type,'parameters':model.parameters,'columns':columns,
         'training_sha256':fingerprint(training),'source_metadata':metadata}, {'training':model.train_values})
     forecast_id=store.put('forecasts',{'model_id':model_id,'seed':seed,'constraints':constraints,
         'intercept_shifts':shifts,'correlation_overrides':{str(k):v for k,v in overrides.items()},
-        'volatility_scale':volatility_scale,'data_status':'HYPOTHETICAL_STRESS'}, {'monthly_paths':monthly})
+        'volatility_scale':volatility_scale,'data_status':'HYPOTHETICAL_STRESS',
+        'daily_bridge':'empirical_variance_template' if extended else 'gaussian_fixed_reference'},
+        {'monthly_paths':monthly,**({'lineage':lineage} if lineage is not None else {})})
     calendar=xcals.get_calendar('XNYS',start='2026-12-01',end=f'{2028+max(horizons)}-12-31')
     sessions=calendar.sessions[(calendar.sessions>=pd.Timestamp('2027-01-04')) & (calendar.sessions<pd.Timestamp(f'{2027+max(horizons)}-01-01'))].tz_localize(None)
-    ff=sources.daily_factors();empirical=(ff['Mkt-RF']+ff.RF).loc[training.index[0]:training.index[-1]]
+    ff=sources.daily_factors();empirical=(ff['Mkt-RF']+ff.RF).loc[training.index[0].to_period('M').start_time:training.index[-1]]
     daily_vol=float(np.log1p(empirical).std(ddof=1))*volatility_scale
     meta=sources.catalog['sources']['ff_daily']
     source=SourceRecord(meta['provider'],meta['url'],meta['retrieved_at'],str(meta['source_header']),meta['sha256'],
         str(empirical.index[0].date()),'USD','Hypothetical paths calibrated from observed daily factors','daily',False)
     covariance=model.innovation_covariance(vol_multiplier=volatility_scale,correlation_overrides=overrides) if model_type=='conditional_var_t' else None
     rows=[];diagnostics=[]
+    if extended:
+        templates,lengths=training_templates(np.log1p(empirical),training)
+        counts=sessions.to_series().groupby(sessions.to_period('M')).size().to_numpy()
     for path_id in range(paths):
         daily=conditional_daily_bridge(monthly[path_id],columns,sessions,seed=seed+100000+path_id,
             daily_equity_vol=daily_vol,monthly_covariance=covariance,crash_month=crash_month,crash_return=crash_return,
             initial_short_rate=initial[path_id,columns.index('short_rate')],
             initial_long_yield=initial[path_id,columns.index('long_yield')] if 'long_yield' in columns else None)
+        if extended:
+            generated=daily_bridge(monthly[path_id:path_id+1],lineage[path_id:path_id+1],columns,
+                templates,lengths,seed+100000,sessions=counts,path_ids=np.array([path_id]))[0]
+            daily['equity_return']=np.expm1(generated)
         market,divs,liquidations,costs=scenario_market(daily,annual_fee=annual_fee,borrowing_spread=borrowing_spread,
             distribution_yield=distribution_yield,source=source)
         for horizon in horizons:
@@ -288,6 +313,7 @@ def explore(sources,*,calibration_end,output,paths=16,horizons=(5,10,20,30,40),s
                     'median_max_underwater_sessions':float(np.median([r['metrics']['max_underwater_sessions'] for r in selected]))})
     report={'evidence':'HYPOTHETICAL_STRESS','investment_performance_certification':'BLOCKED','source_catalog_sha256':sources.catalog_hash,
         'model_id':model_id,'forecast_id':forecast_id,'model_type':model_type,'model_approval':'UNAPPROVED_RESEARCH_MODEL',
+        'daily_bridge':'empirical_variance_template' if extended else 'gaussian_fixed_reference',
         'calibration_end_requested':calibration_end,'training_end_actual':str(training.index[-1].date()),'columns':columns,
         'blind_nowcast_bridge_months':gap,'incomplete_training_months':model.parameters['incomplete_training_months'],
         'seed':seed,'paths':paths,'horizons':horizons,'frozen_tax_and_roth_eligibility_year':frozen_tax_year,

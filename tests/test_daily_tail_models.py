@@ -13,6 +13,7 @@ from letf.macro.daily_tails import (realized_monthly_variance,training_templates
 from letf.macro.scoring import ensemble_crps
 from letf.macro.tail_study import daily_gates
 from letf.macro.learning import ModelRegistry,REQUIRED_GATES
+from letf.macro.tail_study import common_reference_scales
 
 
 def fixture():
@@ -64,6 +65,9 @@ def test_daily_bridge_preserves_monthly_return_variance_and_chunk_identity():
     for ids in (np.arange(0,13),np.arange(13,41)):
         chunks.append(daily_bridge(monthly[ids],ix[ids],m.columns,templates,lengths,900,path_ids=ids))
     np.testing.assert_array_equal(np.concatenate(chunks),daily)
+    variable=daily_bridge(monthly[:,:2],ix[:,:2],m.columns,templates,lengths,900,sessions=np.array([19,23]))
+    np.testing.assert_allclose(variable[:,:19].sum(1),monthly[:,0,0],atol=1e-15)
+    np.testing.assert_allclose(variable[:,19:].sum(1),monthly[:,1,0],atol=1e-15)
     with pytest.raises(ValueError,match='Future daily'):
         training_templates(pd.concat([d,pd.Series([.1],index=[pd.Timestamp('2010-01-04')])]),x)
     damaged=x.copy();damaged.iloc[0,-1]+=.1
@@ -100,6 +104,17 @@ def test_registry_cannot_approve_a_tail_batch_with_only_original_monthly_gates(t
     with pytest.raises(ValueError,match='every registered'):registry.consider(batch,decision,candidate_release_ids={})
     decision['candidate']['gates']['daily_drawdown_tail95']=False
     with pytest.raises(ValueError,match='every registered'):registry.consider(batch,decision,candidate_release_ids={})
+
+
+def test_different_training_windows_cannot_change_candidate_scoring_units(tmp_path):
+    from letf.macro.artifacts import ArtifactStore
+    store=ArtifactStore(tmp_path)
+    baseline=store.put('forecasts',{'kind':'joint_block','origin':'1954-12-31',
+        'training_scale':[1.,2.,3.,4.,5.],'fixed_training_daily_sd':.01})
+    candidate=store.put('forecasts',{'kind':'long_joint_block','origin':'1954-12-31',
+        'training_scale':[100.,200.,300.,400.,500.],'fixed_training_daily_sd':.5})
+    references=common_reference_scales(store,[candidate,baseline])
+    assert references['1954-12-31']=={'forecast_id':baseline,'monthly':[1.,2.,3.,4.,5.],'daily':.01}
 
 
 def test_extended_bootstraps_fail_explicitly_for_unregistered_independent_shocks():

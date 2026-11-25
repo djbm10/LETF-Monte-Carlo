@@ -282,17 +282,25 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         if needed > 1e-6:
             raise ValueError('Insufficient account assets to fund scheduled payment')
 
-    for step, (timestamp, row) in enumerate(trading.iterrows()):
+    # Positional reads avoid allocating a pandas Series/slice for every daily
+    # row. Dates and values are exactly the already-validated input rows.
+    open_values=trading[[f'{s}_Open' for s in symbols]].to_numpy(float)
+    close_values=trading[[f'{s}_Close' for s in symbols]].to_numpy(float)
+    sweep_values=sweep_annual_rates.reindex(trading.index).to_numpy(float)
+    ex_schedules={}
+    for distribution in schedules:ex_schedules.setdefault(distribution.ex_date,[]).append(distribution)
+    payment_items=sorted(payments.items())
+    for step,timestamp in enumerate(trading.index):
         when = timestamp.date()
         # Reconcile maturation of the previous day's receivables separately.
         prior_pending = list(book.accounts[account_id].unsettled)
         prior_cash = book.accounts[account_id].cash
         book._advance(when)
         expected_cash += sum(value for due, value in prior_pending if due <= when)
-        opens = {s: float(row[f'{s}_Open']) for s in symbols}
-        closes = {s: float(row[f'{s}_Close']) for s in symbols}
+        opens = dict(zip(symbols,open_values[step].tolist()))
+        closes = dict(zip(symbols,close_values[step].tolist()))
         if step:
-            prior_rate = sweep_annual_rates.loc[:timestamp].iloc[-2]
+            prior_rate = sweep_values[step-1]
             if prior_cash < -1e-9:
                 raise UnsupportedModelError('Cash account cannot accrue interest on an unauthorized debit balance')
             if prior_rate < 0:
@@ -310,7 +318,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 expected_quantities[action['security']] *= action['ratio']
                 for suffix in ('Open','Close'):
                     signal_market.loc[signal_market.index<timestamp,f"{action['security']}_{suffix}"]/=action['ratio']
-        for distribution in schedules:
+        for distribution in ex_schedules.get(when,[]):
             if distribution.ex_date == when:
                 if distribution.category=='qualified_dividend' and qualified_holding_policy=='track_unhedged_common':
                     holding_trackers[id(distribution)]=DividendHolding(distribution,book,account_id)
@@ -346,7 +354,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 book.liquidate_security(when,action['security'],action['cash_per_share'],
                     source=action['source'],settlement_date=settlement(when))
         # Prepare tax-funded sales early enough for cash-account settlement.
-        for year, due in sorted(payments.items()):
+        for year, due in payment_items:
+            if year in paid_years:continue
             if due > last:
                 continue  # accrued/payable at termination, not a future cash event
             if due < when and year not in paid_years:
@@ -490,18 +499,21 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         account = book.accounts[account_id]
         receivable = sum(value for _, value in receivables)
         unsettled = sum(value for _, value in account.unsettled)
-        position_value = sum(book.quantity(account_id, symbol) * closes[symbol] for symbol in symbols)
+        quantities=dict.fromkeys(symbols,0.)
+        for lot in book.lots:
+            if lot.account==account_id:quantities[lot.security]+=lot.shares
+        position_value = sum(quantities[symbol] * closes[symbol] for symbol in symbols)
         nav = book.wealth(account_id, closes) + receivable
         residual = account.cash - expected_cash
         nav_residual = nav - (account.cash + unsettled + position_value + receivable)
-        quantity_residual = max(abs(book.quantity(account_id, s) - expected_quantities[s]) for s in symbols)
+        quantity_residual = max(abs(quantities[s] - expected_quantities[s]) for s in symbols)
         if abs(residual) > 1e-6 or abs(nav_residual) > 1e-6 or quantity_residual > 1e-7 or account.cash < -1e-7:
             raise AssertionError(f'Canonical account reconciliation failed on {when}: cash={residual}, NAV={nav_residual}')
         equity.append(nav)
         unit_values.append(0. if unit_extinguished else nav / units if units > 0 else np.nan)
         snapshots.append({'date': when, 'cash': account.cash, 'unsettled': unsettled,
                           'reserved': sum(account.collateral_reservations.values()), 'receivable_dividends': receivable,
-                          'positions': {s: book.quantity(account_id, s) for s in symbols},
+                          'positions': quantities,
                           'position_value': position_value, 'nav': nav, 'external_flow': net_flow,
                           'cash_residual': residual, 'nav_residual': nav_residual,
                           'quantity_residual': quantity_residual})

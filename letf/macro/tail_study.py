@@ -96,26 +96,7 @@ def run_tail_study(sources,registry,protocol,*,prior_report,output):
     receipt={'forecast_ids':forecasts,'implementation_sha256':tail_implementation_hash(),
         'protocol_sha256':sha256(canonical(protocol)).hexdigest(),'source_catalog_sha256':sources.catalog_hash}
     (output/'frozen-receipt.json').write_bytes(canonical(receipt))
-    actual,actual_meta=sources.panel();actual_daily=_logs(sources)
-    evaluations=[]
-    for fid in forecasts:
-        f,a=store.load('forecasts',fid);dates=pd.to_datetime(f['dates'])
-        if f['daily_bridge_code_sha256']!=tail_implementation_hash():raise ValueError('Frozen bridge implementation changed')
-        truth=actual.reindex(dates)[list(CORE)]
-        score=evaluate_paths(a['monthly'][:,:,:len(CORE)],truth.to_numpy(),np.array(f['training_scale'][:len(CORE)]),list(CORE),
-            score_paths=protocol['ensemble_score_sample_paths'],seed=protocol['seed'])
-        result={'forecast_id':fid,'model':f['kind'],'origin':f['origin'],
-            'evaluation_start':f['dates'][0],'evaluation_end':f['dates'][-1],'complete_evaluation':True,
-            'point_in_time_verified':bool(f['source_metadata']['point_in_time_verified']),
-            'score':score,'actual_sha256':fingerprint(truth),'actual_metadata':actual_meta,
-            'forecast_was_frozen_before_scoring':True,'daily':{}}
-        observed=actual_daily.loc[dates[0].to_period('M').start_time:dates[-1]]
-        for bridge in protocol['daily_bridges']:
-            daily=daily_bridge(a['monthly'],a['lineage'],f['columns'],a['templates'],a['lengths'],f['daily_seed'],
-                bridge=bridge,fixed_daily_sd=f['fixed_training_daily_sd'])
-            result['daily'][bridge]=evaluate_daily(daily,observed,dates,f['fixed_training_daily_sd'])
-        eid=store.put('evaluations',result);result['evaluation_id']=eid;evaluations.append(result)
-        print('evaluated',f['origin'],f['kind'],flush=True)
+    evaluations=score_frozen_tail(sources,store,forecasts,protocol)
     decisions=compare_models(evaluations,protocol);daily_summary={}
     for kind in protocol['models']:
         daily_summary[kind]={}
@@ -141,6 +122,72 @@ def run_tail_study(sources,registry,protocol,*,prior_report,output):
             'Daily variance templates are a conditional scenario assumption, not reconstructed observations',
             'No bond total-return series in this panel: stock/bond correlation forecasts remain BLOCKED',
             'No executable strategy or account wealth is calculated in this forecast-validation study']}
+    (output/'report.json').write_bytes(canonical(report));return report
+
+
+def common_reference_scales(store,forecast_ids):
+    """Proper losses require common units, even with different training windows."""
+    references={}
+    for fid in forecast_ids:
+        f,_=store.load('forecasts',fid)
+        if f['kind']=='joint_block':
+            if f['origin'] in references:raise ValueError('Duplicate baseline reference')
+            references[f['origin']]={'forecast_id':fid,'monthly':f['training_scale'],
+                'daily':f['fixed_training_daily_sd']}
+    return references
+
+
+def score_frozen_tail(sources,store,forecast_ids,protocol,*,allow_scoring_revision=False):
+    references=common_reference_scales(store,forecast_ids)
+    actual,actual_meta=sources.panel();actual_daily=_logs(sources);evaluations=[]
+    for fid in forecast_ids:
+        f,a=store.load('forecasts',fid);dates=pd.to_datetime(f['dates'])
+        if not allow_scoring_revision and f['daily_bridge_code_sha256']!=tail_implementation_hash():
+            raise ValueError('Frozen bridge implementation changed; explicit inspected rescoring required')
+        reference=references[f['origin']]
+        truth=actual.reindex(dates)[list(CORE)]
+        score=evaluate_paths(a['monthly'][:,:,:len(CORE)],truth.to_numpy(),np.array(reference['monthly'][:len(CORE)]),list(CORE),
+            score_paths=protocol['ensemble_score_sample_paths'],seed=protocol['seed'])
+        result={'forecast_id':fid,'model':f['kind'],'origin':f['origin'],
+            'evaluation_start':f['dates'][0],'evaluation_end':f['dates'][-1],'complete_evaluation':True,
+            'point_in_time_verified':bool(f['source_metadata']['point_in_time_verified']),
+            'score':score,'actual_sha256':fingerprint(truth),'actual_metadata':actual_meta,
+            'forecast_was_frozen_before_scoring':True,'daily':{},
+            'common_loss_scale_reference_forecast_id':reference['forecast_id'],
+            'scoring_implementation_sha256':tail_implementation_hash()}
+        observed=actual_daily.loc[dates[0].to_period('M').start_time:dates[-1]]
+        for bridge in protocol['daily_bridges']:
+            daily=daily_bridge(a['monthly'],a['lineage'],f['columns'],a['templates'],a['lengths'],f['daily_seed'],
+                bridge=bridge,fixed_daily_sd=f['fixed_training_daily_sd'])
+            result['daily'][bridge]=evaluate_daily(daily,observed,dates,reference['daily'])
+        eid=store.put('evaluations',result);result['evaluation_id']=eid;evaluations.append(result)
+        print('evaluated',f['origin'],f['kind'],flush=True)
+    return evaluations
+
+
+def rescore_inspected(sources,store,original_report,*,output):
+    """Correct units on frozen paths; NEVER consume outcomes again for promotion."""
+    output=Path(output);output.mkdir(parents=True,exist_ok=False)
+    before=json.loads(Path(original_report).read_text());protocol=before['protocol']
+    evaluations=score_frozen_tail(sources,store,before['receipt']['forecast_ids'],protocol,allow_scoring_revision=True)
+    for after,old in zip(evaluations,before['evaluations'],strict=True):
+        if after['forecast_id']!=old['forecast_id']:raise AssertionError('Frozen forecast replaced')
+        for bridge in protocol['daily_bridges']:
+            # The bridge recipe is unchanged for 21 sessions. Only score units
+            # change; tail distributions/coverage MUST remain identical.
+            for key,value in old['daily'][bridge].items():
+                if key!='normalized_daily_marginal_crps' and after['daily'][bridge][key]!=value:
+                    raise AssertionError('Frozen daily diagnostic changed during units correction: '+key)
+    decisions=compare_models(evaluations,protocol)
+    for d in decisions.values():d['passed']=False  # inspected, consumed evidence cannot promote
+    report={'evidence':'HYPOTHETICAL_STRESS','investment_performance_certification':'BLOCKED',
+        'status':'SCORING_CORRECTION_ON_CONSUMED_EVIDENCE_NOT_NEW_VALIDATION',
+        'original_report_sha256':sha256(Path(original_report).read_bytes()).hexdigest(),
+        'receipt':before['receipt'],'protocol_unchanged':protocol,'evaluations':evaluations,
+        'model_comparison':decisions,'daily_summary_unchanged':before['daily_summary'],
+        'normalization_correction':'All candidates use the SAME baseline training scale by origin, including daily marginal CRPS',
+        'registry_decision':'NO_PROMOTION; no second consumption or registry overwrite',
+        'source_vintage_gate':False,'original_forecasts_unchanged':True}
     (output/'report.json').write_bytes(canonical(report));return report
 
 

@@ -56,17 +56,19 @@ def daily_bridge(monthly,lineage,columns,templates,lengths,seed,*,bridge='empiri
     """
     monthly=np.asarray(monthly,float);lineage=np.asarray(lineage)
     if monthly.ndim!=3 or lineage.shape!=monthly.shape[:2] or not np.isfinite(monthly).all():raise ValueError('Invalid monthly ensemble/lineage')
-    if type(sessions)is not int or sessions<2:raise ValueError('At least two sessions required')
     if lineage.dtype.kind not in 'iu' or (lineage<0).any() or (lineage>=len(lengths)).any():raise ValueError('Invalid observed-row lineage')
     p,m,_=monthly.shape
+    counts=np.full(m,sessions,dtype=int) if type(sessions)is int else np.asarray(sessions)
+    if counts.shape!=(m,) or counts.dtype.kind not in 'iu' or (counts<2).any():raise ValueError('At least two integral sessions per month required')
     ids=np.arange(p) if path_ids is None else np.asarray(path_ids)
     if ids.shape!=(p,) or ids.dtype.kind not in 'iu' or len(set(ids.tolist()))!=p or (ids<0).any():raise ValueError('Unique nonnegative path IDs required')
     if bridge not in ('empirical_variance_template','gaussian_fixed_reference'):raise UnsupportedModelError('Unknown daily bridge')
     if bridge=='gaussian_fixed_reference' and (fixed_daily_sd is None or not np.isfinite(fixed_daily_sd) or fixed_daily_sd<=0):
         raise ValueError('Positive training daily standard deviation required')
-    eq=columns.index('equity_log');out=np.empty((p,m*sessions))
+    eq=columns.index('equity_log');out=np.empty((p,int(counts.sum())))
     if bridge=='empirical_variance_template':vi=columns.index(VARIANCE_COLUMN)
-    for t in range(m):
+    cursor=0
+    for t,count in enumerate(counts):
         rng=np.random.default_rng(np.random.SeedSequence([seed,t]))
         if bridge=='empirical_variance_template':
             selected=lineage[:,t];n=lengths[selected]
@@ -74,16 +76,17 @@ def daily_bridge(monthly,lineage,columns,templates,lengths,seed,*,bridge='empiri
             # Uniform draws, rather than bounded integer draws, preserve path-ID
             # invariance when different paths have different template lengths.
             offset=(rng.random(int(ids.max())+1)[ids]*n).astype(int)
-            index=(offset[:,None]+np.arange(sessions))%n[:,None]
+            index=(offset[:,None]+np.arange(count))%n[:,None]
             residual=templates[selected[:,None],index]
             residual=residual-residual.mean(1,keepdims=True)
             ss=np.sum(residual**2,axis=1)
             if (ss<=0).any():raise UnsupportedModelError('Degenerate sampled daily shape; no silent redraw')
             residual*=np.sqrt(np.exp(monthly[:,t,vi])/ss)[:,None]
         else:
-            residual=rng.standard_normal((int(ids.max())+1,sessions))[ids]*fixed_daily_sd
+            residual=rng.standard_normal((int(ids.max())+1,int(count)))[ids]*fixed_daily_sd
             residual-=residual.mean(1,keepdims=True)
-        out[:,t*sessions:(t+1)*sessions]=residual+monthly[:,t,eq,None]/sessions
+        out[:,cursor:cursor+count]=residual+monthly[:,t,eq,None]/count
+        cursor+=count
     if not np.isfinite(out).all():raise ValueError('Nonfinite daily paths; no dropped paths')
     return out
 

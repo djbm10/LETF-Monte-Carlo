@@ -12,14 +12,17 @@ from letf.macro.counterfactual import historical_counterfactual
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
-    for name in ('catalog','counterfactual','walkforward','tail-walkforward','diagnose-frozen','issue','evaluate-issued','evaluate-pending','parameter-sensitivity','explore'):
+    for name in ('catalog','counterfactual','walkforward','tail-walkforward','rescore-tail','sampling-study','diagnose-frozen','issue','evaluate-issued','evaluate-pending','parameter-sensitivity','explore'):
         q=sub.add_parser(name);q.add_argument('--sources',required=True,type=Path)
         if name!='catalog':q.add_argument('--output',required=True,type=Path)
         if name=='counterfactual':q.add_argument('--start',default='1930-01-01');q.add_argument('--end')
-        if name in ('walkforward','tail-walkforward','diagnose-frozen','issue','evaluate-issued','evaluate-pending'):
+        if name in ('walkforward','tail-walkforward','rescore-tail','sampling-study','diagnose-frozen','issue','evaluate-issued','evaluate-pending'):
             q.add_argument('--registry',required=True,type=Path)
             q.add_argument('--protocol',default=Path('docs/macro-learning-2026-11-24/protocol.json'),type=Path)
-        if name in ('tail-walkforward','diagnose-frozen'):q.add_argument('--prior-report',type=Path,required=True)
+        if name in ('tail-walkforward','rescore-tail','diagnose-frozen'):q.add_argument('--prior-report',type=Path,required=True)
+        if name=='sampling-study':
+            q.add_argument('--calibration-end',required=True)
+            q.add_argument('--chunk-paths',type=int,default=128)
         if name=='walkforward':q.add_argument('--paths',type=int)
         if name=='issue':q.add_argument('--require-existing',action='store_true')
         if name=='evaluate-issued':q.add_argument('--forecasts',nargs='+',required=True)
@@ -32,7 +35,8 @@ def main():
             q.add_argument('--paths',type=int,default=16)
             q.add_argument('--horizons',nargs='+',type=int,default=[5,10,20,30,40])
             q.add_argument('--seed',type=int,default=20261124)
-            q.add_argument('--model',choices=['joint_block','regime_block','conditional_var_t'],default='conditional_var_t')
+            q.add_argument('--model',choices=['joint_block','regime_block','conditional_var_t','joint_block_long_history',
+                'long_joint_block','stationary_block','volatility_stationary_block'],default='conditional_var_t')
             q.add_argument('--initial-capital',type=float,default=10000.)
             q.add_argument('--annual-contribution',type=float,default=0.)
             q.add_argument('--monthly-withdrawal',type=float,default=0.)
@@ -74,6 +78,14 @@ def main():
             annual_fee=a.annual_fee,borrowing_spread=a.borrowing_spread,distribution_yield=a.distribution_yield)
         print(json.dumps({'status':r['evidence'],'results':r['results']},indent=2));return
     protocol=json.loads(a.protocol.read_text())
+    if a.command=='sampling-study':
+        from letf.macro.sampling import sampling_study
+        r=sampling_study(sources,output=a.output,protocol=protocol,calibration_end=a.calibration_end,chunk_paths=a.chunk_paths)
+        print(json.dumps({'all_precision_gates_passed':r['all_quantile_and_probability_gates_passed'],'results':r['results']},indent=2));return
+    if a.command=='rescore-tail':
+        from letf.macro.tail_study import rescore_inspected
+        r=rescore_inspected(sources,ModelRegistry(a.registry).store,a.prior_report,output=a.output)
+        print(json.dumps(r['model_comparison'],indent=2));return
     if a.command=='tail-walkforward':
         from letf.macro.tail_study import run_tail_study
         r=run_tail_study(sources,ModelRegistry(a.registry),protocol,prior_report=a.prior_report,output=a.output)

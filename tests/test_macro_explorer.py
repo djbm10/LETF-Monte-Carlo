@@ -74,6 +74,16 @@ def test_retirement_cash_flows_require_owner_history(tmp_path):
         explore(FixtureSources(),calibration_end='2024-12-31',output=tmp_path/'missing',annual_contribution=1200.)
 
 
+def test_empirical_tail_candidate_reaches_same_canonical_account_engine(tmp_path):
+    r=explore(FixtureSources(),calibration_end='2024-12-31',output=tmp_path/'empirical',paths=2,horizons=[1],
+        model_type='volatility_stationary_block',strategies=['US1X_CF','US3X_CF'])
+    assert r['daily_bridge']=='empirical_variance_template'
+    assert r['model_approval']=='UNAPPROVED_RESEARCH_MODEL'
+    assert len(r['path_results'])==8
+    assert all(x['cash_residual_max']<1e-8 and x['nav_residual_max']<1e-7 for x in r['path_results'])
+    assert all(x['tax_paid']==0. and x['terminal_tax_payable']==0. for x in r['path_results'] if x['account']=='roth')
+
+
 def test_ordinary_income_is_not_silently_eligible_roth_compensation(tmp_path):
     with pytest.raises(UnsupportedModelError,match='eligible compensation'):
         explore(FixtureSources(),calibration_end='2024-12-31',output=tmp_path/'income',annual_contribution=1200.,

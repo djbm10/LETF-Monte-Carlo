@@ -20,6 +20,13 @@ from letf.accuracy import Evidence, UnsupportedModelError
 from letf.reconstruction import daily_series
 
 
+@lru_cache(maxsize=16)
+def equity_calendar(first,last):
+    """Reuse immutable pinned session calendars for identical replay bounds."""
+    import exchange_calendars as xcals
+    return xcals.get_calendar('XNYS',start=str(first-timedelta(days=15)),end=str(last+timedelta(days=30)))
+
+
 @dataclass(frozen=True)
 class Distribution:
     security: str
@@ -111,7 +118,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                          settlement_policy='immediate', trade_start=None, apply_taxes=True,
                          lot_method='FIFO', source_manifest=None,
                          linked_accounts=(), linked_trades=(), liquidation_events=(),
-                         freeze_roth_contribution_year=None,qualified_holding_policy='verified_at_ex'):
+                         freeze_roth_contribution_year=None,qualified_holding_policy='verified_at_ex',
+                         audit_detail=False):
     """One daily account engine for market replay and generated scenarios.
 
     Signals see previous closes. Fills use the current open with configured
@@ -171,8 +179,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         raise ValueError('Cash sweep rates must be finite and exactly aligned')
     calendar = None
     if settlement_policy == 'us_equity':
-        import exchange_calendars as xcals
-        calendar = xcals.get_calendar('XNYS', start=str(first - timedelta(days=15)), end=str(last + timedelta(days=30)))
+        calendar = equity_calendar(first,last)
         if any(not calendar.is_session(pd.Timestamp(d)) for d in trading.index):
             raise ValueError('Market rows include a non-XNYS session')
         expected_sessions=calendar.sessions_in_range(pd.Timestamp(first),pd.Timestamp(last)).tz_localize(None)
@@ -416,7 +423,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             if flow['kind'] == 'withdrawal' and funding_day(flow['date']) == when:
                 sell_for_cash(when, flow['amount'], opens, 'WITHDRAWAL_FUNDING')
                 book.accounts[account_id].collateral_reservations[f"flow:{flow['id']}"] = flow['amount']
-        net_flow = 0.
+        net_flow = 0.;flow_valuations=[]
         for flow in flows:
             if flow['date'] != when:
                 continue
@@ -454,8 +461,11 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 book.accounts[account_id].cash += amount
                 book.events.append({'date': when, 'account': account_id, 'action': 'DEPOSIT', 'amount': amount})
                 delta = amount
+            prior_units=units
             if before>0:units *= (before + delta) / before
             else:unit_extinguished=True
+            if audit_detail:flow_valuations.append({'before_nav':before,'delta':delta,
+                'units_before':prior_units,'units_after':units,'unit_extinguished':unit_extinguished})
             net_flow += delta
             external.append((when, -delta))  # investor perspective
         if step % rebalance_every == 0:
@@ -554,6 +564,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                           'position_value': position_value, 'nav': nav, 'external_flow': net_flow,
                           'cash_residual': residual, 'nav_residual': nav_residual,
                           'quantity_residual': quantity_residual})
+        if audit_detail:snapshots[-1].update(units=units,unit_extinguished=unit_extinguished,flow_valuations=flow_valuations)
         previous_date = when
     terminal_liability = 0.
     if taxable and any(t.unresolved for t in holding_trackers.values()):
@@ -586,7 +597,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         net_twr = portfolio_metrics(net_units, initial_capital, start_date=first, inflation_index=cpi)
         after_tax.update(time_weighted_cagr=net_twr['cagr'], real_time_weighted_cagr=net_twr['real_cagr'],
                          max_drawdown=net_twr['max_drawdown'], max_underwater_sessions=net_twr['max_underwater_sessions'])
-    return {'ledger': book, 'equity': curve, 'metrics': metrics, 'tax_rows': tax_rows,
+    result={'ledger': book, 'equity': curve, 'metrics': metrics, 'tax_rows': tax_rows,
             'decisions': decisions, 'reconciliation': pd.DataFrame(snapshots).set_index('date'),
             'tax_paid': withheld, 'terminal_tax_payable': terminal_liability,
             'ending_wealth_net_payable': curve.iloc[-1] - terminal_liability,
@@ -600,3 +611,6 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             'limitations': ['Daily open/close fills with assumed spread/slippage, not observed NBBO fills',
                 'Tax payments use the supplied annual schedule; withholding/estimated-tax safe harbors are external inputs',
                 'Federal regular tax/NIIT and supported state subset, not a full tax return']}
+    if audit_detail:result.update(unit_equity=unit_curve,terminal_net_unit_equity=net_units if after_tax is not None else None,
+        net_payable_equity=net_curve,drawdown_convention='Unitized cash-tax-paid NAV; terminal tax/refund payable recognized at final observation. Not daily liquidation-tax NAV.')
+    return result

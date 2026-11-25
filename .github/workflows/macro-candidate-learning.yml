@@ -10,6 +10,7 @@ on:
     - cron: '23 9 12 * *'
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: prospective-macro-registry
   cancel-in-progress: false
@@ -31,13 +32,26 @@ jobs:
         id: history
         with:
           path: audit-output/prospective-registry
-          key: macro-registry-${{ github.repository_id }}-${{ github.run_id }}
-          restore-keys: macro-registry-${{ github.repository_id }}-
+          key: macro-registry-${{ github.repository_id }}-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: macro-registry-${{ github.repository_id }}-${{ github.ref_name }}-
       - name: Refuse accidental registry reset
         if: steps.history.outputs.cache-matched-key == '' && !(github.event_name == 'workflow_dispatch' && inputs.initialize_registry)
         run: |
           echo 'Persistent evidence history absent. Restore the archived registry before retraining.'
           exit 1
+      - name: Verify restored history belongs to the latest successful run
+        if: !(github.event_name == 'workflow_dispatch' && inputs.initialize_registry)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESTORED_KEY: ${{ steps.history.outputs.cache-matched-key }}
+          REPOSITORY_ID: ${{ github.repository_id }}
+        run: |
+          previous_run=$(gh api -X GET "repos/$GITHUB_REPOSITORY/actions/workflows/macro-candidate-learning.yml/runs" -f status=success -f per_page=1 -f branch="$GITHUB_REF_NAME" --jq '.workflow_runs[0].id // empty')
+          expected_key="macro-registry-$REPOSITORY_ID-$GITHUB_REF_NAME-$previous_run"
+          if [ -z "$previous_run" ] || [ "$RESTORED_KEY" != "$expected_key" ]; then
+            echo 'The cache cannot establish the latest evidence history. Restore a durable archive; do not reuse stale selection windows.'
+            exit 1
+          fi
       - run: python scripts/capture_macro_sources.py --output audit-output/current-macro-sources
       - name: Evaluate earlier frozen forecasts before retraining
         run: python -m letf.macro.cli evaluate-pending --sources audit-output/current-macro-sources --registry audit-output/prospective-registry --output audit-output/evaluation-report
@@ -53,7 +67,7 @@ jobs:
       - uses: actions/cache/save@v4
         with:
           path: audit-output/prospective-registry
-          key: macro-registry-${{ github.repository_id }}-${{ github.run_id }}
+          key: macro-registry-${{ github.repository_id }}-${{ github.ref_name }}-${{ github.run_id }}
       - uses: actions/upload-artifact@v4
         with:
           name: prospective-macro-evidence-${{ github.run_id }}

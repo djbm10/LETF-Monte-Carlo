@@ -37,7 +37,7 @@ def bootstrap_parameters(kind,training,protocol):
     return p
 
 
-def sample_with_lineage(model,months,paths,seed,*,initial_state=None):
+def sample_with_lineage(model,months,paths,seed,*,initial_state=None,return_values=True):
     """Return joint monthly rows and their original training row indices.
 
     The original joint-block loop order is retained byte-for-byte. A restart
@@ -45,6 +45,7 @@ def sample_with_lineage(model,months,paths,seed,*,initial_state=None):
     The positive uniform mixture preserves support for every complete month.
     """
     if type(months)is not int or months<1 or type(paths)is not int or paths<1:raise ValueError('Positive integer sizes required')
+    if type(return_values)is not bool:raise ValueError('Explicit boolean return_values required')
     if model.kind not in ('joint_block',*EXTENDED_BOOTSTRAPS):raise UnsupportedModelError('No observed-row lineage for this model')
     x=model.train_values;par=model.parameters;rng=np.random.default_rng(seed)
     lineage=np.empty((paths,months),dtype=np.int32);valid=np.isfinite(x).all(1)
@@ -56,7 +57,7 @@ def sample_with_lineage(model,months,paths,seed,*,initial_state=None):
             n=min(block,months-t)
             for p in range(paths):
                 start=int(rng.choice(starts));lineage[p,t:t+n]=np.arange(start,start+n)
-        return x[lineage],lineage
+        return (x[lineage] if return_values else None),lineage
     eligible=np.flatnonzero(valid)
     if not len(eligible):raise UnsupportedModelError('No complete historical months remain')
     conditional=model.kind=='volatility_stationary_block'
@@ -91,4 +92,4 @@ def sample_with_lineage(model,months,paths,seed,*,initial_state=None):
         else:current[selected]=rng.choice(eligible,size=len(selected))
         lineage[:,t]=current
         if conditional:history=np.column_stack([history[:,1:],v[current]])
-    return x[lineage],lineage
+    return (x[lineage] if return_values else None),lineage

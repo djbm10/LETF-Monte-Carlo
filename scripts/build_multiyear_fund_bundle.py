@@ -46,24 +46,27 @@ def build(inputs, issuer_dir, output, symbol):
         for r in ici:
             # Supported corporate RIC subset. Never ignore 199A, foreign,
             # spillover, exempt, ROC or special-rate capital-gain components.
-            excluded=('K','L','O','P','S','T','V','W','X','Y','Z','AA','AB','AC','AD','AE','AG','AH','AI','AJ','AK','AL','AM','AN','AO')
+            excluded=('K','L','P','T','W','X','Y','Z','AA','AB','AC','AD','AE','AI','AK','AL','AM','AN','AO')
             if any(num(r,c) for c in excluded):raise UnsupportedModelError(f'{symbol}/{year}: additional tax components')
-            total,ordinary,qdi=num(r,'J'),num(r,'Q'),num(r,'R')
-            if not np.isclose(total,ordinary,atol=1e-9) or not 0<=qdi<=ordinary:
+            total,ordinary,qdi,cg,reit=num(r,'J'),num(r,'Q'),num(r,'U'),num(r,'V'),num(r,'AJ')
+            if not np.isclose(total,ordinary+cg,atol=1e-9) or not 0<=qdi+reit<=ordinary:
                 raise ValueError('Issuer tax components do not reconcile')
             ex=ici_date(r['H'])
             pay=ici_date(r['I'])
             if pay.year!=year or ex.year!=year:raise UnsupportedModelError('Tax-year spillover requires separate statutory mapping')
             matches=[a for a in api if pd.Timestamp(a['ExDate'])==ex]
             if len(matches)!=1 or pd.Timestamp(matches[0]['PayableDate'])!=pay:raise ValueError('Issuer date disagreement')
-            restatement=total/float(matches[0]['CashDividendPerShare'])
+            api_total=sum(float(matches[0].get(k) or 0) for k in ('CashDividendPerShare','LongTermCapGains','ShortTermCapGains','ReturnOfCapital'))
+            restatement=total/api_total
             if not np.isclose(restatement,scale.loc[ex],rtol=2e-5,atol=1e-8):
                 raise ValueError('Dated/current issuer payouts conflict with split scaling')
             source_checks.append({'ex_date':str(ex.date()),'nominal_cash':total,'issuer_restatement':restatement,
                 'dated_split_factor':float(scale.loc[ex]),'rounded_vendor_cash':float(raw.loc[ex,'Dividends'])})
-            for category,amount in [('ordinary_dividend',ordinary-qdi),('qualified_dividend',qdi)]:
+            for category,amount in [('ordinary_dividend',ordinary-qdi-reit),('qualified_dividend',qdi),
+                                   ('section199a_dividend',reit),('capital_gain_distribution',cg)]:
                 if amount:rows.append({'ex_date':ex,'pay_date':str(pay.date()),'amount_per_share':amount,
                     'category':category,'qualified_verified':category=='qualified_dividend',
+                    'section199a_verified':category=='section199a_dividend',
                     'source':f'https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_{year}.xlsx'})
         issuer_dates={ici_date(r['H']) for r in ici}
         if issuer_dates!=set(raw.loc[str(year)].loc[lambda f:f.Dividends.ne(0)].index):raise ValueError('Incomplete cash payout coverage')

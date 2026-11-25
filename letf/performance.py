@@ -51,7 +51,10 @@ def portfolio_metrics(equity, initial_capital, *, start_date, inflation_index=No
     if external_flows:
         # Do not label a contribution-boosted wealth ratio as CAGR.
         flows = [(start_date, -initial_capital), *external_flows, (equity.index[-1], values[-1])]
-        result['money_weighted_return'] = xirr(flows)
+        try:
+            result['money_weighted_return'] = -1. if values[-1]==0 and all(v<=0 for _,v in flows) else xirr(flows)
+        except UnsupportedModelError as exc:
+            result['money_weighted_return_status']='BLOCKED: '+str(exc)
         result['max_drawdown'] = None
         result['max_underwater_sessions'] = None
     elif years > 0:

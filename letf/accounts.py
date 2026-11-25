@@ -205,9 +205,16 @@ class PortfolioLedger:
                     self._match(realization, candidate, when)
 
     def execute(self, when, account_id, symbol, side, shares, price, *,
-                method='FIFO', lot_ids=None, fill_shares=None, settlement_date=None):
+                method='FIFO', lot_ids=None, fill_shares=None, settlement_date=None,
+                execution_kind='market', execution_source=None, commission_override=None):
         when = calendar_date(when)
-        positive(shares, 'shares'); positive(price, 'price')
+        if execution_kind not in ('market','liquidation','exercise','assignment'):
+            raise UnsupportedModelError('Unknown execution mechanism')
+        if execution_kind!='market' and not execution_source:
+            raise ValueError('Corporate/option delivery requires explicit execution evidence')
+        if commission_override is not None and execution_kind=='market':
+            raise ValueError('Ordinary orders use the configured broker commission')
+        positive(shares, 'shares'); positive(price, 'price',execution_kind=='liquidation' and side=='SELL')
         if side not in ('BUY', 'SELL'):
             raise ValueError('Side must be BUY or SELL')
         qty = shares if fill_shares is None else fill_shares
@@ -217,17 +224,19 @@ class PortfolioLedger:
         account = self.accounts[account_id]
         security = self.securities[symbol]
         profile = account.profile
+        commission=profile.commission if commission_override is None else commission_override
+        positive(commission,'commission',True)
         if security.kind not in profile.allowed_kinds:
             raise UnsupportedModelError('Instrument is not permitted by the brokerage profile')
         if not profile.fractional_shares and not float(qty).is_integer():
             raise ValueError('Broker requires integer shares')
         if security.inception and when < security.inception:
             raise UnsupportedModelError('Product did not yet exist; use a labelled proxy instrument')
-        if security.closure and when >= security.closure:
+        if security.closure and when >= security.closure and not (execution_kind=='liquidation' and when==security.closure):
             raise UnsupportedModelError('Product is closed; provide liquidation corporate action')
         slip = (profile.spread_bps / 2 + profile.slippage_bps) / 10000
-        execution_price = price * (1 + slip if side == 'BUY' else 1 - slip)
-        positive(execution_price, 'execution price')
+        execution_price = price * (1 + slip if side == 'BUY' else 1 - slip) if execution_kind=='market' else price
+        positive(execution_price, 'execution price',execution_kind=='liquidation' and side=='SELL')
         settle = calendar_date(settlement_date) if settlement_date else when
         if settle < when:
             raise ValueError('Settlement cannot precede execution')
@@ -235,7 +244,7 @@ class PortfolioLedger:
         # before evaluating today's buying power.
         self._advance(when)
         if side == 'BUY':
-            cost = qty * execution_price + profile.commission
+            cost = qty * execution_price + commission
             if account.buying_power + 1e-9 < cost or account.cash < profile.minimum_equity:
                 raise ValueError('Insufficient settled cash or brokerage account minimum')
             account.cash -= cost
@@ -259,7 +268,7 @@ class PortfolioLedger:
                 raise UnsupportedModelError('Audited lot methods: FIFO, HIFO, SPEC_ID')
             if sum(l.shares for l in lots) < qty - 1e-9:
                 raise ValueError('Insufficient shares; naked short sales are unsupported')
-            proceeds = qty * execution_price - profile.commission
+            proceeds = qty * execution_price - commission
             if proceeds < 0:
                 raise ValueError('Commission exceeds sale proceeds')
             remaining = qty
@@ -301,17 +310,34 @@ class PortfolioLedger:
                 account.unsettled.append((settle, proceeds))
         self.events.append({'date': when, 'account': account_id, 'security': symbol,
                             'action': side, 'shares': qty, 'price': execution_price,
-                            'commission': profile.commission,
+                            'commission': commission,
                             'spread_slippage_cost': qty * abs(execution_price - price),
-                            'settlement_date': settle})
+                            'settlement_date': settle,'execution_kind':execution_kind,'source':execution_source})
         return self.events[-1]
 
-    def income(self, when, account_id, amount, category, *, qualified_verified=False):
+    def liquidate_security(self,when,symbol,cash_per_share,*,source,settlement_date):
+        """Sourced cash liquidation, including zero residual NAV; not a mark."""
+        when=calendar_date(when);positive(cash_per_share,'liquidation proceeds',True)
+        if not source:raise ValueError('Liquidation evidence required')
+        security=self.securities[symbol]
+        if security.closure and security.closure!=when:raise ValueError('Conflicting closure dates')
+        self.securities[symbol]=replace(security,closure=when)
+        for account in self.accounts:
+            qty=self.quantity(account,symbol)
+            if qty>1e-10:
+                event=self.execute(when,account,symbol,'SELL',qty,cash_per_share,settlement_date=settlement_date,
+                    execution_kind='liquidation',execution_source=source,commission_override=0.)
+                event['reason']='FUND_LIQUIDATION'
+        self.events.append({'date':when,'action':'FUND_CLOSURE','security':symbol,'cash_per_share':cash_per_share,'source':source})
+
+    def income(self, when, account_id, amount, category, *, qualified_verified=False, section199a_verified=False):
         positive(amount, 'income', True)
-        if category not in ('interest', 'ordinary_dividend', 'qualified_dividend', 'capital_gain_distribution'):
+        if category not in ('interest', 'ordinary_dividend', 'qualified_dividend', 'capital_gain_distribution','section199a_dividend'):
             raise UnsupportedModelError('Unsupported distribution classification')
         if category == 'qualified_dividend' and not qualified_verified:
             raise UnsupportedModelError('Qualified-dividend issuer and holding-period tests must be verified')
+        if category == 'section199a_dividend' and not section199a_verified:
+            raise UnsupportedModelError('Section 199A issuer and investor holding-period tests must be verified')
         when = self._advance(when)
         account = self.accounts[account_id]
         account.cash += amount
@@ -371,7 +397,7 @@ class PortfolioLedger:
                                       elections=TaxpayerElections(), filing_status=filing_status,
                                       taxable_income_before_loss=max(0., ordinary_income +
                                           inc.get('interest', 0.) + inc.get('ordinary_dividend', 0.) +
-                                          inc.get('qualified_dividend', 0.) - standard))
+                                          inc.get('qualified_dividend', 0.) + inc.get('section199a_dividend',0.) - standard))
         kwargs = dict(ordinary_income=ordinary_income, include_state=not federal_only,
                       state_code=state_code, filing_status=filing_status, tax_year=table_year)
         baseline = calculate_comprehensive_tax_v6(0., 0., 0., **kwargs)
@@ -380,6 +406,7 @@ class PortfolioLedger:
             qualified_dividends=inc.get('qualified_dividend', 0.),
             ordinary_dividends=inc.get('ordinary_dividend', 0.),
             interest_income=inc.get('interest', 0.),
+            section199a_dividends=inc.get('section199a_dividend',0.),
             state_inputs=dict(activity, st_cf=state_st_cf, lt_cf=state_lt_cf) if state_code == 'MA' else None, **kwargs)
         # Loss deductions may reduce household taxes: preserve the negative
         # incremental liability; cash refunds require a separate payment event.

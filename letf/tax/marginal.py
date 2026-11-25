@@ -140,6 +140,7 @@ def calculate_comprehensive_tax_v6(
     tax_year: int = 2026, qualified_dividends: float = 0,
     ordinary_dividends: float = 0, interest_income: float = 0,
     itemized_deduction: float = None, state_inputs: Dict = None,
+    section199a_dividends: float = 0,
 ) -> Dict:
     """Regular federal income tax + NIIT for the explicitly supported scope.
 
@@ -153,7 +154,7 @@ def calculate_comprehensive_tax_v6(
     from letf.tax.years import federal_parameters
     from letf.accuracy import UnsupportedModelError
     values = (taxable_st, taxable_lt, capital_loss_deduction, ordinary_income,
-              qualified_dividends, ordinary_dividends, interest_income)
+              qualified_dividends, ordinary_dividends, interest_income, section199a_dividends)
     if any(not math.isfinite(x) or x < 0 for x in values):
         raise ValueError('Income inputs must be finite and nonnegative')
     if bracket_multiplier != 1.0:
@@ -165,7 +166,9 @@ def calculate_comprehensive_tax_v6(
     if itemized_deduction is not None and (not math.isfinite(itemized_deduction) or itemized_deduction < 0):
         raise ValueError('Itemized deduction must be a verified nonnegative amount')
     deduction = standard if itemized_deduction is None else max(standard, itemized_deduction)
-    ordinary_gross = ordinary_income + ordinary_dividends + interest_income
+    if section199a_dividends and tax_year not in (2024,2025):
+        raise UnsupportedModelError('Qualified RIC/REIT dividend deduction verified only for 2024-25')
+    ordinary_gross = ordinary_income + ordinary_dividends + interest_income + section199a_dividends
     # A capital-loss deduction can also reduce AGI consisting of qualified
     # dividends. Preserve a negative ordinary component for that allocation.
     ordinary_base = ordinary_gross - capital_loss_deduction
@@ -175,13 +178,18 @@ def calculate_comprehensive_tax_v6(
     # income too (Qualified Dividends and Capital Gain Tax Worksheet).
     ordinary_taxable = max(0., with_st - deduction)
     preferred_taxable = max(0., preferred - max(0., deduction - with_st))
-    federal_ordinary = calculate_marginal_tax(ordinary_base, ordinary_brackets, deduction)
-    federal_st = calculate_marginal_tax(with_st, ordinary_brackets, deduction) - federal_ordinary
+    # Form 8995 REIT/RIC-only subset: no business/PTP losses or other QBI.
+    # Below-line deduction does not reduce AGI/NIIT or MA income.
+    qbi_deduction=min(.20*section199a_dividends,
+        .20*max(0.,ordinary_taxable+preferred_taxable-preferred))
+    ordinary_taxable-=qbi_deduction
+    federal_ordinary = calculate_marginal_tax(ordinary_base, ordinary_brackets, deduction+qbi_deduction)
+    federal_st = calculate_marginal_tax(with_st, ordinary_brackets, deduction+qbi_deduction) - federal_ordinary
     federal_ltcg, breakdown = calculate_ltcg_tax_stacked(
         preferred_taxable, ordinary_taxable, ltcg_brackets)
     federal_total = federal_ordinary + federal_st + federal_ltcg
     magi = ordinary_gross + taxable_st + preferred - capital_loss_deduction
-    investment_income = max(0., taxable_st + preferred + ordinary_dividends + interest_income
+    investment_income = max(0., taxable_st + preferred + ordinary_dividends + interest_income + section199a_dividends
                              - capital_loss_deduction)
     niit_tax = .038 * min(investment_income, max(0., magi - threshold)) if include_niit else 0.
     state_tax = 0.
@@ -197,7 +205,7 @@ def calculate_comprehensive_tax_v6(
                 raise UnsupportedModelError('MA losses require raw activity and independent state carryovers')
             activity = state_inputs if state_inputs is not None else dict(st_gains=taxable_st, lt_gains=taxable_lt)
             state_calculation = massachusetts_tax(tax_year, ordinary_income, interest=interest_income,
-                dividends=ordinary_dividends + qualified_dividends, filing_status=filing_status, **activity)
+                dividends=ordinary_dividends + qualified_dividends + section199a_dividends, filing_status=filing_status, **activity)
             state_tax = state_calculation['total_tax']
         elif state_code not in ('TX', 'FL', 'NV'):
             raise UnsupportedModelError(f'No validated state model for {state_code}/{tax_year}')
@@ -211,6 +219,7 @@ def calculate_comprehensive_tax_v6(
         'ltcg_stacking_used': True, 'tax_year': tax_year,
         'scope': 'regular federal tax and NIIT; excludes AMT/credits/special-rate gains',
         'state_scope': state_code if include_state else 'FEDERAL ONLY',
+        'section199a_dividend_deduction':qbi_deduction,
     }
 
 

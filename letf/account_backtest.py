@@ -29,11 +29,12 @@ class Distribution:
     category: str
     source: str
     qualified_verified: bool = False
+    section199a_verified: bool = False
 
     def __post_init__(self):
         if self.pay_date < self.ex_date or not self.source or not isfinite(self.amount_per_share) or self.amount_per_share < 0:
             raise ValueError('Invalid sourced distribution schedule')
-        if self.category not in ('interest', 'ordinary_dividend', 'qualified_dividend', 'capital_gain_distribution'):
+        if self.category not in ('interest', 'ordinary_dividend', 'qualified_dividend', 'capital_gain_distribution','section199a_dividend'):
             raise UnsupportedModelError('Return of capital/special distributions require a separate basis action')
 
 
@@ -94,7 +95,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                          inflation_index=None, cash_flows=(), roth_history_config=None,
                          settlement_policy='immediate', trade_start=None, apply_taxes=True,
                          lot_method='FIFO', source_manifest=None,
-                         linked_accounts=(), linked_trades=()):
+                         linked_accounts=(), linked_trades=(), liquidation_events=(),
+                         freeze_roth_contribution_year=None):
     """One daily account engine for market replay and generated scenarios.
 
     Signals see previous closes. Fills use the current open with configured
@@ -104,7 +106,9 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     """
     from letf.tax.roth import RothHistory
     from letf.performance import portfolio_metrics
-    if price_convention != 'as_traded':
+    scenario=(price_convention=='scenario_nominal' and source_manifest and
+              source_manifest.get('data_status')==Evidence.HYPOTHETICAL.value)
+    if price_convention != 'as_traded' and not scenario:
         raise UnsupportedModelError('Tax/execution replay needs as-traded prices, not adjusted total-return levels')
     if not distributions_complete:
         raise UnsupportedModelError('Complete classified distributions and payable dates are required')
@@ -114,19 +118,27 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         raise UnsupportedModelError('Unknown settlement convention')
     if not len(market):
         raise ValueError('Empty market')
+    for action in liquidation_events:
+        if action.get('timing','open') not in ('open','close') or not action.get('source'):
+            raise UnsupportedModelError('Liquidation requires explicit open/close timing and source evidence')
     symbols = [s.symbol for s in securities]
     if not symbols or len(symbols) != len(set(symbols)):
         raise ValueError('Unique instruments required')
     for symbol in symbols:
         for suffix in ('Open', 'Close'):
             daily_series(market[f'{symbol}_{suffix}'], f'{symbol}_{suffix}')
-            if (market[f'{symbol}_{suffix}'] <= 0).any():
+            nonpositive=market[f'{symbol}_{suffix}']<=0
+            permitted=[a for a in liquidation_events if a['security']==symbol and a.get('source')]
+            if nonpositive.any() and (len(permitted)!=1 or (market[f'{symbol}_{suffix}']<0).any() or
+                (market.index[nonpositive]<pd.Timestamp(permitted[0]['date'])).any()):
                 raise ValueError('Nonpositive prices require explicit liquidation actions')
     first = pd.Timestamp(trade_start) if trade_start else market.index[0]
     trading = market.loc[first:]
     if not len(trading):
         raise ValueError('No trading sessions after trade_start')
     first, last = trading.index[0].date(), trading.index[-1].date()
+    if profile.account_type=='roth' and first<date(1998,1,1):
+        raise UnsupportedModelError('Roth IRA historical availability begins in 1998; early counterfactual indexes are not Roth accounts')
     taxable = profile.account_type == 'taxable' and apply_taxes
     if taxable and tax_inputs is None:
         raise ValueError('Explicit taxable household inputs are required')
@@ -179,6 +191,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             raise ValueError('External flow amount must be positive')
         flows.append(f)
     book = PortfolioLedger();book.add_account(account_id, profile, initial_capital)
+    if hasattr(allocator,'reset'):allocator.reset()
     for linked in linked_accounts:
         book.add_account(linked['id'], linked['profile'], linked['cash'], taxpayer=linked.get('taxpayer','owner'))
     for trade in linked_trades:
@@ -202,7 +215,30 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     expected_quantities = dict.fromkeys(symbols, 0.)
     event_cursor = 0
     previous_date = first
+    unit_extinguished=False
     schedules = sorted(distributions, key=lambda d: (d.ex_date, d.pay_date))
+    # Execution quotes remain nominal. Signals get a causal total-return
+    # reference and split-normalized price history, never a future split.
+    signal_market=market.copy()
+    for symbol in symbols:
+        split_ratios=pd.Series(1.,index=market.index)
+        cash_amounts=pd.Series(0.,index=market.index)
+        for action in split_events:
+            timestamp=pd.Timestamp(action['date'])
+            if action['security']==symbol and timestamp in market.index:split_ratios.loc[timestamp]*=action['ratio']
+        for dist in schedules:
+            if dist.security==symbol and pd.Timestamp(dist.ex_date) in market.index:
+                cash_amounts.loc[pd.Timestamp(dist.ex_date)]+=dist.amount_per_share
+        closes=market[f'{symbol}_Close']
+        previous=closes.shift(1)
+        gross=(closes+cash_amounts)*split_ratios/previous
+        gross.loc[previous.eq(0)&closes.eq(0)]=1.
+        gross.iloc[0]=1.
+        signal_market[f'{symbol}_TR_Close']=closes.iloc[0]*gross.cumprod()
+    for action in split_events:
+        if calendar_date(action['date'])<first:
+            for suffix in ('Open','Close'):
+                signal_market.loc[signal_market.index<pd.Timestamp(action['date']),f"{action['security']}_{suffix}"]/=action['ratio']
 
     def tax_for(year, as_of):
         income = tax_inputs.get('ordinary_income_by_year', {}).get(year, tax_inputs.get('ordinary_income'))
@@ -224,6 +260,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             if needed <= 1e-8:
                 break
             owned = book.quantity(account_id, symbol)
+            if owned<=1e-10:continue
             unit_net = opens[symbol] * (1 - (profile.spread_bps / 2 + profile.slippage_bps) / 10000)
             shares = min(owned, (needed + profile.commission) / unit_net)
             if not profile.fractional_shares:
@@ -248,27 +285,34 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         closes = {s: float(row[f'{s}_Close']) for s in symbols}
         if step:
             prior_rate = sweep_annual_rates.loc[:timestamp].iloc[-2]
-            interest = prior_cash * prior_rate * (when - previous_date).days / 365
-            if interest < 0:
+            if prior_cash < -1e-9:
+                raise UnsupportedModelError('Cash account cannot accrue interest on an unauthorized debit balance')
+            if prior_rate < 0:
                 raise UnsupportedModelError('Negative sweep yield requires an explicit fee event')
+            # Execution accepts at most 1e-9 of floating-point roundoff. That
+            # tolerance is not an interest-bearing margin loan.
+            interest = max(0., prior_cash) * prior_rate * (when - previous_date).days / 365
             if interest:
                 book.income(when, account_id, interest, 'interest')
         for action in split_events:
             if calendar_date(action['date']) == when:
                 book.split(when, action['security'], action['ratio'])
                 expected_quantities[action['security']] *= action['ratio']
+                for suffix in ('Open','Close'):
+                    signal_market.loc[signal_market.index<timestamp,f"{action['security']}_{suffix}"]/=action['ratio']
         for distribution in schedules:
             if distribution.ex_date == when:
-                if taxable and distribution.category == 'qualified_dividend':
+                if taxable and distribution.category in ('qualified_dividend','section199a_dividend'):
                     entitled=[lot for lot in book.lots if lot.account==account_id and
                               lot.security==distribution.security and lot.shares>1e-10]
-                    if any((when-lot.acquired).days<=60 for lot in entitled):
+                    days_needed=60 if distribution.category=='qualified_dividend' else 45
+                    if any((when-lot.acquired).days<=days_needed for lot in entitled):
                         raise UnsupportedModelError('Qualified dividend needs investor holding-period proof; future 121-day eligibility is not inferred')
                 receivables.append((distribution, book.quantity(account_id, distribution.security) * distribution.amount_per_share))
         for distribution, amount in list(receivables):
             if distribution.pay_date <= when:
                 book.income(when, account_id, amount, distribution.category,
-                            qualified_verified=distribution.qualified_verified)
+                            qualified_verified=distribution.qualified_verified,section199a_verified=distribution.section199a_verified)
                 receivables.remove((distribution, amount))
         for trade in linked_trades:
             if calendar_date(trade['date']) == when:
@@ -276,6 +320,10 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                     trade['shares'], trade['price'], settlement_date=settlement(when))
                 event['source'] = trade['source']
                 event['reason'] = 'LINKED_ACCOUNT_EXECUTION'
+        for action in liquidation_events:
+            if calendar_date(action['date'])==when and action.get('timing','open')=='open':
+                book.liquidate_security(when,action['security'],action['cash_per_share'],
+                    source=action['source'],settlement_date=settlement(when))
         # Prepare tax-funded sales early enough for cash-account settlement.
         for year, due in sorted(payments.items()):
             if due > last:
@@ -309,7 +357,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             if flow['date'] != when:
                 continue
             before = book.wealth(account_id, opens) + sum(v for _, v in receivables)
-            if before <= 0 or units <= 0:
+            if before < 0 or units <= 0:
                 raise UnsupportedModelError('Cannot unitize new flows into an insolvent or fully closed account')
             amount, kind = flow['amount'], flow['kind']
             if kind == 'withdrawal':
@@ -329,7 +377,10 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                     history.contribute(when, account_id, amount, tax_year=flow.get('tax_year', when.year),
                         magi=flow['magi'], compensation=flow['compensation'],
                         filing_status=flow.get('filing_status', 'single'),
-                        other_ira_contributions=flow.get('other_ira_contributions', 0.))
+                        other_ira_contributions=flow.get('other_ira_contributions', 0.),
+                        eligibility_table_year=freeze_roth_contribution_year)
+                    # Future eligibility is only a caller-selected frozen-law
+                    # stress assumption; actual tax-year contribution keys stay dated.
                 else:
                     history.convert(when, account_id, amount, flow['taxable_amount'], kind=kind)
                 delta = amount
@@ -339,27 +390,36 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 book.accounts[account_id].cash += amount
                 book.events.append({'date': when, 'account': account_id, 'action': 'DEPOSIT', 'amount': amount})
                 delta = amount
-            units *= (before + delta) / before
+            if before>0:units *= (before + delta) / before
+            else:unit_extinguished=True
             net_flow += delta
             external.append((when, -delta))  # investor perspective
         if step % rebalance_every == 0:
             wealth = book.wealth(account_id, opens)
             weights = {s: book.quantity(account_id, s) * opens[s] / wealth for s in symbols} if wealth > 0 else {}
-            past = market.loc[market.index < timestamp]
+            past = signal_market.loc[signal_market.index < timestamp]
             target = allocator(past.copy(), weights)
             if set(target) - set(symbols) or any(not isfinite(w) or w < 0 for w in target.values()) or sum(target.values()) > 1 + 1e-12:
                 raise UnsupportedModelError('Target violates cash-account permissions/no-borrowing constraint')
+            target=dict(target)
+            for symbol in symbols:
+                if book.securities[symbol].closure and when>=book.securities[symbol].closure and target.get(symbol,0)>0:
+                    target[symbol]=0.
+                    book.events.append({'date':when,'account':account_id,'action':'ORDER_REJECTED',
+                        'security':symbol,'reason':'Closed product; no reinvestment possible'})
             decisions.append({'date': when, 'weights': dict(target)})
-            desired = {s: wealth * target.get(s, 0.) / opens[s] for s in symbols}
+            desired = {s: wealth * target.get(s, 0.) / opens[s] if opens[s]>0 else 0. for s in symbols}
             if not profile.fractional_shares:
                 desired = {s: float(np.floor(n)) for s, n in desired.items()}
             for symbol in symbols:
+                if opens[symbol]<=0:continue
                 sell = book.quantity(account_id, symbol) - desired[symbol]
                 if sell > 1e-9:
                     event = book.execute(when, account_id, symbol, 'SELL', sell, opens[symbol],
                                          method=lot_method, settlement_date=settlement(when))
                     event['reason'] = 'STRATEGY'
             for symbol in symbols:
+                if opens[symbol]<=0:continue
                 buy = desired[symbol] - book.quantity(account_id, symbol)
                 slip = (profile.spread_bps / 2 + profile.slippage_bps) / 10000
                 affordable = max(0., (book.accounts[account_id].buying_power - profile.commission) / (opens[symbol] * (1 + slip)))
@@ -369,6 +429,10 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 if buy > 1e-9:
                     event = book.execute(when, account_id, symbol, 'BUY', buy, opens[symbol])
                     event['reason'] = 'STRATEGY'
+        for action in liquidation_events:
+            if calendar_date(action['date'])==when and action.get('timing','open')=='close':
+                book.liquidate_security(when,action['security'],action['cash_per_share'],
+                    source=action['source'],settlement_date=settlement(when))
         if terminal_liquidation and when == last:
             for symbol in symbols:
                 shares = book.quantity(account_id, symbol)
@@ -404,7 +468,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         if abs(residual) > 1e-6 or abs(nav_residual) > 1e-6 or quantity_residual > 1e-7 or account.cash < -1e-7:
             raise AssertionError(f'Canonical account reconciliation failed on {when}: cash={residual}, NAV={nav_residual}')
         equity.append(nav)
-        unit_values.append(nav / units if units > 0 else np.nan)
+        unit_values.append(0. if unit_extinguished else nav / units if units > 0 else np.nan)
         snapshots.append({'date': when, 'cash': account.cash, 'unsettled': unsettled,
                           'reserved': sum(account.collateral_reservations.values()), 'receivable_dividends': receivable,
                           'positions': {s: book.quantity(account_id, s) for s in symbols},
@@ -437,7 +501,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     after_tax = portfolio_metrics(net_curve, initial_capital, start_date=first, inflation_index=cpi,
                                   external_flows=external) if terminal_liquidation else None
     if after_tax is not None:
-        net_units = unit_curve.copy();net_units.iloc[-1] *= net_curve.iloc[-1] / curve.iloc[-1]
+        net_units = unit_curve.copy();net_units.iloc[-1] = 0. if unit_extinguished else net_curve.iloc[-1]/units*initial_capital
         net_twr = portfolio_metrics(net_units, initial_capital, start_date=first, inflation_index=cpi)
         after_tax.update(time_weighted_cagr=net_twr['cagr'], real_time_weighted_cagr=net_twr['real_cagr'],
                          max_drawdown=net_twr['max_drawdown'], max_underwater_sessions=net_twr['max_underwater_sessions'])

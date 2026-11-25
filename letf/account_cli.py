@@ -18,6 +18,13 @@ from letf.account_backtest import run_account_backtest, Distribution
 from letf.accuracy import UnsupportedModelError
 
 
+def _verified_flag(value):
+    if value is None or pd.isna(value):return False
+    if isinstance(value,(bool,np.bool_)):return bool(value)
+    if isinstance(value,str) and value.lower() in ('true','false'):return value.lower()=='true'
+    raise ValueError('Tax verification flags require explicit true/false values')
+
+
 def load_bundle(folder):
     folder = Path(folder)
     manifest = json.loads((folder / 'manifest.json').read_text())
@@ -45,7 +52,8 @@ def load_bundle(folder):
         for ex_date, row in files['distributions'].iterrows():
             distributions.append(Distribution(symbol, ex_date.date(), pd.Timestamp(row.pay_date).date(),
                 float(row.amount_per_share), row.category, row.source,
-                qualified_verified=bool(row.get('qualified_verified', False))))
+                qualified_verified=_verified_flag(row.get('qualified_verified', False)),
+                section199a_verified=_verified_flag(row.get('section199a_verified',False))))
     elif ('Dividends' not in prices or 'Stock Splits' not in prices or
           prices[['Dividends', 'Stock Splits']].to_numpy().any()):
         raise UnsupportedModelError('Nonzero/missing corporate actions need a complete explicit action schedule')

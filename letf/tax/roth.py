@@ -82,7 +82,7 @@ class RothHistory:
 
     def contribute(self, when, account_id, amount, *, tax_year, magi, compensation,
                    filing_status='single', other_ira_contributions=0.,
-                   lived_with_spouse=True, contribution_deadline=None):
+                   lived_with_spouse=True, contribution_deadline=None, eligibility_table_year=None):
         when = calendar_date(when)
         positive(amount, 'contribution')
         deadline = calendar_date(contribution_deadline) if contribution_deadline else date(tax_year, 12, 31)
@@ -90,7 +90,8 @@ class RothHistory:
             raise ValueError('Outside the supplied contribution-year deadline')
         account = self._account(account_id)
         age = relativedelta(date(tax_year, 12, 31), self.birth_date).years
-        limit = contribution_limit(tax_year, age, magi, compensation,
+        table_year=eligibility_table_year if eligibility_table_year is not None else tax_year
+        limit = contribution_limit(table_year, age, magi, compensation,
                                    filing_status=filing_status,
                                    other_ira_contributions=other_ira_contributions,
                                    lived_with_spouse=lived_with_spouse)
@@ -102,7 +103,9 @@ class RothHistory:
         account.cash += amount
         self.first_tax_year = min(self.first_tax_year or tax_year, tax_year)
         self.ledger.events.append({'date': when, 'action': 'ROTH_CONTRIBUTION',
-                                   'account': account_id, 'amount': amount, 'tax_year': tax_year})
+                                   'account': account_id, 'amount': amount, 'tax_year': tax_year,
+                                   'eligibility_table_year':table_year,
+                                   'eligibility_evidence':'HYPOTHETICAL_STRESS' if table_year!=tax_year else 'OBSERVED'})
 
     def convert(self, when, account_id, amount, taxable_amount, *, kind='conversion'):
         """External traditional-IRA conversion or non-Roth qualified-plan rollover.

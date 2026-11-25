@@ -46,6 +46,8 @@ class BrokerProfile:
     def __post_init__(self):
         if self.account_type not in ('taxable', 'roth'):
             raise ValueError('Account type must be taxable or roth')
+        if type(self.fractional_shares)is not bool:
+            raise ValueError('Fractional-share permission must be an explicit boolean')
         for name in ('minimum_equity', 'commission', 'spread_bps', 'slippage_bps'):
             positive(getattr(self, name), name, True)
 

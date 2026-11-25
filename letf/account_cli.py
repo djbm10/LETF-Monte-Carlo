@@ -66,7 +66,7 @@ def load_bundle(folder, *, allow_fixture=False):
             files[name] = pd.read_csv(path, index_col=0, parse_dates=True)
     symbol = manifest['symbol']
     prices = files['prices']
-    if not manifest.get('distributions_complete'):
+    if manifest.get('distributions_complete') is not True:
         raise UnsupportedModelError('Distribution classification/payable dates are incomplete')
     distributions = []
     if 'distributions' in files:
@@ -86,7 +86,7 @@ def load_bundle(folder, *, allow_fixture=False):
         actions=manifest.get('split_events',[])
         observed=prices.loc[prices['Stock Splits'].ne(0),'Stock Splits']
         supplied={pd.Timestamp(a['date']):a['ratio'] for a in actions}
-        if (not manifest.get('corporate_actions_reviewed') or len(supplied)!=len(actions) or
+        if (manifest.get('corporate_actions_reviewed') is not True or len(supplied)!=len(actions) or
             set(supplied)!=set(observed.index) or any(not a.get('source') or a.get('security')!=symbol for a in actions) or
             any(not np.isfinite(v) or v<=0 or v!=float(observed.loc[d]) for d,v in supplied.items())):
             raise UnsupportedModelError('Use a reviewed split/deliverable bundle; vendor split-restated OHLC is not sufficient')

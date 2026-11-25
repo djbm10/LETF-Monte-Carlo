@@ -73,6 +73,18 @@ def test_unknown_tax_law_external_accounts_and_frozen_mislabel_are_blocked(tmp_p
     with pytest.raises(UnsupportedModelError,match='Linked'):validate_request(r)
 
 
+def test_string_false_cannot_grant_broker_permission_or_distribution_completeness(tmp_path):
+    from dataclasses import replace
+    from letf.accounts import CONSERVATIVE_ROTH
+    from letf.account_cli import load_bundle
+    for value in ('false','False',0,1):
+        with pytest.raises(ValueError,match='boolean'):replace(CONSERVATIVE_ROTH,fractional_shares=value)
+    folder=Path(bundle(tmp_path/'X','X'));m=json.loads((folder/'manifest.json').read_text())
+    for value in ('false','False',1):
+        m['distributions_complete']=value;(folder/'manifest.json').write_text(json.dumps(m))
+        with pytest.raises(UnsupportedModelError,match='incomplete'):load_bundle(folder)
+
+
 def test_original_versions_and_corrected_cash_signals_are_explicit():
     records=registry();assert {f'S{i}' for i in range(1,20)}<={r['id'] for r in records}
     with pytest.raises(UnsupportedModelError):make_allocator({'id':'S16','version':'legacy_rules_v1'})

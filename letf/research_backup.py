@@ -83,24 +83,33 @@ def create_bundle(roots,output,*,provenance=None):
 def verify_bundle(archive,expected_sha256,*,maximum_bytes=20_000_000_000):
     if not re.fullmatch('[a-f0-9]{64}',expected_sha256 or '') or file_hash(archive)!=expected_sha256:
         raise ValueError('Private archive does not match externally retained trusted checksum')
-    with tarfile.open(archive,'r:gz') as tar:
-        members=tar.getmembers();names=[m.name for m in members]
-        if len(members)>100000 or len(set(names))!=len(names):raise ValueError('Duplicate or excessive archive members')
-        if sum(m.size for m in members)>maximum_bytes:raise ValueError('Recovery exceeds reviewed size budget')
-        for member in members:
-            safe_name(member.name)
-            if member.type!=tarfile.REGTYPE or member.size<0:raise ValueError('Only ordinary files permitted in research recovery')
-        if 'recovery-manifest.json' not in names:raise ValueError('Missing recovery manifest')
-        if tar.getmember('recovery-manifest.json').size>50_000_000:raise ValueError('Oversized manifest')
-        manifest=json.load(tar.extractfile('recovery-manifest.json'))
-        if manifest.get('schema')!='private-research-recovery-v1' or set(names)!={'recovery-manifest.json',*manifest['files']}:
+    # Compressed-tar random seeks repeatedly decompress the archive, becoming
+    # quadratic when canonical manifest order differs from physical file order.
+    # Read every member once in physical order, with bounded manifest/size checks.
+    with tarfile.open(archive,'r|gz') as tar:
+        first=tar.next()
+        if first is None or first.name!='recovery-manifest.json' or first.type!=tarfile.REGTYPE:
+            raise ValueError('Missing first ordinary recovery manifest')
+        if not 0<=first.size<=50_000_000:raise ValueError('Oversized manifest')
+        manifest=json.load(tar.extractfile(first));files=manifest.get('files',{})
+        if manifest.get('schema')!='private-research-recovery-v1' or not files or len(files)>99999:
             raise ValueError('Recovery manifest inventory mismatch')
-        for name,identity in manifest['files'].items():
-            if tar.getmember(name).size!=identity['bytes']:raise ValueError('Recovery size mismatch')
-            h=sha256()
-            with tar.extractfile(name) as stream:
+        for name,identity in files.items():
+            safe_name(name)
+            if name=='recovery-manifest.json' or type(identity.get('bytes'))is not int or identity['bytes']<0 or not re.fullmatch('[a-f0-9]{64}',identity.get('sha256','')):
+                raise ValueError('Invalid recovery identity')
+        if sum(v['bytes'] for v in files.values())+first.size>maximum_bytes:raise ValueError('Recovery exceeds reviewed size budget')
+        seen=set()
+        for member in tar:
+            if member is first:continue  # tar's iterator can yield its cached first header
+            safe_name(member.name)
+            if member.name in seen or member.name not in files:raise ValueError('Duplicate or undeclared archive member')
+            if member.type!=tarfile.REGTYPE or member.size!=files[member.name]['bytes']:raise ValueError('Nonordinary file or recovery size mismatch')
+            seen.add(member.name);h=sha256()
+            with tar.extractfile(member) as stream:
                 for block in iter(lambda:stream.read(1024*1024),b''):h.update(block)
-            if h.hexdigest()!=identity['sha256']:raise ValueError('Private research member checksum mismatch')
+            if h.hexdigest()!=files[member.name]['sha256']:raise ValueError('Private research member checksum mismatch')
+        if seen!=set(files):raise ValueError('Missing recovery files')
     return manifest
 
 
@@ -112,8 +121,10 @@ def restore_bundle(archive,expected_sha256,target):
     target.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
     stage=Path(tempfile.mkdtemp(prefix='.recovery-pending-',dir=target.parent))
     try:
-        with tarfile.open(archive,'r:gz') as tar:
-            for name,identity in manifest['files'].items():
+        with tarfile.open(archive,'r|gz') as tar:
+            for member in tar:
+                if member.name=='recovery-manifest.json':continue
+                name=member.name;identity=manifest['files'][name]
                 destination=stage.joinpath(*safe_name(name).parts)
                 parent=destination.parent
                 # mkdir(parents=True) need not apply its mode to intermediate
@@ -121,7 +132,7 @@ def restore_bundle(archive,expected_sha256,target):
                 relative=parent.relative_to(stage);cursor=stage
                 for part in relative.parts:
                     cursor=cursor/part;cursor.mkdir(exist_ok=True,mode=0o700)
-                with tar.extractfile(name) as source,private_file(destination) as out:
+                with tar.extractfile(member) as source,private_file(destination) as out:
                     shutil.copyfileobj(source,out,1024*1024);out.flush();os.fsync(out.fileno())
                 if file_hash(destination)!=identity['sha256']:raise ValueError('Restored research bytes failed verification')
         for directory in sorted([p for p in stage.rglob('*') if p.is_dir()],key=lambda x:len(x.parts),reverse=True):fsync_directory(directory)

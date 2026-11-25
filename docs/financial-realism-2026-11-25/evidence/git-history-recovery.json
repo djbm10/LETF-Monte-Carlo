@@ -1,0 +1,33 @@
+{
+  "created_at_utc": "2026-11-25T19:28:57.201387+00:00",
+  "source_head": "efbdb48c564cd0f09b7f2f83582ea0b7fdcd1ae8",
+  "original_user_checkout_head": "96af497cc5a9432b3298623fb16a69ce069153fa",
+  "required_commit_hashes": [
+    "efbdb48c564cd0f09b7f2f83582ea0b7fdcd1ae8",
+    "96af497cc5a9432b3298623fb16a69ce069153fa",
+    "1fb825011573748536239c190e07ba9fac19caed",
+    "bed720aafa1659101a6f28be96ebad1f3b24701c",
+    "140535f1ce8d80e31118a72b43aa9a83b4633c19",
+    "553ce1af5e7d02846882cf7cb3c0fc3d8d59a7bd",
+    "b967b2b498c261a2f551cfde9ab1621e5c489c2d"
+  ],
+  "bundle_sha256": "62891590a735adb169b0df9267ecd76798b7b3bbf900fb2917e08f3af3d0fde0",
+  "bundle_bytes": 29315440,
+  "patch_sha256": "cab71899e293e5915b6b1086d33366ddb617ff0e3497ec44ae9a26214adea290",
+  "patch_bytes": 99343,
+  "ref_count": 86,
+  "bundle_verified": true,
+  "off_host_verified": false,
+  "approved_destination": null,
+  "verified_at_utc": "2026-11-25T19:29:40.349808+00:00",
+  "local_only": true,
+  "git_object_fsck": "PASS",
+  "restored_required_commits": 7,
+  "original_tracked_user_edit_count": 14,
+  "original_tracked_user_edits_restored_and_byte_checked": true,
+  "original_checkout_unchanged": true,
+  "untracked_user_files_backed_up": false,
+  "scope": "All committed refs as of source_head, plus a separately private patch of 14 reviewed tracked user edits; no credentials or untracked user/tool directories",
+  "bundle_file": "audit-output/private-recovery/research-history-v1.bundle",
+  "private_patch_file": "audit-output/private-recovery/original-user-edits-v1.patch"
+}

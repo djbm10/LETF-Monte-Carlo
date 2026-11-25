@@ -60,6 +60,22 @@ reproduces the entire three-case observed-account report exactly.
 It is also local only. Preserve both base and delta versions when an approved
 off-host destination becomes available.
 
+The separate private Git-history bundle protects **86 committed refs** through
+`efbdb48c564cd0f09b7f2f83582ea0b7fdcd1ae8`, including the original unpublished
+audit and all verified integration/development starting commits. Bundle path:
+`audit-output/private-recovery/research-history-v1.bundle`, **29,315,440 bytes**,
+SHA-256 `62891590a735adb169b0df9267ecd76798b7b3bbf900fb2917e08f3af3d0fde0`.
+A new local clone passes `git fsck --full --no-reflogs` and restores all seven
+explicitly required commits. The later receipt commit is outside this earlier
+bundle; retain its receipt separately.
+
+A separately private binary patch preserves the original checkout's **14 tracked
+user edits/deletions**. Applying it only in the isolated recovery clone reproduces
+every current user-file hash/deletion; the original checkout is unchanged. No
+untracked user files, tooling directories or credentials were included. The
+patch is not embedded in Git and is not authorized for upload merely because
+its checksum is recorded. [Git/user-edit recovery receipt](evidence/git-history-recovery.json).
+
 ## Local reproduction and periodic verification
 
 Use the pinned environment from [REPRODUCE.md](REPRODUCE.md). The checksum must
@@ -85,6 +101,23 @@ reviewed JSON object with `roots` (named research directories/files) and
 `provenance`, then use `create --roots ... --archive NEW --receipt NEW`.
 Any refreshed snapshot has a new creation time/archive identity. Do not overwrite
 earlier versions, forecasts or outcomes. Keep provider license/retention notes.
+
+For the Git bundle, first compare its SHA-256 to the committed receipt, then:
+
+```bash
+git bundle verify audit-output/private-recovery/research-history-v1.bundle
+git clone --no-checkout audit-output/private-recovery/research-history-v1.bundle \
+  audit-output/new-private-git-recovery
+git -C audit-output/new-private-git-recovery fsck --full --no-reflogs
+```
+
+Use a private parent directory (0700) and new target. To recover the reviewed
+tracked user edits, check out `96af497cc5a9432b3298623fb16a69ce069153fa` **only
+inside that new recovery clone**, verify the private patch checksum in the
+receipt, and run `git apply --check` before applying it. Compare each result to
+the private `git-history-state-v1.json`; never apply that recovery patch to the
+original working checkout. This procedure does not recover excluded untracked
+files. All three archive versions and the patch remain local-only.
 
 ## Required steps before an off-host success claim
 

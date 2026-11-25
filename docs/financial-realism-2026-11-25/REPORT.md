@@ -244,12 +244,21 @@ in a separately verified 11-file private delta. Replaying the restored bundle
 reproduces the complete observed-account report exactly.
 [Recovery replay](evidence/restored-observed-reproduction.json).
 
+A separate private Git bundle preserves 86 committed refs through `efbdb48`,
+including the original unpublished audit history. A clean isolated clone passes
+object-integrity checks and restores all seven required historical commits.
+The original checkout's 14 tracked user edits/deletions are also preserved in a
+private patch and reproduced byte-for-byte only in that recovery clone.
+Untracked user/tool directories are excluded; the original checkout is unchanged.
+These additional artifacts are also local, with no off-host protection claim.
+[History/edit recovery](evidence/git-history-recovery.json).
+
 ## Tests, CI and remaining blockers
 
 Baseline **259 passed**, final **282 passed**, with the same four inherited
 dependency warnings; **97 workflow checks pass**. [Test stdout](evidence/tests-282.txt).
-[Hosted implementation CI](https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45679807866)
-passed at `64b32a5`; the delivery response links CI for the final documentation
+[Hosted CI](https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45685106917)
+passed all 282 tests and 97 workflow checks at `efbdb48`; the delivery response links CI for the final documentation
 commit. Hosted CI runs the pinned fixture suite, not local licensed-input studies.
 Compilation and whitespace checks pass. No tests were skipped, xfailed, removed
 or weakened to obtain a green result.

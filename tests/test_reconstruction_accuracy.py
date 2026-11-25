@@ -76,3 +76,24 @@ def test_gate_fails_large_bias_even_with_high_correlation():
     result = validate_reconstruction(r, r + .001, training_end='2019-12-31', gate=ReconstructionGate())
     assert not result['numerical_pass']
     assert not result['checks']['daily_bias']
+def test_gross_swap_spread_and_collateral_credit_are_not_net_borrowing_costs():
+    from letf.reconstruction import daily_reset_returns,SourceRecord
+    from letf.accuracy import UnsupportedModelError
+    import pandas as pd
+    import pytest
+    idx=pd.to_datetime(['2026-05-28','2026-05-29']);zero=pd.Series(0.,index=idx)
+    source=SourceRecord('fixture','https://example.invalid','2026-11-24','fixture','a'*64,'2026-05-28','USD','daily TR','daily',False)
+    kw=dict(source=source,annual_fee=.01,funding_rate_at_previous_close=.06,borrowing_spread=.002,
+        elapsed_calendar_days=pd.Series([1.,1.],index=idx))
+    gross=daily_reset_returns(zero,3,**kw,financed_notional=3.,collateral_income_per_nav=.06,
+        financing_source='Dated issuer contract fixture, notional 3 per NAV, collateral income .06 per NAV')
+    assert gross.financing.iloc[0]==pytest.approx(3*.062/360-.06/365)
+    assert gross['return'].iloc[0]==pytest.approx(-.01/365-3*.062/360+.06/365)
+    net=daily_reset_returns(zero,3,**kw)
+    assert net.financing.iloc[0]==pytest.approx(2*.062/360)
+    with pytest.raises(UnsupportedModelError):daily_reset_returns(zero,3,**kw,financed_notional=3.)
+    with pytest.raises(ValueError):daily_reset_returns(zero,3,**kw,collateral_income_per_nav=.06)
+    with pytest.raises(ValueError):daily_reset_returns(zero,3,**kw,funding_day_basis=float('nan'))
+    with pytest.raises(ValueError):daily_reset_returns(zero,1,source=source,observed_fund_returns=True,
+        financed_notional=0.,collateral_income_per_nav=0.,financing_source='fixture')
+

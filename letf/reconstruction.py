@@ -54,7 +54,9 @@ def daily_reset_returns(benchmark_returns, leverage, *, annual_fee=0.,
                         funding_rate_at_previous_close=0., borrowing_spread=0.,
                         elapsed_calendar_days=None, source=None,
                         observed_fund_returns=False, funding_day_basis=360,
-                        verified_closures=None):
+                        verified_closures=None,financed_notional=None,
+                        collateral_income_per_nav=None,financing_source=None,
+                        collateral_day_basis=365):
     """Long daily-reset model, or direct passthrough of observed fund returns.
 
     Fees accrue ACT/365 and borrowing ACT/360 with real dated intervals. If
@@ -62,6 +64,14 @@ def daily_reset_returns(benchmark_returns, leverage, *, annual_fee=0.,
     funding rate passed here must already be aligned to the interval start.
     Loss of all NAV closes the hypothetical fund permanently. This is a stress
     liquidation convention, not proof of a real issuer's intraday behavior.
+
+    Default financing is net cash borrowing (L-1)*(rate+spread). An explicit
+    gross-notional mode instead charges financed_notional*(rate+spread) and
+    credits collateral_income_per_nav, an exposure-weighted APR per unit NAV.
+    These are distinct contracts: a swap spread can apply to the full swap
+    notional. Dated notionals/yields must be supplied, never inferred from NAV
+    curve fit. ProShares Trust financial statements May31,2026, swap schedules:
+    https://www.proshares.com/globalassets/proshares/documents/annual-reports/annual_proshares_geared_financial_statement.pdf
     """
     daily_series(benchmark_returns, 'benchmark', allow_total_loss=False)
     if source is None:
@@ -84,10 +94,10 @@ def daily_reset_returns(benchmark_returns, leverage, *, annual_fee=0.,
     fee = aligned(annual_fee, 'fee')
     rate = aligned(funding_rate_at_previous_close, 'funding rate')
     spread = aligned(borrowing_spread, 'spread')
-    if (fee < 0).any() or (spread < 0).any() or funding_day_basis <= 0:
+    if (fee < 0).any() or (spread < 0).any() or not np.isfinite(funding_day_basis) or funding_day_basis <= 0:
         raise ValueError('Fee/spread must be nonnegative and day basis positive')
     if observed_fund_returns:
-        if leverage != 1 or np.any(fee) or np.any(rate) or np.any(spread):
+        if leverage != 1 or np.any(fee) or np.any(rate) or np.any(spread) or financed_notional is not None or collateral_income_per_nav is not None:
             raise ValueError('Observed adjusted fund returns already include internal costs; no extra leverage/fees/funding')
         return pd.DataFrame({'return': benchmark_returns, 'fund_fee': 0., 'financing': 0.,
                              'liquidated': False, 'evidence': Evidence.OBSERVED.value})
@@ -107,7 +117,17 @@ def daily_reset_returns(benchmark_returns, leverage, *, annual_fee=0.,
         fee_fraction = days / 365
         funding_fraction = days / funding_day_basis
     fees = fee * fee_fraction
-    financing = (leverage - 1) * (rate + spread) * funding_fraction
+    if financed_notional is None:
+        if collateral_income_per_nav is not None:raise ValueError('Collateral credit requires explicit financed notional; no double credit')
+        financing = (leverage - 1) * (rate + spread) * funding_fraction
+    else:
+        if not financing_source or collateral_income_per_nav is None or not np.isfinite(collateral_day_basis) or collateral_day_basis<=0:
+            raise UnsupportedModelError('Gross financing requires notional, collateral income/day basis and dated source assumptions')
+        notional=aligned(financed_notional,'financed notional')
+        collateral=aligned(collateral_income_per_nav,'collateral income per NAV')
+        if (notional<0).any():raise ValueError('Nonnegative gross financed notional required')
+        credit_fraction=np.full(len(fee),1/252) if elapsed_calendar_days is None else days/collateral_day_basis
+        financing=notional*(rate+spread)*funding_fraction-collateral*credit_fraction
     returns = leverage * benchmark_returns.to_numpy() - fees - financing
     liquidated = np.zeros(len(returns), dtype=bool)
     failed = np.flatnonzero(returns <= -1)

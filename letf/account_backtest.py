@@ -147,6 +147,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     for action in liquidation_events:
         if action.get('timing','open') not in ('open','close') or not action.get('source'):
             raise UnsupportedModelError('Liquidation requires explicit open/close timing and source evidence')
+        if profile.account_type=='taxable' and action.get('cash_per_share')==0:
+            raise UnsupportedModelError('Taxable zero-residual closure requires reviewed worthless-security/IRC165(g) or actual final-redemption treatment, not a same-day zero-NAV sale')
     symbols = [s.symbol for s in securities]
     if not symbols or len(symbols) != len(set(symbols)):
         raise ValueError('Unique instruments required')

@@ -224,6 +224,8 @@ class PortfolioLedger:
         account = self.accounts[account_id]
         security = self.securities[symbol]
         profile = account.profile
+        if price==0 and profile.account_type=='taxable':
+            raise UnsupportedModelError('Zero-residual taxable securities require reviewed worthless-security/IRC165(g) or final-redemption tax treatment; a zero NAV mark is not a same-day taxable sale')
         commission=profile.commission if commission_override is None else commission_override
         positive(commission,'commission',True)
         if security.kind not in profile.allowed_kinds:
@@ -319,6 +321,9 @@ class PortfolioLedger:
         """Sourced cash liquidation, including zero residual NAV; not a mark."""
         when=calendar_date(when);positive(cash_per_share,'liquidation proceeds',True)
         if not source:raise ValueError('Liquidation evidence required')
+        if cash_per_share==0 and any(a.profile.account_type=='taxable' and self.quantity(key,symbol)>1e-10
+                                    for key,a in self.accounts.items()):
+            raise UnsupportedModelError('Zero-residual taxable securities require reviewed worthless-security/IRC165(g) tax treatment')
         security=self.securities[symbol]
         if security.closure and security.closure!=when:raise ValueError('Conflicting closure dates')
         self.securities[symbol]=replace(security,closure=when)

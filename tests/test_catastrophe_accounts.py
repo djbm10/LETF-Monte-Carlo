@@ -27,12 +27,13 @@ def test_extinction_is_a_dated_absorbing_corporate_action_not_a_small_nav_floor(
     assert (m.market.loc[day,'CF3_Open']==0.)==(timing=='open')
     two=scenario_market(c,2,annual_distribution=0.,fee=0.,spread=0.)
     assert bool(two.liquidation_events)==dead_two
-    for account in ('taxable','roth'):
+    with pytest.raises(UnsupportedModelError,match='IRC165'):
+        replay_scenario(m,'taxable',initial=1000.,annual_contribution=0.)
+    for account in ('roth',):
         summary,result=replay_scenario(m,account,initial=1000.,annual_contribution=0.,allocation=.8,
             rebalance_sessions=100000,spread_bps=0.,slippage_bps=0.)
-        # Cash reserve is 200; taxable capital-loss deduction is independently
-        # 22% of the 800 basis. It is a household tax receivable, not fund revival.
-        assert summary['ending_net_assets']==pytest.approx(376. if account=='taxable' else 200.)
+        # Cash reserve survives. Unverified taxable-loss recognition is blocked.
+        assert summary['ending_net_assets']==pytest.approx(200.)
         assert result['ledger'].quantity('main','CF3')==0.
         assert summary['fund_closures']==1 and summary['minimum_cash']>=0.
         assert summary['independent_audit']['passed']
@@ -106,3 +107,17 @@ def test_legal_unbounded_tax_bracket_is_serialized_but_nan_wealth_is_never_publi
     assert isinstance(json.loads(path.read_text())['bracket_ceiling'],str)
     with pytest.raises(ValueError,match='NaN'):write_evidence_json(tmp_path/'invalid.json',{'wealth':float('nan')})
     assert not (tmp_path/'invalid.json').exists()
+
+
+def test_low_level_zero_tax_disposition_is_blocked_before_any_corporate_action_mutation():
+    from datetime import date
+    from letf.accounts import PortfolioLedger,Security,TAXABLE_CASH
+    book=PortfolioLedger();book.add_account('main',TAXABLE_CASH,1000.);book.add_security(Security('X'))
+    book.execute(date(2027,1,4),'main','X','BUY',10.,100.)
+    count=len(book.events)
+    with pytest.raises(UnsupportedModelError,match='IRC165'):
+        book.liquidate_security(date(2027,6,15),'X',0.,source='Not proof of tax disposition',settlement_date=date(2027,6,16))
+    assert book.quantity('main','X')==10. and book.securities['X'].closure is None and len(book.events)==count
+    with pytest.raises(UnsupportedModelError,match='IRC165'):
+        book.execute(date(2027,6,15),'main','X','SELL',10.,0.,execution_kind='liquidation',execution_source='Not tax evidence')
+    assert book.quantity('main','X')==10. and len(book.events)==count

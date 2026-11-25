@@ -346,6 +346,32 @@ class PortfolioLedger:
         self.events.append({'date': when, 'account': account_id, 'action': 'INCOME',
                             'category': category, 'amount': amount})
 
+    def distribution_tax(self,when,account_id,amount,category,*,tax_date,source,qualified_verified=False,section199a_verified=False):
+        """Recognize sourced distribution income WITHOUT making cash available.
+
+        Used for IRC 852(b)(7) deemed Dec31 receipt. The replay validates the
+        issuer's Q4/January timing. Cash arrives separately on its payable date.
+        IRS Instructions for Form 1099-DIV (01/2024), Special reporting rules:
+        https://www.irs.gov/instructions/i1099div
+        """
+        positive(amount,'distribution tax income',True);tax_date=calendar_date(tax_date)
+        if not source or tax_date>calendar_date(when):raise ValueError('Dated tax-recognition evidence required')
+        if category not in ('ordinary_dividend','qualified_dividend','capital_gain_distribution','section199a_dividend'):
+            raise UnsupportedModelError('Unsupported noncash distribution tax classification')
+        if category=='qualified_dividend' and not qualified_verified:raise UnsupportedModelError('Verified QDI required')
+        if category=='section199a_dividend' and not section199a_verified:raise UnsupportedModelError('Verified 199A required')
+        when=self._advance(when);bucket=self.accounts[account_id].income.setdefault(tax_date.year,{})
+        bucket[category]=bucket.get(category,0.)+amount
+        self.events.append({'date':when,'account':account_id,'action':'DISTRIBUTION_TAX','category':category,
+            'amount':amount,'tax_date':tax_date,'tax_year':tax_date.year,'source':source})
+
+    def distribution_cash(self,when,account_id,amount,*,source):
+        """Actual cash for income already recognized; never tax it twice."""
+        positive(amount,'distribution cash',True)
+        if not source:raise ValueError('Distribution cash source required')
+        when=self._advance(when);self.accounts[account_id].cash+=amount
+        self.events.append({'date':when,'account':account_id,'action':'DISTRIBUTION_CASH','amount':amount,'source':source})
+
     def reclassify_dividend(self,when,account_id,tax_year,amount,*,source,qualified_verified=False):
         """Tax-only correction after actual QDI holding days become observable.
 

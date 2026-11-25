@@ -30,12 +30,27 @@ class Distribution:
     source: str
     qualified_verified: bool = False
     section199a_verified: bool = False
+    tax_date: date | None = None
+    tax_date_source: str = ''
+    issuer_tax_year: int | None = None
+    record_date: date | None = None
 
     def __post_init__(self):
         if self.pay_date < self.ex_date or not self.source or not isfinite(self.amount_per_share) or self.amount_per_share < 0:
             raise ValueError('Invalid sourced distribution schedule')
         if self.category not in ('interest', 'ordinary_dividend', 'qualified_dividend', 'capital_gain_distribution','section199a_dividend'):
             raise UnsupportedModelError('Return of capital/special distributions require a separate basis action')
+        if self.tax_date is not None and (not self.tax_date_source or type(self.issuer_tax_year)is not int):
+            raise ValueError('Explicit sourced integer issuer tax year required')
+        if self.tax_date is not None and self.tax_date!=self.pay_date:
+            # IRC 852(b)(7). Final issuer allocation is required; a January
+            # payment alone never authorizes backdating an investor's income.
+            if (self.category=='interest' or not self.tax_date_source or self.issuer_tax_year!=self.tax_date.year or
+                self.tax_date!=date(self.tax_date.year,12,31) or self.pay_date.year!=self.tax_date.year+1 or
+                self.pay_date.month!=1 or self.ex_date.year!=self.tax_date.year or self.ex_date.month<10 or
+                self.record_date is None or self.record_date.year!=self.tax_date.year or
+                self.record_date.month<10 or self.record_date<self.ex_date):
+                raise UnsupportedModelError('RIC year-end recognition requires final issuer tax-year allocation and Q4 record/January pay evidence')
 
 
 def strategy_allocator(strategy_id):
@@ -215,6 +230,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     st_cf = lt_cf = state_st_cf = state_lt_cf = 0.
     receivables, equity, unit_values, snapshots, external, decisions = [], [], [], [], [], []
     holding_trackers={}
+    tax_recognized=set()
     units = initial_capital
     withheld = 0.
     expected_cash = initial_capital
@@ -331,9 +347,27 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                         raise UnsupportedModelError('Qualified dividend needs investor holding-period proof; future 121-day eligibility is not inferred')
                 receivables.append((distribution, book.quantity(account_id, distribution.security) * distribution.amount_per_share))
         for distribution, amount in list(receivables):
-            if distribution.pay_date <= when:
+            if distribution.tax_date is not None and distribution.tax_date<=when and id(distribution) not in tax_recognized:
+                if book.securities[distribution.security].kind!='etf':
+                    raise UnsupportedModelError('RIC year-end tax timing needs a reviewed fund instrument')
                 tracker=holding_trackers.get(id(distribution))
                 if tracker is None:
+                    book.distribution_tax(when,account_id,amount,distribution.category,tax_date=distribution.tax_date,
+                        source=distribution.tax_date_source,qualified_verified=distribution.qualified_verified,
+                        section199a_verified=distribution.section199a_verified)
+                else:
+                    tracker.update(when,book);qualified=tracker.qualified_amount
+                    if qualified:book.distribution_tax(when,account_id,qualified,'qualified_dividend',tax_date=distribution.tax_date,
+                        source=distribution.tax_date_source,qualified_verified=True)
+                    if amount-qualified>1e-10:book.distribution_tax(when,account_id,amount-qualified,'ordinary_dividend',
+                        tax_date=distribution.tax_date,source=distribution.tax_date_source)
+                    tracker.booked_year=distribution.tax_date.year;tracker.booked_qualified=qualified
+                tax_recognized.add(id(distribution))
+            if distribution.pay_date <= when:
+                tracker=holding_trackers.get(id(distribution))
+                if id(distribution) in tax_recognized:
+                    book.distribution_cash(when,account_id,amount,source=distribution.source)
+                elif tracker is None:
                     book.income(when, account_id, amount, distribution.category,
                                 qualified_verified=distribution.qualified_verified,section199a_verified=distribution.section199a_verified)
                 else:
@@ -491,7 +525,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 expected_quantities[event['security']] -= event['shares']
                 if event['settlement_date'] <= when:
                     expected_cash += event['shares'] * event['price'] - event['commission']
-            elif action in ('INCOME', 'DEPOSIT', 'ROTH_CONTRIBUTION', 'CONVERSION', 'NON_ROTH_PLAN_ROLLOVER'):
+            elif action in ('INCOME', 'DISTRIBUTION_CASH', 'DEPOSIT', 'ROTH_CONTRIBUTION', 'CONVERSION', 'NON_ROTH_PLAN_ROLLOVER'):
                 expected_cash += event['amount']
             elif action in ('WITHDRAWAL', 'ROTH_WITHDRAWAL', 'TAX_PAYMENT'):
                 expected_cash -= event['amount']
@@ -499,9 +533,12 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         account = book.accounts[account_id]
         receivable = sum(value for _, value in receivables)
         unsettled = sum(value for _, value in account.unsettled)
-        quantities=dict.fromkeys(symbols,0.)
+        share_groups={s:[] for s in symbols}
         for lot in book.lots:
-            if lot.account==account_id:quantities[lot.security]+=lot.shares
+            if lot.account==account_id:share_groups[lot.security].append(lot.shares)
+        # Retain Python's compensated float sum and original lot order; naive
+        # += aggregation changes exported reconciliation residuals on 3.12+.
+        quantities={s:sum(values) for s,values in share_groups.items()}
         position_value = sum(quantities[symbol] * closes[symbol] for symbol in symbols)
         nav = book.wealth(account_id, closes) + receivable
         residual = account.cash - expected_cash
@@ -521,8 +558,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     terminal_liability = 0.
     if taxable and any(t.unresolved for t in holding_trackers.values()):
         raise UnsupportedModelError('End-of-history QDI holding days unresolved; extend data or liquidate')
-    if terminal_liquidation and sum(value for _, value in receivables) > 1e-8:
-        raise UnsupportedModelError('Terminal distributions still receivable: extend the replay through payable dates')
+    if terminal_liquidation and any(amount>1e-8 and id(d) not in tax_recognized for d,amount in receivables):
+        raise UnsupportedModelError('Terminal distributions still receivable with unresolved tax timing: extend through payable/recognition dates')
     if taxable:
         if not tax_inputs.get('no_external_wash_replacements_after_end', False):
             raise UnsupportedModelError('Terminal tax requires a completed owner-wide wash observation window')
@@ -554,6 +591,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             'tax_paid': withheld, 'terminal_tax_payable': terminal_liability,
             'ending_wealth_net_payable': curve.iloc[-1] - terminal_liability,
             'terminal_liquidation': terminal_liquidation, 'after_tax_metrics': after_tax,
+            'ending_distribution_receivables':sum(value for _,value in receivables),
             'external_flows_investor': external, 'settlement_policy': settlement_policy,
             'trading_costs': sum(e.get('commission', 0.) + e.get('spread_slippage_cost', 0.) for e in book.events),
             'fund_fees': None, 'financing_expenses': None,

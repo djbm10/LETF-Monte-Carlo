@@ -25,6 +25,13 @@ def _verified_flag(value):
     raise ValueError('Tax verification flags require explicit true/false values')
 
 
+def _issuer_year(value):
+    if value is None or pd.isna(value):return None
+    if isinstance(value,(bool,np.bool_)) or not np.isfinite(float(value)) or float(value)!=int(float(value)):
+        raise ValueError('Issuer tax year must be an explicit integer')
+    return int(float(value))
+
+
 def load_bundle(folder):
     folder = Path(folder)
     manifest = json.loads((folder / 'manifest.json').read_text())
@@ -53,7 +60,11 @@ def load_bundle(folder):
             distributions.append(Distribution(symbol, ex_date.date(), pd.Timestamp(row.pay_date).date(),
                 float(row.amount_per_share), row.category, row.source,
                 qualified_verified=_verified_flag(row.get('qualified_verified', False)),
-                section199a_verified=_verified_flag(row.get('section199a_verified',False))))
+                section199a_verified=_verified_flag(row.get('section199a_verified',False)),
+                tax_date=pd.Timestamp(row.tax_date).date() if pd.notna(row.get('tax_date')) else None,
+                tax_date_source=str(row.tax_date_source) if pd.notna(row.get('tax_date_source')) else '',
+                issuer_tax_year=_issuer_year(row.get('issuer_tax_year')),
+                record_date=pd.Timestamp(row.record_date).date() if pd.notna(row.get('record_date')) else None))
     elif ('Dividends' not in prices or 'Stock Splits' not in prices or
           prices[['Dividends', 'Stock Splits']].to_numpy().any()):
         raise UnsupportedModelError('Nonzero/missing corporate actions need a complete explicit action schedule')
@@ -118,6 +129,8 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
         raise UnsupportedModelError('Replay dates exceed reviewed corporate-action/distribution coverage')
     if state not in manifest.get('supported_tax_states',[state]):
         raise UnsupportedModelError('Distribution state-tax adjustments have not been reviewed for this input bundle')
+    if strategy not in manifest.get('supported_strategies',[strategy]):
+        raise UnsupportedModelError('Strategy needs distribution-complete signal warmup unavailable in this bundle')
     market = market.loc[:end]
     cpi = cpi.reindex(market.index) if cpi is not None else None
     symbol = manifest['symbol']
@@ -183,6 +196,7 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
             'ending_positions': reconciled.positions.iloc[-1],
             'final_cash': float(reconciled.cash.iloc[-1]),
             'unsettled_liquidation_proceeds': float(reconciled.unsettled.iloc[-1]),
+            'ending_distribution_receivables':result['ending_distribution_receivables'],
             'days': len(reconciled), 'external_flows_investor': result['external_flows_investor']}
     if output is not None:
         output = Path(output);output.mkdir(parents=True, exist_ok=False)

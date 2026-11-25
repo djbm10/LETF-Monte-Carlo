@@ -18,6 +18,8 @@ from scripts.build_observed_etf_bundles import ici_rows
 from letf.accuracy import UnsupportedModelError
 
 OTHER_ISSUERS={
+    'SPY':{'provider':'State Street','files':{2025:('letf-ssga-ici-primary.xlsx',
+        'https://www.ssga.com/library-content/products/fund-docs/etfs/us/tax-documents/SPDR_ICI_Tax_Summary_Primary.xlsx')}},
     'TMF':{'provider':'Direxion','files':{y:(f'letf-direxion-ici-{y}.xlsx',f'https://www.direxion.com/uploads/{y}-ICI-Primary-Direxion-ETF.xlsx') for y in (2024,2025)}},
     'QQQ':{'provider':'Invesco','files':{
         2024:('letf-invesco-ici-2024.xlsx','https://www.invesco.com/content/dam/invesco/us/en/documents/tax-document/ce-ici-primary-and-secondary-distribution-file-file-ivz-etf-2024-02-10-2025.xlsx'),
@@ -52,7 +54,7 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
     prices=raw.loc['2023-01-01':'2025-12-31'].copy()
     for col in ('Open','High','Low','Close'):prices[col]*=scale.reindex(prices.index)
     rows=[];files={};source_checks=[]
-    for year in (2024,2025):
+    for year in ((2025,) if symbol=='SPY' else (2024,2025)):
         issuer=OTHER_ISSUERS.get(symbol)
         provider=issuer['provider'] if issuer else 'ProShares'
         original=issuer_dir/(issuer['files'][year][0] if issuer else f'letf-ici-primary-{year}.xlsx')
@@ -72,7 +74,14 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
                 raise ValueError('Issuer tax components do not reconcile')
             ex=ici_date(r['H'])
             pay=ici_date(r['I'])
-            if pay.year!=year or ex.year!=year:raise UnsupportedModelError('Tax-year spillover requires separate statutory mapping')
+            timing={}
+            if pay.year!=year or ex.year!=year:
+                record=ici_date(r['G'])
+                if (symbol!='SPY' or pay.year!=year+1 or pay.month!=1 or ex.year!=year or
+                    ex.month<10 or record.year!=year or record.month<10 or not np.isclose(num(r,'M'),total,atol=1e-9)):
+                    raise UnsupportedModelError('Tax-year spillover lacks final issuer allocation evidence')
+                timing={'tax_date':f'{year}-12-31','issuer_tax_year':year,'record_date':str(record.date()),
+                    'tax_date_source':original_url+f'; final {year} ICI column M tax-year allocation, IRC 852(b)(7)'}
             restatement=None
             if api is not None:
                 matches=[a for a in api if pd.Timestamp(a['ExDate'])==ex]
@@ -89,7 +98,7 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
                 if amount:rows.append({'ex_date':ex,'pay_date':str(pay.date()),'amount_per_share':amount,
                     'category':category,'qualified_verified':category=='qualified_dividend',
                     'section199a_verified':category=='section199a_dividend',
-                    'source':original_url})
+                    'source':original_url,**timing})
         issuer_dates={ici_date(r['H']) for r in ici}
         if issuer_dates!=set(raw.loc[str(year)].loc[lambda f:f.Dividends.ne(0)].index):raise ValueError('Incomplete cash payout coverage')
         source_files=[(original,original_url)]
@@ -113,7 +122,7 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
     active_splits=splits.loc[prices.index.min():prices.index.max()]
     manifest={'symbol':symbol,'instrument_kind':'etf','tax_structure':'corporation','currency':'USD',
         'frequency':'daily','data_status':'OBSERVED','price_convention':'as_traded','distributions_complete':True,
-        'account_coverage_start':'2024-01-02','account_coverage_end':'2025-12-31',
+        'account_coverage_start':'2025-01-02' if symbol=='SPY' else '2024-01-02','account_coverage_end':'2025-12-31',
         'supported_tax_states':['FEDERAL_ONLY','TX','FL','NV'],'corporate_actions_reviewed':True,
         'split_events':[{'date':str(d.date()),'security':symbol,'ratio':float(v),
             'source':'Dated vendor split actions crosschecked against original/restated issuer cash payouts'} for d,v in active_splits.items()],
@@ -122,6 +131,9 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
         'limitations':['Actual daily observations; assumed open/close execution, not NBBO fills',
             'Final fund tax classifications enter tax accounting only, never trading signals',
             'State-specific government-obligation exemptions and extra tax components remain gated']}
+    if symbol=='SPY':
+        manifest['supported_strategies']=['buy_hold']
+        manifest['limitations'].append('SPY 2024 final classification not captured; 2025 buy/hold only, no distribution-complete 2024 signal warmup')
     (output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     return manifest
 
@@ -129,7 +141,7 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for a in ('inputs','issuer-dir','output'):p.add_argument('--'+a,required=True,type=Path)
-    p.add_argument('--symbol',required=True,choices=['TQQQ','QLD','SSO','UPRO','QQQ','TMF'])
+    p.add_argument('--symbol',required=True,choices=['SPY','TQQQ','QLD','SSO','UPRO','QQQ','TMF'])
     p.add_argument('--macro-sources',type=Path)
     a=p.parse_args();m=build(a.inputs,a.issuer_dir,a.output,a.symbol,macro_sources=a.macro_sources)
     print(json.dumps({'symbol':a.symbol,'issuer_checks':len(m['issuer_cross_checks']),'splits':m['split_events']},indent=2))

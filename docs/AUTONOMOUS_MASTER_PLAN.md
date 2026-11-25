@@ -6,9 +6,9 @@ This ledger describes actual acceptance work, not investment certification.
 
 | Stage | Scope and acceptance | State |
 |---|---|---|
-| 0 | Verify live SHA, instructions, old reports, worktrees, preserve inputs, repeat 282/97 baseline | In progress |
-| 1 | Unified immutable source/evidence catalog; adapt existing catalogs, coverage/vintage/rights and safe public refresh | Pending |
-| 2 | Source-backed canonical tax/account repairs; historical parameters; independent legal fixtures and real-fund daily comparison | Pending |
+| 0 | Verify live SHA, instructions, old reports, worktrees, preserve inputs, repeat 282/97 baseline | DONE: 282/97; 402 old artifacts unchanged |
+| 1 | Unified immutable source/evidence catalog; adapt existing catalogs, coverage/vintage/rights and safe public refresh | DONE software/import; live feed validation pending |
+| 2 | Source-backed canonical tax/account repairs; historical parameters; independent legal fixtures and real-fund daily comparison | PARTIAL: 2021–23 federal/Roth, MA 2023, 2023–25 TQQQ/UPRO; special taxes remain gated |
 | 3 | Reuse derivative books; contract/quote ingestion, evidence/permission/margin gates; no continuous-chart execution certification | Pending |
 | 4 | Reproduce daily 1930 counterfactuals, closures, proxy/cost ambiguity and historical rolling windows | Pending |
 | 5 | Durable public-data/issue/score/candidate workflow; preserve 51 old and prospective forecasts, never promote without evidence | Pending |

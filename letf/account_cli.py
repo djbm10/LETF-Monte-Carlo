@@ -120,6 +120,19 @@ def _serialize(value):
     raise TypeError(type(value).__name__)
 
 
+def _report_safe(value, key=None):
+    """Encode unbounded legal bracket metadata; reject nonfinite money/results."""
+    if isinstance(value, dict):
+        return {k: _report_safe(v, k) for k, v in value.items()}
+    if isinstance(value, (tuple, list)):
+        return [_report_safe(v) for v in value]
+    if isinstance(value, np.generic): value=value.item()
+    if isinstance(value, float) and not np.isfinite(value):
+        if key == 'bracket_ceiling' and np.isposinf(value): return 'UNBOUNDED'
+        raise ValueError('Nonfinite financial result cannot be exported')
+    return value
+
+
 def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02', end='2025-12-31',
                      initial_capital=100000., state='MA', ordinary_income=100000.,
                      filing_status='single',cash_flows=(),roth_history_config=None,output=None,
@@ -198,6 +211,8 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
             'unsettled_liquidation_proceeds': float(reconciled.unsettled.iloc[-1]),
             'ending_distribution_receivables':result['ending_distribution_receivables'],
             'days': len(reconciled), 'external_flows_investor': result['external_flows_investor']}
+    summary=_report_safe(summary)
+    serialized=json.dumps(summary,default=_serialize,indent=2,allow_nan=False)+'\n'
     if output is not None:
         output = Path(output);output.mkdir(parents=True, exist_ok=False)
         for account in net:
@@ -205,7 +220,7 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
             pd.DataFrame(_fills(net[account])).to_csv(output/f'{account}_fills.csv', index=False)
             pd.DataFrame(_fills(gross[account])).to_csv(output/f'{account}_pretax_fills.csv', index=False)
             (output/f'{account}_events.json').write_text(json.dumps(net[account]['ledger'].events, default=_serialize, indent=2))
-        (output/'summary.json').write_text(json.dumps(summary, default=_serialize, indent=2, allow_nan=False) + '\n')
+        (output/'summary.json').write_text(serialized)
     return summary
 
 

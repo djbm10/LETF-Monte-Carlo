@@ -42,7 +42,13 @@ def ici_date(value):
     return pd.Timestamp('1899-12-30')+pd.Timedelta(days=float(value))
 
 
-def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
+def build(inputs, issuer_dir, output, symbol,*,macro_sources=None,years=None):
+    reviewed_years=tuple(years) if years is not None else ((2025,) if symbol=='SPY' else (2024,2025))
+    if (not reviewed_years or any(type(y)is not int for y in reviewed_years) or
+        reviewed_years!=tuple(range(min(reviewed_years),max(reviewed_years)+1))):
+        raise ValueError('A contiguous increasing range of final issuer tax years is required')
+    if symbol in OTHER_ISSUERS and any(y not in OTHER_ISSUERS[symbol]['files'] for y in reviewed_years):
+        raise UnsupportedModelError('No captured dated issuer taxonomy for requested years')
     output.mkdir(parents=True,exist_ok=False)
     catalog=json.loads((inputs/'manifest.json').read_text())
     meta=catalog['sources'][symbol];file=inputs/meta['path']
@@ -51,10 +57,10 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
     splits=raw['Stock Splits'].loc[lambda s:s.ne(0)]
     scale=pd.Series(1.,index=raw.index)
     for day,ratio in splits.items():scale.loc[scale.index<day]*=ratio
-    prices=raw.loc['2023-01-01':'2025-12-31'].copy()
+    prices=raw.loc[f'{min(reviewed_years)-1}-01-01':f'{max(reviewed_years)}-12-31'].copy()
     for col in ('Open','High','Low','Close'):prices[col]*=scale.reindex(prices.index)
     rows=[];files={};source_checks=[]
-    for year in ((2025,) if symbol=='SPY' else (2024,2025)):
+    for year in reviewed_years:
         issuer=OTHER_ISSUERS.get(symbol)
         provider=issuer['provider'] if issuer else 'ProShares'
         original=issuer_dir/(issuer['files'][year][0] if issuer else f'letf-ici-primary-{year}.xlsx')
@@ -62,7 +68,10 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
         restated=issuer_dir/f'letf-{symbol}-issuer-{year}.json'
         api=None if issuer else json.loads(restated.read_text())
         ici=[r for r in ici_rows(original,year=year) if r.get('C')==symbol]
-        if not ici:raise UnsupportedModelError(f'Missing issuer {year} tax rows')
+        if not ici:
+            # A zero payout year needs affirmative issuer evidence; an empty
+            # ticker match cannot prove distribution completeness.
+            raise UnsupportedModelError(f'Missing issuer {year} tax rows')
         num=lambda r,c:float(r.get(c) or 0.)
         for r in ici:
             # Supported corporate RIC subset. Never ignore 199A, foreign,
@@ -122,7 +131,10 @@ def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
     active_splits=splits.loc[prices.index.min():prices.index.max()]
     manifest={'symbol':symbol,'instrument_kind':'etf','tax_structure':'corporation','currency':'USD',
         'frequency':'daily','data_status':'OBSERVED','price_convention':'as_traded','distributions_complete':True,
-        'account_coverage_start':'2025-01-02' if symbol=='SPY' else '2024-01-02','account_coverage_end':'2025-12-31',
+        'account_coverage_start':str(prices.loc[f'{min(reviewed_years)}-01-01':].index[0].date()),
+        'account_coverage_end':str(prices.index[-1].date()),
+        'signal_coverage_start':f'{min(reviewed_years)}-01-01',
+        'reviewed_distribution_tax_years':list(reviewed_years),
         'supported_tax_states':['FEDERAL_ONLY','TX','FL','NV'],'corporate_actions_reviewed':True,
         'split_events':[{'date':str(d.date()),'security':symbol,'ratio':float(v),
             'source':'Dated vendor split actions crosschecked against original/restated issuer cash payouts'} for d,v in active_splits.items()],
@@ -143,5 +155,6 @@ if __name__=='__main__':
     for a in ('inputs','issuer-dir','output'):p.add_argument('--'+a,required=True,type=Path)
     p.add_argument('--symbol',required=True,choices=['SPY','TQQQ','QLD','SSO','UPRO','QQQ','TMF'])
     p.add_argument('--macro-sources',type=Path)
-    a=p.parse_args();m=build(a.inputs,a.issuer_dir,a.output,a.symbol,macro_sources=a.macro_sources)
+    p.add_argument('--years',type=int,nargs='+',help='Contiguous final issuer tax years; no missing year is inferred')
+    a=p.parse_args();m=build(a.inputs,a.issuer_dir,a.output,a.symbol,macro_sources=a.macro_sources,years=a.years)
     print(json.dumps({'symbol':a.symbol,'issuer_checks':len(m['issuer_cross_checks']),'splits':m['split_events']},indent=2))

@@ -1,0 +1,31 @@
+{
+  "imports": [
+    {
+      "namespace": "macro",
+      "import_id": "d1fbf341ac33054f90b801b52e30b73021002c61997e48ec74929eeb6209eb1f",
+      "catalog_sha256": "1d0147b5c242baa5055ba3f9f42e4130ba23dfa2c97287040b2f53c29dcac376",
+      "sources": 52
+    },
+    {
+      "namespace": "index-nav",
+      "import_id": "74fc31e80623182cb6d79f43058bbe6a9fa892108c0bbdac35577d6030a9a6e1",
+      "catalog_sha256": "2be48a3a975ad9aa8f290b5c3d7f29ce832f436500878913a8ec8bf65ebc61e1",
+      "sources": 86
+    },
+    {
+      "namespace": "daily-quotes",
+      "import_id": "5977fb9b394c6909f78bca96dfbd71b753de084777757ef29abe51ddb4aa48e0",
+      "catalog_sha256": "8a434afe840e8b5f22a0cd1d336cb81b33b672a1a534fb04b70f0900f558bb6c",
+      "sources": 9
+    },
+    {
+      "namespace": "TQQQ-account",
+      "import_id": "94b64d2366ad5b3d3b3faa67affe1514239758f6d6c9bd3722ff3b42af5556b1",
+      "catalog_sha256": "f2d99cc1ffa766cf232e6f9b7686a0e7a8e18881341c93059dfecd67e2609891",
+      "sources": 7
+    }
+  ],
+  "snapshots_verified": 158,
+  "source_integrity_only": true,
+  "financial_certification": "BLOCKED"
+}

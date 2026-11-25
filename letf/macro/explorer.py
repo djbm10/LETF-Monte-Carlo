@@ -146,6 +146,7 @@ def _cost_attribution(result,market,costs):
 def explore(sources,*,calibration_end,output,paths=16,horizons=(5,10,20,30,40),seed=20261124,
             model_type='conditional_var_t',initial_capital=10000.,annual_contribution=0.,monthly_withdrawal=0.,
             roth_birth_date=None,roth_first_tax_year=None,roth_regular_basis=None,
+            roth_magi=None,annual_compensation=None,
             ordinary_income=100000.,state='FEDERAL_ONLY',filing_status='single',frozen_tax_year=2026,
             rate=None,inflation=None,production_growth=None,equity_drift=None,volatility_scale=1.,
             equity_cagr_constraint=None,
@@ -163,6 +164,8 @@ def explore(sources,*,calibration_end,output,paths=16,horizons=(5,10,20,30,40),s
         if any(v is None for v in (roth_birth_date,roth_first_tax_year,roth_regular_basis)):
             raise UnsupportedModelError('Roth cash flows require explicit owner birth date, first Roth tax year and aggregate regular basis')
         roth_history={'birth_date':roth_birth_date,'first_tax_year':roth_first_tax_year,'regular_basis':roth_regular_basis}
+    if annual_contribution and (roth_magi is None or annual_compensation is None):
+        raise UnsupportedModelError('Roth contributions require separate supplied MAGI and eligible compensation; ordinary income alone is insufficient')
     panel,metadata=sources.panel(calibration_end,include_long_yield=stock_bond_correlation is not None)
     training=train_slice(panel,calibration_end,240,protocol['minimum_conditional_months'] if model_type=='conditional_var_t' else protocol['minimum_bootstrap_months'],allow_missing_transitions=True)
     protocol=dict(protocol,allow_incomplete_training=True)
@@ -222,7 +225,7 @@ def explore(sources,*,calibration_end,output,paths=16,horizons=(5,10,20,30,40),s
             flow_dates=dates.to_series().groupby(dates.to_period('M')).first()
             flows=[]
             for d in flow_dates:
-                if annual_contribution:flows.append({'date':str(d.date()),'kind':'contribution','amount':annual_contribution/12,'magi':ordinary_income,'compensation':ordinary_income,'filing_status':filing_status})
+                if annual_contribution:flows.append({'date':str(d.date()),'kind':'contribution','amount':annual_contribution/12,'magi':roth_magi,'compensation':annual_compensation,'filing_status':filing_status})
                 if monthly_withdrawal:flows.append({'date':str(d.date()),'kind':'withdrawal','amount':monthly_withdrawal})
             payments={y:calendar.date_to_session(pd.Timestamp(date(y+1,4,15)),direction='next').date() for y in range(2027,final.year)}
             cash_rates=(daily.short_rate-.005).clip(lower=0.).reindex(dates)
@@ -291,6 +294,7 @@ def explore(sources,*,calibration_end,output,paths=16,horizons=(5,10,20,30,40),s
         'initial_capital':initial_capital,'annual_contribution':annual_contribution,'monthly_withdrawal':monthly_withdrawal,
         'filing_status':filing_status,'ordinary_income':ordinary_income,'state':state,
         'supplied_roth_owner_history':roth_history,
+        'supplied_annual_roth_magi':roth_magi,'supplied_annual_eligible_compensation':annual_compensation,
         'conditional_assumptions':{'reference_rate':rate,'annual_inflation':inflation,'annual_production_growth':production_growth,
             'constant_monthly_equity_annualized_constraint':equity_cagr_constraint,
             'equity_log_intercept_shift':shifts.get('equity_log'),'joint_volatility_multiplier':volatility_scale,

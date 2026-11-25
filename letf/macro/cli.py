@@ -38,6 +38,8 @@ def main():
             q.add_argument('--roth-birth-date')
             q.add_argument('--roth-first-tax-year',type=int)
             q.add_argument('--roth-regular-basis',type=float)
+            q.add_argument('--roth-magi',type=float)
+            q.add_argument('--annual-compensation',type=float)
             q.add_argument('--ordinary-income',type=float,default=100000.)
             q.add_argument('--filing-status',default='single',choices=['single','married','head_of_household','married_filing_separately'])
             q.add_argument('--state',choices=['FEDERAL_ONLY','MA','TX','FL','NV'],required=True)
@@ -63,6 +65,7 @@ def main():
         r=explore(sources,calibration_end=a.calibration_end,output=a.output,paths=a.paths,horizons=a.horizons,seed=a.seed,
             model_type=a.model,initial_capital=a.initial_capital,annual_contribution=a.annual_contribution,monthly_withdrawal=a.monthly_withdrawal,
             roth_birth_date=a.roth_birth_date,roth_first_tax_year=a.roth_first_tax_year,roth_regular_basis=a.roth_regular_basis,
+            roth_magi=a.roth_magi,annual_compensation=a.annual_compensation,
             ordinary_income=a.ordinary_income,state=a.state,filing_status=a.filing_status,frozen_tax_year=a.freeze_tax_year,rate=a.rate,inflation=a.inflation,
             production_growth=a.production_growth,equity_drift=a.equity_drift,volatility_scale=a.volatility_scale,
             equity_cagr_constraint=a.equity_cagr_constraint,

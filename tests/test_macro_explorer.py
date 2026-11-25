@@ -59,7 +59,8 @@ class FixtureSources:
 def test_macro_retirement_scenario_uses_canonical_tax_and_roth_books(tmp_path):
     r=explore(FixtureSources(),calibration_end='2024-12-31',output=tmp_path/'result',paths=2,horizons=[1],
         annual_contribution=1200.,rate=.06,inflation=.04,strategies=['US1X_CF','US2X_CF'],
-        roth_birth_date='1980-01-01',roth_first_tax_year=2010,roth_regular_basis=10000.)
+        roth_birth_date='1980-01-01',roth_first_tax_year=2010,roth_regular_basis=10000.,
+        roth_magi=100000.,annual_compensation=100000.)
     assert len(r['path_results'])==8
     assert r['evidence']=='HYPOTHETICAL_STRESS' and r['investment_performance_certification']=='BLOCKED'
     assert r['frozen_tax_and_roth_eligibility_year']==2026
@@ -71,3 +72,9 @@ def test_macro_retirement_scenario_uses_canonical_tax_and_roth_books(tmp_path):
 def test_retirement_cash_flows_require_owner_history(tmp_path):
     with pytest.raises(UnsupportedModelError,match='explicit owner'):
         explore(FixtureSources(),calibration_end='2024-12-31',output=tmp_path/'missing',annual_contribution=1200.)
+
+
+def test_ordinary_income_is_not_silently_eligible_roth_compensation(tmp_path):
+    with pytest.raises(UnsupportedModelError,match='eligible compensation'):
+        explore(FixtureSources(),calibration_end='2024-12-31',output=tmp_path/'income',annual_contribution=1200.,
+            ordinary_income=100000.,roth_birth_date='1980-01-01',roth_first_tax_year=2010,roth_regular_basis=10000.)

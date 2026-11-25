@@ -118,13 +118,14 @@ class HistoricalSources:
         return monthly,metadata
 
 
-def train_slice(panel,origin,window_months,minimum):
+def train_slice(panel,origin,window_months,minimum,*,allow_missing_transitions=False):
     eligible=panel.loc[:pd.Timestamp(origin)]
     complete=eligible.dropna()
     if complete.empty:raise UnsupportedModelError('No complete monthly information state')
     end=complete.index[-1]
     frame=eligible.loc[:end].tail(window_months)
-    if frame.isna().any().any():raise UnsupportedModelError('Missing interior training observations; shorten or source the missing history explicitly')
+    if frame.isna().any().any() and not allow_missing_transitions:
+        raise UnsupportedModelError('Missing interior training observations; shorten or source the missing history explicitly')
     if len(frame)<minimum:raise UnsupportedModelError('Insufficient independent training months')
     if not frame.index.equals(pd.date_range(frame.index[0],frame.index[-1],freq='ME')):
         raise ValueError('Monthly training calendar gap')

@@ -20,7 +20,7 @@ from letf.macro.scoring import evaluate_paths
 from letf.simulation.paired import paired_mean_difference_ci
 
 REQUIRED_GATES={'minimum_disjoint_eras','registered_path_count','relative_crps_improvement',
-    'paired_ci','coverage80','equity_tail5','drawdown_tail95','decision_time_vintages'}
+    'paired_ci','coverage80','equity_tail5','drawdown_tail95','decision_time_vintages','incumbent_comparison'}
 
 
 def implementation_hash():
@@ -76,10 +76,15 @@ def compare_models(evaluations,protocol):
     """Disjoint-era paired tests, fixed gates, familywise CI correction."""
     by={}
     for e in evaluations:
-        if e['complete_evaluation']:by.setdefault(e['origin'],{})[e['model']]=e
+        if e['complete_evaluation']:
+            group=by.setdefault(e['origin'],{})
+            if e['model'] in group:raise ValueError('Duplicate model/origin evaluations cannot be selected by overwrite')
+            group[e['model']]=e
+    incumbent_present=any(e['model']=='incumbent_approved' for e in evaluations)
     common=[];last_end=None
     for origin,models in sorted(by.items()):
         if set(protocol['models'])-set(models):continue
+        if incumbent_present and 'incumbent_approved' not in models:continue
         first=models['joint_block']
         if last_end is not None and first['evaluation_start']<=last_end:continue
         common.append(models);last_end=first['evaluation_end']
@@ -92,6 +97,11 @@ def compare_models(evaluations,protocol):
         ref=[e['score']['primary_crps'] for e in baseline]
         improvement=1-np.mean(losses)/np.mean(ref) if losses else None
         interval=paired_mean_difference_ci(losses,ref,seed=protocol['seed'],confidence=confidence) if len(losses)>=2 else None
+        incumbent_ci=None;incumbent_gain=None
+        if incumbent_present and len(losses)>=2:
+            inc=[g['incumbent_approved']['score']['primary_crps'] for g in common]
+            incumbent_ci=paired_mean_difference_ci(losses,inc,seed=protocol['seed'],confidence=confidence)
+            incumbent_gain=1-np.mean(losses)/np.mean(inc)
         coverage=[v['coverage80'] for e in candidate for v in e['score']['marginals'].values() if v['coverage80'] is not None]
         breaches=[e['score']['marginals']['equity_log']['lower_5_breach_rate'] for e in candidate]
         dd=[e['score']['drawdown_95_breach'] for e in candidate]
@@ -103,9 +113,12 @@ def compare_models(evaluations,protocol):
             'equity_tail5':bool(breaches and np.mean(breaches)<=policy['maximum_5_percent_breach_rate']),
             'drawdown_tail95':bool(dd and np.mean(dd)<=policy['maximum_drawdown_95_breach_fraction']),
             'decision_time_vintages':bool(candidate and all(e['point_in_time_verified'] for e in candidate))}
+        gates['incumbent_comparison']=not incumbent_present or (incumbent_ci is not None and
+            incumbent_ci['high']<=0 and incumbent_gain>=policy['minimum_relative_crps_improvement'])
         gates={k:bool(v) for k,v in gates.items()}
         decisions[model]={'passed':all(gates.values()),'gates':gates,'relative_crps_improvement':float(improvement) if improvement is not None else None,
             'paired_loss_difference_ci':interval,'disjoint_origins':[e['origin'] for e in candidate],
+            'incumbent_loss_difference_ci':incumbent_ci,
             'coverage80_mean':float(np.mean(coverage)) if coverage else None,
             'tail5_breach_mean':float(np.mean(breaches)) if breaches else None,
             'drawdown95_breach_fraction':float(np.mean(dd)) if dd else None}

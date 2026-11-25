@@ -1,0 +1,65 @@
+name: Optional prospective macro candidates
+on:
+  workflow_dispatch:
+    inputs:
+      initialize_registry:
+        description: Initialize a new registry only for an intentional first run
+        type: boolean
+        default: false
+  schedule:
+    - cron: '23 9 12 * *'
+permissions:
+  contents: read
+concurrency:
+  group: prospective-macro-registry
+  cancel-in-progress: false
+jobs:
+  candidate:
+    if: vars.ENABLE_MACRO_RETRAINING == 'true' && vars.MACRO_SOURCE_RIGHTS_ACKNOWLEDGED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: requirements-audit.lock
+      - run: python -m pip install -r requirements-audit.lock
+      - run: python -m pytest tests/test_macro_learning.py tests/test_prospective_retraining.py -q
+      - uses: actions/cache/restore@v4
+        id: history
+        with:
+          path: audit-output/prospective-registry
+          key: macro-registry-${{ github.repository_id }}-${{ github.run_id }}
+          restore-keys: macro-registry-${{ github.repository_id }}-
+      - name: Refuse accidental registry reset
+        if: steps.history.outputs.cache-matched-key == '' && !(github.event_name == 'workflow_dispatch' && inputs.initialize_registry)
+        run: |
+          echo 'Persistent evidence history absent. Restore the archived registry before retraining.'
+          exit 1
+      - run: python scripts/capture_macro_sources.py --output audit-output/current-macro-sources
+      - name: Evaluate earlier frozen forecasts before retraining
+        run: python -m letf.macro.cli evaluate-pending --sources audit-output/current-macro-sources --registry audit-output/prospective-registry --output audit-output/evaluation-report
+      - name: Freeze candidate forecasts
+        env:
+          INTENTIONAL_GENESIS: ${{ github.event_name == 'workflow_dispatch' && inputs.initialize_registry }}
+        run: |
+          if [ "$INTENTIONAL_GENESIS" = 'true' ]; then
+            python -m letf.macro.cli issue --sources audit-output/current-macro-sources --registry audit-output/prospective-registry --output audit-output/candidate-report
+          else
+            python -m letf.macro.cli issue --require-existing --sources audit-output/current-macro-sources --registry audit-output/prospective-registry --output audit-output/candidate-report
+          fi
+      - uses: actions/cache/save@v4
+        with:
+          path: audit-output/prospective-registry
+          key: macro-registry-${{ github.repository_id }}-${{ github.run_id }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prospective-macro-evidence-${{ github.run_id }}
+          path: |
+            audit-output/prospective-registry
+            audit-output/candidate-report
+            audit-output/evaluation-report
+            audit-output/current-macro-sources/catalog.json
+          retention-days: 90

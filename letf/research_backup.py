@@ -17,7 +17,7 @@ ALLOWED_SUFFIXES={'.json','.jsonl','.csv','.txt','.npz','.zip','.bin','.pdf','.x
 
 def safe_name(name):
     p=PurePosixPath(name)
-    if (not name or p.is_absolute() or str(p)!=name or '..' in p.parts or '\\' in name or ':' in name
+    if (not name or not p.parts or p.is_absolute() or str(p)!=name or '..' in p.parts or '\\' in name or ':' in name
             or len(name)>512):raise ValueError('Unsafe research archive path')
     return p
 

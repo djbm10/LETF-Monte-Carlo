@@ -186,3 +186,4 @@ if __name__=='__main__':
     parser.add_argument('--cases',nargs='+',choices=CASES);parser.add_argument('--anchors',type=int,choices=(1,2))
     a=parser.parse_args();r=run_study(a.experiment,json.loads(a.protocol.read_text()),a.output,cases=a.cases,anchors=a.anchors)
     print(json.dumps({'runs':len(r['results']),'all_reconciled':r['all_account_reconciliations_passed'],'model_approved':False}))
+    if not r['all_account_reconciliations_passed']:raise SystemExit(2)

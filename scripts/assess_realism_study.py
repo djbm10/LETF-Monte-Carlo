@@ -61,18 +61,25 @@ def assess(study,precision,sensitivity,output,raw_engine_commit):
                 for field in ('ex_date','pay_date','tax_date','record_date'):
                     if d.get(field) is not None:d[field]=pd.Timestamp(d[field]).date()
                 if d['pay_date']<=end.date():distributions.append(Distribution(**d))
-            new_events=[dict(e,cancel_unpaid_distributions=True) for e in events]
+            raw_has_zero_recovery=any(e.get('cancel_unpaid_distributions') for e in events)
+            # Legacy producers assumed full recovery; current producers assume
+            # zero recovery. Replay the opposite explicitly in either direction.
+            new_events=[dict(e,cancel_unpaid_distributions=not raw_has_zero_recovery) for e in events]
             scenario=ScenarioMarket(market,distributions,new_events,inflation,pd.DataFrame(),inputs[key]['manifest'])
             summary,result=replay_scenario(scenario,'roth')
             recomputed=output.parent/'zero-recovery-replays'/key/f"{old['horizon']}y-roth";recomputed.mkdir(parents=True,exist_ok=False)
             result['reconciliation'].to_csv(recomputed/'daily-account.csv')
             result['terminal_net_unit_equity'].to_csv(recomputed/'net-unit-wealth.csv')
             write_evidence_json(recomputed/'events.json',result['ledger'].events)
-            summary.pop('annual_tax_rows',None);summary['annual_tax_years']=0;summary['ending_carryforwards']={}
-            identity.update(status='SUPPORTED_HYPOTHETICAL_MECHANICS',summary=summary,
-                distribution_recovery_sensitivity={'prior_full_recovery_ending_net_assets':old['summary']['ending_net_assets'],
-                    'zero_recovery_ending_net_assets':summary['ending_net_assets'],
-                    'difference':summary['ending_net_assets']-old['summary']['ending_net_assets'],
+            full_value=summary['ending_net_assets'] if raw_has_zero_recovery else old['summary']['ending_net_assets']
+            zero_value=old['summary']['ending_net_assets'] if raw_has_zero_recovery else summary['ending_net_assets']
+            supported=dict(old['summary']) if raw_has_zero_recovery else summary
+            supported.pop('annual_tax_rows',None);supported['annual_tax_years']=0;supported['ending_carryforwards']={}
+            identity.update(status='SUPPORTED_HYPOTHETICAL_MECHANICS',summary=supported,
+                distribution_recovery_sensitivity={'full_recovery_ending_net_assets':full_value,
+                    'zero_recovery_ending_net_assets':zero_value,'difference':zero_value-full_value,
+                    'raw_recovery_assumption':'zero' if raw_has_zero_recovery else 'full',
+                    'rerun_recovery_assumption':'full' if raw_has_zero_recovery else 'zero',
                     'scenario_probabilities':'UNSPECIFIED'},
                 recomputed_exports={p.name:file_hash(p) for p in recomputed.iterdir()})
         elif old['status']=='EXECUTED_UNAPPROVED':

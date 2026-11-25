@@ -22,11 +22,14 @@ def test_private_recovery_preserves_all_bytes_and_fails_on_tampering_or_overwrit
     assert not (tmp_path/'other').exists()
 
 
-@pytest.mark.parametrize('name,kind',[('../outside',tarfile.REGTYPE),('/absolute',tarfile.REGTYPE),
+@pytest.mark.parametrize('name,kind',[('.',tarfile.REGTYPE),('../outside',tarfile.REGTYPE),('/absolute',tarfile.REGTYPE),
     ('data/link',tarfile.SYMTYPE),('data/hard',tarfile.LNKTYPE),('data\\escape',tarfile.REGTYPE)])
 def test_recovery_rejects_unsafe_tar_members_even_with_matching_archive_hash(tmp_path,name,kind):
     archive=tmp_path/'unsafe.tar.gz'
     with tarfile.open(archive,'w:gz') as tar:
+        manifest={'schema':'private-research-recovery-v1','files':{name:{'sha256':sha256(b'').hexdigest(),'bytes':0}}}
+        blob=json.dumps(manifest).encode();first=tarfile.TarInfo('recovery-manifest.json');first.size=len(blob)
+        tar.addfile(first,io.BytesIO(blob))
         header=tarfile.TarInfo(name);header.type=kind;header.linkname='../outside'
         tar.addfile(header,io.BytesIO(b''))
     digest=sha256(archive.read_bytes()).hexdigest()
@@ -47,3 +50,15 @@ def test_atomic_publication_cannot_replace_even_a_new_empty_target(tmp_path):
     with pytest.raises(FileExistsError):publish_recovery(stage,target)
     assert target.stat().st_ino==identity and list(target.iterdir())==[]
     assert (stage/'data.csv').read_text()=='preserve'
+
+
+def test_valid_manifest_does_not_allow_duplicate_payloads_or_unreviewed_size(tmp_path):
+    archive=tmp_path/'duplicate.tar.gz';name='data/a.csv'
+    manifest={'schema':'private-research-recovery-v1','files':{name:{'sha256':sha256(b'').hexdigest(),'bytes':0}}}
+    with tarfile.open(archive,'w:gz') as tar:
+        blob=json.dumps(manifest).encode();header=tarfile.TarInfo('recovery-manifest.json');header.size=len(blob)
+        tar.addfile(header,io.BytesIO(blob))
+        for _ in range(2):tar.addfile(tarfile.TarInfo(name),io.BytesIO(b''))
+    digest=sha256(archive.read_bytes()).hexdigest()
+    with pytest.raises(ValueError,match='Duplicate'):verify_bundle(archive,digest)
+    with pytest.raises(ValueError,match='size budget'):verify_bundle(archive,digest,maximum_bytes=1)

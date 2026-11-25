@@ -53,7 +53,8 @@ def daily_series(series, name, *, allow_total_loss=True):
 def daily_reset_returns(benchmark_returns, leverage, *, annual_fee=0.,
                         funding_rate_at_previous_close=0., borrowing_spread=0.,
                         elapsed_calendar_days=None, source=None,
-                        observed_fund_returns=False, funding_day_basis=360):
+                        observed_fund_returns=False, funding_day_basis=360,
+                        verified_closures=None):
     """Long daily-reset model, or direct passthrough of observed fund returns.
 
     Fees accrue ACT/365 and borrowing ACT/360 with real dated intervals. If
@@ -95,8 +96,14 @@ def daily_reset_returns(benchmark_returns, leverage, *, annual_fee=0.,
         funding_fraction = fee_fraction
     else:
         days = aligned(elapsed_calendar_days, 'elapsed days')
-        if (days <= 0).any() or (days > 7).any():
+        if (days <= 0).any():
             raise UnsupportedModelError('Historical intervals must represent consecutive daily observations, not missing months')
+        for i in np.flatnonzero(days>7):
+            key=str(benchmark_returns.index[i].date())
+            notice=(verified_closures or {}).get(key,{})
+            if (not notice.get('source') or notice.get('elapsed_days')!=days[i] or i==0 or
+                notice.get('previous_close')!=str(benchmark_returns.index[i-1].date())):
+                raise UnsupportedModelError('Extended gap requires dated independent market-closure evidence')
         fee_fraction = days / 365
         funding_fraction = days / funding_day_basis
     fees = fee * fee_fraction

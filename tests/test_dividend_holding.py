@@ -15,6 +15,8 @@ SOURCE='IRS Publication 550 (2025), Qualified dividends, https://www.irs.gov/pub
 def test_partial_sales_count_sale_day_exclude_acquisition_day_and_do_not_duplicate_cash():
     b=PortfolioLedger();b.add_account('a',TAXABLE_CASH,1000.);b.add_security(Security('X'))
     b.execute(date(2024,1,3),'a','X','BUY',10.,100.)
+    # IRC 246(c)(3)(B) expressly excludes wash-sale tacked holding days.
+    b.lots[0].tacked_days=365
     dist=Distribution('X',date(2024,1,31),date(2024,2,2),1.,'qualified_dividend',SOURCE,True)
     t=DividendHolding(dist,b,'a');t.update(date(2024,1,31),b)
     b.income(date(2024,2,2),'a',10.,'ordinary_dividend')

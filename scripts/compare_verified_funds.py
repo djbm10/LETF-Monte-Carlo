@@ -16,14 +16,15 @@ import pandas as pd
 from letf.account_cli import compare_accounts,_serialize
 
 
-def compare_cohort(bundles,*,output,start='2024-01-02',end='2025-12-31',state='FEDERAL_ONLY',initial_capital=100000.):
+def compare_cohort(bundles,*,output,start='2024-01-02',end='2025-12-31',state='FEDERAL_ONLY',initial_capital=100000.,reinvest=False):
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     rows={};checks={}
     for symbol,bundle in sorted(bundles.items()):
         target=output/symbol
         summary=compare_accounts(bundle,strategy='buy_hold',start=start,end=end,
             state=state,initial_capital=initial_capital,ordinary_income=100000.,
-            filing_status='single',buy_hold_initial_only=True,output=target)
+            filing_status='single',buy_hold_initial_only=not reinvest,output=target,
+            qualified_holding_policy='track_unhedged_common' if reinvest else 'verified_at_ex')
         if summary['strategy']['symbol']!=symbol:raise ValueError('Bundle symbol mismatch')
         checks[symbol]={}
         if (target/'taxable_pretax_fills.csv').read_bytes()!=(target/'roth_pretax_fills.csv').read_bytes():
@@ -45,14 +46,14 @@ def compare_cohort(bundles,*,output,start='2024-01-02',end='2025-12-31',state='F
     if len(policies)!=1:raise AssertionError('Incompatible cash policies')
     report={'data_status':'OBSERVED','execution_status':'HYPOTHETICAL_STRESS','investment_performance_certification':'BLOCKED',
         'common_inputs':{'start':start,'end':end,'initial_capital':initial_capital,'state':state,
-            'filing_status':'single','ordinary_income':100000.,'allocation':'Initial lump-sum buy, hold, terminal sell',
-            'cash_distributions':'Accumulate in cash in BOTH accounts for EVERY fund','cash_yield':0.,
+            'filing_status':'single','ordinary_income':100000.,'allocation':'Buy, hold and terminal sell',
+            'cash_distributions':'Reinvest through common daily allocation rule' if reinvest else 'Accumulate in cash in BOTH accounts for EVERY fund','cash_yield':0.,
             'spread_bps':2.,'slippage_bps':1.,'fees':'Observed fund costs embedded in prices, never deducted twice'},
         'funds':rows,'independent_checks':checks,
         'limitations':['Hypothetical daily OHLC execution, no contemporaneous NBBO verification',
             'Existing Roth balance; terminal internal sale is not a personal withdrawal',
             'Salary withholding/safe harbor supplied assumption, not complete household tax advice',
-            'Initial-only cash-distribution policy makes the cohort consistent; no dividend reinvestment claim',
+            'Actual unhedged common-share QDI tracking; hedged/preferred/Section199A forward eligibility remains gated' if reinvest else 'Initial-only cash-distribution policy; no dividend reinvestment claim',
             'No investment ranking is certified; different fund risks are not matched portfolios']}
     (output/'report.json').write_text(json.dumps(report,indent=2,allow_nan=False,default=_serialize)+'\n');return report
 
@@ -62,9 +63,10 @@ def main():
     p.add_argument('--bundle',action='append',required=True,help='SYMBOL=directory; repeat per fund')
     p.add_argument('--output',type=Path,required=True);p.add_argument('--start',default='2024-01-02');p.add_argument('--end',default='2025-12-31')
     p.add_argument('--state',required=True,choices=['FEDERAL_ONLY','MA','TX','FL','NV'])
+    p.add_argument('--reinvest',action='store_true',help='Common reinvestment policy with actual unhedged common-share QDI tracking')
     a=p.parse_args();pairs=[s.split('=',1) for s in a.bundle]
     if any(len(s)!=2 for s in pairs) or len({s[0] for s in pairs})!=len(pairs):p.error('Unique SYMBOL=directory inputs required')
-    compare_cohort(dict(pairs),output=a.output,start=a.start,end=a.end,state=a.state)
+    compare_cohort(dict(pairs),output=a.output,start=a.start,end=a.end,state=a.state,reinvest=a.reinvest)
 
 
 if __name__=='__main__':main()

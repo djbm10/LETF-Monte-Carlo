@@ -5,6 +5,9 @@ https://www.irs.gov/publications/p550
 Common shares require >60 days in the 121-day ex-date window. This bounded
 tracker handles unhedged common stock/corporate ETF lots only. Preferred stock,
 hedged/risk-reduced days and derivative entitlements require separate evidence.
+IRC 1(h)(11)(B)(iii) incorporates 246(c); 246(c)(3)(B) excludes 1223(3)
+wash-sale tacking for this test. Count actual acquisition dates, NOT tax tacks:
+https://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title26-section246
 """
 from dataclasses import dataclass
 from datetime import timedelta
@@ -31,7 +34,6 @@ class DividendHolding:
         by={}
         for lot in book.lots:
             if lot.account==account and lot.security==distribution.security and lot.shares>1e-10:
-                if lot.tacked_days:raise UnsupportedModelError('QDI after tacked wash-sale holding periods requires separate review')
                 by[lot.acquired]=by.get(lot.acquired,0.)+lot.shares
         for acquired,shares in by.items():
             start=max(acquired+timedelta(days=1),distribution.ex_date-timedelta(days=60))

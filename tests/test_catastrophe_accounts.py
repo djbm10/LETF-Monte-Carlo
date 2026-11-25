@@ -121,3 +121,29 @@ def test_low_level_zero_tax_disposition_is_blocked_before_any_corporate_action_m
     with pytest.raises(UnsupportedModelError,match='IRC165'):
         book.execute(date(2027,6,15),'main','X','SELL',10.,0.,execution_kind='liquidation',execution_source='Not tax evidence')
     assert book.quantity('main','X')==10. and len(book.events)==count
+
+
+@pytest.mark.parametrize('account',['taxable','roth'])
+def test_supported_principal_withdrawal_is_not_drawdown_or_negative_investment_return(account):
+    m=scenario_market(stressed_context(context(),'reference'),1,annual_distribution=0.,fee=0.,spread=0.)
+    day=m.market.index[m.market.index>='2028-07-10'][0]
+    summary,_=replay_scenario(m,account,annual_contribution=0.,allocation=0.,
+        withdrawals=[{'date':str(day.date()),'kind':'withdrawal','amount':500.}],spread_bps=0.,slippage_bps=0.)
+    assert summary['ending_net_assets']==pytest.approx(9500.)
+    assert summary['withdrawals']==500. and summary['contributions']==0.
+    assert summary['metrics']['money_weighted_return']==pytest.approx(0.,abs=1e-9)
+    assert summary['metrics']['max_drawdown']==0.
+
+
+def test_issuer_failure_can_destroy_declared_unpaid_cash_without_fabricating_a_later_payment():
+    m=scenario_market(stressed_context(context(),'issuer_failure_zero'),1,fee=0.,spread=0.)
+    event=m.liquidation_events[0];day=pd.Timestamp(event['date'])
+    assert event['cancel_unpaid_distributions']
+    summary,result=replay_scenario(m,'roth',annual_contribution=0.,spread_bps=0.,slippage_bps=0.)
+    defaults=[e for e in result['ledger'].events if e['action']=='DISTRIBUTION_DEFAULT']
+    assert len(defaults)==1 and defaults[0]['amount']>0.
+    assert result['reconciliation'].loc[:day].iloc[-2].receivable_dividends>0.
+    assert result['reconciliation'].loc[day].receivable_dividends==0.
+    assert not [e for e in result['ledger'].events if e['action']=='INCOME' and e['date']>day.date()]
+    assert summary['unpaid_distributions_written_off']==defaults[0]['amount']
+    assert summary['independent_audit']['passed']

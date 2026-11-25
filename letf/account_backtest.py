@@ -149,6 +149,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             raise UnsupportedModelError('Liquidation requires explicit open/close timing and source evidence')
         if profile.account_type=='taxable' and action.get('cash_per_share')==0:
             raise UnsupportedModelError('Taxable zero-residual closure requires reviewed worthless-security/IRC165(g) or actual final-redemption treatment, not a same-day zero-NAV sale')
+        if action.get('cancel_unpaid_distributions') and (profile.account_type!='roth' or action.get('timing','open')!='close'):
+            raise UnsupportedModelError('Unpaid-distribution default currently supports explicit Roth close events only; taxable bad-debt and same-day payment treatment are unreviewed')
     symbols = [s.symbol for s in securities]
     if not symbols or len(symbols) != len(set(symbols)):
         raise ValueError('Unique instruments required')
@@ -509,6 +511,12 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             if calendar_date(action['date'])==when and action.get('timing','open')=='close':
                 book.liquidate_security(when,action['security'],action['cash_per_share'],
                     source=action['source'],settlement_date=settlement(when))
+                if action.get('cancel_unpaid_distributions'):
+                    for distribution,amount in list(receivables):
+                        if distribution.security==action['security']:
+                            receivables.remove((distribution,amount))
+                            book.events.append({'date':when,'account':account_id,'action':'DISTRIBUTION_DEFAULT',
+                                'security':action['security'],'amount':amount,'source':action['source']})
         if terminal_liquidation and when == last:
             for symbol in symbols:
                 shares = book.quantity(account_id, symbol)

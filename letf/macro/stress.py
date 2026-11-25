@@ -133,7 +133,8 @@ def scenario_market(context,leverage,*,annual_distribution=.02,fee=.01,spread=.0
         if end is not None and t>=end:
             opening[t]=previous if t==end and context.attrs['timing']=='close' else 0.
             if t==end:events.append({'date':str(dates[t].date()),'security':symbol,'cash_per_share':0.,
-                'timing':context.attrs['timing'],'source':f'Stress assumption {case}; {source.sha256}; not actual issuer policy'})
+                'timing':context.attrs['timing'],'cancel_unpaid_distributions':case=='issuer_failure_zero',
+                'source':f'Stress assumption {case}; {source.sha256}; not actual issuer policy'})
             continue
         opening[t]=previous;cash=previous*annual_distribution/4 if t in ex else 0.
         closing[t]=previous*(1+result['return'].iloc[t])-cash

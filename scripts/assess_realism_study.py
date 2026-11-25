@@ -10,15 +10,17 @@ from collections import Counter
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import numpy as np
 import pandas as pd
-from letf.account_backtest import run_account_backtest
+from letf.account_backtest import run_account_backtest,Distribution
 from letf.accounts import Security,TAXABLE_CASH
 from letf.accuracy import UnsupportedModelError
-from letf.account_stress import write_evidence_json
+from letf.account_stress import write_evidence_json,replay_scenario
+from letf.macro.stress import ScenarioMarket
 from letf.macro.precision_run import file_hash
 
 
 def assess(study,precision,sensitivity,output,raw_engine_commit):
     if output.exists():raise ValueError('Evidence assessments are immutable')
+    output.parent.mkdir(parents=True,exist_ok=True)
     raw=json.loads((study/'report.json').read_text());inputs={r['id']:r for r in raw['inputs']}
     actions={}
     for key,entry in inputs.items():
@@ -47,8 +49,36 @@ def assess(study,precision,sensitivity,output,raw_engine_commit):
             else:raise AssertionError('Current canonical API failed to block unsupported zero-price taxable loss')
             blocked_checks+=1;identity.update(status='BLOCKED_TAX_DISPOSITION',reason=reason,summary=None,
                 superseded_raw_tax_values='Not valid after-tax evidence; no same-day zero-NAV disposition assumed')
+        elif old['case']=='issuer_failure_zero' and old['account']=='roth' and old['status']=='EXECUTED_UNAPPROVED':
+            # A second structural assumption is explicit: declared but unpaid
+            # distributions receive zero recovery. Rerun the actual daily ledger
+            # rather than merely subtracting cash from an old terminal estimate.
+            market=pd.read_csv(study/key/'prices.csv',index_col=0,parse_dates=True).loc[:end]
+            inflation=pd.read_csv(study/key/'inflation.csv',index_col=0,parse_dates=True).iloc[:,0].reindex(market.index)
+            distributions=[]
+            for entry in actions[key]['distributions']:
+                d=dict(entry)
+                for field in ('ex_date','pay_date','tax_date','record_date'):
+                    if d.get(field) is not None:d[field]=pd.Timestamp(d[field]).date()
+                if d['pay_date']<=end.date():distributions.append(Distribution(**d))
+            new_events=[dict(e,cancel_unpaid_distributions=True) for e in events]
+            scenario=ScenarioMarket(market,distributions,new_events,inflation,pd.DataFrame(),inputs[key]['manifest'])
+            summary,result=replay_scenario(scenario,'roth')
+            recomputed=output.parent/'zero-recovery-replays'/key/f"{old['horizon']}y-roth";recomputed.mkdir(parents=True,exist_ok=False)
+            result['reconciliation'].to_csv(recomputed/'daily-account.csv')
+            result['terminal_net_unit_equity'].to_csv(recomputed/'net-unit-wealth.csv')
+            write_evidence_json(recomputed/'events.json',result['ledger'].events)
+            summary.pop('annual_tax_rows',None);summary['annual_tax_years']=0;summary['ending_carryforwards']={}
+            identity.update(status='SUPPORTED_HYPOTHETICAL_MECHANICS',summary=summary,
+                distribution_recovery_sensitivity={'prior_full_recovery_ending_net_assets':old['summary']['ending_net_assets'],
+                    'zero_recovery_ending_net_assets':summary['ending_net_assets'],
+                    'difference':summary['ending_net_assets']-old['summary']['ending_net_assets'],
+                    'scenario_probabilities':'UNSPECIFIED'},
+                recomputed_exports={p.name:file_hash(p) for p in recomputed.iterdir()})
         elif old['status']=='EXECUTED_UNAPPROVED':
             summary={k:v for k,v in old['summary'].items() if k!='annual_tax_rows'}
+            if 'routine_capital_gains_tax' in summary:
+                summary['total_incremental_investment_tax_liability']=summary.pop('routine_capital_gains_tax')
             summary['annual_tax_years']=len(old['summary']['annual_tax_rows'])
             summary['ending_carryforwards']={k:old['summary']['annual_tax_rows'][-1].get(k,0.)
                 for k in ('st_cf','lt_cf','state_st_cf','state_lt_cf')} if old['summary']['annual_tax_rows'] else {}
@@ -83,6 +113,7 @@ def assess(study,precision,sensitivity,output,raw_engine_commit):
             'future_tax_policy':'Frozen 2026 federal/eligibility assumptions, unknown future law',
             'forecast_skill':'Rejected models stay rejected; genuine December2026 outcomes pending'},
         'limitations':raw['limitations']+['All taxable zero-residual cases blocked; raw initial ordinary-sale tax values superseded',
+            'Roth issuer default rerun with zero unpaid-distribution recovery; original full-recovery values retained as unweighted structural sensitivity',
             'Only two registered old anchor paths reused, not an empirical probability or convergence study']}
     output.parent.mkdir(parents=True,exist_ok=True);write_evidence_json(output,report);return report
 

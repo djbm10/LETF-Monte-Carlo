@@ -21,6 +21,13 @@ def fingerprint(frame):
     return sha256(canonical(payload)).hexdigest()
 
 
+def fsync_directory(path):
+    """Persist newly created names as well as file contents on local storage."""
+    descriptor=os.open(path,os.O_RDONLY)
+    try:os.fsync(descriptor)
+    finally:os.close(descriptor)
+
+
 @contextmanager
 def lock(root):
     root=Path(root);root.mkdir(parents=True,exist_ok=True)
@@ -54,12 +61,11 @@ class ArtifactStore:
                           'created_at':datetime.now(timezone.utc).isoformat()}
                 with (staging/'manifest.json').open('xb') as f:
                     f.write(canonical(envelope));f.flush();os.fsync(f.fileno())
+                fsync_directory(staging)
                 # Publish both files atomically. A failed/terminated write can
                 # never expose a half-written content-addressed artifact.
                 os.rename(staging,directory)
-                descriptor=os.open(directory.parent,os.O_RDONLY)
-                try:os.fsync(descriptor)
-                finally:os.close(descriptor)
+                fsync_directory(directory.parent)
             finally:
                 if staging.exists():shutil.rmtree(staging)
         return identifier

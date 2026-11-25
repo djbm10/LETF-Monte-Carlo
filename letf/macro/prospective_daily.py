@@ -10,7 +10,7 @@ import json,os,tarfile,io
 from pathlib import Path,PurePosixPath
 import numpy as np
 import pandas as pd
-from letf.macro.artifacts import ArtifactStore,canonical,fingerprint
+from letf.macro.artifacts import ArtifactStore,canonical,fingerprint,fsync_directory
 from letf.macro.data import CORE,train_slice
 from letf.macro.models import MacroModel
 from letf.macro.resampling import sample_with_lineage
@@ -83,6 +83,7 @@ def issue_daily(sources,*,registry,output,paths=2000,months=12,seed=20261129):
         'uncertainty':'Forecast percentiles are model distributions, not confidence intervals or validated real-world probabilities'}
     output.parent.mkdir(parents=True,exist_ok=True)
     with output.open('xb') as f:f.write(canonical(commitment));f.flush();os.fsync(f.fileno())
+    fsync_directory(output.parent)
     return commitment
 
 
@@ -143,6 +144,7 @@ def seal_snapshot(sources,registry,commitment,archive):
             info=tarfile.TarInfo('archive-manifest.json');info.size=len(blob);tar.addfile(info,io.BytesIO(blob))
         raw.flush();os.fsync(raw.fileno())
     os.rename(pending,archive)
+    fsync_directory(archive.parent)
     return verify_snapshot(archive)
 
 

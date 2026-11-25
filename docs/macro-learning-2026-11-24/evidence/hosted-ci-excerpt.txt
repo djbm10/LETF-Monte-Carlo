@@ -1,0 +1,32 @@
+2026-11-25T01:00:54.6079872Z   python-version: 3.14
+2026-11-25T01:00:55.1588559Z Successfully set up CPython (3.14.10)
+2026-11-25T01:00:55.3200404Z [command]/opt/hostedtoolcache/Python/3.14.10/x64/bin/pip cache dir
+2026-11-25T01:00:58.5836952Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:00:58.5837329Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.10/x64/lib/pkgconfig
+2026-11-25T01:00:58.5837731Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:00:58.5838077Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:00:58.5838408Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:00:58.5838771Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.10/x64/lib
+2026-11-25T01:01:18.8778283Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:01:18.8778666Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.10/x64/lib/pkgconfig
+2026-11-25T01:01:18.8779121Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:01:18.8779476Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:01:18.8779834Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:01:18.8780179Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.10/x64/lib
+2026-11-25T01:01:19.1728667Z 97 workflows: unique YAML mappings and jobs structure PASS
+2026-11-25T01:01:19.1820174Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:01:19.1820551Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.10/x64/lib/pkgconfig
+2026-11-25T01:01:19.1820968Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:01:19.1821322Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:01:19.1821666Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+2026-11-25T01:01:19.1822025Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.10/x64/lib
+2026-11-25T01:01:36.2469948Z ../../../../../opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:11
+2026-11-25T01:01:36.2470981Z   /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:11: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+2026-11-25T01:01:36.2472601Z ../../../../../opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:13
+2026-11-25T01:01:36.2473541Z   /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:13: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+2026-11-25T01:01:36.2474914Z ../../../../../opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:14
+2026-11-25T01:01:36.2475757Z   /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:14: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+2026-11-25T01:01:36.2476996Z ../../../../../opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:15
+2026-11-25T01:01:36.2477756Z   /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:15: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+2026-11-25T01:01:36.2479551Z 213 passed, 4 warnings in 15.56s
+2026-11-25T01:01:39.8415648Z Cache saved with the key: setup-python-Linux-x64-26.04-Ubuntu-python-3.14.10-pip-a48861e55dc35068a6199288d4297605f7df9c552a91ff3bbb35f54a27d8cac5

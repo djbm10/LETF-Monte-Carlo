@@ -1,0 +1,35 @@
+2026-11-25T01:26:30.2605442Z             True to raise DateOutOfBounds if `date` is earlier than the
+2026-11-25T01:26:30.2610668Z         exchange_calendars.errors.DateOutOfBounds
+2026-11-25T01:26:30.2620088Z >               raise errors.DateOutOfBounds(calendar, ts, param_name)
+2026-11-25T01:26:30.2620825Z E               exchange_calendars.errors.DateOutOfBounds: Parameter `start` receieved as '1998-01-02 00:00:00' although cannot be earlier than the first session of calendar 'XNYS' ('2006-11-27 00:00:00').
+2026-11-25T01:26:30.2621657Z /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/exchange_calendars/calendar_helpers.py:389: DateOutOfBounds
+2026-11-25T01:26:30.2635916Z E   KeyError: Timestamp('2017-09-05 00:00:00')
+2026-11-25T01:26:30.2636296Z pandas/_libs/hashtable_class_helper.pxi:7096: KeyError
+2026-11-25T01:26:30.2657598Z         except KeyError as err:
+2026-11-25T01:26:30.2659598Z >           raise KeyError(key) from err
+2026-11-25T01:26:30.2659881Z E           KeyError: Timestamp('2017-09-05 00:00:00')
+2026-11-25T01:26:30.2660356Z /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas/core/indexes/base.py:3819: KeyError
+2026-11-25T01:26:30.2674252Z E   KeyError: Timestamp('2017-09-06 00:00:00')
+2026-11-25T01:26:30.2674587Z pandas/_libs/hashtable_class_helper.pxi:7096: KeyError
+2026-11-25T01:26:30.2695664Z         except KeyError as err:
+2026-11-25T01:26:30.2697384Z >           raise KeyError(key) from err
+2026-11-25T01:26:30.2697714Z E           KeyError: Timestamp('2017-09-06 00:00:00')
+2026-11-25T01:26:30.2698292Z /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas/core/indexes/base.py:3819: KeyError
+2026-11-25T01:26:30.2712157Z E   KeyError: Timestamp('2024-05-28 00:00:00')
+2026-11-25T01:26:30.2712467Z pandas/_libs/hashtable_class_helper.pxi:7096: KeyError
+2026-11-25T01:26:30.2734153Z         except KeyError as err:
+2026-11-25T01:26:30.2736046Z >           raise KeyError(key) from err
+2026-11-25T01:26:30.2736755Z E           KeyError: Timestamp('2024-05-28 00:00:00')
+2026-11-25T01:26:30.2737215Z /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas/core/indexes/base.py:3819: KeyError
+2026-11-25T01:26:30.2751476Z E   KeyError: Timestamp('2024-05-29 00:00:00')
+2026-11-25T01:26:30.2751794Z pandas/_libs/hashtable_class_helper.pxi:7096: KeyError
+2026-11-25T01:26:30.2772810Z         except KeyError as err:
+2026-11-25T01:26:30.2774615Z >           raise KeyError(key) from err
+2026-11-25T01:26:30.2774896Z E           KeyError: Timestamp('2024-05-29 00:00:00')
+2026-11-25T01:26:30.2775387Z /opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/site-packages/pandas/core/indexes/base.py:3819: KeyError
+2026-11-25T01:26:30.2785703Z FAILED tests/test_historical_settlement.py::test_buy_delivery_is_dated_and_cash_sale_proceeds_follow_effective_law[1998-01-02-expected0] - exchange_calendars.errors.DateOutOfBounds: Parameter `start` receieved as '1998-01-02 00:00:00' although cannot be earlier than the first session of calendar 'XNYS' ('2006-11-27 00:00:00').
+2026-11-25T01:26:30.2786910Z FAILED tests/test_historical_settlement.py::test_buy_delivery_is_dated_and_cash_sale_proceeds_follow_effective_law[2017-09-01-expected1] - KeyError: Timestamp('2017-09-05 00:00:00')
+2026-11-25T01:26:30.2787805Z FAILED tests/test_historical_settlement.py::test_buy_delivery_is_dated_and_cash_sale_proceeds_follow_effective_law[2017-09-05-expected2] - KeyError: Timestamp('2017-09-06 00:00:00')
+2026-11-25T01:26:30.2788816Z FAILED tests/test_historical_settlement.py::test_buy_delivery_is_dated_and_cash_sale_proceeds_follow_effective_law[2024-05-24-expected3] - KeyError: Timestamp('2024-05-28 00:00:00')
+2026-11-25T01:26:30.2789854Z FAILED tests/test_historical_settlement.py::test_buy_delivery_is_dated_and_cash_sale_proceeds_follow_effective_law[2024-05-28-expected4] - KeyError: Timestamp('2024-05-29 00:00:00')
+2026-11-25T01:26:30.2790463Z 5 failed, 216 passed, 4 warnings in 17.44s

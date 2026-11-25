@@ -1,0 +1,3167 @@
+{
+  "protocol": {
+    "version": "macro-learning-v1",
+    "registered": "2026-11-24",
+    "purpose": "Research hindcasts and controlled candidate comparison; no strategy optimization or live authority",
+    "models": [
+      "joint_block",
+      "regime_block",
+      "conditional_var_t"
+    ],
+    "seed": 20261124,
+    "paths_per_origin": 2000,
+    "block_months": 3,
+    "ridge_penalty": 10.0,
+    "student_df": 5.0,
+    "covariance_diagonal_shrinkage": 0.1,
+    "max_var_spectral_radius": 0.995,
+    "origins": [
+      "1929-12-31",
+      "1945-12-31",
+      "1969-12-31",
+      "1986-12-31",
+      "1999-12-31",
+      "2007-12-31",
+      "2011-12-31",
+      "2019-12-31",
+      "2021-12-31"
+    ],
+    "evaluation_months": 60,
+    "training_window_months": 240,
+    "minimum_bootstrap_months": 36,
+    "minimum_conditional_months": 120,
+    "primary_score": "standardized marginal ensemble CRPS, averaged over variables and months",
+    "secondary_scores": [
+      "energy score",
+      "variogram score",
+      "80/95 percent coverage",
+      "5 percent downside quantile calibration",
+      "drawdown tail",
+      "terminal wealth rank",
+      "correlation error"
+    ],
+    "ensemble_score_sample_paths": 256,
+    "promotion": {
+      "minimum_disjoint_eras": 5,
+      "minimum_relative_crps_improvement": 0.02,
+      "paired_era_mean_loss_difference_ci_upper": 0.0,
+      "minimum_80_interval_coverage": 0.65,
+      "maximum_80_interval_coverage": 0.95,
+      "maximum_5_percent_breach_rate": 0.15,
+      "maximum_drawdown_95_breach_fraction": 0.3,
+      "require_verified_decision_time_vintages": true,
+      "require_unconsumed_selection_batch": true,
+      "require_incumbent_and_baseline_comparison": true,
+      "rejection_is_a_valid_result": true
+    },
+    "new_selection_windows": "Only evaluation intervals explicitly disjoint from previously consumed batches; chronological eras overlap elsewhere only for diagnostic reporting",
+    "reconstruction": "Existing 2020-2025 ETF gate is already inspected and remains frozen diagnostic; never called untouched",
+    "macro_availability": "Release/vintage rows must be <= forecast origin. Current revised history may be used only with an explicit pseudo-real-time research label and promotion block",
+    "daily_bridge": "Monthly predictions do not identify daily observations. Any future daily bridge is a separately seeded hypothetical conditional path model",
+    "no_threshold_relaxation": true
+  },
+  "protocol_sha256": "5f7a86bc4e5a7780c9ea7e957626f3945984cbfac41a67779719517a96b688fb",
+  "forecast_ids": [
+    "bd29f22d10dccdfece815601fdae1ac1eeb964801d44768b9f062265a04aa759",
+    "11a292448a578c188a7c6e936806dab58f6bdc8c8c5f0bfd8821402adb3527c4",
+    "fa67f9de7aa2e800717375c93d2173ac35808bf9a538b2259db935720b5f94d4",
+    "72deb28a462041f175a79824de8da18e0cafe3bfd7d99798cc35882c3e4deafe",
+    "75f8e1800ce74c83c2eb8b78b9d3036cf8f777cae054c62df2ac80a4f8306071",
+    "caabb5459aa4f8cc22134ddc23a2095a8e5b293c8e2115c7dcdfaf5b99826abf",
+    "7cd98982ada9a6d9af614a14d554caa5f04bbede8a28f416a926109da08723cc",
+    "161b4adac7f6b1a58f27022f74c1b84ecc9406425aa07d0be0a887aee6f5a6cb",
+    "c6dae5d8aa472bb0a937c661530958bdb148d99ca09ed2385cb9c9368fdb45e6",
+    "53249d9944d419c49c522beaabd054f326454b9056333652a44db42c79f5a49e",
+    "8cccaa4ba45dfe215032ffd6de30aa8429139438ef9b2cc4b7ef4e9e31a091fe",
+    "3c7ccbf0decc4a6311064c3715dfe026306c38591d463238199d34254b66bbd3",
+    "d0df70ae9c205aff8505e96aaf6a87a8e54acd7557d63a03d3ffc81d2ff9ff68",
+    "8f276fe1f049f1d490e0eb111ee6d7e35a1b1a0dc5b08a98ab0f7462da2b3c5a",
+    "f8ad3445191aa1309aea52c630376a5ea95b1b6d4fb9f361b9b8aadce9f89caa",
+    "9e0c559603b379093febe97402fa15dd77ef5301eafea714b82e0b9cf90838b9",
+    "03ce57634f07ca83fb1e31bf2a912ed8fb0b095ddb4c6bd4f6fdbbe6c4916d5f",
+    "261f5f866a166b1e5675ba78d3aa090c19340abf4e6c00055d63e73842658435",
+    "fbbc98d9b31bbd4a2132ec7efb6c401c66ea6dda42993aa1d2b30640af33b024",
+    "754922d5883c8b3fc045c47fe1e7117ccdf67bc27fb8981c8762b545c5ca776f",
+    "92f7a1cacdbd20e06672572a72ed05314afb888ed4a4db36088d1f008ec16ce6",
+    "680b9498c6a4dcbaa7e4b4a8620276c5c64f3c552d748431ee62c3619b0256ed",
+    "f963cfe4d2cf1eeaa6cbf71ef2e8f5bb3dee32a69dc303cc1b60785a940985c8",
+    "c0c9409f7f066ea5d91ad88997a3fe407828be35c4ef2757d21893baa752e90b",
+    "a03ad0322f49867c978325223ca308919d125f0249552f5ca836d45d47ad88bc",
+    "2180e0972902972c95294b70be37b78522ed35d7e00c26c260350c10da971f42"
+  ],
+  "source_catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+  "blocked_models": [
+    {
+      "origin": "1929-12-31",
+      "model": "conditional_var_t",
+      "reason": "Insufficient independent training months"
+    }
+  ],
+  "evaluations": [
+    {
+      "forecast_id": "bd29f22d10dccdfece815601fdae1ac1eeb964801d44768b9f062265a04aa759",
+      "model": "joint_block",
+      "origin": "1929-12-31",
+      "evaluation_start": "1930-01-31",
+      "evaluation_end": "1934-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 4.030806360701206,
+        "energy_score": 14.590245305816904,
+        "variogram_score": 2.440377169443267,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.4080036315512632,
+            "coverage80": 0.4666666666666667,
+            "coverage95": 0.6166666666666667,
+            "lower_5_breach_rate": 0.36666666666666664
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 2.2399305699424255,
+            "coverage80": 0.11666666666666667,
+            "coverage95": 0.31666666666666665,
+            "lower_5_breach_rate": 0.8666666666666667
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7857070688059247,
+            "coverage80": 0.4,
+            "coverage95": 0.9,
+            "lower_5_breach_rate": 0.2
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.276663168765205,
+            "coverage80": 0.4666666666666667,
+            "coverage95": 0.7,
+            "lower_5_breach_rate": 0.26666666666666666
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 14.443727364441207,
+            "coverage80": 0.03333333333333333,
+            "coverage95": 0.11666666666666667,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.7961546028333054,
+        "predicted_drawdown_p95": 0.27908355047586664,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": -0.5392905244474856,
+        "terminal_predictive_rank": 0.0,
+        "terminal_log_p10": 0.8298488119295441,
+        "terminal_log_p50": 1.252680468867367,
+        "terminal_log_p90": 1.6237823968300242,
+        "correlation_error_frobenius_per_dimension": 0.3552926589684117,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "2942fa1dce973a6b441e32ecf14e20f1802261df5bc7b103319a1d0b5dad0e52",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "11a292448a578c188a7c6e936806dab58f6bdc8c8c5f0bfd8821402adb3527c4",
+      "model": "regime_block",
+      "origin": "1929-12-31",
+      "evaluation_start": "1930-01-31",
+      "evaluation_end": "1934-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 4.026294921561541,
+        "energy_score": 14.569775626939593,
+        "variogram_score": 2.4316813832032595,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.4079949357041288,
+            "coverage80": 0.4166666666666667,
+            "coverage95": 0.6333333333333333,
+            "lower_5_breach_rate": 0.36666666666666664
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 2.2111435817980207,
+            "coverage80": 0.13333333333333333,
+            "coverage95": 0.26666666666666666,
+            "lower_5_breach_rate": 0.8666666666666667
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7913662117773872,
+            "coverage80": 0.38333333333333336,
+            "coverage95": 0.8833333333333333,
+            "lower_5_breach_rate": 0.21666666666666667
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.2734419107844337,
+            "coverage80": 0.45,
+            "coverage95": 0.6833333333333333,
+            "lower_5_breach_rate": 0.25
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 14.44752796774374,
+            "coverage80": 0.03333333333333333,
+            "coverage95": 0.11666666666666667,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.7961546028333054,
+        "predicted_drawdown_p95": 0.37001718544199,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": -0.5392905244474856,
+        "terminal_predictive_rank": 0.0,
+        "terminal_log_p10": 0.7690612473676326,
+        "terminal_log_p50": 1.2119683710844076,
+        "terminal_log_p90": 1.5997707416561013,
+        "correlation_error_frobenius_per_dimension": 0.3566466168714465,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "2942fa1dce973a6b441e32ecf14e20f1802261df5bc7b103319a1d0b5dad0e52",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "fa67f9de7aa2e800717375c93d2173ac35808bf9a538b2259db935720b5f94d4",
+      "model": "joint_block",
+      "origin": "1945-12-31",
+      "evaluation_start": "1946-01-31",
+      "evaluation_end": "1950-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.5036594705766442,
+        "energy_score": 1.4078112760005437,
+        "variogram_score": 0.3077285685463697,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3023553802933928,
+            "coverage80": 0.95,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.26844664787507583,
+            "coverage80": 1.0,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.8451659993167336,
+            "coverage80": 0.55,
+            "coverage95": 0.8833333333333333,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3805530746026252,
+            "coverage80": 0.85,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.03333333333333333
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7217762507953936,
+            "coverage80": 0.0,
+            "coverage95": 0.13333333333333333,
+            "lower_5_breach_rate": 0.9833333333333333
+          }
+        },
+        "equity_drawdown_actual": 0.24506917280040907,
+        "predicted_drawdown_p95": 0.7115617664060819,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.3978872744921343,
+        "terminal_predictive_rank": 0.577,
+        "terminal_log_p10": -0.5746076525253511,
+        "terminal_log_p50": 0.26454193808294824,
+        "terminal_log_p90": 1.1550760967423424,
+        "correlation_error_frobenius_per_dimension": 0.2806614739364806,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "47d48c6193cb161d9148714d3e5e079a71be1309768fccce6e17f9696bccb3a6",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "72deb28a462041f175a79824de8da18e0cafe3bfd7d99798cc35882c3e4deafe",
+      "model": "regime_block",
+      "origin": "1945-12-31",
+      "evaluation_start": "1946-01-31",
+      "evaluation_end": "1950-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.5069695923565088,
+        "energy_score": 1.4097897720367543,
+        "variogram_score": 0.312702652349829,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3061311399775673,
+            "coverage80": 0.95,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.26882188039656063,
+            "coverage80": 1.0,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.8569231238656904,
+            "coverage80": 0.55,
+            "coverage95": 0.8833333333333333,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3705311613744345,
+            "coverage80": 0.9,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7324406561682913,
+            "coverage80": 0.0,
+            "coverage95": 0.11666666666666667,
+            "lower_5_breach_rate": 1.0
+          }
+        },
+        "equity_drawdown_actual": 0.24506917280040907,
+        "predicted_drawdown_p95": 0.7727694603781827,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.3978872744921343,
+        "terminal_predictive_rank": 0.569,
+        "terminal_log_p10": -0.7270203687110484,
+        "terminal_log_p50": 0.2714412470717873,
+        "terminal_log_p90": 1.209729552142665,
+        "correlation_error_frobenius_per_dimension": 0.2754203939628861,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "47d48c6193cb161d9148714d3e5e079a71be1309768fccce6e17f9696bccb3a6",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "75f8e1800ce74c83c2eb8b78b9d3036cf8f777cae054c62df2ac80a4f8306071",
+      "model": "conditional_var_t",
+      "origin": "1945-12-31",
+      "evaluation_start": "1946-01-31",
+      "evaluation_end": "1950-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.4917325306030409,
+        "energy_score": 1.3684003188115,
+        "variogram_score": 0.27979701118104927,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.31584179841964927,
+            "coverage80": 0.9666666666666667,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.22960535649737077,
+            "coverage80": 1.0,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.813689846806933,
+            "coverage80": 0.6166666666666667,
+            "coverage95": 0.8833333333333333,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3891323930573477,
+            "coverage80": 0.9,
+            "coverage95": 0.9666666666666667,
+            "lower_5_breach_rate": 0.016666666666666666
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7103932582339032,
+            "coverage80": 0.1,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.016666666666666666
+          }
+        },
+        "equity_drawdown_actual": 0.24506917280040907,
+        "predicted_drawdown_p95": 0.7191308718910395,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.3978872744921343,
+        "terminal_predictive_rank": 0.5925,
+        "terminal_log_p10": -0.5976120544510964,
+        "terminal_log_p50": 0.2493198506222581,
+        "terminal_log_p90": 1.0753985564975561,
+        "correlation_error_frobenius_per_dimension": 0.2352090614933767,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "47d48c6193cb161d9148714d3e5e079a71be1309768fccce6e17f9696bccb3a6",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "caabb5459aa4f8cc22134ddc23a2095a8e5b293c8e2115c7dcdfaf5b99826abf",
+      "model": "joint_block",
+      "origin": "1969-12-31",
+      "evaluation_start": "1970-01-31",
+      "evaluation_end": "1974-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 1.180514261511936,
+        "energy_score": 3.1974745625165744,
+        "variogram_score": 0.47013890913136713,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9060348998028029,
+            "coverage80": 0.5666666666666667,
+            "coverage95": 0.85,
+            "lower_5_breach_rate": 0.11666666666666667
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.7107966130033414,
+            "coverage80": 0.38333333333333336,
+            "coverage95": 0.5,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.0593983148817976,
+            "coverage80": 0.5,
+            "coverage95": 0.7333333333333333,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.42669593775242126,
+            "coverage80": 0.8833333333333333,
+            "coverage95": 0.9666666666666667,
+            "lower_5_breach_rate": 0.05
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.799645542119317,
+            "coverage80": 0.2833333333333333,
+            "coverage95": 0.65,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.46357532777587873,
+        "predicted_drawdown_p95": 0.2688880149851349,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": -0.23015047800559998,
+        "terminal_predictive_rank": 0.0005,
+        "terminal_log_p10": 0.2896979404771407,
+        "terminal_log_p50": 0.6436486786010696,
+        "terminal_log_p90": 0.9698004058937124,
+        "correlation_error_frobenius_per_dimension": 0.24903986042251872,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "e1ff89132a41c4076528ea737285232c8aaeb4178e8f79e507f3c1e73d82b530",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "7cd98982ada9a6d9af614a14d554caa5f04bbede8a28f416a926109da08723cc",
+      "model": "regime_block",
+      "origin": "1969-12-31",
+      "evaluation_start": "1970-01-31",
+      "evaluation_end": "1974-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 1.1694958648186617,
+        "energy_score": 3.1910050871353377,
+        "variogram_score": 0.46897470790040846,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9093054735682611,
+            "coverage80": 0.5833333333333334,
+            "coverage95": 0.85,
+            "lower_5_breach_rate": 0.13333333333333333
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.705089191353402,
+            "coverage80": 0.38333333333333336,
+            "coverage95": 0.5166666666666667,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.0423392395300595,
+            "coverage80": 0.6,
+            "coverage95": 0.7333333333333333,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.4126059028125546,
+            "coverage80": 0.9,
+            "coverage95": 0.9666666666666667,
+            "lower_5_breach_rate": 0.05
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.7781395168290322,
+            "coverage80": 0.31666666666666665,
+            "coverage95": 0.65,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.46357532777587873,
+        "predicted_drawdown_p95": 0.24977409875736983,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": -0.23015047800559998,
+        "terminal_predictive_rank": 0.001,
+        "terminal_log_p10": 0.3124506987220837,
+        "terminal_log_p50": 0.6684815405546727,
+        "terminal_log_p90": 0.9961141968193267,
+        "correlation_error_frobenius_per_dimension": 0.25951492050959407,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "e1ff89132a41c4076528ea737285232c8aaeb4178e8f79e507f3c1e73d82b530",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "161b4adac7f6b1a58f27022f74c1b84ecc9406425aa07d0be0a887aee6f5a6cb",
+      "model": "conditional_var_t",
+      "origin": "1969-12-31",
+      "evaluation_start": "1970-01-31",
+      "evaluation_end": "1974-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.983504652597551,
+        "energy_score": 2.679596753306692,
+        "variogram_score": 0.373413992421041,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9003292616583565,
+            "coverage80": 0.55,
+            "coverage95": 0.8333333333333334,
+            "lower_5_breach_rate": 0.18333333333333332
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.3278271282554595,
+            "coverage80": 0.4166666666666667,
+            "coverage95": 0.6166666666666667,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9849382534210165,
+            "coverage80": 0.6333333333333333,
+            "coverage95": 0.7666666666666667,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.4165782465545166,
+            "coverage80": 0.9,
+            "coverage95": 0.9666666666666667,
+            "lower_5_breach_rate": 0.05
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.2878503730984063,
+            "coverage80": 0.4166666666666667,
+            "coverage95": 0.55,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.46357532777587873,
+        "predicted_drawdown_p95": 0.2692151083488453,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": -0.23015047800559998,
+        "terminal_predictive_rank": 0.0035,
+        "terminal_log_p10": 0.18222581446865088,
+        "terminal_log_p50": 0.554499221936199,
+        "terminal_log_p90": 0.9332141399558593,
+        "correlation_error_frobenius_per_dimension": 0.3153117692704067,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "e1ff89132a41c4076528ea737285232c8aaeb4178e8f79e507f3c1e73d82b530",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "c6dae5d8aa472bb0a937c661530958bdb148d99ca09ed2385cb9c9368fdb45e6",
+      "model": "joint_block",
+      "origin": "1986-12-31",
+      "evaluation_start": "1987-01-31",
+      "evaluation_end": "1991-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.39360594227927237,
+        "energy_score": 1.0989523543015498,
+        "variogram_score": 0.15509292781219328,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6112054833291772,
+            "coverage80": 0.7833333333333333,
+            "coverage95": 0.9166666666666666,
+            "lower_5_breach_rate": 0.06666666666666667
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3131309915643034,
+            "coverage80": 0.9666666666666667,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.016666666666666666
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.40335899764959726,
+            "coverage80": 0.7666666666666667,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.05
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3477411030812266,
+            "coverage80": 0.9833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.29259313577205753,
+            "coverage80": 1.0,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.29841352740344085,
+        "predicted_drawdown_p95": 0.39447686344153654,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6665392032041664,
+        "terminal_predictive_rank": 0.67,
+        "terminal_log_p10": 0.022359373895860533,
+        "terminal_log_p50": 0.5167746996223983,
+        "terminal_log_p90": 0.9526635602110197,
+        "correlation_error_frobenius_per_dimension": 0.29957554406330755,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "2a23b1cb762f8c368de18111967e777f8f871082ef0d885b57a9c28e5eb6d4b8",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "53249d9944d419c49c522beaabd054f326454b9056333652a44db42c79f5a49e",
+      "model": "regime_block",
+      "origin": "1986-12-31",
+      "evaluation_start": "1987-01-31",
+      "evaluation_end": "1991-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.393113000452995,
+        "energy_score": 1.0808713751059047,
+        "variogram_score": 0.1515079732579765,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6104152148500026,
+            "coverage80": 0.7666666666666667,
+            "coverage95": 0.9333333333333333,
+            "lower_5_breach_rate": 0.06666666666666667
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.30752867796312844,
+            "coverage80": 0.9666666666666667,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.016666666666666666
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.40728050027442986,
+            "coverage80": 0.7666666666666667,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.03333333333333333
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3449394495372262,
+            "coverage80": 0.95,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.29540115964018804,
+            "coverage80": 1.0,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.29841352740344085,
+        "predicted_drawdown_p95": 0.4208449632440282,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6665392032041664,
+        "terminal_predictive_rank": 0.6665,
+        "terminal_log_p10": 0.008804056883776619,
+        "terminal_log_p50": 0.5102020211894078,
+        "terminal_log_p90": 0.9996002525523009,
+        "correlation_error_frobenius_per_dimension": 0.2987311251301764,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "2a23b1cb762f8c368de18111967e777f8f871082ef0d885b57a9c28e5eb6d4b8",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "8cccaa4ba45dfe215032ffd6de30aa8429139438ef9b2cc4b7ef4e9e31a091fe",
+      "model": "conditional_var_t",
+      "origin": "1986-12-31",
+      "evaluation_start": "1987-01-31",
+      "evaluation_end": "1991-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.3859542534692601,
+        "energy_score": 1.0587720426550433,
+        "variogram_score": 0.14775183849960574,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6087759827661885,
+            "coverage80": 0.7666666666666667,
+            "coverage95": 0.9333333333333333,
+            "lower_5_breach_rate": 0.06666666666666667
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.2795495601374569,
+            "coverage80": 0.9833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.42081441602301534,
+            "coverage80": 0.8833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.34106426128634976,
+            "coverage80": 0.9666666666666667,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.27956704713329006,
+            "coverage80": 1.0,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.29841352740344085,
+        "predicted_drawdown_p95": 0.4092673773127037,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6665392032041664,
+        "terminal_predictive_rank": 0.6405,
+        "terminal_log_p10": -0.01021804017680319,
+        "terminal_log_p50": 0.5147938854760654,
+        "terminal_log_p90": 1.046659602423137,
+        "correlation_error_frobenius_per_dimension": 0.25431072576379,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "2a23b1cb762f8c368de18111967e777f8f871082ef0d885b57a9c28e5eb6d4b8",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "3c7ccbf0decc4a6311064c3715dfe026306c38591d463238199d34254b66bbd3",
+      "model": "joint_block",
+      "origin": "1999-12-31",
+      "evaluation_start": "2000-01-31",
+      "evaluation_end": "2004-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.5936120031440463,
+        "energy_score": 1.5738450833354092,
+        "variogram_score": 0.20167672227406916,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6618199241951989,
+            "coverage80": 0.6666666666666666,
+            "coverage95": 0.9166666666666666,
+            "lower_5_breach_rate": 0.16666666666666666
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9194987358210421,
+            "coverage80": 0.35,
+            "coverage95": 0.35,
+            "lower_5_breach_rate": 0.65
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6313782824305336,
+            "coverage80": 0.75,
+            "coverage95": 0.8333333333333334,
+            "lower_5_breach_rate": 0.2
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.42515431461728453,
+            "coverage80": 0.9833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.33020875865617244,
+            "coverage80": 0.9666666666666667,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.016666666666666666
+          }
+        },
+        "equity_drawdown_actual": 0.4465083835601107,
+        "predicted_drawdown_p95": 0.3635640158249319,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": -0.09586881417023774,
+        "terminal_predictive_rank": 0.014,
+        "terminal_log_p10": 0.33076812713451303,
+        "terminal_log_p50": 0.7982141361029815,
+        "terminal_log_p90": 1.2025086265511824,
+        "correlation_error_frobenius_per_dimension": 0.3976225875641525,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "1d6b14716fd73fd8516fa42ad932b952ca789e25e28779d708f201f55211dd33",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "d0df70ae9c205aff8505e96aaf6a87a8e54acd7557d63a03d3ffc81d2ff9ff68",
+      "model": "regime_block",
+      "origin": "1999-12-31",
+      "evaluation_start": "2000-01-31",
+      "evaluation_end": "2004-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.5901973333423797,
+        "energy_score": 1.5788993307711086,
+        "variogram_score": 0.20150499393980478,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6627616903501482,
+            "coverage80": 0.6666666666666666,
+            "coverage95": 0.9166666666666666,
+            "lower_5_breach_rate": 0.16666666666666666
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9091337578216832,
+            "coverage80": 0.31666666666666665,
+            "coverage95": 0.35,
+            "lower_5_breach_rate": 0.65
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6320089115856301,
+            "coverage80": 0.7166666666666667,
+            "coverage95": 0.8333333333333334,
+            "lower_5_breach_rate": 0.2
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.42757320718329805,
+            "coverage80": 0.9833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3195090997711389,
+            "coverage80": 0.9833333333333333,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.016666666666666666
+          }
+        },
+        "equity_drawdown_actual": 0.4465083835601107,
+        "predicted_drawdown_p95": 0.3617244069918564,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": -0.09586881417023774,
+        "terminal_predictive_rank": 0.0115,
+        "terminal_log_p10": 0.32210091793178347,
+        "terminal_log_p50": 0.7877667820616128,
+        "terminal_log_p90": 1.2065350102747547,
+        "correlation_error_frobenius_per_dimension": 0.4049347188079054,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "1d6b14716fd73fd8516fa42ad932b952ca789e25e28779d708f201f55211dd33",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "8f276fe1f049f1d490e0eb111ee6d7e35a1b1a0dc5b08a98ab0f7462da2b3c5a",
+      "model": "conditional_var_t",
+      "origin": "1999-12-31",
+      "evaluation_start": "2000-01-31",
+      "evaluation_end": "2004-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.560843080447133,
+        "energy_score": 1.52100089576336,
+        "variogram_score": 0.2067906653303892,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6550605469063008,
+            "coverage80": 0.7,
+            "coverage95": 0.9166666666666666,
+            "lower_5_breach_rate": 0.16666666666666666
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.8357899351973775,
+            "coverage80": 0.35,
+            "coverage95": 0.6166666666666667,
+            "lower_5_breach_rate": 0.6
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6146871913734377,
+            "coverage80": 0.7166666666666667,
+            "coverage95": 0.8833333333333333,
+            "lower_5_breach_rate": 0.16666666666666666
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.4418233253773091,
+            "coverage80": 0.8333333333333334,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.2568544033812398,
+            "coverage80": 0.9833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.4465083835601107,
+        "predicted_drawdown_p95": 0.3165366760473286,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": -0.09586881417023774,
+        "terminal_predictive_rank": 0.0075,
+        "terminal_log_p10": 0.29666987667623124,
+        "terminal_log_p50": 0.7583296562007857,
+        "terminal_log_p90": 1.2068618747404571,
+        "correlation_error_frobenius_per_dimension": 0.3255861503467695,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "1d6b14716fd73fd8516fa42ad932b952ca789e25e28779d708f201f55211dd33",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "f8ad3445191aa1309aea52c630376a5ea95b1b6d4fb9f361b9b8aadce9f89caa",
+      "model": "joint_block",
+      "origin": "2007-12-31",
+      "evaluation_start": "2008-01-31",
+      "evaluation_end": "2012-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 1.3409112942346613,
+        "energy_score": 3.6872396945251986,
+        "variogram_score": 0.651851411466635,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.8004038654262146,
+            "coverage80": 0.65,
+            "coverage95": 0.85,
+            "lower_5_breach_rate": 0.16666666666666666
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.5109222029307567,
+            "coverage80": 0.15,
+            "coverage95": 0.16666666666666666,
+            "lower_5_breach_rate": 0.85
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9723750658107642,
+            "coverage80": 0.5833333333333334,
+            "coverage95": 0.8333333333333334,
+            "lower_5_breach_rate": 0.15
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9824128601425173,
+            "coverage80": 0.6666666666666666,
+            "coverage95": 0.85,
+            "lower_5_breach_rate": 0.13333333333333333
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 2.4384424768630533,
+            "coverage80": 0.43333333333333335,
+            "coverage95": 0.6,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.4754210749611485,
+        "predicted_drawdown_p95": 0.3300984943066642,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": 0.1131847581897635,
+        "terminal_predictive_rank": 0.074,
+        "terminal_log_p10": 0.17345911690730134,
+        "terminal_log_p50": 0.5885679864507195,
+        "terminal_log_p90": 0.9637101698466551,
+        "correlation_error_frobenius_per_dimension": 0.22968160615326175,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "cd2e0d7c6d1a1a85009aab346a150e811a4c04c0e6587185f06974aa22f5b60f",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "9e0c559603b379093febe97402fa15dd77ef5301eafea714b82e0b9cf90838b9",
+      "model": "regime_block",
+      "origin": "2007-12-31",
+      "evaluation_start": "2008-01-31",
+      "evaluation_end": "2012-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 1.3408120907739387,
+        "energy_score": 3.687847051752759,
+        "variogram_score": 0.6526936834632706,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7904247062451122,
+            "coverage80": 0.65,
+            "coverage95": 0.8666666666666667,
+            "lower_5_breach_rate": 0.18333333333333332
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.5153437752237902,
+            "coverage80": 0.15,
+            "coverage95": 0.16666666666666666,
+            "lower_5_breach_rate": 0.85
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9666195534649913,
+            "coverage80": 0.5666666666666667,
+            "coverage95": 0.8333333333333334,
+            "lower_5_breach_rate": 0.15
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.987824878190373,
+            "coverage80": 0.6666666666666666,
+            "coverage95": 0.85,
+            "lower_5_breach_rate": 0.13333333333333333
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 2.4438475407454274,
+            "coverage80": 0.38333333333333336,
+            "coverage95": 0.5833333333333334,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.4754210749611485,
+        "predicted_drawdown_p95": 0.3334198407224118,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": 0.1131847581897635,
+        "terminal_predictive_rank": 0.0865,
+        "terminal_log_p10": 0.13977144092298183,
+        "terminal_log_p50": 0.5646731755363803,
+        "terminal_log_p90": 0.9818068178449258,
+        "correlation_error_frobenius_per_dimension": 0.2282084984738592,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "cd2e0d7c6d1a1a85009aab346a150e811a4c04c0e6587185f06974aa22f5b60f",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "03ce57634f07ca83fb1e31bf2a912ed8fb0b095ddb4c6bd4f6fdbbe6c4916d5f",
+      "model": "conditional_var_t",
+      "origin": "2007-12-31",
+      "evaluation_start": "2008-01-31",
+      "evaluation_end": "2012-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 1.3689421824371661,
+        "energy_score": 3.714651189832636,
+        "variogram_score": 0.6156776888852991,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.8016360167577946,
+            "coverage80": 0.65,
+            "coverage95": 0.8166666666666667,
+            "lower_5_breach_rate": 0.2
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.6379502660025456,
+            "coverage80": 0.0,
+            "coverage95": 0.05,
+            "lower_5_breach_rate": 1.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.968558722632721,
+            "coverage80": 0.5833333333333334,
+            "coverage95": 0.8166666666666667,
+            "lower_5_breach_rate": 0.13333333333333333
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.98186609436709,
+            "coverage80": 0.6333333333333333,
+            "coverage95": 0.8666666666666667,
+            "lower_5_breach_rate": 0.16666666666666666
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 2.45469981242568,
+            "coverage80": 0.23333333333333334,
+            "coverage95": 0.38333333333333336,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.4754210749611485,
+        "predicted_drawdown_p95": 0.3029454957559735,
+        "drawdown_95_breach": true,
+        "terminal_log_return_actual": 0.1131847581897635,
+        "terminal_predictive_rank": 0.0885,
+        "terminal_log_p10": 0.1418505474429207,
+        "terminal_log_p50": 0.5408338805543457,
+        "terminal_log_p90": 0.9617123921045315,
+        "correlation_error_frobenius_per_dimension": 0.23072960191320316,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "cd2e0d7c6d1a1a85009aab346a150e811a4c04c0e6587185f06974aa22f5b60f",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "261f5f866a166b1e5675ba78d3aa090c19340abf4e6c00055d63e73842658435",
+      "model": "joint_block",
+      "origin": "2011-12-31",
+      "evaluation_start": "2012-01-31",
+      "evaluation_end": "2016-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.5480708709937244,
+        "energy_score": 1.5248610008355248,
+        "variogram_score": 0.19402872961417925,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3884323053433392,
+            "coverage80": 0.9,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.0195990063851335,
+            "coverage80": 0.31666666666666665,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.18333333333333332
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.5756394780403251,
+            "coverage80": 0.6666666666666666,
+            "coverage95": 0.9333333333333333,
+            "lower_5_breach_rate": 0.08333333333333333
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.390959496930121,
+            "coverage80": 0.8833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.36572406826970333,
+            "coverage80": 0.7833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.03333333333333333
+          }
+        },
+        "equity_drawdown_actual": 0.08968765370949883,
+        "predicted_drawdown_p95": 0.4425916975067052,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6894752218030918,
+        "terminal_predictive_rank": 0.7795,
+        "terminal_log_p10": -0.09708822140916588,
+        "terminal_log_p50": 0.4006383402030382,
+        "terminal_log_p90": 0.8623960059907216,
+        "correlation_error_frobenius_per_dimension": 0.24542952461888126,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "e752864ec15813c9415c093aff90265d2a560cc5eea36e733545880c852a1a9e",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "fbbc98d9b31bbd4a2132ec7efb6c401c66ea6dda42993aa1d2b30640af33b024",
+      "model": "regime_block",
+      "origin": "2011-12-31",
+      "evaluation_start": "2012-01-31",
+      "evaluation_end": "2016-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.5461424262599653,
+        "energy_score": 1.5478027095698788,
+        "variogram_score": 0.19517006510333826,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.393178619594731,
+            "coverage80": 0.9166666666666666,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.0061203352525696,
+            "coverage80": 0.31666666666666665,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.16666666666666666
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.5806714725974882,
+            "coverage80": 0.65,
+            "coverage95": 0.9333333333333333,
+            "lower_5_breach_rate": 0.06666666666666667
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3912422096772815,
+            "coverage80": 0.8833333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.016666666666666666
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3594994941777567,
+            "coverage80": 0.7833333333333333,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.03333333333333333
+          }
+        },
+        "equity_drawdown_actual": 0.08968765370949883,
+        "predicted_drawdown_p95": 0.4844926361455723,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6894752218030918,
+        "terminal_predictive_rank": 0.8145,
+        "terminal_log_p10": -0.15978008705558538,
+        "terminal_log_p50": 0.37263261427438604,
+        "terminal_log_p90": 0.8276360349363469,
+        "correlation_error_frobenius_per_dimension": 0.2446176729213177,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "e752864ec15813c9415c093aff90265d2a560cc5eea36e733545880c852a1a9e",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "754922d5883c8b3fc045c47fe1e7117ccdf67bc27fb8981c8762b545c5ca776f",
+      "model": "conditional_var_t",
+      "origin": "2011-12-31",
+      "evaluation_start": "2012-01-31",
+      "evaluation_end": "2016-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.4815266833659289,
+        "energy_score": 1.2696001688647434,
+        "variogram_score": 0.14552475656936173,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3956188175655561,
+            "coverage80": 0.9,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7309356736790139,
+            "coverage80": 0.2,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.5833333333333334
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.564908022116972,
+            "coverage80": 0.8,
+            "coverage95": 0.95,
+            "lower_5_breach_rate": 0.06666666666666667
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.38319070525482213,
+            "coverage80": 0.9166666666666666,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.3329801982132799,
+            "coverage80": 0.9333333333333333,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.08968765370949883,
+        "predicted_drawdown_p95": 0.47872737889835115,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6894752218030918,
+        "terminal_predictive_rank": 0.8075,
+        "terminal_log_p10": -0.2210936388052045,
+        "terminal_log_p50": 0.3391809900998696,
+        "terminal_log_p90": 0.8541468794409941,
+        "correlation_error_frobenius_per_dimension": 0.20222997294947956,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "e752864ec15813c9415c093aff90265d2a560cc5eea36e733545880c852a1a9e",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "92f7a1cacdbd20e06672572a72ed05314afb888ed4a4db36088d1f008ec16ce6",
+      "model": "joint_block",
+      "origin": "2019-12-31",
+      "evaluation_start": "2020-01-31",
+      "evaluation_end": "2024-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.7479265917757271,
+        "energy_score": 2.268826210031039,
+        "variogram_score": 0.36257479301061024,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7046990616113096,
+            "coverage80": 0.7166666666666667,
+            "coverage95": 0.9,
+            "lower_5_breach_rate": 0.08333333333333333
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7748231114988521,
+            "coverage80": 0.7666666666666667,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6197967914789615,
+            "coverage80": 0.75,
+            "coverage95": 0.9,
+            "lower_5_breach_rate": 0.016666666666666666
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.3116859385982833,
+            "coverage80": 0.6333333333333333,
+            "coverage95": 0.8333333333333334,
+            "lower_5_breach_rate": 0.11666666666666667
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.32862805569122916,
+            "coverage80": 0.7833333333333333,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.13333333333333333
+          }
+        },
+        "equity_drawdown_actual": 0.24899518819469246,
+        "predicted_drawdown_p95": 0.46767039578740627,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6686619617827517,
+        "terminal_predictive_rank": 0.859,
+        "terminal_log_p10": -0.15481857366327106,
+        "terminal_log_p50": 0.33101459380965814,
+        "terminal_log_p90": 0.7360099839701685,
+        "correlation_error_frobenius_per_dimension": 0.20957228118632437,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "f6ec8a952932a798d8f1be61815bed013f254a62042799d58ccd30cbc5a13540",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "680b9498c6a4dcbaa7e4b4a8620276c5c64f3c552d748431ee62c3619b0256ed",
+      "model": "regime_block",
+      "origin": "2019-12-31",
+      "evaluation_start": "2020-01-31",
+      "evaluation_end": "2024-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.7471666216205425,
+        "energy_score": 2.275442568993283,
+        "variogram_score": 0.365415857537134,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7048213104923363,
+            "coverage80": 0.7166666666666667,
+            "coverage95": 0.8833333333333333,
+            "lower_5_breach_rate": 0.08333333333333333
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7674539088476696,
+            "coverage80": 0.7666666666666667,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.622173486677503,
+            "coverage80": 0.75,
+            "coverage95": 0.9,
+            "lower_5_breach_rate": 0.016666666666666666
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.3125413020309402,
+            "coverage80": 0.6166666666666667,
+            "coverage95": 0.8333333333333334,
+            "lower_5_breach_rate": 0.13333333333333333
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.32884310005426287,
+            "coverage80": 0.7666666666666667,
+            "coverage95": 0.9666666666666667,
+            "lower_5_breach_rate": 0.13333333333333333
+          }
+        },
+        "equity_drawdown_actual": 0.24899518819469246,
+        "predicted_drawdown_p95": 0.46174180437449774,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6686619617827517,
+        "terminal_predictive_rank": 0.833,
+        "terminal_log_p10": -0.14695202472969457,
+        "terminal_log_p50": 0.3491912259464637,
+        "terminal_log_p90": 0.7637892827741004,
+        "correlation_error_frobenius_per_dimension": 0.20919551440894207,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "f6ec8a952932a798d8f1be61815bed013f254a62042799d58ccd30cbc5a13540",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "f963cfe4d2cf1eeaa6cbf71ef2e8f5bb3dee32a69dc303cc1b60785a940985c8",
+      "model": "conditional_var_t",
+      "origin": "2019-12-31",
+      "evaluation_start": "2020-01-31",
+      "evaluation_end": "2024-12-31",
+      "complete_evaluation": true,
+      "score": {
+        "primary_crps": 0.7921424578664193,
+        "energy_score": 2.3166931732623652,
+        "variogram_score": 0.3839586947330372,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.7069362928163271,
+            "coverage80": 0.7,
+            "coverage95": 0.8666666666666667,
+            "lower_5_breach_rate": 0.11666666666666667
+          },
+          "short_rate": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.9473224755184032,
+            "coverage80": 0.13333333333333333,
+            "coverage95": 0.5333333333333333,
+            "lower_5_breach_rate": 0.23333333333333334
+          },
+          "inflation_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.6325780129563515,
+            "coverage80": 0.75,
+            "coverage95": 0.9,
+            "lower_5_breach_rate": 0.016666666666666666
+          },
+          "production_log": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 1.3061080064448343,
+            "coverage80": 0.6833333333333333,
+            "coverage95": 0.8333333333333334,
+            "lower_5_breach_rate": 0.11666666666666667
+          },
+          "credit_spread": {
+            "observed_months": 60,
+            "missing_months": 0,
+            "crps": 0.36776750159618066,
+            "coverage80": 0.9333333333333333,
+            "coverage95": 0.9833333333333333,
+            "lower_5_breach_rate": 0.0
+          }
+        },
+        "equity_drawdown_actual": 0.24899518819469246,
+        "predicted_drawdown_p95": 0.4340747683479021,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.6686619617827517,
+        "terminal_predictive_rank": 0.791,
+        "terminal_log_p10": -0.14475043967457923,
+        "terminal_log_p50": 0.34646908131216625,
+        "terminal_log_p90": 0.8236496309774448,
+        "correlation_error_frobenius_per_dimension": 0.18829190440549576,
+        "months": 60,
+        "paths": 2000,
+        "complete_joint_months": 60
+      },
+      "actual_sha256": "f6ec8a952932a798d8f1be61815bed013f254a62042799d58ccd30cbc5a13540",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "c0c9409f7f066ea5d91ad88997a3fe407828be35c4ef2757d21893baa752e90b",
+      "model": "joint_block",
+      "origin": "2021-12-31",
+      "evaluation_start": "2022-01-31",
+      "evaluation_end": "2026-09-30",
+      "complete_evaluation": false,
+      "score": {
+        "primary_crps": 0.6751100733961661,
+        "energy_score": 1.9304473282322265,
+        "variogram_score": 0.27647991387175774,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.602290176983768,
+            "coverage80": 0.7368421052631579,
+            "coverage95": 0.9122807017543859,
+            "lower_5_breach_rate": 0.05263157894736842
+          },
+          "short_rate": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 1.5596547515745998,
+            "coverage80": 0.3508771929824561,
+            "coverage95": 0.7894736842105263,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 55,
+            "missing_months": 2,
+            "crps": 0.5763750772026612,
+            "coverage80": 0.7636363636363637,
+            "coverage95": 0.8909090909090909,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.21170023888825956,
+            "coverage80": 0.8771929824561403,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.03508771929824561
+          },
+          "credit_spread": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.422065736500191,
+            "coverage80": 0.5964912280701754,
+            "coverage95": 0.6666666666666666,
+            "lower_5_breach_rate": 0.3684210526315789
+          }
+        },
+        "equity_drawdown_actual": 0.24899518819469246,
+        "predicted_drawdown_p95": 0.41479722745277603,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.5186372628132104,
+        "terminal_predictive_rank": 0.5555,
+        "terminal_log_p10": 0.006761000217085458,
+        "terminal_log_p50": 0.4723851531019675,
+        "terminal_log_p90": 0.8552122461232902,
+        "correlation_error_frobenius_per_dimension": 0.23087053308240701,
+        "months": 57,
+        "paths": 2000,
+        "complete_joint_months": 55
+      },
+      "actual_sha256": "2db123b1f2f0d03908ec93c3e4f364c5784fff21a4b99c7c5a51df246955c574",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "a03ad0322f49867c978325223ca308919d125f0249552f5ca836d45d47ad88bc",
+      "model": "regime_block",
+      "origin": "2021-12-31",
+      "evaluation_start": "2022-01-31",
+      "evaluation_end": "2026-09-30",
+      "complete_evaluation": false,
+      "score": {
+        "primary_crps": 0.6695739839929483,
+        "energy_score": 1.9154750144729253,
+        "variogram_score": 0.2740979529883386,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.6039087869796721,
+            "coverage80": 0.7192982456140351,
+            "coverage95": 0.9122807017543859,
+            "lower_5_breach_rate": 0.07017543859649122
+          },
+          "short_rate": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 1.5549967544726326,
+            "coverage80": 0.3508771929824561,
+            "coverage95": 0.7894736842105263,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 55,
+            "missing_months": 2,
+            "crps": 0.5584628726485485,
+            "coverage80": 0.7636363636363637,
+            "coverage95": 0.9090909090909091,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.21021155775886516,
+            "coverage80": 0.8771929824561403,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.05263157894736842
+          },
+          "credit_spread": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.41639131261925416,
+            "coverage80": 0.5964912280701754,
+            "coverage95": 0.6842105263157895,
+            "lower_5_breach_rate": 0.3684210526315789
+          }
+        },
+        "equity_drawdown_actual": 0.24899518819469246,
+        "predicted_drawdown_p95": 0.42883625377180545,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.5186372628132104,
+        "terminal_predictive_rank": 0.5405,
+        "terminal_log_p10": 0.0019766228548295846,
+        "terminal_log_p50": 0.48509745103834856,
+        "terminal_log_p90": 0.8673173573010525,
+        "correlation_error_frobenius_per_dimension": 0.22834600192683313,
+        "months": 57,
+        "paths": 2000,
+        "complete_joint_months": 55
+      },
+      "actual_sha256": "2db123b1f2f0d03908ec93c3e4f364c5784fff21a4b99c7c5a51df246955c574",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    },
+    {
+      "forecast_id": "2180e0972902972c95294b70be37b78522ed35d7e00c26c260350c10da971f42",
+      "model": "conditional_var_t",
+      "origin": "2021-12-31",
+      "evaluation_start": "2022-01-31",
+      "evaluation_end": "2026-09-30",
+      "complete_evaluation": false,
+      "score": {
+        "primary_crps": 0.7241268419964817,
+        "energy_score": 2.035252551197963,
+        "variogram_score": 0.2953082384659889,
+        "marginals": {
+          "equity_log": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.6064924486370875,
+            "coverage80": 0.7017543859649122,
+            "coverage95": 0.9298245614035088,
+            "lower_5_breach_rate": 0.08771929824561403
+          },
+          "short_rate": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 1.737403208607941,
+            "coverage80": 0.12280701754385964,
+            "coverage95": 0.12280701754385964,
+            "lower_5_breach_rate": 0.0
+          },
+          "inflation_log": {
+            "observed_months": 55,
+            "missing_months": 2,
+            "crps": 0.5757851731670702,
+            "coverage80": 0.8,
+            "coverage95": 0.9090909090909091,
+            "lower_5_breach_rate": 0.0
+          },
+          "production_log": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.2641654662211333,
+            "coverage80": 1.0,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.0
+          },
+          "credit_spread": {
+            "observed_months": 57,
+            "missing_months": 0,
+            "crps": 0.4315829425130571,
+            "coverage80": 0.8245614035087719,
+            "coverage95": 1.0,
+            "lower_5_breach_rate": 0.05263157894736842
+          }
+        },
+        "equity_drawdown_actual": 0.24899518819469246,
+        "predicted_drawdown_p95": 0.3776733051630204,
+        "drawdown_95_breach": false,
+        "terminal_log_return_actual": 0.5186372628132104,
+        "terminal_predictive_rank": 0.496,
+        "terminal_log_p10": 0.04889487688353366,
+        "terminal_log_p50": 0.5204696570948109,
+        "terminal_log_p90": 0.9862392581781261,
+        "correlation_error_frobenius_per_dimension": 0.22951848282645132,
+        "months": 57,
+        "paths": 2000,
+        "complete_joint_months": 55
+      },
+      "actual_sha256": "2db123b1f2f0d03908ec93c3e4f364c5784fff21a4b99c7c5a51df246955c574",
+      "actual_metadata": {
+        "source_hashes": {
+          "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+          "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618",
+          "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+          "INDPRO": "a21151ab655b27472b4f1d0a0ff5d6f72d85f99334ca2b9527cc4d6629465554",
+          "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+          "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a"
+        },
+        "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+        "macro_vintages": {
+          "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "INDPRO": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+          "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME"
+        },
+        "missing_source_rows": {
+          "CPIAUCNS": 1,
+          "INDPRO": 0,
+          "BAA": 0,
+          "AAA": 0
+        },
+        "requested_origin": "2026-09-30",
+        "point_in_time_verified": false,
+        "macro_vintages_verified": false,
+        "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+        "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+        "growth_convention": "Industrial production growth, not GDP",
+        "frequency": "monthly",
+        "variables": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "evidence": "OBSERVED",
+        "limitations": [
+          "Observed factors are research portfolios, not executable ETF quotes",
+          "Missing interior monthly observations are retained as NaN; never interpolated"
+        ]
+      },
+      "forecast_was_frozen_before_scoring": true,
+      "point_in_time_verified": false
+    }
+  ],
+  "model_comparison": {
+    "regime_block": {
+      "passed": false,
+      "gates": {
+        "minimum_disjoint_eras": true,
+        "registered_path_count": true,
+        "relative_crps_improvement": false,
+        "paired_ci": false,
+        "coverage80": true,
+        "equity_tail5": true,
+        "drawdown_tail95": false,
+        "decision_time_vintages": false
+      },
+      "relative_crps_improvement": 0.002620684568000131,
+      "paired_loss_difference_ci": {
+        "mean_difference": -0.002079176692876772,
+        "low": -0.006774083306390066,
+        "high": 0.0014297083162349196,
+        "confidence": 0.975,
+        "independent_path_count": 6,
+        "seed": 20261124
+      },
+      "disjoint_origins": [
+        "1945-12-31",
+        "1969-12-31",
+        "1986-12-31",
+        "1999-12-31",
+        "2007-12-31",
+        "2019-12-31"
+      ],
+      "coverage80_mean": 0.6777777777777777,
+      "tail5_breach_mean": 0.10555555555555557,
+      "drawdown95_breach_fraction": 0.5
+    },
+    "conditional_var_t": {
+      "passed": false,
+      "gates": {
+        "minimum_disjoint_eras": true,
+        "registered_path_count": true,
+        "relative_crps_improvement": true,
+        "paired_ci": false,
+        "coverage80": true,
+        "equity_tail5": true,
+        "drawdown_tail95": false,
+        "decision_time_vintages": false
+      },
+      "relative_crps_improvement": 0.0372062741383139,
+      "paired_loss_difference_ci": {
+        "mean_difference": -0.029518401016952755,
+        "low": -0.11141560201843075,
+        "high": 0.024229184809092863,
+        "confidence": 0.975,
+        "independent_path_count": 6,
+        "seed": 20261124
+      },
+      "disjoint_origins": [
+        "1945-12-31",
+        "1969-12-31",
+        "1986-12-31",
+        "1999-12-31",
+        "2007-12-31",
+        "2019-12-31"
+      ],
+      "coverage80_mean": 0.6661111111111111,
+      "tail5_breach_mean": 0.12222222222222223,
+      "drawdown95_breach_fraction": 0.5
+    }
+  },
+  "registry_decision": {
+    "batch_id": "56ecc6f32d8012fe28f5541b4f6483f2a789cb274dd13033231734cc75ac8343",
+    "decisions": {
+      "regime_block": {
+        "passed": false,
+        "gates": {
+          "minimum_disjoint_eras": true,
+          "registered_path_count": true,
+          "relative_crps_improvement": false,
+          "paired_ci": false,
+          "coverage80": true,
+          "equity_tail5": true,
+          "drawdown_tail95": false,
+          "decision_time_vintages": false
+        },
+        "relative_crps_improvement": 0.002620684568000131,
+        "paired_loss_difference_ci": {
+          "mean_difference": -0.002079176692876772,
+          "low": -0.006774083306390066,
+          "high": 0.0014297083162349196,
+          "confidence": 0.975,
+          "independent_path_count": 6,
+          "seed": 20261124
+        },
+        "disjoint_origins": [
+          "1945-12-31",
+          "1969-12-31",
+          "1986-12-31",
+          "1999-12-31",
+          "2007-12-31",
+          "2019-12-31"
+        ],
+        "coverage80_mean": 0.6777777777777777,
+        "tail5_breach_mean": 0.10555555555555557,
+        "drawdown95_breach_fraction": 0.5
+      },
+      "conditional_var_t": {
+        "passed": false,
+        "gates": {
+          "minimum_disjoint_eras": true,
+          "registered_path_count": true,
+          "relative_crps_improvement": true,
+          "paired_ci": false,
+          "coverage80": true,
+          "equity_tail5": true,
+          "drawdown_tail95": false,
+          "decision_time_vintages": false
+        },
+        "relative_crps_improvement": 0.0372062741383139,
+        "paired_loss_difference_ci": {
+          "mean_difference": -0.029518401016952755,
+          "low": -0.11141560201843075,
+          "high": 0.024229184809092863,
+          "confidence": 0.975,
+          "independent_path_count": 6,
+          "seed": 20261124
+        },
+        "disjoint_origins": [
+          "1945-12-31",
+          "1969-12-31",
+          "1986-12-31",
+          "1999-12-31",
+          "2007-12-31",
+          "2019-12-31"
+        ],
+        "coverage80_mean": 0.6661111111111111,
+        "tail5_breach_mean": 0.12222222222222223,
+        "drawdown95_breach_fraction": 0.5
+      }
+    },
+    "winner": null,
+    "previous_champion": null,
+    "created_at": "2026-11-24T23:58:16.645099+00:00",
+    "authority": "Research model only; never trading strategy/live deployment"
+  },
+  "selection_batch_id": "56ecc6f32d8012fe28f5541b4f6483f2a789cb274dd13033231734cc75ac8343",
+  "evidence": "HYPOTHETICAL_STRESS",
+  "investment_performance_certification": "BLOCKED",
+  "scope": "Retrospective chronological out-of-sample research; equity data revisions prevent real-time certification",
+  "limitations": [
+    "Forecasts are immutable before scoring, but historical outcomes are known to human researchers",
+    "All declared eras are diagnostics; only complete disjoint eras enter selection",
+    "Early missing macro vintages and current revised equity history block verified promotion",
+    "Synthetic future Student-t log returns have no finite expected arithmetic wealth; use quantiles, not a mean wealth forecast"
+  ]
+}

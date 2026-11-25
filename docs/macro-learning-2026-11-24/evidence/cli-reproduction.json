@@ -1,0 +1,7 @@
+{
+  "command": "python -m letf.account_cli compare --bundle audit-output/cli-reproduction-TQQQ-inputs --strategy buy_hold --state FEDERAL_ONLY --filing-status single --output audit-output/cli-reproduction-TQQQ-results",
+  "identical_pre_tax_trades": true,
+  "taxable_net": 199462.76951940503,
+  "roth_net": 218422.98633422382,
+  "same_as_reported": true
+}

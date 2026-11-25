@@ -1,5 +1,18 @@
 Leveraged ETF Monte Carlo simulation testing multiple LETF strategies
 
+## Historical macro learning (2026-11-24)
+
+The [implemented research system and evidence](docs/macro-learning-2026-11-24/REPORT.md)
+adds daily 1930 counterfactuals, three joint macro models, immutable walk-forward
+forecasts, controlled prospective retraining and account-based future scenarios.
+Six real-fund account comparisons reconcile; 221 tests pass. Both macro candidates
+were rejected, and the TQQQ/UPRO reconstruction failures remain visible.
+See [methods](docs/macro-learning-2026-11-24/METHODS.md),
+[supported combinations](docs/macro-learning-2026-11-24/SUPPORT_MATRIX.md),
+[sources/restrictions](docs/macro-learning-2026-11-24/SOURCES_AND_RESTRICTIONS.md)
+and [reproduction commands](docs/macro-learning-2026-11-24/REPRODUCE.md).
+No model or historical derivative strategy is certified for investment use.
+
 ## Integrated account engine (2026-11-24)
 
 The [engineering report](docs/integration-2026-11-24/REPORT.md) records repository

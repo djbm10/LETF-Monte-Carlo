@@ -1,0 +1,181 @@
+{
+  "python": "3.14.4",
+  "seed": 20261123,
+  "strategy_comparisons_run": false,
+  "reason": "Relevant historical data/execution/tax gates are incomplete or failed",
+  "tests": {
+    "pytest": {
+      "exit_code": 0,
+      "output": "........................................................................ [ 32%]\n........................................................................ [ 65%]\n........................................................................ [ 97%]\n.....                                                                    [100%]\n=============================== warnings summary ===============================\n../../.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:11\n  /home/djmann/projects/letf-monte-carlo/.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:11: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.\n    PANDAS_VERSION = LooseVersion(pd.__version__)\n\n../../.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:13\n  /home/djmann/projects/letf-monte-carlo/.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:13: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.\n    PANDAS_0210 = PANDAS_VERSION >= LooseVersion(\"0.21.0\")\n\n../../.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:14\n  /home/djmann/projects/letf-monte-carlo/.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:14: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.\n    PANDAS_0220 = PANDAS_VERSION >= LooseVersion(\"0.22.0\")\n\n../../.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:15\n  /home/djmann/projects/letf-monte-carlo/.venv/lib/python3.14/site-packages/pandas_datareader/compat/__init__.py:15: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.\n    PANDAS_0230 = PANDAS_VERSION >= LooseVersion(\"0.23.0\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n221 passed, 4 warnings in 31.38s"
+    },
+    "netting_regressions": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "details": [
+        {
+          "test": "Basic Netting",
+          "passed": true,
+          "message": "PASSED: Basic Netting"
+        },
+        {
+          "test": "$3k Loss Deduction",
+          "passed": true,
+          "message": "PASSED: $3k Loss Deduction"
+        },
+        {
+          "test": "Cross-Offset Current Year",
+          "passed": true,
+          "message": "PASSED: Cross-Offset Current Year"
+        },
+        {
+          "test": "Carryforward Application Order",
+          "passed": true,
+          "message": "PASSED: Carryforward Application Order"
+        },
+        {
+          "test": "Large Loss Year",
+          "passed": true,
+          "message": "PASSED: Large Loss Year"
+        },
+        {
+          "test": "Same-character carryovers",
+          "passed": true,
+          "message": "PASSED: Same-character carryovers"
+        }
+      ]
+    },
+    "zero_drift": {
+      "test_passed": true,
+      "expected_drag": -0.09629292212680393,
+      "actual_drag": -0.09558688396333692,
+      "error_pct": 0.07060381634670099
+    },
+    "flat_market": {
+      "2.0x": {
+        "expected": -0.04400251816690009,
+        "actual_median": -0.033888299060428395,
+        "actual_mean": 0.008279869645967886,
+        "actual_std": 0.3086229764248495,
+        "error": 0.010114219106471693,
+        "passed": true
+      },
+      "3.0x": {
+        "expected": -0.09629292212680393,
+        "actual_median": -0.10015284362069216,
+        "actual_mean": 0.0013142852775728908,
+        "actual_std": 0.48800882490272324,
+        "error": 0.0038599214938882243,
+        "passed": true
+      },
+      "all_passed": true
+    },
+    "legacy_forward_realism": {
+      "T18": {
+        "passed": true,
+        "missing_keys": []
+      },
+      "T19": {
+        "passed": true,
+        "score": 59.50749533337072
+      },
+      "T20": {
+        "passed": false,
+        "score": 59.50749533337072
+      },
+      "T21": {
+        "passed": true,
+        "score": 24.727474032254722
+      },
+      "T22": {
+        "passed": true,
+        "aggregate": {
+          "median_score": 42.11748468281272,
+          "p10_score": 28.205476162366324,
+          "p90_score": 56.02949320325912,
+          "n_paths": 2.0
+        }
+      },
+      "T23": {
+        "passed": true,
+        "median_score": 24.727474032254722
+      },
+      "T24": {
+        "passed": true
+      },
+      "T25": {
+        "passed": true
+      },
+      "T26": {
+        "passed": true
+      },
+      "T27": {
+        "passed": false,
+        "error": "BlockBootstrapReturns.sample_returns() got an unexpected keyword argument 'max_crisis_chain'"
+      },
+      "all_passed": false
+    },
+    "legacy_quick_test": {
+      "exit_code": 1,
+      "expected_accuracy_gate": true
+    }
+  },
+  "before_after": {
+    "character": {
+      "before": {
+        "taxable_st": 0,
+        "taxable_lt": 0,
+        "st_loss_cf_out": 10000,
+        "lt_loss_cf_out": 0,
+        "capital_loss_deduction": 0
+      },
+      "after": {
+        "taxable_st": 0.0,
+        "taxable_lt": 0.0,
+        "st_loss_cf_out": 0.0,
+        "lt_loss_cf_out": 7000.0,
+        "capital_loss_deduction": 3000.0
+      }
+    },
+    "carry_only": {
+      "before": {
+        "taxable_st": 0,
+        "taxable_lt": 0,
+        "st_loss_cf_out": 5000,
+        "lt_loss_cf_out": 0,
+        "capital_loss_deduction": 0
+      },
+      "after": {
+        "taxable_st": 0.0,
+        "taxable_lt": 0.0,
+        "st_loss_cf_out": 2000.0,
+        "lt_loss_cf_out": 0.0,
+        "capital_loss_deduction": 3000.0
+      }
+    },
+    "unused_deduction_tax": {
+      "before": 1946.25,
+      "after": 0.0
+    },
+    "student_t_garch_variance": {
+      "target": 0.0001,
+      "n": 30000,
+      "before": 0.00012188863429195663,
+      "after": 0.00010163796740269875,
+      "relative_tolerance": 0.1,
+      "before_passed": false,
+      "after_passed": true
+    }
+  },
+  "baseline_files_absent_from_integrated_checkout": [
+    "validation_metadata.json"
+  ],
+  "protected_input_sha256": {
+    "LETF35_analysis.py": "19c2dec910070e39eda44d272570a5ab0c0222ed1109ab369b539ed724037bea",
+    "validation_metadata.json": null,
+    "docs/accuracy-audit/reconstruction-gate.json": "2c01b56a9583d4fe28df9d721bbafb745edb86fbe0c6fe2483f27c478ae7cda3",
+    "requirements-audit.lock": "5b5b676dc31720966150999d97318cb6bdc04ee8cfbae4fddfd46084316eb6fd"
+  },
+  "implementation_tests_passed": true,
+  "full_mission_verified": false
+}

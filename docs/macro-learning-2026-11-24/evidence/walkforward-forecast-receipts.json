@@ -1,0 +1,3876 @@
+[
+  {
+    "arrays_file_sha256": "b4345df13b011fa7a50bf5030a67db954f36e369a80cc3a1e87e7ed91b9ab816",
+    "created_at": "2026-11-24T23:57:47.684727+00:00",
+    "id": "bd29f22d10dccdfece815601fdae1ac1eeb964801d44768b9f062265a04aa759",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "fa21c257cbf89678e8a8440c7e170003f01bfd7b6642227bebc6599d0406e843",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1930-01-31",
+          "1930-02-28",
+          "1930-03-31",
+          "1930-04-30",
+          "1930-05-31",
+          "1930-06-30",
+          "1930-07-31",
+          "1930-08-31",
+          "1930-09-30",
+          "1930-10-31",
+          "1930-11-30",
+          "1930-12-31",
+          "1931-01-31",
+          "1931-02-28",
+          "1931-03-31",
+          "1931-04-30",
+          "1931-05-31",
+          "1931-06-30",
+          "1931-07-31",
+          "1931-08-31",
+          "1931-09-30",
+          "1931-10-31",
+          "1931-11-30",
+          "1931-12-31",
+          "1932-01-31",
+          "1932-02-29",
+          "1932-03-31",
+          "1932-04-30",
+          "1932-05-31",
+          "1932-06-30",
+          "1932-07-31",
+          "1932-08-31",
+          "1932-09-30",
+          "1932-10-31",
+          "1932-11-30",
+          "1932-12-31",
+          "1933-01-31",
+          "1933-02-28",
+          "1933-03-31",
+          "1933-04-30",
+          "1933-05-31",
+          "1933-06-30",
+          "1933-07-31",
+          "1933-08-31",
+          "1933-09-30",
+          "1933-10-31",
+          "1933-11-30",
+          "1933-12-31",
+          "1934-01-31",
+          "1934-02-28",
+          "1934-03-31",
+          "1934-04-30",
+          "1934-05-31",
+          "1934-06-30",
+          "1934-07-31",
+          "1934-08-31",
+          "1934-09-30",
+          "1934-10-31",
+          "1934-11-30",
+          "1934-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "c79be0b319ba30d1eb5b3b15e25f849eb903a97b52f752807d2051cc1994241c",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1929-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261124,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "INDPRO": "1929-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1929-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+            "INDPRO_asof_1929-12-31": "fd25f93874dbaac0ac7a3a746b1f51ab7f375fd2c6c4ca107ac5af64deeb97dc",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1929-10-31",
+        "training_scale": [
+          0.05572713252721375,
+          0.0100120756264256,
+          0.006629842380222585,
+          0.020913699872460268,
+          0.0012343273887280087
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "ff168a834509fc227cfbdd4752fabb11d7c5906b5f6255aaee12f7022db8bdbc",
+    "created_at": "2026-11-24T23:57:48.757458+00:00",
+    "id": "11a292448a578c188a7c6e936806dab58f6bdc8c8c5f0bfd8821402adb3527c4",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "8a1e5b4af878e598c0a408c69d0b8928660e8c1d115ec3837808bf80519d1ce5",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1930-01-31",
+          "1930-02-28",
+          "1930-03-31",
+          "1930-04-30",
+          "1930-05-31",
+          "1930-06-30",
+          "1930-07-31",
+          "1930-08-31",
+          "1930-09-30",
+          "1930-10-31",
+          "1930-11-30",
+          "1930-12-31",
+          "1931-01-31",
+          "1931-02-28",
+          "1931-03-31",
+          "1931-04-30",
+          "1931-05-31",
+          "1931-06-30",
+          "1931-07-31",
+          "1931-08-31",
+          "1931-09-30",
+          "1931-10-31",
+          "1931-11-30",
+          "1931-12-31",
+          "1932-01-31",
+          "1932-02-29",
+          "1932-03-31",
+          "1932-04-30",
+          "1932-05-31",
+          "1932-06-30",
+          "1932-07-31",
+          "1932-08-31",
+          "1932-09-30",
+          "1932-10-31",
+          "1932-11-30",
+          "1932-12-31",
+          "1933-01-31",
+          "1933-02-28",
+          "1933-03-31",
+          "1933-04-30",
+          "1933-05-31",
+          "1933-06-30",
+          "1933-07-31",
+          "1933-08-31",
+          "1933-09-30",
+          "1933-10-31",
+          "1933-11-30",
+          "1933-12-31",
+          "1934-01-31",
+          "1934-02-28",
+          "1934-03-31",
+          "1934-04-30",
+          "1934-05-31",
+          "1934-06-30",
+          "1934-07-31",
+          "1934-08-31",
+          "1934-09-30",
+          "1934-10-31",
+          "1934-11-30",
+          "1934-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "ea38288ca71382c98c3ca022eaaaa2ec3de12736942bf0cdd200ff1165207d23",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1929-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261125,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "INDPRO": "1929-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1929-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+            "INDPRO_asof_1929-12-31": "fd25f93874dbaac0ac7a3a746b1f51ab7f375fd2c6c4ca107ac5af64deeb97dc",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1929-10-31",
+        "training_scale": [
+          0.05572713252721375,
+          0.0100120756264256,
+          0.006629842380222585,
+          0.020913699872460268,
+          0.0012343273887280087
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "626d542591141683f8328ca700f953eb74ab418411097accdc68439f05eba675",
+    "created_at": "2026-11-24T23:57:50.002824+00:00",
+    "id": "fa67f9de7aa2e800717375c93d2173ac35808bf9a538b2259db935720b5f94d4",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "b253aa2a52cf4444308805a3b83d54f14fe6fc7488ef81dde1cb403061aa15f1",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1946-01-31",
+          "1946-02-28",
+          "1946-03-31",
+          "1946-04-30",
+          "1946-05-31",
+          "1946-06-30",
+          "1946-07-31",
+          "1946-08-31",
+          "1946-09-30",
+          "1946-10-31",
+          "1946-11-30",
+          "1946-12-31",
+          "1947-01-31",
+          "1947-02-28",
+          "1947-03-31",
+          "1947-04-30",
+          "1947-05-31",
+          "1947-06-30",
+          "1947-07-31",
+          "1947-08-31",
+          "1947-09-30",
+          "1947-10-31",
+          "1947-11-30",
+          "1947-12-31",
+          "1948-01-31",
+          "1948-02-29",
+          "1948-03-31",
+          "1948-04-30",
+          "1948-05-31",
+          "1948-06-30",
+          "1948-07-31",
+          "1948-08-31",
+          "1948-09-30",
+          "1948-10-31",
+          "1948-11-30",
+          "1948-12-31",
+          "1949-01-31",
+          "1949-02-28",
+          "1949-03-31",
+          "1949-04-30",
+          "1949-05-31",
+          "1949-06-30",
+          "1949-07-31",
+          "1949-08-31",
+          "1949-09-30",
+          "1949-10-31",
+          "1949-11-30",
+          "1949-12-31",
+          "1950-01-31",
+          "1950-02-28",
+          "1950-03-31",
+          "1950-04-30",
+          "1950-05-31",
+          "1950-06-30",
+          "1950-07-31",
+          "1950-08-31",
+          "1950-09-30",
+          "1950-10-31",
+          "1950-11-30",
+          "1950-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "ddd73278f4fdf11cdf8d29406a4a559aafb535f93ea59e875edb1589172c2153",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1945-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261224,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "INDPRO": "1945-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1945-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+            "INDPRO_asof_1945-12-31": "d7331e210f6b5b6b50fb974e6949ab8d8a8e2d005646ced4b1c4f50802217f1c",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1945-10-31",
+        "training_scale": [
+          0.08208425141348963,
+          0.014918616033171595,
+          0.007264825607101212,
+          0.03339883155218175,
+          0.009719689874139
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "c5b85c6e0d06d833b7c29d866aa733928720b598a4eb2b7937c7d7d5653b4aca",
+    "created_at": "2026-11-24T23:57:51.056579+00:00",
+    "id": "72deb28a462041f175a79824de8da18e0cafe3bfd7d99798cc35882c3e4deafe",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "087b3a686b7b64f38624a3e26c73d3b5fddc396252aa1b9d3e751c9e21848395",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1946-01-31",
+          "1946-02-28",
+          "1946-03-31",
+          "1946-04-30",
+          "1946-05-31",
+          "1946-06-30",
+          "1946-07-31",
+          "1946-08-31",
+          "1946-09-30",
+          "1946-10-31",
+          "1946-11-30",
+          "1946-12-31",
+          "1947-01-31",
+          "1947-02-28",
+          "1947-03-31",
+          "1947-04-30",
+          "1947-05-31",
+          "1947-06-30",
+          "1947-07-31",
+          "1947-08-31",
+          "1947-09-30",
+          "1947-10-31",
+          "1947-11-30",
+          "1947-12-31",
+          "1948-01-31",
+          "1948-02-29",
+          "1948-03-31",
+          "1948-04-30",
+          "1948-05-31",
+          "1948-06-30",
+          "1948-07-31",
+          "1948-08-31",
+          "1948-09-30",
+          "1948-10-31",
+          "1948-11-30",
+          "1948-12-31",
+          "1949-01-31",
+          "1949-02-28",
+          "1949-03-31",
+          "1949-04-30",
+          "1949-05-31",
+          "1949-06-30",
+          "1949-07-31",
+          "1949-08-31",
+          "1949-09-30",
+          "1949-10-31",
+          "1949-11-30",
+          "1949-12-31",
+          "1950-01-31",
+          "1950-02-28",
+          "1950-03-31",
+          "1950-04-30",
+          "1950-05-31",
+          "1950-06-30",
+          "1950-07-31",
+          "1950-08-31",
+          "1950-09-30",
+          "1950-10-31",
+          "1950-11-30",
+          "1950-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "2f9beaaa0d85da9c58056ee2f1273660430626ba5a088f2f4e23e4998618306b",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1945-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261225,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "INDPRO": "1945-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1945-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+            "INDPRO_asof_1945-12-31": "d7331e210f6b5b6b50fb974e6949ab8d8a8e2d005646ced4b1c4f50802217f1c",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1945-10-31",
+        "training_scale": [
+          0.08208425141348963,
+          0.014918616033171595,
+          0.007264825607101212,
+          0.03339883155218175,
+          0.009719689874139
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "e7afbc398538e7d7340a1833c2b8b3ff81daf0816af1cba1b59e3db19e93b7b6",
+    "created_at": "2026-11-24T23:57:51.498265+00:00",
+    "id": "75f8e1800ce74c83c2eb8b78b9d3036cf8f777cae054c62df2ac80a4f8306071",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "ac78c58c643a436647eca0aa5bf335dc2a62e1f98c46798c4cf0fa51470a1705",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1946-01-31",
+          "1946-02-28",
+          "1946-03-31",
+          "1946-04-30",
+          "1946-05-31",
+          "1946-06-30",
+          "1946-07-31",
+          "1946-08-31",
+          "1946-09-30",
+          "1946-10-31",
+          "1946-11-30",
+          "1946-12-31",
+          "1947-01-31",
+          "1947-02-28",
+          "1947-03-31",
+          "1947-04-30",
+          "1947-05-31",
+          "1947-06-30",
+          "1947-07-31",
+          "1947-08-31",
+          "1947-09-30",
+          "1947-10-31",
+          "1947-11-30",
+          "1947-12-31",
+          "1948-01-31",
+          "1948-02-29",
+          "1948-03-31",
+          "1948-04-30",
+          "1948-05-31",
+          "1948-06-30",
+          "1948-07-31",
+          "1948-08-31",
+          "1948-09-30",
+          "1948-10-31",
+          "1948-11-30",
+          "1948-12-31",
+          "1949-01-31",
+          "1949-02-28",
+          "1949-03-31",
+          "1949-04-30",
+          "1949-05-31",
+          "1949-06-30",
+          "1949-07-31",
+          "1949-08-31",
+          "1949-09-30",
+          "1949-10-31",
+          "1949-11-30",
+          "1949-12-31",
+          "1950-01-31",
+          "1950-02-28",
+          "1950-03-31",
+          "1950-04-30",
+          "1950-05-31",
+          "1950-06-30",
+          "1950-07-31",
+          "1950-08-31",
+          "1950-09-30",
+          "1950-10-31",
+          "1950-11-30",
+          "1950-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "conditional_var_t",
+        "model_id": "924bc1c2d950fa73a3ba83f6648b3a78700332c84769ed7a3ed36dc011212c09",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1945-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261226,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "INDPRO": "1945-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1945-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS": "0e1fc35d62c4b76698418b4e6a8f259ca23407a52bf3f5971597afe0388cadfc",
+            "INDPRO_asof_1945-12-31": "d7331e210f6b5b6b50fb974e6949ab8d8a8e2d005646ced4b1c4f50802217f1c",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1945-10-31",
+        "training_scale": [
+          0.08208425141348963,
+          0.014918616033171595,
+          0.007264825607101212,
+          0.03339883155218175,
+          0.009719689874139
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "13a58df9dcbfab6d6631a7d8c9af50e6d8f561a68979dbf2026d385a2cadfd3a",
+    "created_at": "2026-11-24T23:57:53.091841+00:00",
+    "id": "caabb5459aa4f8cc22134ddc23a2095a8e5b293c8e2115c7dcdfaf5b99826abf",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "345e27386f179628e577a507265ff5bc11b133abec9d38d84fdc21e375f48a6c",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1970-01-31",
+          "1970-02-28",
+          "1970-03-31",
+          "1970-04-30",
+          "1970-05-31",
+          "1970-06-30",
+          "1970-07-31",
+          "1970-08-31",
+          "1970-09-30",
+          "1970-10-31",
+          "1970-11-30",
+          "1970-12-31",
+          "1971-01-31",
+          "1971-02-28",
+          "1971-03-31",
+          "1971-04-30",
+          "1971-05-31",
+          "1971-06-30",
+          "1971-07-31",
+          "1971-08-31",
+          "1971-09-30",
+          "1971-10-31",
+          "1971-11-30",
+          "1971-12-31",
+          "1972-01-31",
+          "1972-02-29",
+          "1972-03-31",
+          "1972-04-30",
+          "1972-05-31",
+          "1972-06-30",
+          "1972-07-31",
+          "1972-08-31",
+          "1972-09-30",
+          "1972-10-31",
+          "1972-11-30",
+          "1972-12-31",
+          "1973-01-31",
+          "1973-02-28",
+          "1973-03-31",
+          "1973-04-30",
+          "1973-05-31",
+          "1973-06-30",
+          "1973-07-31",
+          "1973-08-31",
+          "1973-09-30",
+          "1973-10-31",
+          "1973-11-30",
+          "1973-12-31",
+          "1974-01-31",
+          "1974-02-28",
+          "1974-03-31",
+          "1974-04-30",
+          "1974-05-31",
+          "1974-06-30",
+          "1974-07-31",
+          "1974-08-31",
+          "1974-09-30",
+          "1974-10-31",
+          "1974-11-30",
+          "1974-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "6c656515215a91ebf957eab2f67c4fcbcea42de5ae59b4d6326b6052a388a896",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1969-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261324,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "1969-12-31",
+            "INDPRO": "1969-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1969-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS_asof_1969-12-31": "707b18b674d68ff543a23396e2636fcbd17061be1d0c0a1faf6365db1b7c6fe5",
+            "INDPRO_asof_1969-12-31": "19271821ab3984b04b1cab5186a2ae88ae2d3b30134233129514bbc734ea66d8",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1969-10-31",
+        "training_scale": [
+          0.03421586375969957,
+          0.014694246595009083,
+          0.002838572489513386,
+          0.01322681171041829,
+          0.001579973827087566
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "9a58de4048ef463d11a8c0dc4da96562937cdd45bd2d07e260bc27443be53fce",
+    "created_at": "2026-11-24T23:57:54.218714+00:00",
+    "id": "7cd98982ada9a6d9af614a14d554caa5f04bbede8a28f416a926109da08723cc",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "eeb856904639941729add80fe3049c4d287817c926daf93f7dccba1c94e35fa6",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1970-01-31",
+          "1970-02-28",
+          "1970-03-31",
+          "1970-04-30",
+          "1970-05-31",
+          "1970-06-30",
+          "1970-07-31",
+          "1970-08-31",
+          "1970-09-30",
+          "1970-10-31",
+          "1970-11-30",
+          "1970-12-31",
+          "1971-01-31",
+          "1971-02-28",
+          "1971-03-31",
+          "1971-04-30",
+          "1971-05-31",
+          "1971-06-30",
+          "1971-07-31",
+          "1971-08-31",
+          "1971-09-30",
+          "1971-10-31",
+          "1971-11-30",
+          "1971-12-31",
+          "1972-01-31",
+          "1972-02-29",
+          "1972-03-31",
+          "1972-04-30",
+          "1972-05-31",
+          "1972-06-30",
+          "1972-07-31",
+          "1972-08-31",
+          "1972-09-30",
+          "1972-10-31",
+          "1972-11-30",
+          "1972-12-31",
+          "1973-01-31",
+          "1973-02-28",
+          "1973-03-31",
+          "1973-04-30",
+          "1973-05-31",
+          "1973-06-30",
+          "1973-07-31",
+          "1973-08-31",
+          "1973-09-30",
+          "1973-10-31",
+          "1973-11-30",
+          "1973-12-31",
+          "1974-01-31",
+          "1974-02-28",
+          "1974-03-31",
+          "1974-04-30",
+          "1974-05-31",
+          "1974-06-30",
+          "1974-07-31",
+          "1974-08-31",
+          "1974-09-30",
+          "1974-10-31",
+          "1974-11-30",
+          "1974-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "9f25a6437c0b4747cdf97cf5c7f4ccb3e79723f0a9b80c747572507c9ea92cef",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1969-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261325,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "1969-12-31",
+            "INDPRO": "1969-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1969-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS_asof_1969-12-31": "707b18b674d68ff543a23396e2636fcbd17061be1d0c0a1faf6365db1b7c6fe5",
+            "INDPRO_asof_1969-12-31": "19271821ab3984b04b1cab5186a2ae88ae2d3b30134233129514bbc734ea66d8",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1969-10-31",
+        "training_scale": [
+          0.03421586375969957,
+          0.014694246595009083,
+          0.002838572489513386,
+          0.01322681171041829,
+          0.001579973827087566
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "d2ead50efff24a49387df14624a20f0794dc362ba348b40fcddf0f6b0c1d7902",
+    "created_at": "2026-11-24T23:57:54.728716+00:00",
+    "id": "161b4adac7f6b1a58f27022f74c1b84ecc9406425aa07d0be0a887aee6f5a6cb",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "1fd0f79f03d5e405740eb1b5fa93867ab609bf8320d8008765d7372b4ece856e",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1970-01-31",
+          "1970-02-28",
+          "1970-03-31",
+          "1970-04-30",
+          "1970-05-31",
+          "1970-06-30",
+          "1970-07-31",
+          "1970-08-31",
+          "1970-09-30",
+          "1970-10-31",
+          "1970-11-30",
+          "1970-12-31",
+          "1971-01-31",
+          "1971-02-28",
+          "1971-03-31",
+          "1971-04-30",
+          "1971-05-31",
+          "1971-06-30",
+          "1971-07-31",
+          "1971-08-31",
+          "1971-09-30",
+          "1971-10-31",
+          "1971-11-30",
+          "1971-12-31",
+          "1972-01-31",
+          "1972-02-29",
+          "1972-03-31",
+          "1972-04-30",
+          "1972-05-31",
+          "1972-06-30",
+          "1972-07-31",
+          "1972-08-31",
+          "1972-09-30",
+          "1972-10-31",
+          "1972-11-30",
+          "1972-12-31",
+          "1973-01-31",
+          "1973-02-28",
+          "1973-03-31",
+          "1973-04-30",
+          "1973-05-31",
+          "1973-06-30",
+          "1973-07-31",
+          "1973-08-31",
+          "1973-09-30",
+          "1973-10-31",
+          "1973-11-30",
+          "1973-12-31",
+          "1974-01-31",
+          "1974-02-28",
+          "1974-03-31",
+          "1974-04-30",
+          "1974-05-31",
+          "1974-06-30",
+          "1974-07-31",
+          "1974-08-31",
+          "1974-09-30",
+          "1974-10-31",
+          "1974-11-30",
+          "1974-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "conditional_var_t",
+        "model_id": "74c0208c84a470a2e1920100c06dfc4854e6298c11620f84b70b75f36459acb7",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1969-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261326,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "1969-12-31",
+            "INDPRO": "1969-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1969-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS_asof_1969-12-31": "707b18b674d68ff543a23396e2636fcbd17061be1d0c0a1faf6365db1b7c6fe5",
+            "INDPRO_asof_1969-12-31": "19271821ab3984b04b1cab5186a2ae88ae2d3b30134233129514bbc734ea66d8",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1969-10-31",
+        "training_scale": [
+          0.03421586375969957,
+          0.014694246595009083,
+          0.002838572489513386,
+          0.01322681171041829,
+          0.001579973827087566
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "fb8eecb9b5748c2c51aab59b79ee8fb5c7b0c2bbd7e1e37af0a088a2eef16f54",
+    "created_at": "2026-11-24T23:57:55.887298+00:00",
+    "id": "c6dae5d8aa472bb0a937c661530958bdb148d99ca09ed2385cb9c9368fdb45e6",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "df9594c7633fefa6be0aea11d7000a857a19e366f07d12759d7b2b15edab583b",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1987-01-31",
+          "1987-02-28",
+          "1987-03-31",
+          "1987-04-30",
+          "1987-05-31",
+          "1987-06-30",
+          "1987-07-31",
+          "1987-08-31",
+          "1987-09-30",
+          "1987-10-31",
+          "1987-11-30",
+          "1987-12-31",
+          "1988-01-31",
+          "1988-02-29",
+          "1988-03-31",
+          "1988-04-30",
+          "1988-05-31",
+          "1988-06-30",
+          "1988-07-31",
+          "1988-08-31",
+          "1988-09-30",
+          "1988-10-31",
+          "1988-11-30",
+          "1988-12-31",
+          "1989-01-31",
+          "1989-02-28",
+          "1989-03-31",
+          "1989-04-30",
+          "1989-05-31",
+          "1989-06-30",
+          "1989-07-31",
+          "1989-08-31",
+          "1989-09-30",
+          "1989-10-31",
+          "1989-11-30",
+          "1989-12-31",
+          "1990-01-31",
+          "1990-02-28",
+          "1990-03-31",
+          "1990-04-30",
+          "1990-05-31",
+          "1990-06-30",
+          "1990-07-31",
+          "1990-08-31",
+          "1990-09-30",
+          "1990-10-31",
+          "1990-11-30",
+          "1990-12-31",
+          "1991-01-31",
+          "1991-02-28",
+          "1991-03-31",
+          "1991-04-30",
+          "1991-05-31",
+          "1991-06-30",
+          "1991-07-31",
+          "1991-08-31",
+          "1991-09-30",
+          "1991-10-31",
+          "1991-11-30",
+          "1991-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "c08911b7d85bac6e2dfb38c33be73f2797d271edbbbc0dd1dcbc8ac0db519fb1",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1986-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261424,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "1986-12-31",
+            "INDPRO": "1986-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1986-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS_asof_1986-12-31": "d43ca310707ee6db772c532a4f5481e6f1d571a28be62bef17547a7ab88fe80e",
+            "INDPRO_asof_1986-12-31": "cb98e28ab3a70fe865411acdc0e5b63043aab9dfb549c2843022793e18d3b7d5",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1986-10-31",
+        "training_scale": [
+          0.04602589313018662,
+          0.0301350568443296,
+          0.003443749947307325,
+          0.009374872926604001,
+          0.004785623792535516
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "c9f92a436bd890019eccab3721249fa5bac9e156fa5a3a771a91d18bff0ebe45",
+    "created_at": "2026-11-24T23:57:56.772369+00:00",
+    "id": "53249d9944d419c49c522beaabd054f326454b9056333652a44db42c79f5a49e",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "2f90c403e9310896a5c6d23e353b63fe2d0f2243971285821fb33889c3ca6aed",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1987-01-31",
+          "1987-02-28",
+          "1987-03-31",
+          "1987-04-30",
+          "1987-05-31",
+          "1987-06-30",
+          "1987-07-31",
+          "1987-08-31",
+          "1987-09-30",
+          "1987-10-31",
+          "1987-11-30",
+          "1987-12-31",
+          "1988-01-31",
+          "1988-02-29",
+          "1988-03-31",
+          "1988-04-30",
+          "1988-05-31",
+          "1988-06-30",
+          "1988-07-31",
+          "1988-08-31",
+          "1988-09-30",
+          "1988-10-31",
+          "1988-11-30",
+          "1988-12-31",
+          "1989-01-31",
+          "1989-02-28",
+          "1989-03-31",
+          "1989-04-30",
+          "1989-05-31",
+          "1989-06-30",
+          "1989-07-31",
+          "1989-08-31",
+          "1989-09-30",
+          "1989-10-31",
+          "1989-11-30",
+          "1989-12-31",
+          "1990-01-31",
+          "1990-02-28",
+          "1990-03-31",
+          "1990-04-30",
+          "1990-05-31",
+          "1990-06-30",
+          "1990-07-31",
+          "1990-08-31",
+          "1990-09-30",
+          "1990-10-31",
+          "1990-11-30",
+          "1990-12-31",
+          "1991-01-31",
+          "1991-02-28",
+          "1991-03-31",
+          "1991-04-30",
+          "1991-05-31",
+          "1991-06-30",
+          "1991-07-31",
+          "1991-08-31",
+          "1991-09-30",
+          "1991-10-31",
+          "1991-11-30",
+          "1991-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "c6bbedcb43f200550d4ec087b303913a83e217364ae3f99b895cd52269c6d760",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1986-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261425,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "1986-12-31",
+            "INDPRO": "1986-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1986-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS_asof_1986-12-31": "d43ca310707ee6db772c532a4f5481e6f1d571a28be62bef17547a7ab88fe80e",
+            "INDPRO_asof_1986-12-31": "cb98e28ab3a70fe865411acdc0e5b63043aab9dfb549c2843022793e18d3b7d5",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1986-10-31",
+        "training_scale": [
+          0.04602589313018662,
+          0.0301350568443296,
+          0.003443749947307325,
+          0.009374872926604001,
+          0.004785623792535516
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "4dbdccf15e902217ec1d599e9b0a25dfa46f6de6a2251c1bb6c5b2608110a5cd",
+    "created_at": "2026-11-24T23:57:57.125384+00:00",
+    "id": "8cccaa4ba45dfe215032ffd6de30aa8429139438ef9b2cc4b7ef4e9e31a091fe",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "9eb98849cdd84fe7aa464bafd57e480506e52f111b208a2b52d4f4a189c439b6",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "1987-01-31",
+          "1987-02-28",
+          "1987-03-31",
+          "1987-04-30",
+          "1987-05-31",
+          "1987-06-30",
+          "1987-07-31",
+          "1987-08-31",
+          "1987-09-30",
+          "1987-10-31",
+          "1987-11-30",
+          "1987-12-31",
+          "1988-01-31",
+          "1988-02-29",
+          "1988-03-31",
+          "1988-04-30",
+          "1988-05-31",
+          "1988-06-30",
+          "1988-07-31",
+          "1988-08-31",
+          "1988-09-30",
+          "1988-10-31",
+          "1988-11-30",
+          "1988-12-31",
+          "1989-01-31",
+          "1989-02-28",
+          "1989-03-31",
+          "1989-04-30",
+          "1989-05-31",
+          "1989-06-30",
+          "1989-07-31",
+          "1989-08-31",
+          "1989-09-30",
+          "1989-10-31",
+          "1989-11-30",
+          "1989-12-31",
+          "1990-01-31",
+          "1990-02-28",
+          "1990-03-31",
+          "1990-04-30",
+          "1990-05-31",
+          "1990-06-30",
+          "1990-07-31",
+          "1990-08-31",
+          "1990-09-30",
+          "1990-10-31",
+          "1990-11-30",
+          "1990-12-31",
+          "1991-01-31",
+          "1991-02-28",
+          "1991-03-31",
+          "1991-04-30",
+          "1991-05-31",
+          "1991-06-30",
+          "1991-07-31",
+          "1991-08-31",
+          "1991-09-30",
+          "1991-10-31",
+          "1991-11-30",
+          "1991-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "conditional_var_t",
+        "model_id": "abf91196791437a55ce09b0f8aa7c2790d95b0ce674bbe2d37e95fa6bf21281d",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1986-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261426,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "BAA": "CURRENT_REVISED_PSEUDO_REAL_TIME",
+            "CPIAUCNS": "1986-12-31",
+            "INDPRO": "1986-12-31"
+          },
+          "macro_vintages_verified": false,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1986-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA": "0f89a825d20cbc97cda34952c9727a642eda7167625feb5d77d1756f53dec59a",
+            "BAA": "0d7a21abcb6af2a2d7ac83fb6a8941a5e3ad8ddcec913dcff1b7d9d50eed6404",
+            "CPIAUCNS_asof_1986-12-31": "d43ca310707ee6db772c532a4f5481e6f1d571a28be62bef17547a7ab88fe80e",
+            "INDPRO_asof_1986-12-31": "cb98e28ab3a70fe865411acdc0e5b63043aab9dfb549c2843022793e18d3b7d5",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1986-10-31",
+        "training_scale": [
+          0.04602589313018662,
+          0.0301350568443296,
+          0.003443749947307325,
+          0.009374872926604001,
+          0.004785623792535516
+        ],
+        "unobserved_state_bridge_months": 2
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "8fda8773bdecf6d67c69234737d173ba85e303b3d00e31579df2b445a0292d85",
+    "created_at": "2026-11-24T23:57:58.137559+00:00",
+    "id": "3c7ccbf0decc4a6311064c3715dfe026306c38591d463238199d34254b66bbd3",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "42da798424960b1df61b9e523f844dda6dc25dd16098b1b33d7e14aaa9c61268",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2000-01-31",
+          "2000-02-29",
+          "2000-03-31",
+          "2000-04-30",
+          "2000-05-31",
+          "2000-06-30",
+          "2000-07-31",
+          "2000-08-31",
+          "2000-09-30",
+          "2000-10-31",
+          "2000-11-30",
+          "2000-12-31",
+          "2001-01-31",
+          "2001-02-28",
+          "2001-03-31",
+          "2001-04-30",
+          "2001-05-31",
+          "2001-06-30",
+          "2001-07-31",
+          "2001-08-31",
+          "2001-09-30",
+          "2001-10-31",
+          "2001-11-30",
+          "2001-12-31",
+          "2002-01-31",
+          "2002-02-28",
+          "2002-03-31",
+          "2002-04-30",
+          "2002-05-31",
+          "2002-06-30",
+          "2002-07-31",
+          "2002-08-31",
+          "2002-09-30",
+          "2002-10-31",
+          "2002-11-30",
+          "2002-12-31",
+          "2003-01-31",
+          "2003-02-28",
+          "2003-03-31",
+          "2003-04-30",
+          "2003-05-31",
+          "2003-06-30",
+          "2003-07-31",
+          "2003-08-31",
+          "2003-09-30",
+          "2003-10-31",
+          "2003-11-30",
+          "2003-12-31",
+          "2004-01-31",
+          "2004-02-29",
+          "2004-03-31",
+          "2004-04-30",
+          "2004-05-31",
+          "2004-06-30",
+          "2004-07-31",
+          "2004-08-31",
+          "2004-09-30",
+          "2004-10-31",
+          "2004-11-30",
+          "2004-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "2739e6d21ca3ea4a5fa0ffbf58c1af5aba37a2b5dba8ea7bb2f1f9ea67dc2fc4",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1999-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261524,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "1999-12-31",
+            "BAA": "1999-12-31",
+            "CPIAUCNS": "1999-12-31",
+            "INDPRO": "1999-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1999-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_1999-12-31": "30b0cded2fe24d35164ef9fbfb5e0b7b3d0f203ced07e271cd5edd88ae4f0e0e",
+            "BAA_asof_1999-12-31": "1232b871506f4a121e74dfd754ce55409f6ef218f86693ced6e096655c335e21",
+            "CPIAUCNS_asof_1999-12-31": "74aa8b131366a3df9ba0f1de9208c175e40a99dec91310638c48f1325cd9823d",
+            "INDPRO_asof_1999-12-31": "a91ffdeffc04e40c351be2bbb40cb93382f0f9870d2537074e267c4129fd707d",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1999-11-30",
+        "training_scale": [
+          0.04450377296006542,
+          0.03147728180305741,
+          0.003001369256030277,
+          0.006763904535498241,
+          0.004917588547948854
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "da368a10baffe0945e696a2b109354cd1b5323d4a5a45a664faa1e020f5b977e",
+    "created_at": "2026-11-24T23:57:58.999445+00:00",
+    "id": "d0df70ae9c205aff8505e96aaf6a87a8e54acd7557d63a03d3ffc81d2ff9ff68",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "068ec002a617d594c0f7e887470f1c7eba72f035e37a51dd993b8f91b0160d54",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2000-01-31",
+          "2000-02-29",
+          "2000-03-31",
+          "2000-04-30",
+          "2000-05-31",
+          "2000-06-30",
+          "2000-07-31",
+          "2000-08-31",
+          "2000-09-30",
+          "2000-10-31",
+          "2000-11-30",
+          "2000-12-31",
+          "2001-01-31",
+          "2001-02-28",
+          "2001-03-31",
+          "2001-04-30",
+          "2001-05-31",
+          "2001-06-30",
+          "2001-07-31",
+          "2001-08-31",
+          "2001-09-30",
+          "2001-10-31",
+          "2001-11-30",
+          "2001-12-31",
+          "2002-01-31",
+          "2002-02-28",
+          "2002-03-31",
+          "2002-04-30",
+          "2002-05-31",
+          "2002-06-30",
+          "2002-07-31",
+          "2002-08-31",
+          "2002-09-30",
+          "2002-10-31",
+          "2002-11-30",
+          "2002-12-31",
+          "2003-01-31",
+          "2003-02-28",
+          "2003-03-31",
+          "2003-04-30",
+          "2003-05-31",
+          "2003-06-30",
+          "2003-07-31",
+          "2003-08-31",
+          "2003-09-30",
+          "2003-10-31",
+          "2003-11-30",
+          "2003-12-31",
+          "2004-01-31",
+          "2004-02-29",
+          "2004-03-31",
+          "2004-04-30",
+          "2004-05-31",
+          "2004-06-30",
+          "2004-07-31",
+          "2004-08-31",
+          "2004-09-30",
+          "2004-10-31",
+          "2004-11-30",
+          "2004-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "9293fa751874db58d5f14c8f13c135c1323980cb981e98bf91e68ef829ff6166",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1999-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261525,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "1999-12-31",
+            "BAA": "1999-12-31",
+            "CPIAUCNS": "1999-12-31",
+            "INDPRO": "1999-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1999-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_1999-12-31": "30b0cded2fe24d35164ef9fbfb5e0b7b3d0f203ced07e271cd5edd88ae4f0e0e",
+            "BAA_asof_1999-12-31": "1232b871506f4a121e74dfd754ce55409f6ef218f86693ced6e096655c335e21",
+            "CPIAUCNS_asof_1999-12-31": "74aa8b131366a3df9ba0f1de9208c175e40a99dec91310638c48f1325cd9823d",
+            "INDPRO_asof_1999-12-31": "a91ffdeffc04e40c351be2bbb40cb93382f0f9870d2537074e267c4129fd707d",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1999-11-30",
+        "training_scale": [
+          0.04450377296006542,
+          0.03147728180305741,
+          0.003001369256030277,
+          0.006763904535498241,
+          0.004917588547948854
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "9a75de6ff43b7c7204b98acc8076b72e2159ef362658146d82cf5b5f0bd022ff",
+    "created_at": "2026-11-24T23:57:59.374603+00:00",
+    "id": "8f276fe1f049f1d490e0eb111ee6d7e35a1b1a0dc5b08a98ab0f7462da2b3c5a",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "2dc3c047083379eb1524947997c63cd3cc535e935413fbf7c4652cb66ef829de",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2000-01-31",
+          "2000-02-29",
+          "2000-03-31",
+          "2000-04-30",
+          "2000-05-31",
+          "2000-06-30",
+          "2000-07-31",
+          "2000-08-31",
+          "2000-09-30",
+          "2000-10-31",
+          "2000-11-30",
+          "2000-12-31",
+          "2001-01-31",
+          "2001-02-28",
+          "2001-03-31",
+          "2001-04-30",
+          "2001-05-31",
+          "2001-06-30",
+          "2001-07-31",
+          "2001-08-31",
+          "2001-09-30",
+          "2001-10-31",
+          "2001-11-30",
+          "2001-12-31",
+          "2002-01-31",
+          "2002-02-28",
+          "2002-03-31",
+          "2002-04-30",
+          "2002-05-31",
+          "2002-06-30",
+          "2002-07-31",
+          "2002-08-31",
+          "2002-09-30",
+          "2002-10-31",
+          "2002-11-30",
+          "2002-12-31",
+          "2003-01-31",
+          "2003-02-28",
+          "2003-03-31",
+          "2003-04-30",
+          "2003-05-31",
+          "2003-06-30",
+          "2003-07-31",
+          "2003-08-31",
+          "2003-09-30",
+          "2003-10-31",
+          "2003-11-30",
+          "2003-12-31",
+          "2004-01-31",
+          "2004-02-29",
+          "2004-03-31",
+          "2004-04-30",
+          "2004-05-31",
+          "2004-06-30",
+          "2004-07-31",
+          "2004-08-31",
+          "2004-09-30",
+          "2004-10-31",
+          "2004-11-30",
+          "2004-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "conditional_var_t",
+        "model_id": "b824baac6e7a086b6a8053dc41c097332ba65af0dc496546121cb741cc462c25",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "1999-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261526,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "1999-12-31",
+            "BAA": "1999-12-31",
+            "CPIAUCNS": "1999-12-31",
+            "INDPRO": "1999-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "1999-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_1999-12-31": "30b0cded2fe24d35164ef9fbfb5e0b7b3d0f203ced07e271cd5edd88ae4f0e0e",
+            "BAA_asof_1999-12-31": "1232b871506f4a121e74dfd754ce55409f6ef218f86693ced6e096655c335e21",
+            "CPIAUCNS_asof_1999-12-31": "74aa8b131366a3df9ba0f1de9208c175e40a99dec91310638c48f1325cd9823d",
+            "INDPRO_asof_1999-12-31": "a91ffdeffc04e40c351be2bbb40cb93382f0f9870d2537074e267c4129fd707d",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "1999-11-30",
+        "training_scale": [
+          0.04450377296006542,
+          0.03147728180305741,
+          0.003001369256030277,
+          0.006763904535498241,
+          0.004917588547948854
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "0337fc0fb1916dd4f87ea0bdf7676927ba9278ae2985537b2ec3ad39e22af3ac",
+    "created_at": "2026-11-24T23:58:00.293812+00:00",
+    "id": "f8ad3445191aa1309aea52c630376a5ea95b1b6d4fb9f361b9b8aadce9f89caa",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "90f8f7244ea5966f0d9134021e7621cca3d25d6fcbd02f67efeab8a884afb62c",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2008-01-31",
+          "2008-02-29",
+          "2008-03-31",
+          "2008-04-30",
+          "2008-05-31",
+          "2008-06-30",
+          "2008-07-31",
+          "2008-08-31",
+          "2008-09-30",
+          "2008-10-31",
+          "2008-11-30",
+          "2008-12-31",
+          "2009-01-31",
+          "2009-02-28",
+          "2009-03-31",
+          "2009-04-30",
+          "2009-05-31",
+          "2009-06-30",
+          "2009-07-31",
+          "2009-08-31",
+          "2009-09-30",
+          "2009-10-31",
+          "2009-11-30",
+          "2009-12-31",
+          "2010-01-31",
+          "2010-02-28",
+          "2010-03-31",
+          "2010-04-30",
+          "2010-05-31",
+          "2010-06-30",
+          "2010-07-31",
+          "2010-08-31",
+          "2010-09-30",
+          "2010-10-31",
+          "2010-11-30",
+          "2010-12-31",
+          "2011-01-31",
+          "2011-02-28",
+          "2011-03-31",
+          "2011-04-30",
+          "2011-05-31",
+          "2011-06-30",
+          "2011-07-31",
+          "2011-08-31",
+          "2011-09-30",
+          "2011-10-31",
+          "2011-11-30",
+          "2011-12-31",
+          "2012-01-31",
+          "2012-02-29",
+          "2012-03-31",
+          "2012-04-30",
+          "2012-05-31",
+          "2012-06-30",
+          "2012-07-31",
+          "2012-08-31",
+          "2012-09-30",
+          "2012-10-31",
+          "2012-11-30",
+          "2012-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "8dc11635ce4d1ab49f93b8dfe17b0ccf9e0a4497d849d9ff1e68e322c0f7f374",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2007-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261624,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2007-12-31",
+            "BAA": "2007-12-31",
+            "CPIAUCNS": "2007-12-31",
+            "INDPRO": "2007-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2007-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2007-12-31": "76ca34b2fbf008e71c615a9505b0e79e0ab8a7f599bfb436602a6ef5831c59d8",
+            "BAA_asof_2007-12-31": "8eade4cbb7090486688cc8875ee8988e2d24c309f2000a301f0dfb305cd32a34",
+            "CPIAUCNS_asof_2007-12-31": "9982dcc30711c2f5efc71e88004f296094fe437c1d69c80016d85a5e79999f9c",
+            "INDPRO_asof_2007-12-31": "5779e619435873348b161dbe8fd8634a1845b8f246287a7f281fa11ff42c46d8",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2007-11-30",
+        "training_scale": [
+          0.04039428966290601,
+          0.02013909686132345,
+          0.0027323894768625815,
+          0.005222539138412397,
+          0.00205603675402246
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "012eb510813c89116079da20fea305b2d3bc0a3d92ee39ed37385ee10a2dba14",
+    "created_at": "2026-11-24T23:58:01.325917+00:00",
+    "id": "9e0c559603b379093febe97402fa15dd77ef5301eafea714b82e0b9cf90838b9",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "fb04b5269a2cc5d4688f0b13e3685dab7214968928785013828945267400b77f",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2008-01-31",
+          "2008-02-29",
+          "2008-03-31",
+          "2008-04-30",
+          "2008-05-31",
+          "2008-06-30",
+          "2008-07-31",
+          "2008-08-31",
+          "2008-09-30",
+          "2008-10-31",
+          "2008-11-30",
+          "2008-12-31",
+          "2009-01-31",
+          "2009-02-28",
+          "2009-03-31",
+          "2009-04-30",
+          "2009-05-31",
+          "2009-06-30",
+          "2009-07-31",
+          "2009-08-31",
+          "2009-09-30",
+          "2009-10-31",
+          "2009-11-30",
+          "2009-12-31",
+          "2010-01-31",
+          "2010-02-28",
+          "2010-03-31",
+          "2010-04-30",
+          "2010-05-31",
+          "2010-06-30",
+          "2010-07-31",
+          "2010-08-31",
+          "2010-09-30",
+          "2010-10-31",
+          "2010-11-30",
+          "2010-12-31",
+          "2011-01-31",
+          "2011-02-28",
+          "2011-03-31",
+          "2011-04-30",
+          "2011-05-31",
+          "2011-06-30",
+          "2011-07-31",
+          "2011-08-31",
+          "2011-09-30",
+          "2011-10-31",
+          "2011-11-30",
+          "2011-12-31",
+          "2012-01-31",
+          "2012-02-29",
+          "2012-03-31",
+          "2012-04-30",
+          "2012-05-31",
+          "2012-06-30",
+          "2012-07-31",
+          "2012-08-31",
+          "2012-09-30",
+          "2012-10-31",
+          "2012-11-30",
+          "2012-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "784b80b4f54497d797ff0e9eee01e0c7e2a84b3a1c2a3b80eb14560d68497a4a",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2007-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261625,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2007-12-31",
+            "BAA": "2007-12-31",
+            "CPIAUCNS": "2007-12-31",
+            "INDPRO": "2007-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2007-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2007-12-31": "76ca34b2fbf008e71c615a9505b0e79e0ab8a7f599bfb436602a6ef5831c59d8",
+            "BAA_asof_2007-12-31": "8eade4cbb7090486688cc8875ee8988e2d24c309f2000a301f0dfb305cd32a34",
+            "CPIAUCNS_asof_2007-12-31": "9982dcc30711c2f5efc71e88004f296094fe437c1d69c80016d85a5e79999f9c",
+            "INDPRO_asof_2007-12-31": "5779e619435873348b161dbe8fd8634a1845b8f246287a7f281fa11ff42c46d8",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2007-11-30",
+        "training_scale": [
+          0.04039428966290601,
+          0.02013909686132345,
+          0.0027323894768625815,
+          0.005222539138412397,
+          0.00205603675402246
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "e15bf45c30abc8827574a80b83896716878ebf17d18c502b429a2ebcb68792ee",
+    "created_at": "2026-11-24T23:58:01.734957+00:00",
+    "id": "03ce57634f07ca83fb1e31bf2a912ed8fb0b095ddb4c6bd4f6fdbbe6c4916d5f",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "8f6b0cd753dd2b67d56e56aa5d556d6a0022793b34d9af8b44df100fff0b2e11",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2008-01-31",
+          "2008-02-29",
+          "2008-03-31",
+          "2008-04-30",
+          "2008-05-31",
+          "2008-06-30",
+          "2008-07-31",
+          "2008-08-31",
+          "2008-09-30",
+          "2008-10-31",
+          "2008-11-30",
+          "2008-12-31",
+          "2009-01-31",
+          "2009-02-28",
+          "2009-03-31",
+          "2009-04-30",
+          "2009-05-31",
+          "2009-06-30",
+          "2009-07-31",
+          "2009-08-31",
+          "2009-09-30",
+          "2009-10-31",
+          "2009-11-30",
+          "2009-12-31",
+          "2010-01-31",
+          "2010-02-28",
+          "2010-03-31",
+          "2010-04-30",
+          "2010-05-31",
+          "2010-06-30",
+          "2010-07-31",
+          "2010-08-31",
+          "2010-09-30",
+          "2010-10-31",
+          "2010-11-30",
+          "2010-12-31",
+          "2011-01-31",
+          "2011-02-28",
+          "2011-03-31",
+          "2011-04-30",
+          "2011-05-31",
+          "2011-06-30",
+          "2011-07-31",
+          "2011-08-31",
+          "2011-09-30",
+          "2011-10-31",
+          "2011-11-30",
+          "2011-12-31",
+          "2012-01-31",
+          "2012-02-29",
+          "2012-03-31",
+          "2012-04-30",
+          "2012-05-31",
+          "2012-06-30",
+          "2012-07-31",
+          "2012-08-31",
+          "2012-09-30",
+          "2012-10-31",
+          "2012-11-30",
+          "2012-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "conditional_var_t",
+        "model_id": "3e2d178ec21201403d7c668fb94391e1d70c14aa2195b9929dbfe2eaee3aa459",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2007-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261626,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2007-12-31",
+            "BAA": "2007-12-31",
+            "CPIAUCNS": "2007-12-31",
+            "INDPRO": "2007-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2007-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2007-12-31": "76ca34b2fbf008e71c615a9505b0e79e0ab8a7f599bfb436602a6ef5831c59d8",
+            "BAA_asof_2007-12-31": "8eade4cbb7090486688cc8875ee8988e2d24c309f2000a301f0dfb305cd32a34",
+            "CPIAUCNS_asof_2007-12-31": "9982dcc30711c2f5efc71e88004f296094fe437c1d69c80016d85a5e79999f9c",
+            "INDPRO_asof_2007-12-31": "5779e619435873348b161dbe8fd8634a1845b8f246287a7f281fa11ff42c46d8",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2007-11-30",
+        "training_scale": [
+          0.04039428966290601,
+          0.02013909686132345,
+          0.0027323894768625815,
+          0.005222539138412397,
+          0.00205603675402246
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "4a806c60fee2b04c5325c07a2f9840b6acae3e5b4518206fd0846114bec2de34",
+    "created_at": "2026-11-24T23:58:02.847544+00:00",
+    "id": "261f5f866a166b1e5675ba78d3aa090c19340abf4e6c00055d63e73842658435",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "06b6277ea555febc5559a86dfe2a16e1e5bb850191431fe75580c0522fc29e95",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2012-01-31",
+          "2012-02-29",
+          "2012-03-31",
+          "2012-04-30",
+          "2012-05-31",
+          "2012-06-30",
+          "2012-07-31",
+          "2012-08-31",
+          "2012-09-30",
+          "2012-10-31",
+          "2012-11-30",
+          "2012-12-31",
+          "2013-01-31",
+          "2013-02-28",
+          "2013-03-31",
+          "2013-04-30",
+          "2013-05-31",
+          "2013-06-30",
+          "2013-07-31",
+          "2013-08-31",
+          "2013-09-30",
+          "2013-10-31",
+          "2013-11-30",
+          "2013-12-31",
+          "2014-01-31",
+          "2014-02-28",
+          "2014-03-31",
+          "2014-04-30",
+          "2014-05-31",
+          "2014-06-30",
+          "2014-07-31",
+          "2014-08-31",
+          "2014-09-30",
+          "2014-10-31",
+          "2014-11-30",
+          "2014-12-31",
+          "2015-01-31",
+          "2015-02-28",
+          "2015-03-31",
+          "2015-04-30",
+          "2015-05-31",
+          "2015-06-30",
+          "2015-07-31",
+          "2015-08-31",
+          "2015-09-30",
+          "2015-10-31",
+          "2015-11-30",
+          "2015-12-31",
+          "2016-01-31",
+          "2016-02-29",
+          "2016-03-31",
+          "2016-04-30",
+          "2016-05-31",
+          "2016-06-30",
+          "2016-07-31",
+          "2016-08-31",
+          "2016-09-30",
+          "2016-10-31",
+          "2016-11-30",
+          "2016-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "b5851a7329054da3a390af9cb879846c8a802983f0b24853393d831150ff121b",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2011-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261724,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2011-12-31",
+            "BAA": "2011-12-31",
+            "CPIAUCNS": "2011-12-31",
+            "INDPRO": "2011-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2011-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2011-12-31": "0cb6af122a929d2a30ccce6c657d39bffab9b655a858bf21405c691a223b4a65",
+            "BAA_asof_2011-12-31": "e86c20c775312826e3c9966c04bfca3eb81ab18c8cef8f8766d340f2da4c0320",
+            "CPIAUCNS_asof_2011-12-31": "65e2d004d0487b32f43ebb30cded0394473747360e4bb1cda9d302227d4be516",
+            "INDPRO_asof_2011-12-31": "d35bdb55880b8e7f92542ef5632a1c6272de263ae07765e4fc3ef94eb2d69471",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2011-11-30",
+        "training_scale": [
+          0.04562030885400438,
+          0.020035595259894016,
+          0.0033755104129331854,
+          0.006789678022516952,
+          0.004446595864683622
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "3223eca5b85d0b3273e0462ea6a775897ee5c801dd82d1d88ad4b3a7ec14f28e",
+    "created_at": "2026-11-24T23:58:04.301542+00:00",
+    "id": "fbbc98d9b31bbd4a2132ec7efb6c401c66ea6dda42993aa1d2b30640af33b024",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "620f29cd7e7a2f2fe20d9c96f65c7bcccc7a5765d678df150800a39fc7f32a30",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2012-01-31",
+          "2012-02-29",
+          "2012-03-31",
+          "2012-04-30",
+          "2012-05-31",
+          "2012-06-30",
+          "2012-07-31",
+          "2012-08-31",
+          "2012-09-30",
+          "2012-10-31",
+          "2012-11-30",
+          "2012-12-31",
+          "2013-01-31",
+          "2013-02-28",
+          "2013-03-31",
+          "2013-04-30",
+          "2013-05-31",
+          "2013-06-30",
+          "2013-07-31",
+          "2013-08-31",
+          "2013-09-30",
+          "2013-10-31",
+          "2013-11-30",
+          "2013-12-31",
+          "2014-01-31",
+          "2014-02-28",
+          "2014-03-31",
+          "2014-04-30",
+          "2014-05-31",
+          "2014-06-30",
+          "2014-07-31",
+          "2014-08-31",
+          "2014-09-30",
+          "2014-10-31",
+          "2014-11-30",
+          "2014-12-31",
+          "2015-01-31",
+          "2015-02-28",
+          "2015-03-31",
+          "2015-04-30",
+          "2015-05-31",
+          "2015-06-30",
+          "2015-07-31",
+          "2015-08-31",
+          "2015-09-30",
+          "2015-10-31",
+          "2015-11-30",
+          "2015-12-31",
+          "2016-01-31",
+          "2016-02-29",
+          "2016-03-31",
+          "2016-04-30",
+          "2016-05-31",
+          "2016-06-30",
+          "2016-07-31",
+          "2016-08-31",
+          "2016-09-30",
+          "2016-10-31",
+          "2016-11-30",
+          "2016-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "f323c29225bf4d357a85bf5d7b3c05aa6a2302aeeecf9591497f74a6bb397549",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2011-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261725,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2011-12-31",
+            "BAA": "2011-12-31",
+            "CPIAUCNS": "2011-12-31",
+            "INDPRO": "2011-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2011-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2011-12-31": "0cb6af122a929d2a30ccce6c657d39bffab9b655a858bf21405c691a223b4a65",
+            "BAA_asof_2011-12-31": "e86c20c775312826e3c9966c04bfca3eb81ab18c8cef8f8766d340f2da4c0320",
+            "CPIAUCNS_asof_2011-12-31": "65e2d004d0487b32f43ebb30cded0394473747360e4bb1cda9d302227d4be516",
+            "INDPRO_asof_2011-12-31": "d35bdb55880b8e7f92542ef5632a1c6272de263ae07765e4fc3ef94eb2d69471",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2011-11-30",
+        "training_scale": [
+          0.04562030885400438,
+          0.020035595259894016,
+          0.0033755104129331854,
+          0.006789678022516952,
+          0.004446595864683622
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "946d8169d1646c042b8201c075c0579a1a7b767eda599f9f4c47072fb478bdb0",
+    "created_at": "2026-11-24T23:58:04.964602+00:00",
+    "id": "754922d5883c8b3fc045c47fe1e7117ccdf67bc27fb8981c8762b545c5ca776f",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "546b77ff1cc442044a60637ec27de733a38cfbe64da87bd2aca92274c34d7fc1",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2012-01-31",
+          "2012-02-29",
+          "2012-03-31",
+          "2012-04-30",
+          "2012-05-31",
+          "2012-06-30",
+          "2012-07-31",
+          "2012-08-31",
+          "2012-09-30",
+          "2012-10-31",
+          "2012-11-30",
+          "2012-12-31",
+          "2013-01-31",
+          "2013-02-28",
+          "2013-03-31",
+          "2013-04-30",
+          "2013-05-31",
+          "2013-06-30",
+          "2013-07-31",
+          "2013-08-31",
+          "2013-09-30",
+          "2013-10-31",
+          "2013-11-30",
+          "2013-12-31",
+          "2014-01-31",
+          "2014-02-28",
+          "2014-03-31",
+          "2014-04-30",
+          "2014-05-31",
+          "2014-06-30",
+          "2014-07-31",
+          "2014-08-31",
+          "2014-09-30",
+          "2014-10-31",
+          "2014-11-30",
+          "2014-12-31",
+          "2015-01-31",
+          "2015-02-28",
+          "2015-03-31",
+          "2015-04-30",
+          "2015-05-31",
+          "2015-06-30",
+          "2015-07-31",
+          "2015-08-31",
+          "2015-09-30",
+          "2015-10-31",
+          "2015-11-30",
+          "2015-12-31",
+          "2016-01-31",
+          "2016-02-29",
+          "2016-03-31",
+          "2016-04-30",
+          "2016-05-31",
+          "2016-06-30",
+          "2016-07-31",
+          "2016-08-31",
+          "2016-09-30",
+          "2016-10-31",
+          "2016-11-30",
+          "2016-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "conditional_var_t",
+        "model_id": "21e3a7e70111e1c447cef7e90e90950c4b56b5b3afe56078a1727860daae5cc4",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2011-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261726,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2011-12-31",
+            "BAA": "2011-12-31",
+            "CPIAUCNS": "2011-12-31",
+            "INDPRO": "2011-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2011-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2011-12-31": "0cb6af122a929d2a30ccce6c657d39bffab9b655a858bf21405c691a223b4a65",
+            "BAA_asof_2011-12-31": "e86c20c775312826e3c9966c04bfca3eb81ab18c8cef8f8766d340f2da4c0320",
+            "CPIAUCNS_asof_2011-12-31": "65e2d004d0487b32f43ebb30cded0394473747360e4bb1cda9d302227d4be516",
+            "INDPRO_asof_2011-12-31": "d35bdb55880b8e7f92542ef5632a1c6272de263ae07765e4fc3ef94eb2d69471",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2011-11-30",
+        "training_scale": [
+          0.04562030885400438,
+          0.020035595259894016,
+          0.0033755104129331854,
+          0.006789678022516952,
+          0.004446595864683622
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "2e7dcba9c783c2f041a407ed7e566d331fb8a91cc910d0aa4af05a65dee1970d",
+    "created_at": "2026-11-24T23:58:06.809258+00:00",
+    "id": "92f7a1cacdbd20e06672572a72ed05314afb888ed4a4db36088d1f008ec16ce6",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "e3a44dc6658c8f33d8cadb83c2955cb0fb76bf92cf06c8ca21bc57b26e7b4748",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2020-01-31",
+          "2020-02-29",
+          "2020-03-31",
+          "2020-04-30",
+          "2020-05-31",
+          "2020-06-30",
+          "2020-07-31",
+          "2020-08-31",
+          "2020-09-30",
+          "2020-10-31",
+          "2020-11-30",
+          "2020-12-31",
+          "2021-01-31",
+          "2021-02-28",
+          "2021-03-31",
+          "2021-04-30",
+          "2021-05-31",
+          "2021-06-30",
+          "2021-07-31",
+          "2021-08-31",
+          "2021-09-30",
+          "2021-10-31",
+          "2021-11-30",
+          "2021-12-31",
+          "2022-01-31",
+          "2022-02-28",
+          "2022-03-31",
+          "2022-04-30",
+          "2022-05-31",
+          "2022-06-30",
+          "2022-07-31",
+          "2022-08-31",
+          "2022-09-30",
+          "2022-10-31",
+          "2022-11-30",
+          "2022-12-31",
+          "2023-01-31",
+          "2023-02-28",
+          "2023-03-31",
+          "2023-04-30",
+          "2023-05-31",
+          "2023-06-30",
+          "2023-07-31",
+          "2023-08-31",
+          "2023-09-30",
+          "2023-10-31",
+          "2023-11-30",
+          "2023-12-31",
+          "2024-01-31",
+          "2024-02-29",
+          "2024-03-31",
+          "2024-04-30",
+          "2024-05-31",
+          "2024-06-30",
+          "2024-07-31",
+          "2024-08-31",
+          "2024-09-30",
+          "2024-10-31",
+          "2024-11-30",
+          "2024-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "f94ff467f311faca4d44d300c0d63f53bcebbb6477e5d71df4d6493b72c687b7",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2019-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261824,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2019-12-31",
+            "BAA": "2019-12-31",
+            "CPIAUCNS": "2019-12-31",
+            "INDPRO": "2019-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2019-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2019-12-31": "1d5ad6e3a699b1c035fa06ee5369b040afc7abfdbc4bfbdc27facf7926c7ba62",
+            "BAA_asof_2019-12-31": "9c3756246d35c93ed1da58de83b7249c9a27b2a24cdfa5444a11eb834482cb53",
+            "CPIAUCNS_asof_2019-12-31": "c43231943018316b23b02e94f603064e41b8cf0cb15cbb5eee5c629a7a6cc4a4",
+            "INDPRO_asof_2019-12-31": "05579951d766a61c7e471d75f88a76e78c598784722e79df7622cd4b8308c570",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2019-11-30",
+        "training_scale": [
+          0.04393162853490418,
+          0.018823990774842723,
+          0.0037393043691010407,
+          0.006646021838995673,
+          0.004269746888718798
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "8f7a97231d9c5366183099fe58314f2b8155d2303fec89d307ec273ccfd26189",
+    "created_at": "2026-11-24T23:58:08.859613+00:00",
+    "id": "680b9498c6a4dcbaa7e4b4a8620276c5c64f3c552d748431ee62c3619b0256ed",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "e5fca2f81e1eb40d5727a5c178196617d5b3dee50fd14c697cb52187bf9cc3e5",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2020-01-31",
+          "2020-02-29",
+          "2020-03-31",
+          "2020-04-30",
+          "2020-05-31",
+          "2020-06-30",
+          "2020-07-31",
+          "2020-08-31",
+          "2020-09-30",
+          "2020-10-31",
+          "2020-11-30",
+          "2020-12-31",
+          "2021-01-31",
+          "2021-02-28",
+          "2021-03-31",
+          "2021-04-30",
+          "2021-05-31",
+          "2021-06-30",
+          "2021-07-31",
+          "2021-08-31",
+          "2021-09-30",
+          "2021-10-31",
+          "2021-11-30",
+          "2021-12-31",
+          "2022-01-31",
+          "2022-02-28",
+          "2022-03-31",
+          "2022-04-30",
+          "2022-05-31",
+          "2022-06-30",
+          "2022-07-31",
+          "2022-08-31",
+          "2022-09-30",
+          "2022-10-31",
+          "2022-11-30",
+          "2022-12-31",
+          "2023-01-31",
+          "2023-02-28",
+          "2023-03-31",
+          "2023-04-30",
+          "2023-05-31",
+          "2023-06-30",
+          "2023-07-31",
+          "2023-08-31",
+          "2023-09-30",
+          "2023-10-31",
+          "2023-11-30",
+          "2023-12-31",
+          "2024-01-31",
+          "2024-02-29",
+          "2024-03-31",
+          "2024-04-30",
+          "2024-05-31",
+          "2024-06-30",
+          "2024-07-31",
+          "2024-08-31",
+          "2024-09-30",
+          "2024-10-31",
+          "2024-11-30",
+          "2024-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "e62a3cd8cc7ce1eeb7d0690e999f617bbb7df9545dc1532cbd1db2092170505e",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2019-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261825,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2019-12-31",
+            "BAA": "2019-12-31",
+            "CPIAUCNS": "2019-12-31",
+            "INDPRO": "2019-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2019-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2019-12-31": "1d5ad6e3a699b1c035fa06ee5369b040afc7abfdbc4bfbdc27facf7926c7ba62",
+            "BAA_asof_2019-12-31": "9c3756246d35c93ed1da58de83b7249c9a27b2a24cdfa5444a11eb834482cb53",
+            "CPIAUCNS_asof_2019-12-31": "c43231943018316b23b02e94f603064e41b8cf0cb15cbb5eee5c629a7a6cc4a4",
+            "INDPRO_asof_2019-12-31": "05579951d766a61c7e471d75f88a76e78c598784722e79df7622cd4b8308c570",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2019-11-30",
+        "training_scale": [
+          0.04393162853490418,
+          0.018823990774842723,
+          0.0037393043691010407,
+          0.006646021838995673,
+          0.004269746888718798
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "aadfda39a5b0829a2071580065e9e6a8534e48b4cfe5c37edbc14276a77d519f",
+    "created_at": "2026-11-24T23:58:09.473763+00:00",
+    "id": "f963cfe4d2cf1eeaa6cbf71ef2e8f5bb3dee32a69dc303cc1b60785a940985c8",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "9924768a9edc7ab5ba9e40ddd5ee4fc63a297d3c4f98bb7f152c3f53fac10000",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2020-01-31",
+          "2020-02-29",
+          "2020-03-31",
+          "2020-04-30",
+          "2020-05-31",
+          "2020-06-30",
+          "2020-07-31",
+          "2020-08-31",
+          "2020-09-30",
+          "2020-10-31",
+          "2020-11-30",
+          "2020-12-31",
+          "2021-01-31",
+          "2021-02-28",
+          "2021-03-31",
+          "2021-04-30",
+          "2021-05-31",
+          "2021-06-30",
+          "2021-07-31",
+          "2021-08-31",
+          "2021-09-30",
+          "2021-10-31",
+          "2021-11-30",
+          "2021-12-31",
+          "2022-01-31",
+          "2022-02-28",
+          "2022-03-31",
+          "2022-04-30",
+          "2022-05-31",
+          "2022-06-30",
+          "2022-07-31",
+          "2022-08-31",
+          "2022-09-30",
+          "2022-10-31",
+          "2022-11-30",
+          "2022-12-31",
+          "2023-01-31",
+          "2023-02-28",
+          "2023-03-31",
+          "2023-04-30",
+          "2023-05-31",
+          "2023-06-30",
+          "2023-07-31",
+          "2023-08-31",
+          "2023-09-30",
+          "2023-10-31",
+          "2023-11-30",
+          "2023-12-31",
+          "2024-01-31",
+          "2024-02-29",
+          "2024-03-31",
+          "2024-04-30",
+          "2024-05-31",
+          "2024-06-30",
+          "2024-07-31",
+          "2024-08-31",
+          "2024-09-30",
+          "2024-10-31",
+          "2024-11-30",
+          "2024-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "conditional_var_t",
+        "model_id": "955be5dd088c4f296e431e8c6ee02b93795b9a18ca78abae6906c0dd90ea7150",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2019-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261826,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2019-12-31",
+            "BAA": "2019-12-31",
+            "CPIAUCNS": "2019-12-31",
+            "INDPRO": "2019-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2019-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2019-12-31": "1d5ad6e3a699b1c035fa06ee5369b040afc7abfdbc4bfbdc27facf7926c7ba62",
+            "BAA_asof_2019-12-31": "9c3756246d35c93ed1da58de83b7249c9a27b2a24cdfa5444a11eb834482cb53",
+            "CPIAUCNS_asof_2019-12-31": "c43231943018316b23b02e94f603064e41b8cf0cb15cbb5eee5c629a7a6cc4a4",
+            "INDPRO_asof_2019-12-31": "05579951d766a61c7e471d75f88a76e78c598784722e79df7622cd4b8308c570",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2019-11-30",
+        "training_scale": [
+          0.04393162853490418,
+          0.018823990774842723,
+          0.0037393043691010407,
+          0.006646021838995673,
+          0.004269746888718798
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "abaf97788dbce2a27cca24168ee881d04c67e3f6ba05c267750c4a9b86bd90a3",
+    "created_at": "2026-11-24T23:58:11.142233+00:00",
+    "id": "c0c9409f7f066ea5d91ad88997a3fe407828be35c4ef2757d21893baa752e90b",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "76498e1824efd23bda1a2f91c8e81086a1f53291103eb45ec7883ae76b1cd9eb",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2022-01-31",
+          "2022-02-28",
+          "2022-03-31",
+          "2022-04-30",
+          "2022-05-31",
+          "2022-06-30",
+          "2022-07-31",
+          "2022-08-31",
+          "2022-09-30",
+          "2022-10-31",
+          "2022-11-30",
+          "2022-12-31",
+          "2023-01-31",
+          "2023-02-28",
+          "2023-03-31",
+          "2023-04-30",
+          "2023-05-31",
+          "2023-06-30",
+          "2023-07-31",
+          "2023-08-31",
+          "2023-09-30",
+          "2023-10-31",
+          "2023-11-30",
+          "2023-12-31",
+          "2024-01-31",
+          "2024-02-29",
+          "2024-03-31",
+          "2024-04-30",
+          "2024-05-31",
+          "2024-06-30",
+          "2024-07-31",
+          "2024-08-31",
+          "2024-09-30",
+          "2024-10-31",
+          "2024-11-30",
+          "2024-12-31",
+          "2025-01-31",
+          "2025-02-28",
+          "2025-03-31",
+          "2025-04-30",
+          "2025-05-31",
+          "2025-06-30",
+          "2025-07-31",
+          "2025-08-31",
+          "2025-09-30",
+          "2025-10-31",
+          "2025-11-30",
+          "2025-12-31",
+          "2026-01-31",
+          "2026-02-28",
+          "2026-03-31",
+          "2026-04-30",
+          "2026-05-31",
+          "2026-06-30",
+          "2026-07-31",
+          "2026-08-31",
+          "2026-09-30",
+          "2026-10-31",
+          "2026-11-30",
+          "2026-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "joint_block",
+        "model_id": "9e8aa02f68301ba7afdbdba1ef1bf606d23bfd39ec15513b4e6bc82a6fa0ede7",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2021-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261924,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2021-12-31",
+            "BAA": "2021-12-31",
+            "CPIAUCNS": "2021-12-31",
+            "INDPRO": "2021-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2021-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2021-12-31": "ea1b6c0acb43d3e6090da84fb210b3ca6d8d497d476d981eaecd1ed6b02bf972",
+            "BAA_asof_2021-12-31": "2e7945f016c7bde0ba32a831526e8cf24fc9da5d72850a96f9d947858eca7e02",
+            "CPIAUCNS_asof_2021-12-31": "0fa63733acd48af5099d3d1a697034a951d02a9fc51976bebc48f99771ab4afd",
+            "INDPRO_asof_2021-12-31": "73b57dc9d0b4d188d3534f26120a3431f45012279fa3996180974da1da1dbfd6",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2021-11-30",
+        "training_scale": [
+          0.043659178647290756,
+          0.014982900830288498,
+          0.0038353144276089186,
+          0.01310287497953886,
+          0.004283002778002109
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "0abccba3f8d3140a9ef98879cdcc59cb47d6a2ef0de5bcf67bfe38c439027bfd",
+    "created_at": "2026-11-24T23:58:12.442830+00:00",
+    "id": "a03ad0322f49867c978325223ca308919d125f0249552f5ca836d45d47ad88bc",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "af505b3b5f7dd05dc5a98cda95a5c2990c1075dc474c5b884640a68949e09fa2",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2022-01-31",
+          "2022-02-28",
+          "2022-03-31",
+          "2022-04-30",
+          "2022-05-31",
+          "2022-06-30",
+          "2022-07-31",
+          "2022-08-31",
+          "2022-09-30",
+          "2022-10-31",
+          "2022-11-30",
+          "2022-12-31",
+          "2023-01-31",
+          "2023-02-28",
+          "2023-03-31",
+          "2023-04-30",
+          "2023-05-31",
+          "2023-06-30",
+          "2023-07-31",
+          "2023-08-31",
+          "2023-09-30",
+          "2023-10-31",
+          "2023-11-30",
+          "2023-12-31",
+          "2024-01-31",
+          "2024-02-29",
+          "2024-03-31",
+          "2024-04-30",
+          "2024-05-31",
+          "2024-06-30",
+          "2024-07-31",
+          "2024-08-31",
+          "2024-09-30",
+          "2024-10-31",
+          "2024-11-30",
+          "2024-12-31",
+          "2025-01-31",
+          "2025-02-28",
+          "2025-03-31",
+          "2025-04-30",
+          "2025-05-31",
+          "2025-06-30",
+          "2025-07-31",
+          "2025-08-31",
+          "2025-09-30",
+          "2025-10-31",
+          "2025-11-30",
+          "2025-12-31",
+          "2026-01-31",
+          "2026-02-28",
+          "2026-03-31",
+          "2026-04-30",
+          "2026-05-31",
+          "2026-06-30",
+          "2026-07-31",
+          "2026-08-31",
+          "2026-09-30",
+          "2026-10-31",
+          "2026-11-30",
+          "2026-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "regime_block",
+        "model_id": "b045b38a8c6a89c438ec81b1f0e5c7c0564abc8ed06ca0ccab9b41470ef67348",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2021-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261925,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2021-12-31",
+            "BAA": "2021-12-31",
+            "CPIAUCNS": "2021-12-31",
+            "INDPRO": "2021-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2021-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2021-12-31": "ea1b6c0acb43d3e6090da84fb210b3ca6d8d497d476d981eaecd1ed6b02bf972",
+            "BAA_asof_2021-12-31": "2e7945f016c7bde0ba32a831526e8cf24fc9da5d72850a96f9d947858eca7e02",
+            "CPIAUCNS_asof_2021-12-31": "0fa63733acd48af5099d3d1a697034a951d02a9fc51976bebc48f99771ab4afd",
+            "INDPRO_asof_2021-12-31": "73b57dc9d0b4d188d3534f26120a3431f45012279fa3996180974da1da1dbfd6",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2021-11-30",
+        "training_scale": [
+          0.043659178647290756,
+          0.014982900830288498,
+          0.0038353144276089186,
+          0.01310287497953886,
+          0.004283002778002109
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  },
+  {
+    "arrays_file_sha256": "b17561148d467dc5b177a3ff4b111e49a3498f7924f35a5cd142b523bf670c15",
+    "created_at": "2026-11-24T23:58:12.965534+00:00",
+    "id": "2180e0972902972c95294b70be37b78522ed35d7e00c26c260350c10da971f42",
+    "identity": {
+      "arrays": {
+        "paths": {
+          "dtype": "float64",
+          "sha256": "e1f4bc8c15c0838587fbdd2b97e206d6f3f650753ba452c1f7aa5faf0d446386",
+          "shape": [
+            2000,
+            60,
+            5
+          ]
+        }
+      },
+      "metadata": {
+        "columns": [
+          "equity_log",
+          "short_rate",
+          "inflation_log",
+          "production_log",
+          "credit_spread"
+        ],
+        "dates": [
+          "2022-01-31",
+          "2022-02-28",
+          "2022-03-31",
+          "2022-04-30",
+          "2022-05-31",
+          "2022-06-30",
+          "2022-07-31",
+          "2022-08-31",
+          "2022-09-30",
+          "2022-10-31",
+          "2022-11-30",
+          "2022-12-31",
+          "2023-01-31",
+          "2023-02-28",
+          "2023-03-31",
+          "2023-04-30",
+          "2023-05-31",
+          "2023-06-30",
+          "2023-07-31",
+          "2023-08-31",
+          "2023-09-30",
+          "2023-10-31",
+          "2023-11-30",
+          "2023-12-31",
+          "2024-01-31",
+          "2024-02-29",
+          "2024-03-31",
+          "2024-04-30",
+          "2024-05-31",
+          "2024-06-30",
+          "2024-07-31",
+          "2024-08-31",
+          "2024-09-30",
+          "2024-10-31",
+          "2024-11-30",
+          "2024-12-31",
+          "2025-01-31",
+          "2025-02-28",
+          "2025-03-31",
+          "2025-04-30",
+          "2025-05-31",
+          "2025-06-30",
+          "2025-07-31",
+          "2025-08-31",
+          "2025-09-30",
+          "2025-10-31",
+          "2025-11-30",
+          "2025-12-31",
+          "2026-01-31",
+          "2026-02-28",
+          "2026-03-31",
+          "2026-04-30",
+          "2026-05-31",
+          "2026-06-30",
+          "2026-07-31",
+          "2026-08-31",
+          "2026-09-30",
+          "2026-10-31",
+          "2026-11-30",
+          "2026-12-31"
+        ],
+        "evidence": "HYPOTHETICAL_STRESS",
+        "kind": "conditional_var_t",
+        "model_id": "c32649046d4f0cd51123e47c487341357e6b7c34c891acf1f7f8f6388c29b7be",
+        "months": 60,
+        "never_claimed": "A forecast made in real time or an untouched human/universe holdout",
+        "origin": "2021-12-31",
+        "paths": 2000,
+        "research_status": "RETROSPECTIVE_CHRONOLOGICAL_HINDCAST",
+        "seed": 20261926,
+        "source_metadata": {
+          "catalog_sha256": "854935ecfa7453782268f0f1eaa890748458cea66b3e2e3a37ea59c400adc3c1",
+          "evidence": "OBSERVED",
+          "frequency": "monthly",
+          "growth_convention": "Industrial production growth, not GDP",
+          "limitations": [
+            "Observed factors are research portfolios, not executable ETF quotes",
+            "Missing interior monthly observations are retained as NaN; never interpolated"
+          ],
+          "macro_vintages": {
+            "AAA": "2021-12-31",
+            "BAA": "2021-12-31",
+            "CPIAUCNS": "2021-12-31",
+            "INDPRO": "2021-12-31"
+          },
+          "macro_vintages_verified": true,
+          "market_vintage": "Current CIZ French vintage; retrospective corrections not historical decision-time records",
+          "missing_source_rows": {
+            "AAA": 0,
+            "BAA": 0,
+            "CPIAUCNS": 0,
+            "INDPRO": 0
+          },
+          "point_in_time_verified": false,
+          "requested_origin": "2021-12-31",
+          "short_rate_convention": "Annualized compounded monthly French RF return; funding proxy, not an observed borrowing invoice",
+          "source_hashes": {
+            "AAA_asof_2021-12-31": "ea1b6c0acb43d3e6090da84fb210b3ca6d8d497d476d981eaecd1ed6b02bf972",
+            "BAA_asof_2021-12-31": "2e7945f016c7bde0ba32a831526e8cf24fc9da5d72850a96f9d947858eca7e02",
+            "CPIAUCNS_asof_2021-12-31": "0fa63733acd48af5099d3d1a697034a951d02a9fc51976bebc48f99771ab4afd",
+            "INDPRO_asof_2021-12-31": "73b57dc9d0b4d188d3534f26120a3431f45012279fa3996180974da1da1dbfd6",
+            "ff_daily": "96c23b88e651cbfff3740a53f8225e59ee39893371e96385a1d8125ec2cd9c89",
+            "ff_monthly": "b03d39e4bb253dda0f14893db3b78e64b40b8d6549a0fc0fd4111dae84c98618"
+          },
+          "variables": [
+            "equity_log",
+            "short_rate",
+            "inflation_log",
+            "production_log",
+            "credit_spread"
+          ]
+        },
+        "training_end": "2021-11-30",
+        "training_scale": [
+          0.043659178647290756,
+          0.014982900830288498,
+          0.0038353144276089186,
+          0.01310287497953886,
+          0.004283002778002109
+        ],
+        "unobserved_state_bridge_months": 1
+      }
+    }
+  }
+]

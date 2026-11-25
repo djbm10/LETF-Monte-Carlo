@@ -1,0 +1,28 @@
+{
+  "scientific_code_commit": "7096a17998094bd8d83ee0ab25e76478893f63ec",
+  "baseline_tests": 152,
+  "final_tests": 221,
+  "local_test_seconds": 31.38,
+  "warnings": 4,
+  "workflow_structures": 97,
+  "raw_sources_redistributed": false,
+  "deliverables": {
+    "branch_and_commits": "IMPLEMENTED",
+    "source_catalog": "52 macro snapshots plus 15 issuer source records; blocked requests and rights explicit",
+    "real_fund_accounts": "6 paired source-backed daily replays with explicit distribution policies",
+    "leveraged_reconstruction": "TQQQ/UPRO FAIL; all provenance certification BLOCKED",
+    "daily_1930_counterfactual": "4 observed research portfolio inputs, 108 hypothetical fee/spread/leverage cases",
+    "macro_walkforward": "26 frozen 2000-path forecasts; both candidates REJECTED; exact reproduction verified",
+    "controlled_retraining": "Prospective freeze/deduplication/pending verified; optional schedule not activated",
+    "derivatives": "Bounded canonical mechanics; historical performance and several execution/tax components BLOCKED",
+    "scenario_explorer": "CLI/API implemented; unapproved conditional research",
+    "horizon_comparisons": "80 account replays at 5/10/20/30/40 years, plus 32 stress replays; convergence not established",
+    "verification": "221 local/hosted tests pass, legacy T20/T27 failures preserved"
+  },
+  "full_mission_certified": false,
+  "approved_macro_champion": null,
+  "all_strategy_rankings_released": false,
+  "documentation_links_checked": true,
+  "scientific_hashes_checked": true,
+  "immutable_evidence_receipts_checked": true
+}

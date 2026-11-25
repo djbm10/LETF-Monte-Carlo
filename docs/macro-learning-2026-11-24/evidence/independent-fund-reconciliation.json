@@ -1,0 +1,110 @@
+{
+  "TQQQ": {
+    "pre_tax_fill_csvs_exactly_equal": true,
+    "accounts": {
+      "taxable": {
+        "independent_csv_nav_identity_max": 8.731149137020111e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "7de8bcfd1107378c9df02008e4b0ada47b61c69a28d99e0294e36fe6ea7c1eaa",
+        "net_terminal_identity": 199462.769519405
+      },
+      "roth": {
+        "independent_csv_nav_identity_max": 8.731149137020111e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "25b77ffd333620fdc8d607403a2dd80c250b506a11b403a566c2eed6ec7adf9e",
+        "net_terminal_identity": 218422.98633422385
+      }
+    },
+    "input_manifest_sha256": "f2d99cc1ffa766cf232e6f9b7686a0e7a8e18881341c93059dfecd67e2609891"
+  },
+  "QLD": {
+    "pre_tax_fill_csvs_exactly_equal": true,
+    "accounts": {
+      "taxable": {
+        "independent_csv_nav_identity_max": 8.731149137020111e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "2f0d8ef06850c0885db3dd66dc7e1f48a3776773f252fc086d6fde5d49531911",
+        "net_terminal_identity": 176021.22258773283
+      },
+      "roth": {
+        "independent_csv_nav_identity_max": 8.731149137020111e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "6cfcd532b7a1123267c0204877de35f5a4547731fc882d628bff534f55c24b4a",
+        "net_terminal_identity": 189479.44676825515
+      }
+    },
+    "input_manifest_sha256": "429283506c2a8ebfb0f2e3b2074d62103099a3618941aa327a9222bca33d203d"
+  },
+  "SSO": {
+    "pre_tax_fill_csvs_exactly_equal": true,
+    "accounts": {
+      "taxable": {
+        "independent_csv_nav_identity_max": 8.731149137020111e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "a31b890b84cb5234156dbd6e3c756441173849b8863a483513eb13b9ee7d9e5f",
+        "net_terminal_identity": 170886.98108066048
+      },
+      "roth": {
+        "independent_csv_nav_identity_max": 8.731149137020111e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "b83881f3691044832102ab8588846c4af232b8f897124ba9563a8e7f64bda308",
+        "net_terminal_identity": 183530.45324413243
+      }
+    },
+    "input_manifest_sha256": "27d35e9dd741ff0f86200bced91e24d87d823fe685b289b1620f340ac478d656"
+  },
+  "UPRO": {
+    "pre_tax_fill_csvs_exactly_equal": true,
+    "accounts": {
+      "taxable": {
+        "independent_csv_nav_identity_max": 8.731149137020111e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "061e6cb38dd5b1bd6b49f72e647f074a30ea16bc1d46cbb0f8bc027d11dd1428",
+        "net_terminal_identity": 201078.12190319048
+      },
+      "roth": {
+        "independent_csv_nav_identity_max": 8.731149137020111e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "02c6b70b5099fbb936bd790964503a9e6cacd0b50d8bc801edde0ddc33c6f544",
+        "net_terminal_identity": 220111.05046708995
+      }
+    },
+    "input_manifest_sha256": "c81828b65c01562ba892f14acfc1c6b7f1ab5dbd7402f2f3edc2fba76403a422"
+  },
+  "QQQ": {
+    "pre_tax_fill_csvs_exactly_equal": true,
+    "accounts": {
+      "taxable": {
+        "independent_csv_nav_identity_max": 2.9103830456733704e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "ea46d66a36b1049a95e178ec5208dcecf5c89c6282657b271bb507d277ff832c",
+        "net_terminal_identity": 144792.24379338295
+      },
+      "roth": {
+        "independent_csv_nav_identity_max": 2.9103830456733704e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "f9b742d670a7f715accbdf34f491d164b089ea19d282eb19d2ab4aae6b07cd17",
+        "net_terminal_identity": 152696.75740397995
+      }
+    },
+    "input_manifest_sha256": "7643e2acda58c1bf97370aa45bf4e653b4cc0f8f93340e4f120c00b2c365f846"
+  },
+  "TMF": {
+    "pre_tax_fill_csvs_exactly_equal": true,
+    "accounts": {
+      "taxable": {
+        "independent_csv_nav_identity_max": 2.9103830456733704e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "5e91ee970e720d97bef0ad42562dbcc0106312ec26e023bae2aa5ab40b29d426",
+        "net_terminal_identity": 64037.36112848416
+      },
+      "roth": {
+        "independent_csv_nav_identity_max": 2.9103830456733704e-11,
+        "rows": 502,
+        "daily_ledger_sha256": "65a773ebde7aa49f9280148552fb5d67aad2d65dfa0d221fa488902430e424b5",
+        "net_terminal_identity": 64245.6634632854
+      }
+    },
+    "input_manifest_sha256": "ebd9e9c042a57d1aeadb504118b28891ade899545a6dc7cc71f0bfe896ccc01f"
+  }
+}

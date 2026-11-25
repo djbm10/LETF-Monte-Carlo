@@ -1,0 +1,12 @@
+{
+  "run_id": 45525817221,
+  "job_id": 138908730079,
+  "commit": "7096a17998094bd8d83ee0ab25e76478893f63ec",
+  "url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45525817221",
+  "conclusion": "success",
+  "tests": 221,
+  "warnings": 4,
+  "seconds": 30.84,
+  "python": "3.14.10",
+  "workflow_structures": 97
+}

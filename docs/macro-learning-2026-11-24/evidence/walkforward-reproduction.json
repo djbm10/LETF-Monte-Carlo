@@ -1,0 +1,11 @@
+{
+  "source_commit": "dd460ae",
+  "forecast_count": 26,
+  "paths_per_forecast": 2000,
+  "forecast_ids_identical": true,
+  "all_evaluation_records_identical": true,
+  "model_decisions_identical": true,
+  "original_report_sha256": "bc132d7690bfd5fa5bbdf1d256c19ab3a752218ed726be3f2ee33b6428ba2a81",
+  "reproduced_report_sha256": "1473aba4a091ae07a68b51048b148cdfd019187d72bc158c9e2ea1c30072944a",
+  "scope": "Numerical reproduction from frozen source and inputs, not a new independent market validation window"
+}

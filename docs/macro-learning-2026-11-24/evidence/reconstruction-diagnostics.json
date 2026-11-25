@@ -1,0 +1,454 @@
+{
+  "frozen_report_sha256": "a6868323ff5e3d902beb88ac9b8b33cce36ded2b1dcb6f8444586a8eeb6195b2",
+  "products": {
+    "TQQQ": {
+      "frozen_gate_unchanged": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": false,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "fitted_training_spread": 0.0,
+      "cagr_error_before": 0.023033671869225225,
+      "cagr_error_after": 0.023033671869225225,
+      "holding_periods": {
+        "1": {
+          "windows": 60,
+          "sessions_per_window": 252,
+          "relative_error_p10_p50_p90": [
+            0.008642866404981775,
+            0.015517244980490008,
+            0.02507494227138476
+          ],
+          "max_abs_error": 0.030799063609339372,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "3": {
+          "windows": 36,
+          "sessions_per_window": 756,
+          "relative_error_p10_p50_p90": [
+            0.04753147026048776,
+            0.052728762712942245,
+            0.055794757285326346
+          ],
+          "max_abs_error": 0.06819576507518055,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "5": {
+          "windows": 12,
+          "sessions_per_window": 1260,
+          "relative_error_p10_p50_p90": [
+            0.07604689898856554,
+            0.08005936558174875,
+            0.09176797757534483
+          ],
+          "max_abs_error": 0.09616318561400106,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "10": {
+          "windows": 0,
+          "sessions_per_window": 2520,
+          "relative_error_p10_p50_p90": null,
+          "max_abs_error": null,
+          "status": "BLOCKED_INSUFFICIENT_DAILY_COVERAGE",
+          "overlap_is_not_independent_evidence": true
+        }
+      },
+      "rate_crisis_diagnostics": {
+        "reference_rate_under_1pct": {
+          "observations": 569,
+          "daily_bias": 7.764633466456773e-05,
+          "daily_rmse": 0.001477169294284335,
+          "no_noncontiguous_compounding": true
+        },
+        "reference_rate_at_least_3pct": {
+          "observations": 820,
+          "daily_bias": 7.724561144501826e-05,
+          "daily_rmse": 0.000993807896892302,
+          "no_noncontiguous_compounding": true
+        },
+        "covid_crash_recovery": {
+          "observations": 104,
+          "daily_bias": 0.00045522057586972056,
+          "daily_rmse": 0.007440492418113179,
+          "no_noncontiguous_compounding": true
+        },
+        "inflation_shock_2022": {
+          "observations": 251,
+          "daily_bias": 0.00013815462046527256,
+          "daily_rmse": 0.0014849520191782984,
+          "no_noncontiguous_compounding": true
+        }
+      },
+      "certification": "BLOCKED",
+      "numerical_pass": false
+    },
+    "QLD": {
+      "frozen_gate_unchanged": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": true,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "fitted_training_spread": 0.0022676621227091126,
+      "cagr_error_before": 0.005539056913659746,
+      "cagr_error_after": 0.005539056913659746,
+      "holding_periods": {
+        "1": {
+          "windows": 60,
+          "sessions_per_window": 252,
+          "relative_error_p10_p50_p90": [
+            -8.054395463381594e-05,
+            0.003134815010703007,
+            0.0085674984020379
+          ],
+          "max_abs_error": 0.010968653920583105,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "3": {
+          "windows": 36,
+          "sessions_per_window": 756,
+          "relative_error_p10_p50_p90": [
+            0.010774202085327866,
+            0.013457717373853595,
+            0.01520075158107781
+          ],
+          "max_abs_error": 0.018938678878814397,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "5": {
+          "windows": 12,
+          "sessions_per_window": 1260,
+          "relative_error_p10_p50_p90": [
+            0.015989684850533935,
+            0.018563439898965473,
+            0.021746509214165165
+          ],
+          "max_abs_error": 0.022159498834483538,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "10": {
+          "windows": 0,
+          "sessions_per_window": 2520,
+          "relative_error_p10_p50_p90": null,
+          "max_abs_error": null,
+          "status": "BLOCKED_INSUFFICIENT_DAILY_COVERAGE",
+          "overlap_is_not_independent_evidence": true
+        }
+      },
+      "rate_crisis_diagnostics": {
+        "reference_rate_under_1pct": {
+          "observations": 569,
+          "daily_bias": 1.0281641849528993e-05,
+          "daily_rmse": 0.0010484956320988294,
+          "no_noncontiguous_compounding": true
+        },
+        "reference_rate_at_least_3pct": {
+          "observations": 820,
+          "daily_bias": 1.646030694572429e-05,
+          "daily_rmse": 0.0006373031124242156,
+          "no_noncontiguous_compounding": true
+        },
+        "covid_crash_recovery": {
+          "observations": 104,
+          "daily_bias": 6.05381592028885e-05,
+          "daily_rmse": 0.0033439466397385906,
+          "no_noncontiguous_compounding": true
+        },
+        "inflation_shock_2022": {
+          "observations": 251,
+          "daily_bias": 2.793802106056658e-05,
+          "daily_rmse": 0.0009420113671280115,
+          "no_noncontiguous_compounding": true
+        }
+      },
+      "certification": "BLOCKED",
+      "numerical_pass": true
+    },
+    "UPRO": {
+      "frozen_gate_unchanged": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": false,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "fitted_training_spread": 0.0,
+      "cagr_error_before": 0.02082449624147964,
+      "cagr_error_after": 0.02082449624147964,
+      "holding_periods": {
+        "1": {
+          "windows": 60,
+          "sessions_per_window": 252,
+          "relative_error_p10_p50_p90": [
+            0.0073995377667775974,
+            0.012528938312206028,
+            0.02136547874934518
+          ],
+          "max_abs_error": 0.03859098861110888,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "3": {
+          "windows": 36,
+          "sessions_per_window": 756,
+          "relative_error_p10_p50_p90": [
+            0.038261038901772126,
+            0.04363374627670158,
+            0.048572742502911104
+          ],
+          "max_abs_error": 0.0690317247640777,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "5": {
+          "windows": 12,
+          "sessions_per_window": 1260,
+          "relative_error_p10_p50_p90": [
+            0.060970891752591606,
+            0.06326268402653679,
+            0.09699348767569074
+          ],
+          "max_abs_error": 0.09739150907614014,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "10": {
+          "windows": 0,
+          "sessions_per_window": 2520,
+          "relative_error_p10_p50_p90": null,
+          "max_abs_error": null,
+          "status": "BLOCKED_INSUFFICIENT_DAILY_COVERAGE",
+          "overlap_is_not_independent_evidence": true
+        }
+      },
+      "rate_crisis_diagnostics": {
+        "reference_rate_under_1pct": {
+          "observations": 569,
+          "daily_bias": 9.333586424972783e-05,
+          "daily_rmse": 0.0010811774567289318,
+          "no_noncontiguous_compounding": true
+        },
+        "reference_rate_at_least_3pct": {
+          "observations": 820,
+          "daily_bias": 7.09823621028787e-05,
+          "daily_rmse": 0.001785804152478443,
+          "no_noncontiguous_compounding": true
+        },
+        "covid_crash_recovery": {
+          "observations": 104,
+          "daily_bias": 6.379296473480134e-05,
+          "daily_rmse": 0.004441189399767665,
+          "no_noncontiguous_compounding": true
+        },
+        "inflation_shock_2022": {
+          "observations": 251,
+          "daily_bias": 8.622415692872505e-05,
+          "daily_rmse": 0.0009998757775800532,
+          "no_noncontiguous_compounding": true
+        }
+      },
+      "certification": "BLOCKED",
+      "numerical_pass": false
+    },
+    "SSO": {
+      "frozen_gate_unchanged": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": true,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "fitted_training_spread": 0.00272340297988353,
+      "cagr_error_before": 0.0053656037263492,
+      "cagr_error_after": 0.0053656037263492,
+      "holding_periods": {
+        "1": {
+          "windows": 60,
+          "sessions_per_window": 252,
+          "relative_error_p10_p50_p90": [
+            0.0010542489795946296,
+            0.0029160177275672217,
+            0.006199886670004085
+          ],
+          "max_abs_error": 0.01065274938469174,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "3": {
+          "windows": 36,
+          "sessions_per_window": 756,
+          "relative_error_p10_p50_p90": [
+            0.00916695353879704,
+            0.010954724764719925,
+            0.012919326324277836
+          ],
+          "max_abs_error": 0.01873091025697393,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "5": {
+          "windows": 12,
+          "sessions_per_window": 1260,
+          "relative_error_p10_p50_p90": [
+            0.014244610526891743,
+            0.015560127772821453,
+            0.02430521132091452
+          ],
+          "max_abs_error": 0.025624307536474156,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "10": {
+          "windows": 0,
+          "sessions_per_window": 2520,
+          "relative_error_p10_p50_p90": null,
+          "max_abs_error": null,
+          "status": "BLOCKED_INSUFFICIENT_DAILY_COVERAGE",
+          "overlap_is_not_independent_evidence": true
+        }
+      },
+      "rate_crisis_diagnostics": {
+        "reference_rate_under_1pct": {
+          "observations": 569,
+          "daily_bias": 3.2131174473116125e-05,
+          "daily_rmse": 0.0006923405094586187,
+          "no_noncontiguous_compounding": true
+        },
+        "reference_rate_at_least_3pct": {
+          "observations": 820,
+          "daily_bias": 2.058380523578839e-05,
+          "daily_rmse": 0.0011140283955175681,
+          "no_noncontiguous_compounding": true
+        },
+        "covid_crash_recovery": {
+          "observations": 104,
+          "daily_bias": -1.6505226916570897e-05,
+          "daily_rmse": 0.0029515683667355845,
+          "no_noncontiguous_compounding": true
+        },
+        "inflation_shock_2022": {
+          "observations": 251,
+          "daily_bias": 2.51525012183739e-05,
+          "daily_rmse": 0.0004968069452548765,
+          "no_noncontiguous_compounding": true
+        }
+      },
+      "certification": "BLOCKED",
+      "numerical_pass": true
+    },
+    "TMF": {
+      "frozen_gate_unchanged": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": true,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "fitted_training_spread": 0.0,
+      "cagr_error_before": 0.005464440801964177,
+      "cagr_error_after": 0.005464440801964177,
+      "holding_periods": {
+        "1": {
+          "windows": 60,
+          "sessions_per_window": 252,
+          "relative_error_p10_p50_p90": [
+            -0.010176377230843036,
+            0.007233123818914056,
+            0.016283069407291784
+          ],
+          "max_abs_error": 0.019202425210796514,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "3": {
+          "windows": 36,
+          "sessions_per_window": 756,
+          "relative_error_p10_p50_p90": [
+            0.0010288913280689371,
+            0.02451312140963835,
+            0.036997983919069055
+          ],
+          "max_abs_error": 0.040138088560908836,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "5": {
+          "windows": 12,
+          "sessions_per_window": 1260,
+          "relative_error_p10_p50_p90": [
+            0.029593747689827053,
+            0.030989089695316996,
+            0.03254376351277484
+          ],
+          "max_abs_error": 0.03289063506887557,
+          "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+          "overlap_is_not_independent_evidence": true
+        },
+        "10": {
+          "windows": 0,
+          "sessions_per_window": 2520,
+          "relative_error_p10_p50_p90": null,
+          "max_abs_error": null,
+          "status": "BLOCKED_INSUFFICIENT_DAILY_COVERAGE",
+          "overlap_is_not_independent_evidence": true
+        }
+      },
+      "rate_crisis_diagnostics": {
+        "reference_rate_under_1pct": {
+          "observations": 569,
+          "daily_bias": 2.9994349446810787e-05,
+          "daily_rmse": 0.0026756981356859206,
+          "no_noncontiguous_compounding": true
+        },
+        "reference_rate_at_least_3pct": {
+          "observations": 820,
+          "daily_bias": 6.765558164234334e-05,
+          "daily_rmse": 0.0018965041633919645,
+          "no_noncontiguous_compounding": true
+        },
+        "covid_crash_recovery": {
+          "observations": 104,
+          "daily_bias": 0.0001529710955901731,
+          "daily_rmse": 0.005623796235664374,
+          "no_noncontiguous_compounding": true
+        },
+        "inflation_shock_2022": {
+          "observations": 251,
+          "daily_bias": 2.0143602484041975e-05,
+          "daily_rmse": 0.0020990171894971076,
+          "no_noncontiguous_compounding": true
+        }
+      },
+      "certification": "BLOCKED",
+      "numerical_pass": true
+    }
+  },
+  "evaluation_status": "ALREADY_INSPECTED_2020_2025_DIAGNOSTIC",
+  "parameter_changes": false,
+  "threshold_changes": false,
+  "evidence_needed": [
+    "Official target-index daily total returns and verified index revisions, not net-fee QQQ/SPY/TLT substitutes",
+    "Dated fund expense waivers, swap/funding spreads and collateral yields",
+    "Issuer NAV total returns versus market-price premium/discount effects",
+    "Fresh future evaluation after registering any new candidate; this old window cannot be made untouched"
+  ]
+}

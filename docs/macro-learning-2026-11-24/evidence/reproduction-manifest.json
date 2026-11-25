@@ -1,0 +1,161 @@
+{
+  "branch": "develop/macro-learning-2026-11-24",
+  "base_commit": "553ce1af5e7d02846882cf7cb3c0fc3d8d59a7bd",
+  "scientific_code_commit": "7096a17998094bd8d83ee0ab25e76478893f63ec",
+  "workflow_continuity_guard_commit": "36d70cc026698cc693cce66fb3e6d3d6723aeab0",
+  "frozen_walkforward_source_commit": "dd460ae",
+  "local_python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "dependency_lock_sha256": "5b5b676dc31720966150999d97318cb6bdc04ee8cfbae4fddfd46084316eb6fd",
+  "scientific_source_sha256": {
+    "letf/__init__.py": "f998704dd116822f4ffd4e9024710b63ed8322aaf9a52c909bca7e05b50c2297",
+    "letf/account_backtest.py": "1d991be5bd797110229c7a3d41f1864492d17409d014c3ce72aa7dc4a8ec8db6",
+    "letf/account_cli.py": "c0534ec9685558c206cf356011b2ab32b9fc5fac07b9c20c91cf2dc38f22ee57",
+    "letf/account_scenarios.py": "020066954c2f494bb8134df1e019122a55c0d95058b17e1de111d02cadf1438a",
+    "letf/accounts.py": "c9e958bb4ac71cfbe707366f4838a2dfd3c83e197265afe2981af8c285fd12fc",
+    "letf/accuracy.py": "a9b638f77d71b97e5caa421a70a7ab929d666a2ec8a152a2980de29c4bddacde",
+    "letf/brokers.py": "69a96acbd671257f01af3bfb4d9d0629ed6d0d0e5a2cb3dd24b153c687bdde81",
+    "letf/calibration.py": "7ea0998889f93589894a88de02db91925e2c880ca1089c05312dc09bc81ec420",
+    "letf/config.py": "b797281d12d9260b044b67a2a07b1ab5aa272d02397a0d6e5c7d449290b3be6a",
+    "letf/data.py": "036974a2a7c5dff46a53b2ab6f3cd96e646ddcabd021585b1d5252dadc779434",
+    "letf/derivatives.py": "0d8f77e15f1c3d56d7d4a1720f21bdf6c1ae12185eda10a3e85e3885b5168479",
+    "letf/historical.py": "b51d06954890506d8818db7087c7f78b79f27829732cbbc511d8e3137269a4db",
+    "letf/income.py": "24c5f88b4d628580e654bf0eade75ac60b68b199e38854d21680546e614b66f1",
+    "letf/integration.py": "9de783b912d197237e66b5cb3bfa0c218aeb4848282ac842e09354c968f37dde",
+    "letf/macro/__init__.py": "4f8f22317c32e8517871270a215288115ada32e109f334ef0c460a1bf5eb60d4",
+    "letf/macro/artifacts.py": "815682463feee24d4fb7ddb10543ace1f03888a537e439f59a3365b64aa0d70f",
+    "letf/macro/cli.py": "72c86e72eeafe38af5de084a4b719a374d23b00a0f5dff06e4041ec70887d925",
+    "letf/macro/counterfactual.py": "a16253c849580abfabadde77019dc1df921eb246adb63202fba4163f7603a74c",
+    "letf/macro/data.py": "0d56c131192f4171d64eabbdd51f012ed02efd4db8ac92966d214d21331423a3",
+    "letf/macro/explorer.py": "ab7622ced28299d74104a9a4fcb30f8eea43569b37e3329be72fe4b5875e9258",
+    "letf/macro/learning.py": "09a0b386e6da39520982bf346a0d2e59b6ed0ac363cacfdcd288ee786d424311",
+    "letf/macro/models.py": "01f28ab429fcdc50f5a49f20c3bed54f3cbcdf68fa81620cce3a101cb2142f8e",
+    "letf/macro/retraining.py": "c89240f73937e73cc809186cb7e5d94cf5a07a93f72249aa77fdf482e2b06930",
+    "letf/macro/scoring.py": "7643d9202f3eb47e87c24ba980d68abb967f9db7f57e4537d7e141a32a3a098d",
+    "letf/macro/uncertainty.py": "82fff000e9c9c370e35e8e3a349c733c79b750503071bd61bb2a9fde247fa92b",
+    "letf/mc_runner.py": "f488a03eeca3fe145d55f18eba2c7d53dc02e46800a641a38dcb62db251f9612",
+    "letf/performance.py": "48d979de0cbe6ce7ef1d12e38835e9d975ad026d57353ab09b5228afa4c8dd07",
+    "letf/reconstruction.py": "d6a25608e6d5f4ae457472d9822fda71bebf02d85d0436073f0113e49cfe95fb",
+    "letf/reporting.py": "b4e88b87b721a0ed0cb1976a7c13fbc7c2a6fca7fa9028d5d9210dcf058aee3b",
+    "letf/research_adapters.py": "915f4048fcdc6cf3bd473df219e3300ad38879254b95cd38acd6dfd1211130d3",
+    "letf/simulation/__init__.py": "6fe95edf6fed2ef1832dd8364b6c22cdcc89645cc76b37565126ef8b614c81b3",
+    "letf/simulation/bootstrap.py": "c2714e8efec53ea946b0ece8bb7673d6dcc8aecc73a44ff88a1cd83174f303f3",
+    "letf/simulation/engine.py": "6a15dd868fce658fe54590d1f56a6ce5d95aee8785cf4c39d83c1bff55d4116f",
+    "letf/simulation/paired.py": "91e6b46c244802640e4d2ed1e6721c9afde5cda6e0cfd0a002335a600d071766",
+    "letf/simulation/random_start.py": "398f84063b033928083b2e647f1dfd32a197d3efd4b168d0f3d18e246c8bc337",
+    "letf/simulation/realism.py": "2097a219a6afee64af99cbb2dd2758f5e4d41d7352d85ea2393b569284af8fa6",
+    "letf/simulation/sector_regime.py": "df986797e63714d7121b0609fcce19fa0d88834838b547b921e921bfa8373eb1",
+    "letf/strategy.py": "27c81a899e0869c490a97d90774171fd1e8f15120a8646ef06596e3b06df0a02",
+    "letf/strategy_allocators.py": "e2f40be8cc5255d5c13dddff2fcad306559f19693587d637433286ebfaa86a93",
+    "letf/tax/__init__.py": "fb1681cbc7d1ed0707fed72e73faae3ee6f85572adcc99d15fd682915674dede",
+    "letf/tax/brackets.py": "e27f6ca6472cdacb73184ec4445182c6a318fcfcc8f8606448dd3a09c2108987",
+    "letf/tax/engine.py": "91810071e232668da9cacc0987e0a71c4eafb4d75cdddf532ff6a9466016cea9",
+    "letf/tax/lot_selection.py": "d990d5b8dd037011899eb4d39e1a1070b5b296f403f8ae413cb30a4156597f14",
+    "letf/tax/marginal.py": "c97d9b3e067892f81277f0d38569a6731a69871396909f3a397bc18cf1bdbf29",
+    "letf/tax/massachusetts.py": "ffb0d9475e2355393b1b2748d71d71e3732dfd61b201630dd7ba3f7e9a098dcb",
+    "letf/tax/regimes.py": "7e95952065358ee3aca84dac148eb53e5d7f4eba4158f3f910838f9933bb608a",
+    "letf/tax/roth.py": "3cb71d088cfa982437eda680933e43be36b1ef387ef7785911cb967c825301fc",
+    "letf/tax/wash_sale.py": "b2522bebca104bb00f7292d5b454673dd60456b9ebe85df43d9f67c61b7af2fd",
+    "letf/tax/years.py": "ce10c86f85b890b870068cf7dbfa6189ca1ea0d8d3afcb1adb611fd8d04efb72",
+    "letf/trade.py": "88495a92e308960e08052d575bf32a14d125be9f14782046d23872a6b3fa9117",
+    "letf/ui.py": "42e2fe605752b2be8e0af6701560846a919f6cccc28bda6cc16a1d1257828e9b",
+    "letf/utils.py": "3bda8db50dfbe3849f3122eab30f3afceb45477270cb0bf5d00145ce9b5f3e55",
+    "letf/validation.py": "615d8138b7cb8f56796681560908791f944e32fe57f11b1c1a1b8543664f0676",
+    "scripts/build_multiyear_fund_bundle.py": "65c02272d75e4e9a6ea429947c00b83b90e3a1289f123ee47c096f4687b08842",
+    "scripts/build_observed_etf_bundles.py": "89ac21dd97bd61dac0609606a59d905c09a40ac1f9447de56296563345aed486",
+    "scripts/capture_account_demo.py": "fc5e5b559eecc2fb3fa9fc2ed35b0662ae2720e492b3d8075c11c53e9ff6b7f8",
+    "scripts/capture_daily_audit_inputs.py": "10b8a9379f56db9ea71b161c3edd94618bd1acd08862b2a3ffcb350261330775",
+    "scripts/capture_issuer_tax_sources.py": "97afb961afe1a29dd804e9e156785486adf8b856a6e9624a1bb0816b2525f7d3",
+    "scripts/capture_macro_sources.py": "96b94bc0da0efd514c8bbb85070f0c9e9658c0afdaa14e8d333aa0494d4de7d5",
+    "scripts/check_workflows.py": "eb2ad170b254d4c741c1b9c98d79e82a3a25701619f3e11b0cf0c1d0fe04b6cf",
+    "scripts/diagnose_reconstruction.py": "456798a5930e99a3b2d9672d8fd82fa58367ea5c817d9b6677da4f0aecb18248",
+    "scripts/normalize_macro_catalog.py": "cfdb57bc2669be0e2e6ed26c3405ab1bc574c7636b24142cf3b8e6b757c8f75a",
+    "scripts/run_accuracy_audit.py": "445a8cb2ee0b502fa4de4a18fea0ac340ce0ee71245deb795fea8a20350abcee",
+    "scripts/validate_daily_reconstruction.py": "fd6e028aad4bd2a758aac08746ef6d980fd8ecbccab7898f5f17911ae1240991",
+    "tests/test_account_backtest.py": "5d37e1f6f88130ae6e0c8f7ab40790705e9167d04967076ad1e04b9ef6d8787a",
+    "tests/test_account_scenarios.py": "76b2645064d42d213068485bee53bf9846509d840d21d1bed7948a544a4d0fab",
+    "tests/test_advanced_allocator_migration.py": "df8cc79636157e6bedc168ae7dcdb82d5e0eec35f8f48674f2a429efcb51f6cb",
+    "tests/test_closure_and_signal_accounting.py": "dd0dda718c9490ba90025eeaafccbac70fbb0f41345a8f5965603940340f0c4a",
+    "tests/test_derivatives_accuracy.py": "70a37538d871c45082a588119e41bd10dbcb2fe094baa78b63a38d424714a3c9",
+    "tests/test_etf_inputs.py": "797c1a20aee3934d377ad1d717105bd5dbf128b76a5268a8339c71adefaa3289",
+    "tests/test_execution_accuracy.py": "318362d64d3fd3e5b9d88ca3af1d63ff4fe83154d359c533d0c00fbe2e1524c5",
+    "tests/test_free_data_validation.py": "b5423e132861909185800b9e1840e05669fc3a160729bd667634dfeec77ceae8",
+    "tests/test_historical_gates.py": "943d8cbc4e042e2f72e1a0f39e93b61b08091778b2269edafdeadf3a56104553",
+    "tests/test_historical_settlement.py": "c86f3e0beddef3d6d5ba07ef62600d53bc0d19807bb55547c241927f2ec0bb4b",
+    "tests/test_historical_windows.py": "c2f2ac5210574e53d9bd64b67d3433d20cfd160a11a9e2b4f19f2a3c541c3699",
+    "tests/test_integrated_accounts.py": "74c4e31c63ef9cd3e72fdd223fc3c12212a6c5b1c402de83aae199611d994b63",
+    "tests/test_macro_explorer.py": "3071b88cfe332b0e31f3e833168ffb24ca8c17c7ec45c55ff69fad9199bc4320",
+    "tests/test_macro_learning.py": "8d13d0aa754958e231fbb7eefd5d21833dd0e631ede053759bcd460ccb9299f5",
+    "tests/test_macro_uncertainty.py": "8e452eb54cbfeda5640b082ba4459a27b563d892a44dfff2798f09cf612aefba",
+    "tests/test_massachusetts.py": "c42291a2ee0dcff5a186f6264213d8da8ea5c56ce1997b8a985a6c316c766757",
+    "tests/test_multiyear_funds.py": "72a3a4f7cb156f9e4995281dbe127942a5ea60c0981785c34221eebed903ec65",
+    "tests/test_option_delivery.py": "5cc7dd0aaafa0699ed1dc5c3367ef744439cdf2b54bd45c6fecbe1ca57b8619f",
+    "tests/test_prospective_retraining.py": "d7b789354336d2b7c1adefc848d7ffda58ba9d978d35fc5eb5522bf3b54995c2",
+    "tests/test_reconstruction_accuracy.py": "557f45f335ea3e42b5a5becbd1e3b649f463bcb17722f24a9d345ec11de64797",
+    "tests/test_reddit_will_perry_20261115.py": "c2659f872eb0c8d4001fce409e5dafb891630ada3aa87ad258871c02aa7edb0a",
+    "tests/test_research_integration.py": "e219967bd2fea85e91343ae5b71ffe4bef26fede50832432a821c37efa2e5d50",
+    "tests/test_section199a.py": "b1693c0726d6f12ebdf7ace8c6facae37e9f706683b80c7c08b5810399ab9902",
+    "tests/test_sector_regime.py": "53e6e85de18aa4d4f38296fdd607be96740967f5c08be12827aac8c1f9929618",
+    "tests/test_simulation_accuracy.py": "6902abcbc12549f6fc923ef2c9ea7134d73fb3aab6d743e18537b18c66983071",
+    "tests/test_tax_accuracy.py": "bda41a9a764b400c3c6abe3b24e4c363d6351ce6bc8c938ab701c74684b182c7",
+    "tests/test_workflow_structure.py": "ee22f3af289f7889fbe6e5ba820e416958811f2ef1244b6f0a0b4ff550a8c78e"
+  },
+  "evidence_artifact_receipts": {
+    "source-catalog.json": {
+      "local_artifact": "audit-output/macro-sources-v4/catalog.json",
+      "sha256": "1d0147b5c242baa5055ba3f9f42e4130ba23dfa2c97287040b2f53c29dcac376"
+    },
+    "walkforward-v1.json": {
+      "local_artifact": "audit-output/macro-walkforward-v1/report.json",
+      "sha256": "bc132d7690bfd5fa5bbdf1d256c19ab3a752218ed726be3f2ee33b6428ba2a81"
+    },
+    "counterfactual-1930.json": {
+      "local_artifact": "audit-output/counterfactual-1930-v2/report.json",
+      "sha256": "b51cd9367ba4688f3d7b1b386c60b424752cbaed2a2bc561654d098832d1a80b"
+    },
+    "future-retirement.json": {
+      "local_artifact": "audit-output/future-retirement-final/report.json",
+      "sha256": "86d495b2c0eace4f94e075c7885abd78fae651729e16028102d524e0c98a835c"
+    },
+    "seven-year-stagnation.json": {
+      "local_artifact": "audit-output/seven-year-stagnation-v1/report.json",
+      "sha256": "fa94d694f5d853a46d29cc651a466c514d4132499c4189d212ecf399a4c4c577"
+    },
+    "crash-extinction.json": {
+      "local_artifact": "audit-output/crash-extinction-v1/report.json",
+      "sha256": "d04b6cceac0d388b285cc6dacb948ff95ff2910531f8e84ae8a7407ac735ddcb"
+    },
+    "parameter-sensitivity.json": {
+      "local_artifact": "audit-output/parameter-sensitivity-v1/report.json",
+      "sha256": "19fdd3cd60735cabc9205337c8378cc3c645904e446186e752ed6c3005e427ea"
+    },
+    "reconstruction-after.json": {
+      "local_artifact": "audit-output/reconstruction-macro-v1/report.json",
+      "sha256": "a6868323ff5e3d902beb88ac9b8b33cce36ded2b1dcb6f8444586a8eeb6195b2"
+    },
+    "reconstruction-diagnostics.json": {
+      "local_artifact": "audit-output/reconstruction-macro-v1/diagnostics.json",
+      "sha256": "28ea6b4f576328b79745cc7d99ea0c1f59ef879143f6390a89e498a15aa3ec2b"
+    },
+    "mechanics-final.json": {
+      "local_artifact": "audit-output/mechanics-macro-acceptance/report.json",
+      "sha256": "c8c15bbe76b97799a630aac6a7b9c0a7ba3b1bfa522d4bd7e0c3aa58b3337d96"
+    },
+    "pytest-final.txt": {
+      "local_artifact": "audit-output/mechanics-macro-acceptance/pytest.txt",
+      "sha256": "153c9074fb541987de92a7c9e08badcac449fe283f3dcfba5df6f1d5354e293e"
+    },
+    "prospective-issue.json": {
+      "local_artifact": "audit-output/prospective-issue-v2/report.json",
+      "sha256": "88f6cf6165c6420c740e673180d1176e3a4857a82264d68d1e7df405f82a0210"
+    },
+    "prospective-evaluation.json": {
+      "local_artifact": "audit-output/prospective-evaluation-v2/report.json",
+      "sha256": "760b34be124c15d5baeceb2fda137701f3dc4b179f704be14c82bbf37d91e90b"
+    },
+    "prospective-deduplication.json": {
+      "local_artifact": "audit-output/prospective-deduplication-v2/report.json",
+      "sha256": "e372945cdacf4d82d9270eb27af0e2a2f2d57aa085fce0bd7ebdf0ec43b8e8c0"
+    }
+  },
+  "raw_input_reproduction": "Requires retained local checksummed snapshots; public redownloads may be revised and are new captures, not identical original inputs"
+}

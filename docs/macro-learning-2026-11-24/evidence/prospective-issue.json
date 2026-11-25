@@ -1,0 +1,23 @@
+{
+  "status": "CANDIDATES_ISSUED_PENDING_FUTURE_VALIDATION",
+  "issued_at": "2026-11-25T01:00:37.734304+00:00",
+  "training_sha256": "6890ff3704166169acc5ef63bffbe9b989d253d2e22fffdc8040e0cb362991e8",
+  "implementation_sha256": "9c068fac2d75167612a1bce20323a7ca6181ce227fdd27fe1e70fc4f1ec6edd3",
+  "protocol_sha256": "792f27ff7fef7779bc45d0ad138550211fb07c7cc2c070bca68f96154415c266",
+  "issuance_code_sha256": "c89240f73937e73cc809186cb7e5d94cf5a07a93f72249aa77fdf482e2b06930",
+  "forecast_ids": [
+    "f521e31247bb408ce5a049cb8ef14bb39d8bd4a42bfa3279e80989a4ee18109c",
+    "06f2371736d193f13669ff7cd4c06858bf06526b561f44d100db2218ae19abe6",
+    "67aed382cb004a9137fa2f90100beb1a6b99c54333c6c50b2479b88ba7cbbb38"
+  ],
+  "model_ids": [
+    "48250723f2401dc1ba63708b6350e1da557467747924885196d5bf214ef05ab6",
+    "9d9482fb8bfc7a9d04bf183803a7a54d8532a8d703b5b09b36bd804cddf5635a",
+    "27236072040b79c07a206d06aef7abae67d75073ab5fb6c860563647f9778f33"
+  ],
+  "training_end": "2026-09-30",
+  "first_future_month": "2026-12-31",
+  "models_created": 3,
+  "promoted": false,
+  "reason": "Actual future outcomes and disjoint evidence gates are not yet available"
+}

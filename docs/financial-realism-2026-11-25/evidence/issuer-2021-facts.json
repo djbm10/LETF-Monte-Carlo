@@ -1,0 +1,31 @@
+{
+  "provider": "ProShares Trust",
+  "url": "https://www.proshares.com/globalassets/proshares/documents/summary-prospectus/proshares_summaryprospect_agq.pdf",
+  "pdf_sha256": "89149fc0bd2121f0093632815f84616c17e3f4ed3f98b84d7fa4084f3f07b915",
+  "statement_date": "2021-05-31",
+  "retrieved_on": "2026-11-25",
+  "publication_vintage": "May 2021 annual report; typeset July 27, 2021; earliest public release unverified",
+  "pages_zero_based": {"cover": 0, "fund_performance": 55, "portfolio_and_first_swaps": 214, "remaining_swaps_and_rate_note": 215},
+  "reported_annualized_returns": {"1": {"fund": 1.4700, "index_total_return": 0.4431}, "5": {"fund": 0.6366, "index_total_return": 0.2606}, "10": {"fund": 0.4950, "index_total_return": 0.2052}},
+  "rounding_tolerance_absolute_return": 0.00005,
+  "performance_convention": "NAV distributions theoretically reinvested on ex-date; published index table includes reinvested dividends although named objective is price index",
+  "expense_disclosure": {"prospectus_date": "2020-10-01", "gross": 0.0098, "net": 0.0095, "waiver_through": "2021-09-30", "not_daily_invoice": true},
+  "net_assets": 12061877850,
+  "common_stock_value": 8669796126,
+  "futures_notional": 555398170,
+  "reported_total_swap_notional": 26963026907,
+  "swaps": [
+    {"counterparty": "Bank of America", "notional": 3169699910, "floating_rate_paid": 0.0050},
+    {"counterparty": "BNP Paribas", "notional": 4587759212, "floating_rate_paid": 0.0060},
+    {"counterparty": "Citibank", "notional": 4680047348, "floating_rate_paid": 0.0055},
+    {"counterparty": "Credit Suisse", "notional": 1288133262, "floating_rate_paid": 0.0070},
+    {"counterparty": "Goldman Sachs", "notional": 5104602889, "floating_rate_paid": 0.0061},
+    {"counterparty": "JPMorgan", "notional": 3525521797, "floating_rate_paid": 0.0046},
+    {"counterparty": "Morgan Stanley", "notional": 427949795, "floating_rate_paid": 0.0060},
+    {"counterparty": "Societe Generale", "notional": 3789014488, "floating_rate_paid": 0.0085},
+    {"counterparty": "UBS", "notional": 390298206, "floating_rate_paid": 0.0090}
+  ],
+  "rate_convention": "As-of floating financing rate on actual swap notional, excluding commissions; not a historical daily spread or year-average expense",
+  "used_for_trading_signals_or_model_fitting": false,
+  "limitations": ["Same issuer, separate publication/API reconciliation; not an independent audit opinion", "Reporting-date exposures and rates must not be backfilled across evaluation history", "Raw copyrighted PDF stays local"]
+}

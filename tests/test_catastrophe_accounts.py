@@ -142,8 +142,21 @@ def test_issuer_failure_can_destroy_declared_unpaid_cash_without_fabricating_a_l
     summary,result=replay_scenario(m,'roth',annual_contribution=0.,spread_bps=0.,slippage_bps=0.)
     defaults=[e for e in result['ledger'].events if e['action']=='DISTRIBUTION_DEFAULT']
     assert len(defaults)==1 and defaults[0]['amount']>0.
-    assert result['reconciliation'].loc[:day].iloc[-2].receivable_dividends>0.
-    assert result['reconciliation'].loc[day].receivable_dividends==0.
+    assert result['reconciliation'].loc[:day.date()].iloc[-2].receivable_dividends>0.
+    assert result['reconciliation'].loc[day.date()].receivable_dividends==0.
     assert not [e for e in result['ledger'].events if e['action']=='INCOME' and e['date']>day.date()]
     assert summary['unpaid_distributions_written_off']==defaults[0]['amount']
     assert summary['independent_audit']['passed']
+
+
+def test_independent_export_audit_reconciles_global_splits_with_terminal_positions():
+    from letf.accounts import Security,CONSERVATIVE_ROTH
+    from letf.account_backtest import run_account_backtest
+    from letf.account_stress import independent_account_audit
+    dates=pd.bdate_range('2024-01-02',periods=5)
+    market=pd.DataFrame({'X_Open':[100.,100.,50.,50.,50.],'X_Close':[100.,100.,50.,50.,50.]},index=dates)
+    result=run_account_backtest(market,[Security('X')],CONSERVATIVE_ROTH,initial_capital=1000.,
+        allocator=lambda h,w:{'X':1.},price_convention='as_traded',distributions_complete=True,
+        split_events=[{'date':str(dates[2].date()),'security':'X','ratio':2.}],terminal_liquidation=True,audit_detail=True)
+    audit=independent_account_audit(result,1000.)
+    assert audit['passed'] and audit['terminal_net_identity_error']==0.

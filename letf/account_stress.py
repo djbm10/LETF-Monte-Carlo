@@ -38,6 +38,9 @@ def independent_account_audit(result,initial):
     """
     cash=initial;quantities={};terminal_receivable=result['ending_distribution_receivables']
     for event in result['ledger'].events:
+        if event['action']=='SPLIT':
+            symbol=event['security'];quantities[symbol]=quantities.get(symbol,0.)*event['ratio']
+            continue
         if event.get('account')!='main':continue
         action=event['action']
         if action in ('BUY','SELL'):

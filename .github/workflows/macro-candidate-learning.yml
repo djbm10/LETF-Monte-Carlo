@@ -40,7 +40,7 @@ jobs:
           echo 'Persistent evidence history absent. Restore the archived registry before retraining.'
           exit 1
       - name: Verify restored history belongs to the latest successful run
-        if: !(github.event_name == 'workflow_dispatch' && inputs.initialize_registry)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.initialize_registry) }}
         env:
           GH_TOKEN: ${{ github.token }}
           RESTORED_KEY: ${{ steps.history.outputs.cache-matched-key }}

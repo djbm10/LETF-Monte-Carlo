@@ -1,0 +1,11 @@
+{
+  "status": "VERIFIED_LOCAL_ARCHIVE",
+  "files": 62,
+  "commitment_sha256": "2dfb140547120ffee01f85769059b0f079cc5fd65d2056d1fbfc6837bd9bd0c9",
+  "off_host_backup_verified": false,
+  "immutable_storage_verified": false,
+  "archive_sha256": "f9d0712b5b15961635317b4a23656297a7374152be5a8bac1a185ba1df7107ef",
+  "bytes": 9076265,
+  "archive_local_path": "audit-output/prospective-reference/sealed-2026-11-25.tar.gz",
+  "public_commitment_commit": "2857292336541e95db500243a7dd22a39f5db063"
+}

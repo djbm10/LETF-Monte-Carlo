@@ -1,0 +1,18 @@
+{
+  "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+  "machine": "x86_64",
+  "byteorder": "little",
+  "packages": {
+    "numpy": "2.3.5",
+    "scipy": "1.16.3",
+    "pandas": "2.3.3",
+    "exchange-calendars": "4.11.3",
+    "pytest": "9.0.2",
+    "yfinance": "0.2.66",
+    "pandas-datareader": "0.10.0"
+  },
+  "requirements_audit_lock_sha256": "5b5b676dc31720966150999d97318cb6bdc04ee8cfbae4fddfd46084316eb6fd",
+  "runtime_dependencies_added": false,
+  "PDF_inspection_only": "pypdf==6.4.0 in /tmp, not required for simulations"
+}

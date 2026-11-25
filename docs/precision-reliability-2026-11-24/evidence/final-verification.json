@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-11-25T17:45:41.500455+00:00",
+  "registered_old_files_unchanged": 369,
+  "new_document_links_resolve": 6,
+  "all_new_evidence_JSON_parses": true,
+  "corrected_account_max_log_CI_error": 0.018445562507189095,
+  "account_points_unchanged_by_interval_correction": true,
+  "local_tests": 259,
+  "workflow_checks": 97,
+  "core_implementation": "c529030e6a10163c9c9e16a45c24a50bf2d64cac"
+}

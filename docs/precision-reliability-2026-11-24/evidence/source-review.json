@@ -1,0 +1,80 @@
+{
+  "reviewed_on": "2026-11-25",
+  "files": [
+    {
+      "file": "audit-output/financing-source-review/current-statutory.pdf",
+      "url": "https://www.proshares.com/globalassets/proshares/prospectuses/statutory_prospectus.pdf",
+      "sha256": "c04f079013602d09bd7deaa282b021ef852f7f60b6790925e8706a38c57780c2",
+      "bytes": 15064109,
+      "local_file_mtime_utc": "2026-11-25T12:08:24.035752+00:00",
+      "redistributed": false,
+      "notes": "Local mtime records capture on this run, not provider publication/vintage",
+      "url_byte_match_reverified_2026_11_25": true
+    },
+    {
+      "file": "audit-output/financing-source-review/prod-summary.pdf",
+      "url": "https://prod.proshares.com/globalassets/proshares/prospectuses/tqqq_summary_prospectus.pdf",
+      "sha256": "b8037fff8b81ad66a74be624378f5613b4e8a1c1e8e389540a8acee466336875",
+      "bytes": 297540,
+      "local_file_mtime_utc": "2026-11-25T12:10:15.919728+00:00",
+      "redistributed": false,
+      "notes": "Local mtime records capture on this run, not provider publication/vintage"
+    },
+    {
+      "file": "audit-output/financing-source-review/FRED-SP500-price.csv",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500&cosd=2009-01-01&coed=2025-12-31",
+      "sha256": "494ebff6737d8ba4b14e103400788b97b9e4bcf4d2b2b33e53e748334eb1fe3e",
+      "bytes": 44520,
+      "local_file_mtime_utc": "2026-11-25T12:28:20.963541+00:00",
+      "redistributed": false,
+      "notes": "Local mtime records capture on this run, not provider publication/vintage"
+    }
+  ],
+  "issuer_summary_publication": "2026-09-28",
+  "issuer_summary_expenses": {
+    "management": 0.0075,
+    "other": 0.0019,
+    "gross": 0.0094,
+    "net": 0.0078,
+    "contractual_cap": 0.0095,
+    "waiver_through": "2027-09-30"
+  },
+  "historical_summary": {
+    "url": "https://www.sec.gov/Archives/edgar/data/1174610/000168386325003345/f41532d1.htm",
+    "dated": "2024-09-27 as supplemented 2025-04-07",
+    "management": 0.0075,
+    "other": 0.0022,
+    "gross": 0.0097,
+    "net": 0.0084,
+    "waiver_through": "2025-09-30",
+    "verification": "Read through web tool; direct HTTP 403, no archived byte hash claimed"
+  },
+  "FRED_SP500": {
+    "provider": "S&P Dow Jones Indices LLC via FRED",
+    "frequency": "daily close",
+    "currency": "USD index",
+    "convention": "PRICE_ONLY_NO_DIVIDENDS",
+    "first_genuine_observation": "2016-11-25",
+    "last_genuine_observation": "2025-12-31",
+    "observations": 2287,
+    "license": "Copyright, pre-approval required for reproduction; raw data not published",
+    "metadata": "https://fred.stlouisfed.org/series/SP500",
+    "used_to_replace_TR_benchmark": false
+  },
+  "retrieval_failures": [
+    {
+      "url": "https://www.sec.gov/Archives/edgar/data/1174610/000139834426013617/primary-document.htm",
+      "HTTP": 403,
+      "scope": "Annual filing direct fetch; web response too large for full document"
+    },
+    {
+      "url": "https://www.spglobal.com/spdji/en/idsexport/file.xls?redesignExport=true&selectedModule=PerformanceGraphView&selectedSubModule=Graph&yearFlag=tenYearFlag&indexId=340",
+      "HTTP": 403
+    },
+    {
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/%5ESP500TR?period1=1230768000&period2=1767225600&interval=1d&events=history",
+      "HTTP": 429
+    }
+  ],
+  "conclusion": "Dated expenses/source conventions investigated; daily historical swap invoices/collateral/waivers and exact complete S&P total-return benchmark remain missing. No provenance gate promoted."
+}

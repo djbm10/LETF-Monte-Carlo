@@ -1,0 +1,9 @@
+Command: /home/djmann/projects/letf-monte-carlo/.venv/bin/python -m pytest -q
+Working directory: .worktrees/precision-reliability
+Implementation commit: 099916518468e797b8a173bba8f1e5f39b48ffd9
+Result captured from local execution, 2026-11-25:
+258 passed, 4 warnings in 28.24s
+
+All four warnings originate in pandas_datareader/compat/__init__.py and concern
+distutils LooseVersion deprecation. No tests skipped, xfailed or disabled.
+The earlier complete 257-test stdout is preserved separately in tests-257.txt.

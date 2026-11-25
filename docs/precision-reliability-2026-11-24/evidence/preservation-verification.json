@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-11-25T12:33:40.257622+00:00",
+  "registered_files": 369,
+  "all_registered_file_hashes_unchanged": true,
+  "baseline": "bed720aafa1659101a6f28be96ebad1f3b24701c",
+  "protected_tracked_paths_changed": [],
+  "existing_implementation_files_changed": [
+    "letf/macro/artifacts.py",
+    "letf/macro/resampling.py"
+  ],
+  "scope": "26 original + 25 later forecast registries and original failed MC report; no outcomes re-evaluated; original root user edits left in place"
+}

@@ -1,5 +1,19 @@
 Leveraged ETF Monte Carlo simulation testing multiple LETF strategies
 
+## Precision and reliability continuation (2026-11-25)
+
+The [latest engineering report](docs/precision-reliability-2026-11-24/REPORT.md)
+diagnoses all 15 original Monte Carlo failures and records a predeclared larger
+study passing conditional sampling gates with two independent seeds × 1,048,576
+paths. Original failures, rejected models and frozen forecasts are preserved.
+Restricted canonical-ledger taxable/Roth endpoints reconcile; genuinely future
+reference forecasts are publicly frozen and await outcomes. TQQQ reconstruction
+and financial-source certification still fail. No model is investment-approved.
+See [numerical results](docs/precision-reliability-2026-11-24/NUMERICAL_RESULTS.md),
+[account scope/results](docs/precision-reliability-2026-11-24/ACCOUNT_RESULTS.md),
+[support matrix](docs/precision-reliability-2026-11-24/SUPPORT_MATRIX.md) and
+[reproduction commands](docs/precision-reliability-2026-11-24/REPRODUCE.md).
+
 ## Historical macro learning (2026-11-24)
 
 The [implemented research system and evidence](docs/macro-learning-2026-11-24/REPORT.md)

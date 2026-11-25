@@ -165,7 +165,9 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     def settlement(when):
         if calendar is None:
             return when
-        lag = 1 if when >= date(2024, 5, 28) else 2
+        if when<date(1995,6,7):
+            raise UnsupportedModelError('Pre-June-1995 US equity settlement version is not reviewed')
+        lag = 1 if when >= date(2024, 5, 28) else 2 if when>=date(2017,9,5) else 3
         return calendar.session_offset(pd.Timestamp(when), lag).date()
 
     @lru_cache(maxsize=None)
@@ -174,7 +176,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
             return due
         if not calendar.is_session(pd.Timestamp(due)):
             raise ValueError('Payment/withdrawal date needs an explicit valid market-session schedule')
-        for lag in (1, 2):
+        for lag in (1, 2, 3):
             candidate = calendar.session_offset(pd.Timestamp(due), -lag).date()
             if settlement(candidate) == due:
                 return candidate
@@ -427,7 +429,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 if not profile.fractional_shares:
                     buy = float(np.floor(buy))
                 if buy > 1e-9:
-                    event = book.execute(when, account_id, symbol, 'BUY', buy, opens[symbol])
+                    event = book.execute(when, account_id, symbol, 'BUY', buy, opens[symbol],settlement_date=settlement(when))
                     event['reason'] = 'STRATEGY'
         for action in liquidation_events:
             if calendar_date(action['date'])==when and action.get('timing','open')=='close':

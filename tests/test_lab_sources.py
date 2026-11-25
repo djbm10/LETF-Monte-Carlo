@@ -65,4 +65,6 @@ def test_public_refresh_keeps_missing_rows_and_never_implies_tax_classification(
     with pytest.raises(ValueError):refresh(tmp_path/'lake',['PRIVATE_URL'])
     broken=refresh(tmp_path/'lake',['DFF'],downloader=lambda url:(b'<html>blocked</html>',{}))
     assert not broken['complete'] and broken['sources']['DFF']['status']=='BLOCKED'
+    corrupt=refresh(tmp_path/'lake',['DFF'],downloader=lambda url:(b'observation_date,DFF\n2024-01-02,unknown\n',{}))
+    assert not corrupt['complete'] and corrupt['sources']['DFF']['status']=='BLOCKED'
     with pytest.raises(ValueError):evidence('RECONSTRUCTED_WITH_VALIDATION',model_approved=True)

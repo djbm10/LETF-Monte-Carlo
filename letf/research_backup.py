@@ -50,7 +50,8 @@ def create_bundle(roots,output,*,provenance=None):
             if p.is_symlink():raise ValueError('Research archive cannot contain symlinks')
             if p.is_dir():continue
             if p.name=='.lock':continue
-            if not p.is_file() or p.suffix not in ALLOWED_SUFFIXES or any(s in p.name.lower() for s in ('.env','credential','secret','id_rsa','token')):
+            content_object=(p.is_file() and p.parent.name=='objects' and re.fullmatch('[a-f0-9]{64}',p.name) and file_hash(p)==p.name)
+            if not p.is_file() or (p.suffix not in ALLOWED_SUFFIXES and not content_object) or any(s in p.name.lower() for s in ('.env','credential','secret','id_rsa','token')):
                 raise ValueError('Unreviewed or credential-like research file')
             name=label+'/'+(str(p.relative_to(root)) if root.is_dir() else p.name)
             safe_name(name);sources[name]=p;inventory[name]={'sha256':file_hash(p),'bytes':p.stat().st_size}

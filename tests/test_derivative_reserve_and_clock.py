@@ -5,8 +5,28 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from test_derivatives_accuracy import future_book
-from letf.accounts import PortfolioLedger,CONSERVATIVE_ROTH
-from letf.derivatives import LongOptionBook,OptionQuote,OptionContract
+from letf.accounts import PortfolioLedger,CONSERVATIVE_ROTH,Security
+from letf.derivatives import LongOptionBook,OptionQuote,OptionContract,FuturesBook
+from letf.accuracy import UnsupportedModelError
+
+
+def test_matured_security_sale_cash_is_available_before_futures_margin_test():
+    ledger,futures,contract=future_book(cash=2000.)
+    ledger.add_security(Security('X'))
+    ledger.execute('2024-01-02','a','X','BUY',20.,100.)
+    ledger.execute('2024-01-03','a','X','SELL',20.,100.,settlement_date='2024-01-05')
+    with pytest.raises(ValueError,match='margin'):futures.trade('2024-01-04',contract,1,5000.)
+    futures.trade('2024-01-05',contract,1,5000.)
+    assert ledger.accounts['a'].cash==1998.375 and not ledger.accounts['a'].unsettled
+
+
+def test_newly_verified_roth_futures_permission_does_not_authorize_past_orders():
+    ledger,_,contract=future_book()
+    ledger.add_account('r',replace(CONSERVATIVE_ROTH,allowed_kinds=frozenset({'future'})),10000.)
+    book=FuturesBook(ledger,'r',commission_per_contract=1.,spread_ticks=1.,ira_margin_multiplier=2.,
+        profile_source='SOFTWARE_FIXTURE approval',profile_verified_on='2024-01-03')
+    with pytest.raises(UnsupportedModelError,match='backdated'):book.trade('2024-01-02',contract,1,5000.)
+    assert not book.positions and ledger.accounts['r'].cash==10000.
 
 
 def test_reversing_futures_requires_initial_margin_even_without_larger_absolute_size():

@@ -116,6 +116,9 @@ class FuturesBook:
 
     def trade(self, when, contract, quantity, price):
         when = calendar_date(when)
+        if (self.ledger.accounts[self.account_id].profile.account_type=='roth' and
+                when<calendar_date(self.profile_verified_on)):
+            raise UnsupportedModelError('IRA futures permission cannot be backdated before its supplied verification date')
         if type(quantity) is not int or quantity == 0:
             raise ValueError('Integer nonzero futures contracts required')
         if when > contract.expiry or when < contract.margin_as_of:
@@ -138,12 +141,12 @@ class FuturesBook:
         pnl = old_qty * contract.multiplier * (price - prior)
         new_reserved = (self.reserved() - abs(old_qty) * contract.initial_margin * self.multiplier
                         + abs(new_qty) * contract.initial_margin * self.multiplier)
+        when = self.ledger._advance(when)
         account = self.ledger.accounts[self.account_id]
         other_reserves = sum(v for k, v in account.collateral_reservations.items() if k != 'futures')
         opens_risk = abs(new_qty) > abs(old_qty) or old_qty * new_qty < 0
         if new_reserved > account.cash - other_reserves + pnl - cost + 1e-9 and opens_risk:
             raise ValueError('Insufficient initial/house margin')
-        when = self.ledger._advance(when)
         self._book_pnl(when, pnl - cost)
         if new_qty:
             self.positions[contract.symbol] = FuturesPosition(contract, new_qty, price)
@@ -171,6 +174,7 @@ class FuturesBook:
             contract.validate_price(adverse_extreme)
             if not extreme_source:
                 raise ValueError('Daily adverse extreme requires a price source')
+        when = self.ledger._advance(when)
         account = self.ledger.accounts[self.account_id]
         other_reserves=sum(v for k,v in account.collateral_reservations.items() if k!='futures')
         pnl = position.quantity * contract.multiplier * (settlement - position.settlement)
@@ -179,7 +183,6 @@ class FuturesBook:
         else:
             adverse_pnl = position.quantity * contract.multiplier * (adverse_extreme - position.settlement)
             possible_intraday_breach = account.cash - other_reserves + adverse_pnl < self.reserved(maintenance=True)
-        when = self.ledger._advance(when)
         self._book_pnl(when, pnl)
         position.settlement = settlement
         self.last_settlement[symbol] = when

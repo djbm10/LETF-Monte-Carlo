@@ -6,6 +6,7 @@ adapter archives observations, not final tax classes or executable fill tapes.
 from datetime import datetime, timezone
 from io import BytesIO
 import json
+import zipfile
 from urllib.parse import urljoin, urlsplit
 
 import numpy as np
@@ -27,6 +28,7 @@ for _series in ('CPIAUCNS', 'INDPRO', 'UNRATE', 'GS10', 'DFF', 'DTB3', 'BAA', 'A
                            'Original provider via Federal Reserve FRED; inspect series terms', 'fred')
 for _symbol in ('TQQQ', 'QLD', 'UPRO', 'SSO'):
     REGISTERED[_symbol + '_nav'] = (f'https://accounts.profunds.com/etfdata/ByFund/{_symbol}-historical_nav.csv', 'ProShares', 'nav')
+    REGISTERED[_symbol + '_cash_2026'] = (f'https://www.proshares.com/api/distributionsummary/?fund={_symbol}&year=2026','ProShares','cash')
 ALLOWED_HOSTS = frozenset(urlsplit(v[0]).hostname for v in REGISTERED.values())
 
 
@@ -54,6 +56,22 @@ def download(url, *, session=None, max_bytes=64 * 1024 * 1024):
 def inspect(name, blob):
     if name not in REGISTERED: raise ValueError('Source is not registered')
     fmt = REGISTERED[name][2]
+    if fmt=='cash':
+        records=json.loads(blob)
+        if not isinstance(records,list) or not records:raise ValueError('Issuer cash schema empty/changed; absence is not proof of zero payouts')
+        dates=[]
+        for row in records:
+            ex=pd.Timestamp(row['ExDate']);pay=pd.Timestamp(row['PayableDate'])
+            if ex.year!=2026 or pay<ex or ex.date()>datetime.now(timezone.utc).date():raise ValueError('Invalid issuer cash dates')
+            for key in ('CashDividendPerShare','LongTermCapGains','ShortTermCapGains','ReturnOfCapital','OtherPerShare','SpecialPerShare'):
+                amount=float(row.get(key) or 0.)
+                if not np.isfinite(amount) or amount<0:raise ValueError('Invalid issuer cash amount')
+            dates.append(ex)
+        if len(dates)!=len(set(dates)):raise ValueError('Duplicate cash ex-date')
+        return {'first_observation':str(min(dates).date()),'last_observation':str(max(dates).date()),
+            'rows':len(records),'format':'json','currency':'USD','frequency':'dated cash events',
+            'convention':'Current split-restated issuer cash API; no final2026 tax classification or completeness certification',
+            'interpolated':False,'final_tax_classes_verified':False}
     if fmt.startswith('french'):
         frame = french_daily(blob, date_digits=6 if fmt == 'french_monthly' else 8)
         convention = 'Research portfolio total returns, current revised CIZ vintage; not executable prices'
@@ -68,7 +86,9 @@ def inspect(name, blob):
         else:
             if frame.shape[1] != 2 or frame.columns[1] != name: raise ValueError('FRED series schema changed')
             dates = pd.to_datetime(frame.iloc[:, 0], format='%Y-%m-%d')
-            frame = frame.iloc[:, 1:].apply(pd.to_numeric, errors='coerce')
+            # FRED documents '.' as missing. Unexpected text is corruption or
+            # a changed schema, never an observation silently turned into NaN.
+            frame = frame.iloc[:, 1:].replace('.',np.nan).apply(pd.to_numeric, errors='raise')
             convention = ('Nasdaq-origin total-return index' if name == 'NASDAQXNDX' else
                 'Price-return index, excludes dividends' if name in ('SP500', 'NASDAQ100') else
                 'Observed macro/rate series in provider units; yield is not a bond total return')
@@ -81,9 +101,16 @@ def inspect(name, blob):
     if np.isinf(values).any() or not np.isfinite(values).any(): raise ValueError('Invalid source values')
     finite_dates = frame.dropna(how='all').index
     if finite_dates.max().date() > datetime.now(timezone.utc).date(): raise ValueError('Future source observation')
+    extra={}
+    if fmt.startswith('french'):
+        with zipfile.ZipFile(BytesIO(blob)) as archive:
+            name_in_zip=next(n for n in archive.namelist() if n.lower().endswith('.csv'))
+            extra['source_header']=archive.read(name_in_zip).decode('latin-1').splitlines()[:6]
     return {'first_observation': str(finite_dates.min().date()), 'last_observation': str(finite_dates.max().date()),
             'rows': len(frame), 'missing_values': int(np.isnan(values).sum()), 'columns': list(frame),
-            'frequency': frequency, 'convention': convention, 'interpolated': False}
+            'frequency': frequency, 'convention': convention, 'interpolated': False,
+            'format':'zip' if fmt.startswith('french') else 'csv',
+            'currency':None if name in ('CPIAUCNS','INDPRO','UNRATE') else 'USD',**extra}
 
 
 def refresh(lake, names, *, downloader=download):

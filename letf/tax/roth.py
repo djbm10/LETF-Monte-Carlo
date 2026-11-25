@@ -65,12 +65,16 @@ class RothHistory:
         self.ledger = ledger
         self.taxpayer = taxpayer
         self.birth_date = calendar_date(birth_date)
+        if first_tax_year is not None and (type(first_tax_year)is not int or first_tax_year<1998 or first_tax_year<self.birth_date.year):
+            raise ValueError('Roth first contribution year must be an integer from 1998 onward and after owner birth')
         self.first_tax_year = first_tax_year
         self.regular_basis = regular_basis
         self.contributions = {}
         self.conversions = sorted([Conversion(c.year, c.taxable_remaining, c.nontaxable_remaining)
                                    for c in conversions], key=lambda c: c.year)
         for conversion in self.conversions:
+            if conversion.year<1998 or (first_tax_year is not None and conversion.year<first_tax_year):
+                raise ValueError('Conversion year conflicts with the Roth contribution clock')
             positive(conversion.taxable_remaining, 'conversion taxable basis', True)
             positive(conversion.nontaxable_remaining, 'conversion nontaxable basis', True)
 

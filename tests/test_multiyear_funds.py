@@ -6,13 +6,19 @@ import pytest
 
 from letf.accounts import Security,TAXABLE_CASH,CONSERVATIVE_ROTH
 from letf.account_backtest import Distribution,run_account_backtest
-from scripts.build_multiyear_fund_bundle import ici_date
+from scripts.build_multiyear_fund_bundle import ici_date,check_rounded_cash
 
 
 def test_issuer_dates_accept_only_explicit_excel_serial_or_documented_string_format():
     assert ici_date('45657')==pd.Timestamp('2024-12-31')
     assert ici_date('03/26/2025')==pd.Timestamp('2025-03-26')
     with pytest.raises(ValueError):ici_date('2025-03-26')
+
+
+def test_issuer_cash_check_verifies_given_split_factor_not_a_fit_to_rounded_payouts():
+    check_rounded_cash(.31979,.320,1.)
+    check_rounded_cash(.63958,.320,2.)
+    with pytest.raises(ValueError):check_rounded_cash(.31979,.160,1.)
 
 
 def test_multiyear_cash_distributions_split_and_annual_tax_reconcile_independently():

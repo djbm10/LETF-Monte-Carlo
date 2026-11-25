@@ -111,7 +111,8 @@ def _serialize(value):
 
 def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02', end='2025-12-31',
                      initial_capital=100000., state='MA', ordinary_income=100000.,
-                     cash_flows=(), output=None):
+                     filing_status='single',cash_flows=(),roth_history_config=None,output=None,
+                     buy_hold_initial_only=False):
     market, manifest, distributions, cpi = load_bundle(bundle)
     if start < manifest.get('account_coverage_start',start) or end > manifest.get('account_coverage_end',end):
         raise UnsupportedModelError('Replay dates exceed reviewed corporate-action/distribution coverage')
@@ -131,18 +132,22 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
         distributions_complete=True, distributions=distributions, trade_start=start,
         terminal_liquidation=True, inflation_index=cpi, settlement_policy='us_equity',
         source_manifest=manifest, cash_flows=cash_flows, split_events=manifest.get('split_events',[]))
-    # Treat the initial Roth balance as supplied historical regular basis, not
-    # a new above-limit contribution. No new Roth balance is created for free.
-    roth_history = dict(birth_date='1980-01-01', first_tax_year=2010, regular_basis=initial_capital)
+    if buy_hold_initial_only:
+        if strategy!='buy_hold' or cash_flows:raise UnsupportedModelError('Initial-only buy/hold requires a lump sum and explicit buy_hold rule')
+        common['rebalance_every']=len(market)+1
+    if cash_flows and roth_history_config is None:
+        raise UnsupportedModelError('Roth flows require supplied owner birth, contribution clock and aggregate basis history')
+    common['cash_flows']=[dict(f,filing_status=f.get('filing_status',filing_status)) for f in cash_flows]
     gross = {}
     net = {}
     for account, profile in profiles.items():
         kwargs = dict(common)
         if account == 'roth' and cash_flows:
-            kwargs['roth_history_config'] = roth_history
+            kwargs['roth_history_config'] = roth_history_config
         gross[account] = run_account_backtest(market, [security], profile, apply_taxes=False, **kwargs)
         net[account] = run_account_backtest(market, [security], profile,
             tax_inputs={'ordinary_income': ordinary_income, 'state': state,
+                        'filing_status':filing_status,
                         'federal_only': state == 'FEDERAL_ONLY',
                         'no_external_wash_replacements_after_end': True},
             tax_payment_dates=payments, **kwargs)
@@ -154,12 +159,14 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
         'investment_performance_certification': 'BLOCKED',
         'reason': 'Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return',
         'strategy': {'rule': strategy, 'lookback_sessions': lookback, 'symbol': symbol},
+        'cash_distribution_policy':'Accumulate in cash; initial purchase only' if buy_hold_initial_only else 'Reinvest through ordinary strategy rebalancing',
         'start': start, 'end': end, 'source_manifest_sha256': sha256((Path(bundle)/'manifest.json').read_bytes()).hexdigest(),
         'identical_pre_tax_trades': identical, 'pre_tax_trade_count': len(_fills(gross['taxable'])),
         'pre_tax_wealth': gross['taxable']['ending_wealth_net_payable'], 'accounts': {},
-        'assumptions': {'state': state, 'ordinary_income': ordinary_income, 'settlement': 'US T+2/T+1 effective dates',
+        'assumptions': {'state': state, 'filing_status':filing_status,'ordinary_income': ordinary_income, 'settlement': 'US T+2/T+1 effective dates',
             'spread_bps': 2., 'slippage_bps': 1., 'commission': 0., 'cash_sweep_yield': 0.,
-            'initial_roth_basis': 'Supplied existing regular basis; no new above-limit contribution',
+            'roth_owner_history':roth_history_config,
+            'initial_roth_balance': 'Existing balance, not a new contribution; internal liquidation does not execute a personal distribution',
             'tax_timing': 'Annual settlement funded; sufficient external salary withholding assumed for safe harbor',
             'cpi': 'Monthly CPI-U NSA mapped to its observation month for ex-post metrics only'}}
     for account, result in net.items():
@@ -197,13 +204,18 @@ def main():
     compare.add_argument('--start', default='2024-01-02');compare.add_argument('--end', default='2025-12-31')
     compare.add_argument('--initial-capital', default=100000., type=float)
     compare.add_argument('--ordinary-income', default=100000., type=float)
+    compare.add_argument('--filing-status',default='single',choices=['single','married','head_of_household','married_filing_separately'])
     compare.add_argument('--state', required=True, choices=['MA', 'TX', 'FL', 'NV', 'FEDERAL_ONLY'])
     compare.add_argument('--flows', type=Path)
+    compare.add_argument('--roth-history',type=Path)
+    compare.add_argument('--buy-hold-initial-only',action='store_true')
     args = parser.parse_args()
     flows = json.loads(args.flows.read_text()) if args.flows else ()
     result = compare_accounts(args.bundle, strategy=args.strategy, lookback=args.lookback,
         start=args.start, end=args.end, initial_capital=args.initial_capital, state=args.state,
-        ordinary_income=args.ordinary_income, cash_flows=flows, output=args.output)
+        ordinary_income=args.ordinary_income, filing_status=args.filing_status,cash_flows=flows,
+        roth_history_config=json.loads(args.roth_history.read_text()) if args.roth_history else None,output=args.output,
+        buy_hold_initial_only=args.buy_hold_initial_only)
     print(json.dumps(result, default=_serialize, indent=2, allow_nan=False))
 
 

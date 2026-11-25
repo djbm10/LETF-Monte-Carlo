@@ -17,6 +17,22 @@ import pandas as pd
 from scripts.build_observed_etf_bundles import ici_rows
 from letf.accuracy import UnsupportedModelError
 
+OTHER_ISSUERS={
+    'TMF':{'provider':'Direxion','files':{y:(f'letf-direxion-ici-{y}.xlsx',f'https://www.direxion.com/uploads/{y}-ICI-Primary-Direxion-ETF.xlsx') for y in (2024,2025)}},
+    'QQQ':{'provider':'Invesco','files':{
+        2024:('letf-invesco-ici-2024.xlsx','https://www.invesco.com/content/dam/invesco/us/en/documents/tax-document/ce-ici-primary-and-secondary-distribution-file-file-ivz-etf-2024-02-10-2025.xlsx'),
+        2025:('letf-invesco-ici-2025.xlsx','https://www.invesco.com/content/dam/invesco/us/en/documents/tax-documents/ICI-Primary-and-Secondary-and-NRA-File-IVZ-ETF-2025.xlsx')}}}
+
+
+def check_rounded_cash(original,vendor,known_split_factor):
+    """Verify a GIVEN split factor against vendor's 0.001/share cash quantum.
+
+    Never estimate a split factor from rounded cash. Exact issuer cash is used
+    for all tax/income events, even when vendor cash is compatible by rounding.
+    """
+    if vendor<=0 or abs(original-vendor*known_split_factor)>.000500001*known_split_factor:
+        raise ValueError('Dated issuer cash is inconsistent with split actions and vendor reporting precision')
+
 
 def ici_date(value):
     if '/' in str(value):
@@ -24,7 +40,7 @@ def ici_date(value):
     return pd.Timestamp('1899-12-30')+pd.Timedelta(days=float(value))
 
 
-def build(inputs, issuer_dir, output, symbol):
+def build(inputs, issuer_dir, output, symbol,*,macro_sources=None):
     output.mkdir(parents=True,exist_ok=False)
     catalog=json.loads((inputs/'manifest.json').read_text())
     meta=catalog['sources'][symbol];file=inputs/meta['path']
@@ -37,9 +53,12 @@ def build(inputs, issuer_dir, output, symbol):
     for col in ('Open','High','Low','Close'):prices[col]*=scale.reindex(prices.index)
     rows=[];files={};source_checks=[]
     for year in (2024,2025):
-        original=issuer_dir/f'letf-ici-primary-{year}.xlsx'
+        issuer=OTHER_ISSUERS.get(symbol)
+        provider=issuer['provider'] if issuer else 'ProShares'
+        original=issuer_dir/(issuer['files'][year][0] if issuer else f'letf-ici-primary-{year}.xlsx')
+        original_url=issuer['files'][year][1] if issuer else f'https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_{year}.xlsx'
         restated=issuer_dir/f'letf-{symbol}-issuer-{year}.json'
-        api=json.loads(restated.read_text())
+        api=None if issuer else json.loads(restated.read_text())
         ici=[r for r in ici_rows(original,year=year) if r.get('C')==symbol]
         if not ici:raise UnsupportedModelError(f'Missing issuer {year} tax rows')
         num=lambda r,c:float(r.get(c) or 0.)
@@ -54,12 +73,15 @@ def build(inputs, issuer_dir, output, symbol):
             ex=ici_date(r['H'])
             pay=ici_date(r['I'])
             if pay.year!=year or ex.year!=year:raise UnsupportedModelError('Tax-year spillover requires separate statutory mapping')
-            matches=[a for a in api if pd.Timestamp(a['ExDate'])==ex]
-            if len(matches)!=1 or pd.Timestamp(matches[0]['PayableDate'])!=pay:raise ValueError('Issuer date disagreement')
-            api_total=sum(float(matches[0].get(k) or 0) for k in ('CashDividendPerShare','LongTermCapGains','ShortTermCapGains','ReturnOfCapital'))
-            restatement=total/api_total
-            if not np.isclose(restatement,scale.loc[ex],rtol=2e-5,atol=1e-8):
-                raise ValueError('Dated/current issuer payouts conflict with split scaling')
+            restatement=None
+            if api is not None:
+                matches=[a for a in api if pd.Timestamp(a['ExDate'])==ex]
+                if len(matches)!=1 or pd.Timestamp(matches[0]['PayableDate'])!=pay:raise ValueError('Issuer date disagreement')
+                api_total=sum(float(matches[0].get(k) or 0) for k in ('CashDividendPerShare','LongTermCapGains','ShortTermCapGains','ReturnOfCapital'))
+                restatement=total/api_total
+                if not np.isclose(restatement,scale.loc[ex],rtol=2e-5,atol=1e-8):
+                    raise ValueError('Dated/current issuer payouts conflict with split scaling')
+            else:check_rounded_cash(total,float(raw.loc[ex,'Dividends']),float(scale.loc[ex]))
             source_checks.append({'ex_date':str(ex.date()),'nominal_cash':total,'issuer_restatement':restatement,
                 'dated_split_factor':float(scale.loc[ex]),'rounded_vendor_cash':float(raw.loc[ex,'Dividends'])})
             for category,amount in [('ordinary_dividend',ordinary-qdi-reit),('qualified_dividend',qdi),
@@ -67,19 +89,27 @@ def build(inputs, issuer_dir, output, symbol):
                 if amount:rows.append({'ex_date':ex,'pay_date':str(pay.date()),'amount_per_share':amount,
                     'category':category,'qualified_verified':category=='qualified_dividend',
                     'section199a_verified':category=='section199a_dividend',
-                    'source':f'https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_{year}.xlsx'})
+                    'source':original_url})
         issuer_dates={ici_date(r['H']) for r in ici}
         if issuer_dates!=set(raw.loc[str(year)].loc[lambda f:f.Dividends.ne(0)].index):raise ValueError('Incomplete cash payout coverage')
-        for src,url in [(original,f'https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_{year}.xlsx'),
-                         (restated,f'https://www.proshares.com/api/distributionsummary/?fund={symbol}&year={year}')]:
+        source_files=[(original,original_url)]
+        if api is not None:source_files.append((restated,f'https://www.proshares.com/api/distributionsummary/?fund={symbol}&year={year}'))
+        for src,url in source_files:
             shutil.copyfile(src,output/src.name)
-            files[src.stem]={'path':src.name,'sha256':sha256(src.read_bytes()).hexdigest(),'provider':'ProShares',
+            files[src.stem]={'path':src.name,'sha256':sha256(src.read_bytes()).hexdigest(),'provider':provider,
                              'url':url,'format':src.suffix[1:]}
     prices.to_csv(output/'prices.csv',index_label='Date',float_format='%.12g')
     pd.DataFrame(rows).set_index('ex_date').sort_index().to_csv(output/'distributions.csv')
-    for name,provider,url in [('prices',meta['provider'],meta['url']),('distributions','ProShares dated ICI records','https://www.proshares.com/resources/tax-and-filing-documents/tax-supplements')]:
+    for name,provider,url in [('prices',meta['provider'],meta['url']),('distributions',provider+' dated ICI records',original_url)]:
         p=output/f'{name}.csv';files[name]={'path':p.name,'sha256':sha256(p.read_bytes()).hexdigest(),
             'provider':provider,'url':url,'format':'csv'}
+    if macro_sources is not None:
+        from letf.macro.data import HistoricalSources
+        sources=HistoricalSources(macro_sources);blob,cpi_meta=sources.bytes('CPIAUCNS')
+        (output/'cpi.csv').write_bytes(blob)
+        files['cpi']={'path':'cpi.csv','sha256':sha256(blob).hexdigest(),'provider':cpi_meta['provider'],
+            'url':cpi_meta['url'],'format':'csv','retrieved_at':cpi_meta['retrieved_at'],
+            'scope':'Observed CPI endpoints used ex post only; missing interior observations retained'}
     active_splits=splits.loc[prices.index.min():prices.index.max()]
     manifest={'symbol':symbol,'instrument_kind':'etf','tax_structure':'corporation','currency':'USD',
         'frequency':'daily','data_status':'OBSERVED','price_convention':'as_traded','distributions_complete':True,
@@ -99,6 +129,7 @@ def build(inputs, issuer_dir, output, symbol):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for a in ('inputs','issuer-dir','output'):p.add_argument('--'+a,required=True,type=Path)
-    p.add_argument('--symbol',required=True,choices=['TQQQ','QLD','SSO','UPRO'])
-    a=p.parse_args();m=build(a.inputs,a.issuer_dir,a.output,a.symbol)
+    p.add_argument('--symbol',required=True,choices=['TQQQ','QLD','SSO','UPRO','QQQ','TMF'])
+    p.add_argument('--macro-sources',type=Path)
+    a=p.parse_args();m=build(a.inputs,a.issuer_dir,a.output,a.symbol,macro_sources=a.macro_sources)
     print(json.dumps({'symbol':a.symbol,'issuer_checks':len(m['issuer_cross_checks']),'splits':m['split_events']},indent=2))

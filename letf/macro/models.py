@@ -22,7 +22,8 @@ class MacroModel:
     @classmethod
     def fit(cls,kind,training,protocol):
         x=training.to_numpy(float)
-        if kind not in ('joint_block','regime_block','conditional_var_t'):
+        from letf.macro.resampling import EXTENDED_BOOTSTRAPS
+        if kind not in ('joint_block','regime_block','conditional_var_t',*EXTENDED_BOOTSTRAPS):
             raise UnsupportedModelError('Unregistered model type')
         if not len(x) or np.isinf(x).any():raise ValueError('Finite training values required')
         incomplete=not np.isfinite(x).all()
@@ -34,6 +35,9 @@ class MacroModel:
             'training_start':str(training.index[0].date()),'training_months':len(x)}
         parameters.update(incomplete_training_months=int((~complete).sum()),
             estimation_scope='Observed adjacent complete transitions / complete blocks only; no filled observations')
+        if kind in EXTENDED_BOOTSTRAPS:
+            from letf.macro.resampling import bootstrap_parameters
+            parameters.update(bootstrap_parameters(kind,training,protocol))
         if kind=='conditional_var_t':
             mean=x[complete].mean(0);scale=x[complete].std(0,ddof=1)
             if (scale<=1e-12).any():raise UnsupportedModelError('Constant model variable lacks identified conditional dynamics')
@@ -80,6 +84,11 @@ class MacroModel:
         if any(not np.isfinite(v) for v in intercept_shifts.values()):raise ValueError('Nonfinite drift intervention')
         if set(constraints)-set(self.columns):raise UnsupportedModelError('Unknown macro constraint')
         if any(not np.isfinite(v) for v in constraints.values()):raise ValueError('Nonfinite scenario constraint')
+        from letf.macro.resampling import EXTENDED_BOOTSTRAPS, sample_with_lineage
+        if self.kind in EXTENDED_BOOTSTRAPS:
+            if constraints or vol_multiplier!=1 or intercept_shifts or correlation_overrides or constraint_schedule:
+                raise UnsupportedModelError('Bootstrap scenarios require joint conditional mechanics; independent overrides are forbidden')
+            return sample_with_lineage(self,months,paths,seed,initial_state=initial_state)[0]
         if self.kind in ('joint_block','regime_block'):
             if constraints or vol_multiplier!=1 or intercept_shifts or correlation_overrides or constraint_schedule:
                 raise UnsupportedModelError('Bootstrap shocks need an explicit conditional model; independent asset overrides are forbidden')

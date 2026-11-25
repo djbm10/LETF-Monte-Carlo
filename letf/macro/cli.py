@@ -12,13 +12,14 @@ from letf.macro.counterfactual import historical_counterfactual
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
-    for name in ('catalog','counterfactual','walkforward','issue','evaluate-issued','evaluate-pending','parameter-sensitivity','explore'):
+    for name in ('catalog','counterfactual','walkforward','tail-walkforward','diagnose-frozen','issue','evaluate-issued','evaluate-pending','parameter-sensitivity','explore'):
         q=sub.add_parser(name);q.add_argument('--sources',required=True,type=Path)
         if name!='catalog':q.add_argument('--output',required=True,type=Path)
         if name=='counterfactual':q.add_argument('--start',default='1930-01-01');q.add_argument('--end')
-        if name in ('walkforward','issue','evaluate-issued','evaluate-pending'):
+        if name in ('walkforward','tail-walkforward','diagnose-frozen','issue','evaluate-issued','evaluate-pending'):
             q.add_argument('--registry',required=True,type=Path)
             q.add_argument('--protocol',default=Path('docs/macro-learning-2026-11-24/protocol.json'),type=Path)
+        if name in ('tail-walkforward','diagnose-frozen'):q.add_argument('--prior-report',type=Path,required=True)
         if name=='walkforward':q.add_argument('--paths',type=int)
         if name=='issue':q.add_argument('--require-existing',action='store_true')
         if name=='evaluate-issued':q.add_argument('--forecasts',nargs='+',required=True)
@@ -73,6 +74,14 @@ def main():
             annual_fee=a.annual_fee,borrowing_spread=a.borrowing_spread,distribution_yield=a.distribution_yield)
         print(json.dumps({'status':r['evidence'],'results':r['results']},indent=2));return
     protocol=json.loads(a.protocol.read_text())
+    if a.command=='tail-walkforward':
+        from letf.macro.tail_study import run_tail_study
+        r=run_tail_study(sources,ModelRegistry(a.registry),protocol,prior_report=a.prior_report,output=a.output)
+        print(json.dumps({'model_comparison':r['model_comparison'],'daily_summary':r['daily_summary']},indent=2));return
+    if a.command=='diagnose-frozen':
+        from letf.macro.tail_study import diagnose_frozen
+        r=diagnose_frozen(sources,ModelRegistry(a.registry).store,a.prior_report,output=a.output)
+        print(json.dumps({'forecasts_verified_and_diagnosed':r['forecasts_verified_and_diagnosed']}));return
     if a.command=='issue':
         from letf.macro.retraining import issue_candidates
         print(json.dumps(issue_candidates(sources,ModelRegistry(a.registry),protocol,output=a.output,require_existing=a.require_existing),indent=2));return

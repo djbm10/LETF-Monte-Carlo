@@ -152,7 +152,8 @@ class ModelRegistry:
                     if any(a<=d and c<=b for c,d in old['windows']):
                         raise ValueError('Evaluation window overlaps previously consumed evidence')
             for d in decisions.values():
-                if d['passed'] and (set(d['gates'])!=REQUIRED_GATES or not all(d['gates'].values())):
+                required=REQUIRED_GATES|set(batch.get('additional_required_gates',[]))
+                if d['passed'] and (set(d['gates'])!=required or not all(d['gates'].values())):
                     raise ValueError('Approval requires every registered evidence gate')
             approved=[(name,d) for name,d in decisions.items() if d['passed'] and all(d['gates'].values())]
             winner=min(approved,key=lambda x:-x[1]['relative_crps_improvement'])[0] if approved else None

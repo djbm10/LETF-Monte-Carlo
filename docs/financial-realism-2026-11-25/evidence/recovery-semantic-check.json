@@ -1,0 +1,13 @@
+{
+  "status": "SEMANTIC_RECOVERY_VERIFIED",
+  "source_catalog_sha256": "1d0147b5c242baa5055ba3f9f42e4130ba23dfa2c97287040b2f53c29dcac376",
+  "source_files_verified": 52,
+  "forecasts_loaded_and_verified": {
+    "original": 26,
+    "tail": 25,
+    "prospective": 2
+  },
+  "models_loaded_and_verified": 53,
+  "all_precision_sample_bytes_match": true,
+  "off_host_verified": false
+}

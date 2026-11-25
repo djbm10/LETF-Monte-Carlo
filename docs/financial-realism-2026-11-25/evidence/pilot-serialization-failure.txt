@@ -1,0 +1,50 @@
+canonical stress replay anchor0-reference-1x 5 taxable EXECUTED_UNAPPROVED
+canonical stress replay anchor0-reference-1x 5 roth EXECUTED_UNAPPROVED
+canonical stress replay anchor0-reference-1x 10 taxable EXECUTED_UNAPPROVED
+canonical stress replay anchor0-reference-1x 10 roth EXECUTED_UNAPPROVED
+canonical stress replay anchor0-reference-1x 20 taxable EXECUTED_UNAPPROVED
+canonical stress replay anchor0-reference-1x 20 roth EXECUTED_UNAPPROVED
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/djmann/projects/letf-monte-carlo/.worktrees/financial-realism/letf/account_stress.py", line 175, in <module>
+    a=parser.parse_args();r=run_study(a.experiment,json.loads(a.protocol.read_text()),a.output,cases=a.cases,anchors=a.anchors)
+                            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/djmann/projects/letf-monte-carlo/.worktrees/financial-realism/letf/account_stress.py", line 148, in run_study
+    with (directory/'result.json').open('x') as f:json.dump(row,f,default=_serialize,sort_keys=True,allow_nan=False)
+                                                  ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/__init__.py", line 181, in dump
+    for chunk in iterable:
+                 ^^^^^^^^
+  File "/usr/lib/python3.14/json/encoder.py", line 444, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/usr/lib/python3.14/json/encoder.py", line 413, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.14/json/encoder.py", line 413, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.14/json/encoder.py", line 326, in _iterencode_list
+    yield from chunks
+  File "/usr/lib/python3.14/json/encoder.py", line 413, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.14/json/encoder.py", line 413, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.14/json/encoder.py", line 413, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.14/json/encoder.py", line 326, in _iterencode_list
+    yield from chunks
+  File "/usr/lib/python3.14/json/encoder.py", line 405, in _iterencode_dict
+    yield _floatstr(value)
+          ~~~~~~~~~^^^^^^^
+  File "/usr/lib/python3.14/json/encoder.py", line 242, in floatstr
+    raise ValueError(
+        "Out of range float values are not JSON compliant: " +
+        repr(o))
+ValueError: Out of range float values are not JSON compliant: inf
+when serializing dict item 'bracket_ceiling'
+when serializing list item 1
+when serializing dict item 'breakdown'
+when serializing dict item 'ltcg_breakdown'
+when serializing dict item 'calculation'
+when serializing list item 29
+when serializing dict item 'annual_tax_rows'
+when serializing dict item 'summary'

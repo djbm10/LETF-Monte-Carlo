@@ -1,0 +1,20 @@
+{
+  "raw_study_commit": "c165421b81d70787742f2a9b4ad39e204aaf0ed8",
+  "raw_study_sha256": "cee44356eb17495472638dae959fa9adf5459eced24300dd9d49fae39a11fb49",
+  "confidence_assessment_sha256": "f13aa7d78d7c252a46eb211b30a29e973ac27e2aa1d67f53399f77ebcc8a373d",
+  "observed_fund_report_sha256": "90d1fe993d60fcdf3b0f17640b4f6fe14a2c3a06432684cd480eedd71a3a42ed",
+  "current_implementation_files": {
+    "letf/accounts.py": "55e8f8849464dad25a2b5fca87420f4257cd15d8a569a7350feea7a123930c5b",
+    "letf/account_backtest.py": "b7f24ad2aaea4e1acd8e743a3b0a86ae871c752068ef97e98bb4719ab1ede545",
+    "letf/account_stress.py": "d9cc35ac3ad9e4aba986ab6410c23617d1f6bb63bfe378cd12f1029a0f3e819b",
+    "letf/macro/stress.py": "fa58f3dad7d40883001c539b8afa8358c9450a41fafdbe011aff65bbdc372f26",
+    "letf/research_backup.py": "c871fb8a4599cc0523fb56b23089344be21615d7f46dc4bc729b25126aa518d5",
+    "scripts/assess_realism_study.py": "d65cb8bbe9c79d6b7032953b6ba3cb8bf0e32fe4b91196748511bf9192b351c5",
+    "scripts/replay_funded_observed.py": "a2c4f311ab74983c628e4bf18fb025d014bc18de0608e744ff260ac23a1c9ae3"
+  },
+  "raw_zero_price_tax_rows": "Superseded; supported assessment removes their after-tax outputs and verifies current canonical rejection",
+  "Roth_default_recovery": "30 canonical reruns with zero recovery; original full-recovery sensitivity kept",
+  "private_sources_required": "Raw market files/ensembles/binaries/PDFs and daily exports are local, not redistributed in Git",
+  "confidence_assessment_version": "realism-confidence-v3",
+  "core_release_commit": "381cc1ee8b7abab89d61afb6c65a56a6d7580b97"
+}

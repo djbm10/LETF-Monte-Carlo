@@ -1,0 +1,11 @@
+{
+  "current_workflow_cases": 30,
+  "counts": {
+    "BLOCKED_TAX_DISPOSITION": 15,
+    "SUPPORTED_HYPOTHETICAL_MECHANICS": 15
+  },
+  "all_statuses_match_full_matrix": true,
+  "maximum_supported_net_wealth_difference": 1.8189894035458565e-12,
+  "scope": "Current guarded zero-recovery producer agrees with assessed legacy full-recovery source; no new market sample",
+  "full_report_sha256": "f13aa7d78d7c252a46eb211b30a29e973ac27e2aa1d67f53399f77ebcc8a373d"
+}

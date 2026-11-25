@@ -1,0 +1,18 @@
+{
+  "checked_at": "2026-11-25T19:24:51.137582+00:00",
+  "preserved_registered_artifacts": 402,
+  "tracked_baseline_files": 586,
+  "existing_files_changed": [
+    "README.md",
+    "letf/account_backtest.py",
+    "letf/accounts.py"
+  ],
+  "all_document_links_and_evidence_JSON_checked": true,
+  "fixture_tests": 282,
+  "workflow_structural_checks": 97,
+  "confidence_counts": {
+    "BLOCKED_TAX_DISPOSITION": 60,
+    "SUPPORTED_HYPOTHETICAL_MECHANICS": 540
+  },
+  "core_commit": "381cc1ee8b7abab89d61afb6c65a56a6d7580b97"
+}

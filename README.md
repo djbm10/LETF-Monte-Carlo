@@ -1,5 +1,20 @@
 Leveraged ETF Monte Carlo simulation testing multiple LETF strategies
 
+## Financial realism and validation (2026-11-25)
+
+The [financial-realism report](docs/financial-realism-2026-11-25/REPORT.md)
+adds unweighted catastrophic-risk scenarios and complete daily account replays.
+Its 600-case assessment accepts 540 bounded hypothetical-mechanics cases and
+blocks 60 unreviewed taxable extinction cases. A real 2024–25 funded TQQQ
+comparison reconciles dividends, contributions, splits and tax-funded sales.
+Official 2021 issuer NAV/financing checks expose remaining index/cost gaps.
+No model is forecast-approved; TQQQ reconstruction still fails. Private local
+recovery is verified, while actual off-host storage awaits an approved destination.
+See [results](docs/financial-realism-2026-11-25/RESULTS.md),
+[support](docs/financial-realism-2026-11-25/SUPPORT_MATRIX.md),
+[reproduction](docs/financial-realism-2026-11-25/REPRODUCE.md) and
+[private recovery](docs/financial-realism-2026-11-25/BACKUP_AND_RECOVERY.md).
+
 ## Precision and reliability continuation (2026-11-25)
 
 The [latest engineering report](docs/precision-reliability-2026-11-24/REPORT.md)

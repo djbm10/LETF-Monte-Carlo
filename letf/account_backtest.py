@@ -96,7 +96,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                          settlement_policy='immediate', trade_start=None, apply_taxes=True,
                          lot_method='FIFO', source_manifest=None,
                          linked_accounts=(), linked_trades=(), liquidation_events=(),
-                         freeze_roth_contribution_year=None):
+                         freeze_roth_contribution_year=None,qualified_holding_policy='verified_at_ex'):
     """One daily account engine for market replay and generated scenarios.
 
     Signals see previous closes. Fills use the current open with configured
@@ -106,6 +106,9 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     """
     from letf.tax.roth import RothHistory
     from letf.performance import portfolio_metrics
+    from letf.tax.dividend_holding import DividendHolding
+    if qualified_holding_policy not in ('verified_at_ex','track_unhedged_common'):
+        raise UnsupportedModelError('Unknown dividend holding-period policy')
     scenario=(price_convention=='scenario_nominal' and source_manifest and
               source_manifest.get('data_status')==Evidence.HYPOTHETICAL.value)
     if price_convention != 'as_traded' and not scenario:
@@ -211,6 +214,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     tax_rows, prepared, paid_years = [], {}, set()
     st_cf = lt_cf = state_st_cf = state_lt_cf = 0.
     receivables, equity, unit_values, snapshots, external, decisions = [], [], [], [], [], []
+    holding_trackers={}
     units = initial_capital
     withheld = 0.
     expected_cash = initial_capital
@@ -243,6 +247,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 signal_market.loc[signal_market.index<pd.Timestamp(action['date']),f"{action['security']}_{suffix}"]/=action['ratio']
 
     def tax_for(year, as_of):
+        if any(t.booked_year==year and t.unresolved for t in holding_trackers.values()):
+            raise UnsupportedModelError('Annual tax cannot finalize unresolved QDI holding days')
         income = tax_inputs.get('ordinary_income_by_year', {}).get(year, tax_inputs.get('ordinary_income'))
         if income is None:
             raise ValueError(f'Missing ordinary income for {year}')
@@ -299,12 +305,17 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
         for action in split_events:
             if calendar_date(action['date']) == when:
                 book.split(when, action['security'], action['ratio'])
+                for tracker in holding_trackers.values():
+                    if tracker.distribution.security==action['security']:tracker.split_factor*=action['ratio']
                 expected_quantities[action['security']] *= action['ratio']
                 for suffix in ('Open','Close'):
                     signal_market.loc[signal_market.index<timestamp,f"{action['security']}_{suffix}"]/=action['ratio']
         for distribution in schedules:
             if distribution.ex_date == when:
-                if taxable and distribution.category in ('qualified_dividend','section199a_dividend'):
+                if distribution.category=='qualified_dividend' and qualified_holding_policy=='track_unhedged_common':
+                    holding_trackers[id(distribution)]=DividendHolding(distribution,book,account_id)
+                    holding_trackers[id(distribution)].update(when,book)
+                elif taxable and distribution.category in ('qualified_dividend','section199a_dividend'):
                     entitled=[lot for lot in book.lots if lot.account==account_id and
                               lot.security==distribution.security and lot.shares>1e-10]
                     days_needed=60 if distribution.category=='qualified_dividend' else 45
@@ -313,8 +324,16 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 receivables.append((distribution, book.quantity(account_id, distribution.security) * distribution.amount_per_share))
         for distribution, amount in list(receivables):
             if distribution.pay_date <= when:
-                book.income(when, account_id, amount, distribution.category,
-                            qualified_verified=distribution.qualified_verified,section199a_verified=distribution.section199a_verified)
+                tracker=holding_trackers.get(id(distribution))
+                if tracker is None:
+                    book.income(when, account_id, amount, distribution.category,
+                                qualified_verified=distribution.qualified_verified,section199a_verified=distribution.section199a_verified)
+                else:
+                    tracker.update(when,book)
+                    qualified=tracker.qualified_amount
+                    if qualified:book.income(when,account_id,qualified,'qualified_dividend',qualified_verified=True)
+                    if amount-qualified>1e-10:book.income(when,account_id,amount-qualified,'ordinary_dividend')
+                    tracker.booked_year=when.year;tracker.booked_qualified=qualified
                 receivables.remove((distribution, amount))
         for trade in linked_trades:
             if calendar_date(trade['date']) == when:
@@ -442,6 +461,15 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                     event = book.execute(when, account_id, symbol, 'SELL', shares, closes[symbol],
                                          method=lot_method, settlement_date=settlement(when))
                     event['reason'] = 'TERMINAL_LIQUIDATION'
+        for tracker in holding_trackers.values():
+            tracker.update(when,book)
+            if tracker.booked_year is not None:
+                change=tracker.qualified_amount-tracker.booked_qualified
+                if change>1e-9:
+                    if tracker.booked_year in paid_years:raise UnsupportedModelError('QDI reclassification after finalized tax payment requires an amended liability')
+                    book.reclassify_dividend(when,account_id,tracker.booked_year,change,
+                        source=tracker.distribution.source+'; actual unhedged common-share calendar holding days',qualified_verified=True)
+                    tracker.booked_qualified=tracker.qualified_amount
         # Independently replay signed cash movements, not changes in NAV.
         for event in book.events[event_cursor:]:
             if event.get('account') != account_id:
@@ -479,6 +507,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                           'quantity_residual': quantity_residual})
         previous_date = when
     terminal_liability = 0.
+    if taxable and any(t.unresolved for t in holding_trackers.values()):
+        raise UnsupportedModelError('End-of-history QDI holding days unresolved; extend data or liquidate')
     if terminal_liquidation and sum(value for _, value in receivables) > 1e-8:
         raise UnsupportedModelError('Terminal distributions still receivable: extend the replay through payable dates')
     if taxable:

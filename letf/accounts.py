@@ -346,6 +346,23 @@ class PortfolioLedger:
         self.events.append({'date': when, 'account': account_id, 'action': 'INCOME',
                             'category': category, 'amount': amount})
 
+    def reclassify_dividend(self,when,account_id,tax_year,amount,*,source,qualified_verified=False):
+        """Tax-only correction after actual QDI holding days become observable.
+
+        Cash was already paid. Never manufacture another distribution or move
+        its original receipt tax year merely because proof arrives later.
+        """
+        positive(amount,'QDI reclassification',True)
+        if not source or not qualified_verified:raise UnsupportedModelError('Issuer and actual investor holding evidence required')
+        when=self._advance(when)
+        if type(tax_year)is not int or tax_year>when.year:raise ValueError('Original receipt tax year required')
+        bucket=self.accounts[account_id].income.setdefault(tax_year,{})
+        if amount>bucket.get('ordinary_dividend',0.)+1e-8:raise ValueError('Cannot reclassify more than recorded ordinary dividends')
+        bucket['ordinary_dividend']=max(0.,bucket.get('ordinary_dividend',0.)-amount)
+        bucket['qualified_dividend']=bucket.get('qualified_dividend',0.)+amount
+        self.events.append({'date':when,'account':account_id,'action':'DIVIDEND_RECLASSIFICATION',
+            'tax_year':tax_year,'amount':amount,'from':'ordinary_dividend','to':'qualified_dividend','source':source})
+
     def split(self, when, symbol, ratio):
         positive(ratio, 'split ratio')
         when = self._advance(when)

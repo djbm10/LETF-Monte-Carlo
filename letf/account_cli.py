@@ -112,7 +112,7 @@ def _serialize(value):
 def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02', end='2025-12-31',
                      initial_capital=100000., state='MA', ordinary_income=100000.,
                      filing_status='single',cash_flows=(),roth_history_config=None,output=None,
-                     buy_hold_initial_only=False):
+                     buy_hold_initial_only=False,qualified_holding_policy='verified_at_ex'):
     market, manifest, distributions, cpi = load_bundle(bundle)
     if start < manifest.get('account_coverage_start',start) or end > manifest.get('account_coverage_end',end):
         raise UnsupportedModelError('Replay dates exceed reviewed corporate-action/distribution coverage')
@@ -131,7 +131,8 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
     common = dict(initial_capital=initial_capital, allocator=rules, price_convention='as_traded',
         distributions_complete=True, distributions=distributions, trade_start=start,
         terminal_liquidation=True, inflation_index=cpi, settlement_policy='us_equity',
-        source_manifest=manifest, cash_flows=cash_flows, split_events=manifest.get('split_events',[]))
+        source_manifest=manifest, cash_flows=cash_flows, split_events=manifest.get('split_events',[]),
+        qualified_holding_policy=qualified_holding_policy)
     if buy_hold_initial_only:
         if strategy!='buy_hold' or cash_flows:raise UnsupportedModelError('Initial-only buy/hold requires a lump sum and explicit buy_hold rule')
         common['rebalance_every']=len(market)+1
@@ -160,6 +161,7 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
         'reason': 'Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return',
         'strategy': {'rule': strategy, 'lookback_sessions': lookback, 'symbol': symbol},
         'cash_distribution_policy':'Accumulate in cash; initial purchase only' if buy_hold_initial_only else 'Reinvest through ordinary strategy rebalancing',
+        'qualified_holding_policy':qualified_holding_policy,
         'start': start, 'end': end, 'source_manifest_sha256': sha256((Path(bundle)/'manifest.json').read_bytes()).hexdigest(),
         'identical_pre_tax_trades': identical, 'pre_tax_trade_count': len(_fills(gross['taxable'])),
         'pre_tax_wealth': gross['taxable']['ending_wealth_net_payable'], 'accounts': {},
@@ -209,13 +211,14 @@ def main():
     compare.add_argument('--flows', type=Path)
     compare.add_argument('--roth-history',type=Path)
     compare.add_argument('--buy-hold-initial-only',action='store_true')
+    compare.add_argument('--qualified-holding-policy',choices=['verified_at_ex','track_unhedged_common'],default='verified_at_ex')
     args = parser.parse_args()
     flows = json.loads(args.flows.read_text()) if args.flows else ()
     result = compare_accounts(args.bundle, strategy=args.strategy, lookback=args.lookback,
         start=args.start, end=args.end, initial_capital=args.initial_capital, state=args.state,
         ordinary_income=args.ordinary_income, filing_status=args.filing_status,cash_flows=flows,
         roth_history_config=json.loads(args.roth_history.read_text()) if args.roth_history else None,output=args.output,
-        buy_hold_initial_only=args.buy_hold_initial_only)
+        buy_hold_initial_only=args.buy_hold_initial_only,qualified_holding_policy=args.qualified_holding_policy)
     print(json.dumps(result, default=_serialize, indent=2, allow_nan=False))
 
 

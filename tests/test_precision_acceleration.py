@@ -18,6 +18,7 @@ def fixture():
     frame=pd.DataFrame({'equity_log':logs.resample('ME').sum(),
         'equity_log_variance':realized_monthly_variance(logs)})
     frame['short_rate']=np.resize([.0,.02,.06],len(frame))
+    frame['inflation_log']=.002
     p={'block_months':3,'stationary_mean_months':12,'minimum_bootstrap_months':120}
     model=MacroModel.fit('stationary_block',frame,p)
     return model,training_templates(logs,frame)

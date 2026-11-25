@@ -7,6 +7,7 @@ assignment and interacting derivative tax provisions fail closed.
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from math import isclose, isfinite
+from numbers import Integral
 
 from letf.accounts import positive, calendar_date
 from letf.accuracy import Evidence, UnsupportedModelError
@@ -284,6 +285,8 @@ class OptionQuote:
         if type(contracts) is not int or contracts <= 0 or side not in ('BUY', 'SELL'):
             raise ValueError('Integer option contracts and BUY/SELL side required')
         size = self.ask_size if side == 'BUY' else self.bid_size
+        if isinstance(size,bool) or not isinstance(size,Integral) or size<0:
+            raise ValueError('Displayed option size must be a nonnegative integer, not missing/estimated depth')
         if contracts > size:
             raise UnsupportedModelError('Requested option fill exceeds displayed size; supply explicit partial fills')
         return self.ask if side == 'BUY' else self.bid
@@ -386,7 +389,9 @@ class LongOptionBook:
                 raise UnsupportedModelError('Short option writing/assignment is not implemented')
             new_qty = old_qty - contracts
             delta = cash - fee
-        if side=='SELL':account.unsettled.append((settle,delta))
+            if delta<0 and account.buying_power < -delta:
+                raise ValueError('Insufficient settled cash to pay option close commission')
+        if side=='SELL' and delta>=0:account.unsettled.append((settle,delta))
         else:account.cash += delta
         if new_qty:
             self.positions[contract.symbol] = (contract, new_qty)

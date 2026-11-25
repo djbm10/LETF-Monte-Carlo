@@ -68,3 +68,29 @@ def test_option_sale_waits_for_settlement_and_new_purchase_settles_prior_cash_fi
     options.trade(tomorrow,c,'BUY',1,replace(q,timestamp=tomorrow))
     assert ledger.accounts['r'].cash==800.
     assert not ledger.accounts['r'].unsettled
+
+
+def test_zero_bid_option_close_cannot_create_unauthorized_commission_debt():
+    for capital in (1101.,1102.):
+        ledger=PortfolioLedger()
+        ledger.add_account('r',replace(CONSERVATIVE_ROTH,allowed_kinds=frozenset({'option'})),capital)
+        options=LongOptionBook(ledger,'r',commission_per_contract=1.)
+        t=datetime(2025,1,2,15,tzinfo=timezone.utc)
+        c=OptionContract('X_CALL','X',100.,date(2027,1,15),'call','american','physical')
+        q=OptionQuote(t,0.,11.,5,5,'Independent zero-bid fixture',contract_symbol=c.symbol)
+        options.trade(t,c,'BUY',1,q)
+        if capital==1101.:
+            with pytest.raises(ValueError,match='commission'):options.trade(t,c,'SELL',1,q)
+            assert c.symbol in options.positions
+        else:
+            options.trade(t,c,'SELL',1,q)
+            assert not options.positions
+        assert ledger.accounts['r'].cash==0.
+        assert not ledger.accounts['r'].unsettled
+
+
+def test_missing_option_depth_is_not_unlimited_liquidity():
+    _,_,_,t,q=setup()
+    for size in (float('nan'),float('inf'),1.5,True,-1):
+        with pytest.raises(ValueError,match='size'):
+            replace(q,ask_size=size).fill(t,'BUY',1)

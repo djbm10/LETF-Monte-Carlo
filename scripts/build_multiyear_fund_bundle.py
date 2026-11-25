@@ -1,0 +1,101 @@
+"""Issuer-reviewed 2024-25 fund inputs, including dated forward splits.
+
+No data download or price fitting occurs here. Original sources are retained
+and hashed; unsupported tax components reject instead of being approximated.
+"""
+import argparse
+from datetime import datetime, timezone
+from hashlib import sha256
+import json
+from pathlib import Path
+import shutil
+import sys
+
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+import numpy as np
+import pandas as pd
+from scripts.build_observed_etf_bundles import ici_rows
+from letf.accuracy import UnsupportedModelError
+
+
+def ici_date(value):
+    if '/' in str(value):
+        return pd.to_datetime(value,format='%m/%d/%Y')
+    return pd.Timestamp('1899-12-30')+pd.Timedelta(days=float(value))
+
+
+def build(inputs, issuer_dir, output, symbol):
+    output.mkdir(parents=True,exist_ok=False)
+    catalog=json.loads((inputs/'manifest.json').read_text())
+    meta=catalog['sources'][symbol];file=inputs/meta['path']
+    if sha256(file.read_bytes()).hexdigest()!=meta['sha256']:raise ValueError('Source checksum mismatch')
+    raw=pd.read_csv(file,index_col=0,parse_dates=True)
+    splits=raw['Stock Splits'].loc[lambda s:s.ne(0)]
+    scale=pd.Series(1.,index=raw.index)
+    for day,ratio in splits.items():scale.loc[scale.index<day]*=ratio
+    prices=raw.loc['2023-01-01':'2025-12-31'].copy()
+    for col in ('Open','High','Low','Close'):prices[col]*=scale.reindex(prices.index)
+    rows=[];files={};source_checks=[]
+    for year in (2024,2025):
+        original=issuer_dir/f'letf-ici-primary-{year}.xlsx'
+        restated=issuer_dir/f'letf-{symbol}-issuer-{year}.json'
+        api=json.loads(restated.read_text())
+        ici=[r for r in ici_rows(original,year=year) if r.get('C')==symbol]
+        if not ici:raise UnsupportedModelError(f'Missing issuer {year} tax rows')
+        num=lambda r,c:float(r.get(c) or 0.)
+        for r in ici:
+            # Supported corporate RIC subset. Never ignore 199A, foreign,
+            # spillover, exempt, ROC or special-rate capital-gain components.
+            excluded=('K','L','O','P','S','T','V','W','X','Y','Z','AA','AB','AC','AD','AE','AG','AH','AI','AJ','AK','AL','AM','AN','AO')
+            if any(num(r,c) for c in excluded):raise UnsupportedModelError(f'{symbol}/{year}: additional tax components')
+            total,ordinary,qdi=num(r,'J'),num(r,'Q'),num(r,'R')
+            if not np.isclose(total,ordinary,atol=1e-9) or not 0<=qdi<=ordinary:
+                raise ValueError('Issuer tax components do not reconcile')
+            ex=ici_date(r['H'])
+            pay=ici_date(r['I'])
+            if pay.year!=year or ex.year!=year:raise UnsupportedModelError('Tax-year spillover requires separate statutory mapping')
+            matches=[a for a in api if pd.Timestamp(a['ExDate'])==ex]
+            if len(matches)!=1 or pd.Timestamp(matches[0]['PayableDate'])!=pay:raise ValueError('Issuer date disagreement')
+            restatement=total/float(matches[0]['CashDividendPerShare'])
+            if not np.isclose(restatement,scale.loc[ex],rtol=2e-5,atol=1e-8):
+                raise ValueError('Dated/current issuer payouts conflict with split scaling')
+            source_checks.append({'ex_date':str(ex.date()),'nominal_cash':total,'issuer_restatement':restatement,
+                'dated_split_factor':float(scale.loc[ex]),'rounded_vendor_cash':float(raw.loc[ex,'Dividends'])})
+            for category,amount in [('ordinary_dividend',ordinary-qdi),('qualified_dividend',qdi)]:
+                if amount:rows.append({'ex_date':ex,'pay_date':str(pay.date()),'amount_per_share':amount,
+                    'category':category,'qualified_verified':category=='qualified_dividend',
+                    'source':f'https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_{year}.xlsx'})
+        issuer_dates={ici_date(r['H']) for r in ici}
+        if issuer_dates!=set(raw.loc[str(year)].loc[lambda f:f.Dividends.ne(0)].index):raise ValueError('Incomplete cash payout coverage')
+        for src,url in [(original,f'https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_{year}.xlsx'),
+                         (restated,f'https://www.proshares.com/api/distributionsummary/?fund={symbol}&year={year}')]:
+            shutil.copyfile(src,output/src.name)
+            files[src.stem]={'path':src.name,'sha256':sha256(src.read_bytes()).hexdigest(),'provider':'ProShares',
+                             'url':url,'format':src.suffix[1:]}
+    prices.to_csv(output/'prices.csv',index_label='Date',float_format='%.12g')
+    pd.DataFrame(rows).set_index('ex_date').sort_index().to_csv(output/'distributions.csv')
+    for name,provider,url in [('prices',meta['provider'],meta['url']),('distributions','ProShares dated ICI records','https://www.proshares.com/resources/tax-and-filing-documents/tax-supplements')]:
+        p=output/f'{name}.csv';files[name]={'path':p.name,'sha256':sha256(p.read_bytes()).hexdigest(),
+            'provider':provider,'url':url,'format':'csv'}
+    active_splits=splits.loc[prices.index.min():prices.index.max()]
+    manifest={'symbol':symbol,'instrument_kind':'etf','tax_structure':'corporation','currency':'USD',
+        'frequency':'daily','data_status':'OBSERVED','price_convention':'as_traded','distributions_complete':True,
+        'account_coverage_start':'2024-01-02','account_coverage_end':'2025-12-31',
+        'supported_tax_states':['FEDERAL_ONLY','TX','FL','NV'],'corporate_actions_reviewed':True,
+        'split_events':[{'date':str(d.date()),'security':symbol,'ratio':float(v),
+            'source':'Dated vendor split actions crosschecked against original/restated issuer cash payouts'} for d,v in active_splits.items()],
+        'retrieved_at':datetime.now(timezone.utc).isoformat(),'original_vendor_sha256':meta['sha256'],
+        'original_vendor_capture':catalog['retrieved_at'],'files':files,'issuer_cross_checks':source_checks,
+        'limitations':['Actual daily observations; assumed open/close execution, not NBBO fills',
+            'Final fund tax classifications enter tax accounting only, never trading signals',
+            'State-specific government-obligation exemptions and extra tax components remain gated']}
+    (output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+    return manifest
+
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser(description=__doc__)
+    for a in ('inputs','issuer-dir','output'):p.add_argument('--'+a,required=True,type=Path)
+    p.add_argument('--symbol',required=True,choices=['TQQQ','QLD','SSO','UPRO'])
+    a=p.parse_args();m=build(a.inputs,a.issuer_dir,a.output,a.symbol)
+    print(json.dumps({'symbol':a.symbol,'issuer_checks':len(m['issuer_cross_checks']),'splits':m['split_events']},indent=2))

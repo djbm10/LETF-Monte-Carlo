@@ -50,7 +50,13 @@ def load_bundle(folder):
           prices[['Dividends', 'Stock Splits']].to_numpy().any()):
         raise UnsupportedModelError('Nonzero/missing corporate actions need a complete explicit action schedule')
     if 'Stock Splits' in prices and prices['Stock Splits'].to_numpy().any():
-        raise UnsupportedModelError('Use a reviewed split/deliverable bundle; vendor split-restated OHLC is not sufficient')
+        actions=manifest.get('split_events',[])
+        observed=prices.loc[prices['Stock Splits'].ne(0),'Stock Splits']
+        supplied={pd.Timestamp(a['date']):a['ratio'] for a in actions}
+        if (not manifest.get('corporate_actions_reviewed') or len(supplied)!=len(actions) or
+            set(supplied)!=set(observed.index) or any(not a.get('source') or a.get('security')!=symbol for a in actions) or
+            any(not np.isfinite(v) or v<=0 or v!=float(observed.loc[d]) for d,v in supplied.items())):
+            raise UnsupportedModelError('Use a reviewed split/deliverable bundle; vendor split-restated OHLC is not sufficient')
     market = prices[['Open', 'Close']].rename(columns={'Open': f'{symbol}_Open', 'Close': f'{symbol}_Close'})
     if not prices.index.is_unique or not prices.index.is_monotonic_increasing:
         raise ValueError('Daily observations must be unique and increasing')
@@ -116,7 +122,7 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
     common = dict(initial_capital=initial_capital, allocator=rules, price_convention='as_traded',
         distributions_complete=True, distributions=distributions, trade_start=start,
         terminal_liquidation=True, inflation_index=cpi, settlement_policy='us_equity',
-        source_manifest=manifest, cash_flows=cash_flows)
+        source_manifest=manifest, cash_flows=cash_flows, split_events=manifest.get('split_events',[]))
     # Treat the initial Roth balance as supplied historical regular basis, not
     # a new above-limit contribution. No new Roth balance is created for free.
     roth_history = dict(birth_date='1980-01-01', first_tax_year=2010, regular_basis=initial_capital)

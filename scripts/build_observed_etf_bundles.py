@@ -26,7 +26,7 @@ from letf.accuracy import UnsupportedModelError
 TAX_URL='https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_2024.xlsx'
 
 
-def ici_rows(path):
+def ici_rows(path, *, year=2024):
     """Explicit 2024 issuer layout; reject a changed schema rather than guess."""
     ns={'m':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
     with zipfile.ZipFile(path) as z:
@@ -42,7 +42,7 @@ def ici_rows(path):
             row[re.sub(r'\d','',cell.get('r'))]=text
         rows.append(row)
     headers=[r for r in rows if r.get('A')=='Security Description (Fund Name)']
-    if len(headers)!=1 or headers[0].get('H')!='Ex-Dividend Date' or headers[0].get('M','').split()[0]!='2024' or headers[0].get('Q')!='Ordinary Dividends (14+15+16)':
+    if len(headers)!=1 or headers[0].get('H')!='Ex-Dividend Date' or headers[0].get('M','').split()[0]!=str(year) or headers[0].get('Q')!='Ordinary Dividends (14+15+16)':
         raise UnsupportedModelError('Unrecognized issuer ICI primary 2024 column layout')
     return rows
 

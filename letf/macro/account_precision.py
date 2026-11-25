@@ -26,7 +26,12 @@ def project_accounts(precision_report,*,output):
         if file_hash(path)!=sample['sha256']:raise ValueError('Frozen paired sample checksum failed')
         arrays.append(np.memmap(path,dtype=sample['dtype'],mode='r',shape=tuple(sample['shape'])))
     spec=report['registration']['protocol'];keys=[(h,l) for h in spec['horizons'] for l in spec['leverages']]
-    rows=[];alpha=.025/(len(keys)*2*2*3);palpha=.025/(len(keys)*2*3)
+    # The upstream path budget was selected from registered checkpoints using
+    # these same paths. Protect every possible stopping point as well as every
+    # account/metric: a fixed-look interval after optional stopping is not enough.
+    looks=len(spec['checkpoints_per_seed'])
+    rows=[];alpha=spec['family_alpha_quantiles']/(len(keys)*2*2*3*looks)
+    palpha=spec['family_alpha_probabilities']/(len(keys)*2*3*looks)
     for j,(h,leverage) in enumerate(keys):
         logs=np.concatenate([a[:,j,0] for a in arrays]);dd=np.concatenate([a[:,j,1] for a in arrays])
         real_logs=np.concatenate([a[:,j,4] for a in arrays]);nav=np.exp(logs)
@@ -66,6 +71,9 @@ def project_accounts(precision_report,*,output):
         'source_catalog_sha256':report['registration']['source_catalog_sha256'],'paired_paths_per_combination':len(logs),
         'method':'Exact piecewise-affine memoization of canonical PortfolioLedger terminal executions and tax, independently reconciled inside every segment',
         'full_daily_account_replay_for_every_path':False,
+        'family_error_control':{'possible_upstream_stopping_looks':looks,
+            'quantile_interval_alpha':alpha,'probability_interval_alpha':palpha,
+            'method':'Bonferroni across all accounts, nominal/real quantiles or probabilities, and every possible registered upstream stopping point'},
         'profile':{'initial_balance':10000.,'ordinary_income':100000.,'filing_status':'single','state':'FEDERAL_ONLY',
             'frozen_tax_year':2026,'distributions':0.,'contributions':0.,'cash_sweep':0.,'spread_bps':2.,'slippage_bps':1.,
             'Roth':'Existing balance; internal liquidation only, not personal withdrawal'},

@@ -32,10 +32,11 @@ def _issuer_year(value):
     return int(float(value))
 
 
-def load_bundle(folder):
+def load_bundle(folder, *, allow_fixture=False):
     folder = Path(folder)
     manifest = json.loads((folder / 'manifest.json').read_text())
-    if manifest.get('data_status') != 'OBSERVED' or manifest.get('price_convention') != 'as_traded':
+    status=manifest.get('data_status')
+    if (status != 'OBSERVED' and not (allow_fixture and status=='SOFTWARE_FIXTURE')) or manifest.get('price_convention') != 'as_traded':
         raise UnsupportedModelError('Account replay needs observed as-traded quotes and reviewed corporate actions')
     if manifest.get('currency') != 'USD' or manifest.get('frequency') != 'daily':
         raise UnsupportedModelError('Only daily USD account inputs are integrated')

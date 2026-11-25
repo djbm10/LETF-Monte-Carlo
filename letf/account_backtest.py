@@ -119,7 +119,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                          lot_method='FIFO', source_manifest=None,
                          linked_accounts=(), linked_trades=(), liquidation_events=(),
                          freeze_roth_contribution_year=None,qualified_holding_policy='verified_at_ex',
-                         audit_detail=False):
+                         audit_detail=False,progress_callback=None):
     """One daily account engine for market replay and generated scenarios.
 
     Signals see previous closes. Fills use the current open with configured
@@ -318,6 +318,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     for distribution in schedules:ex_schedules.setdefault(distribution.ex_date,[]).append(distribution)
     payment_items=sorted(payments.items())
     for step,timestamp in enumerate(trading.index):
+        if progress_callback is not None:
+            progress_callback(step,len(trading),timestamp)
         when = timestamp.date()
         # Reconcile maturation of the previous day's receivables separately.
         prior_pending = list(book.accounts[account_id].unsettled)

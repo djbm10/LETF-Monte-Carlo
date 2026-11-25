@@ -32,3 +32,17 @@ precision; the economic tax expectation remains $850.
 Primary law hashes, source-lake verification and 2023–25 real TQQQ/UPRO account
 results are in `master-lab-2026-11-25/evidence/`. Original high-gain export failure
 and partial source imports remain private evidence, not supported results.
+
+Portfolio stage: 315 full tests pass; frozen35/0 source extraction and exact
+selector comparison are independent of the adapter. Actual S6 pre-tax trade
+quantities differ by at most1.14e-13 shares solely from taxable lot splitting;
+dates/actions/prices/commissions/reasons exact. Absolute share/dollar comparison
+bounds1e-10/$1e-8 are stricter than canonical reconciliation1e-7/$1e-6.
+
+Product/forecast/derivative-clock integration: **326 passed**, four inherited
+warnings (62.17s), 97 workflow checks; unchanged socket test required running
+outside sandbox after explicit EPERM. Original environment failure retained at
+`audit-output/master-mission-baseline/stage4-product-tests.txt`; final stdout
+at `stage4-product-final-tests.txt`. JavaScript syntax checked with Node24.14.1.
+Future2-path account demonstration is not a convergence pass; exact conditional
+order-statistic intervals remain unbounded where sampling cannot identify tails.

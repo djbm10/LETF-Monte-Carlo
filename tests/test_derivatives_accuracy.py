@@ -146,7 +146,9 @@ def test_roth_long_leaps_respects_premium_cash_and_actual_quotes():
     assert book.accounts['r'].cash == 899
     assert book.wealth('r', {contract.symbol: 10}) == 1899
     options.trade(now, contract, 'SELL', 1, q)
-    assert book.accounts['r'].cash == 1898
+    assert book.accounts['r'].cash == 899
+    assert book.accounts['r'].unsettled == [(date(2025,1,3),999)]
+    assert book.wealth('r',{}) == 1898
     assert book.annual_tax('r', 2025, 100000)['tax'] == 0
 
 

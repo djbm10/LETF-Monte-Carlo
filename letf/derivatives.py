@@ -319,14 +319,15 @@ def require_derivative_tax_support(strategy, account_type):
 class LongOptionBook:
     """Real-quote long options/LEAPS in an explicitly permitted Roth profile.
 
-    The executable subset is intentionally small. Physical exercise, American
-    early exercise, taxable wash/straddle interactions and short assignment
-    require explicit handlers. Marks use the liquidation bid, not a model.
+    Physical long exercise requires a sourced notice and sufficient cash or
+    owned shares. Taxable interactions and short assignment remain blocked.
+    Marks use the liquidation bid, not a model. Sale proceeds settle T+1.
     """
     def __init__(self, ledger, account_id, *, commission_per_contract=0.):
         self.ledger = ledger
         self.account_id = account_id
         self.positions = {}
+        self.action_cursor = {}
         positive(commission_per_contract, 'option commission', True)
         self.commission = commission_per_contract
         account = ledger.accounts[account_id]
@@ -336,9 +337,25 @@ class LongOptionBook:
             raise UnsupportedModelError('Taxable option wash/holding-period/exercise treatment is not yet integrated')
         ledger.derivative_books.append(self)
 
+    def _check_actions(self,symbol):
+        contract,_=self.positions[symbol]
+        if any(e.get('security')==contract.underlying and e['action']=='SPLIT'
+               for e in self.ledger.events[self.action_cursor.get(symbol,0):]):
+            raise UnsupportedModelError('Held option crosses an underlying split; an OCC adjusted-deliverable handler is required')
+
+    @staticmethod
+    def settlement_date(when):
+        import exchange_calendars as xcals
+        import pandas as pd
+        when=calendar_date(when)
+        calendar=xcals.get_calendar('XNYS',start=str(when-timedelta(days=10)),end=str(when+timedelta(days=15)))
+        if not calendar.is_session(pd.Timestamp(when)):raise ValueError('Option action must occur on an exchange session')
+        return calendar.next_session(pd.Timestamp(when)).date()
+
     def mark_value(self, prices):
         value = 0.
         for symbol, (contract, quantity) in self.positions.items():
+            self._check_actions(symbol)
             positive(prices[symbol], 'option liquidation bid', True)
             value += prices[symbol] * quantity * contract.multiplier
         return value
@@ -354,6 +371,9 @@ class LongOptionBook:
         old_contract, old_qty = self.positions.get(contract.symbol, (contract, 0))
         if old_contract != contract:
             raise ValueError('Contract adjustment requires OCC action handling')
+        if old_qty:self._check_actions(contract.symbol)
+        settle=self.settlement_date(when)
+        self.ledger._advance(when)
         cash = price * contracts * contract.multiplier
         fee = contracts * self.commission
         if side == 'BUY':
@@ -366,39 +386,73 @@ class LongOptionBook:
                 raise UnsupportedModelError('Short option writing/assignment is not implemented')
             new_qty = old_qty - contracts
             delta = cash - fee
-        self.ledger._advance(when)
-        account.cash += delta
+        if side=='SELL':account.unsettled.append((settle,delta))
+        else:account.cash += delta
         if new_qty:
             self.positions[contract.symbol] = (contract, new_qty)
+            if not old_qty:self.action_cursor[contract.symbol]=len(self.ledger.events)
         else:
             self.positions.pop(contract.symbol, None)
+            self.action_cursor.pop(contract.symbol,None)
         self.ledger.events.append({'date': when, 'timestamp': timestamp, 'account': self.account_id,
                                    'action': 'OPTION_FILL', 'contract': contract.symbol,
                                    'side': side, 'contracts': contracts, 'price': price,
                                    'commission': fee, 'source': quote.source,
+                                   'settlement_date':settle,
                                    'evidence': Evidence.OBSERVED.value,
                                    'execution_exact': False})
         return self.ledger.events[-1]
 
-    def expire(self, when, symbol, settlement_price):
+    def exercise(self,when,symbol,contracts,*,notice_source,exercise_fee=0.):
+        """Explicit exercise of a standard long option; never inferred optimal.
+
+        OCC equity delivery is T+1 from May 28, 2024. Earlier delivery calendars
+        and adjusted contracts need their own effective-date evidence.
+        """
+        when=calendar_date(when);positive(exercise_fee,'exercise fee',True)
+        contract,quantity=self.positions[symbol];self._check_actions(symbol)
+        if not notice_source:raise ValueError('Explicit exercise notice/election evidence is required')
+        if type(contracts)is not int or not 0<contracts<=quantity:raise ValueError('Invalid integer exercise quantity')
+        if contract.settlement!='physical':raise UnsupportedModelError('Cash-settled early exercise needs product-specific settlement rules')
+        if when>contract.expiry or (contract.style=='european' and when!=contract.expiry):raise ValueError('Exercise outside the contract exercise window')
+        if when<date(2024,5,28):raise UnsupportedModelError('Historical physical exercise settlement version is not verified')
+        event=self.ledger.execute(when,self.account_id,contract.underlying,
+            'BUY' if contract.right=='call' else 'SELL',contracts*contract.multiplier,contract.strike,
+            settlement_date=self.settlement_date(when),execution_kind='exercise',
+            execution_source=notice_source,commission_override=exercise_fee)
+        remaining=quantity-contracts
+        if remaining:self.positions[symbol]=(contract,remaining)
+        else:self.positions.pop(symbol);self.action_cursor.pop(symbol,None)
+        self.ledger.events.append({'date':when,'account':self.account_id,'action':'OPTION_EXERCISE',
+            'contract':symbol,'contracts':contracts,'source':notice_source,
+            'settlement_date':event['settlement_date'],'automatic_exercise_assumed':False})
+        return self.ledger.events[-1]
+
+    def expire(self, when, symbol, settlement_price,*,exercise_notice_source=None):
         contract, quantity = self.positions[symbol]
+        self._check_actions(symbol)
         when = calendar_date(when)
         positive(settlement_price, 'underlying official settlement', True)
         if when != contract.expiry:
             raise ValueError('Expiry settlement must be on the contract expiration date')
         intrinsic = max(0., settlement_price - contract.strike) if contract.right == 'call' else max(0., contract.strike - settlement_price)
         if intrinsic > 0 and contract.settlement == 'physical':
-            raise UnsupportedModelError('In-the-money physical options require an explicit exercise/delivery handler')
+            if not exercise_notice_source:
+                raise UnsupportedModelError('In-the-money physical options require an explicit exercise notice, not assumed assignment')
+            return self.exercise(when,symbol,quantity,notice_source=exercise_notice_source)
+        settle=self.settlement_date(when)
         self.ledger._advance(when)
         proceeds = intrinsic * quantity * contract.multiplier
-        self.ledger.accounts[self.account_id].cash += proceeds
+        if proceeds:self.ledger.accounts[self.account_id].unsettled.append((settle,proceeds))
         del self.positions[symbol]
+        self.action_cursor.pop(symbol,None)
         self.ledger.events.append({'date': when, 'account': self.account_id, 'action': 'OPTION_EXPIRY',
-                                   'contract': symbol, 'cash': proceeds})
+                                   'contract': symbol, 'cash': proceeds,'settlement_date':settle})
 
     def mark(self, timestamp, quotes):
         value = 0.
         for symbol, (contract, quantity) in self.positions.items():
+            self._check_actions(symbol)
             # A valuation does not assume enough displayed depth to liquidate
             # the full position. Fill size is checked only on actual orders.
             quote = quotes[symbol]

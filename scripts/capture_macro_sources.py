@@ -39,6 +39,18 @@ FRED={
 VINTAGE_IDS=('CPIAUCNS','INDPRO','BAA','AAA','GS10','UNRATE')
 
 
+def source_units(name):
+    base=name.split('_asof_')[0]
+    if base in FRENCH_SOURCES:return {'currency':'USD','units':'Research portfolio return, percent in original files'}
+    units={'CPIAUCNS':'CPI-U NSA index level (1982-1984=100)',
+        'INDPRO':'Industrial production index, source reference base',
+        'UNRATE':'Percent unemployment','USREC':'0/1 retrospective recession indicator',
+        'GDPC1':'Billions of chained real US dollars, source reference base',
+        'GOLDAMGBD228NLBM':'US dollars per troy ounce'}
+    return {'currency':None if base in ('CPIAUCNS','INDPRO','UNRATE','USREC') else 'USD',
+        'units':units.get(base,'Annual yield/rate, percent; not an asset total return')}
+
+
 def capture(output,protocol,local_ff=None,reuse=None):
     output.mkdir(parents=True,exist_ok=False)
     spec=json.loads(protocol.read_text())
@@ -63,7 +75,7 @@ def capture(output,protocol,local_ff=None,reuse=None):
                 old=previous['sources'][name];source=reuse/old['path']
                 if old['url']==url and sha256(source.read_bytes()).hexdigest()==old['sha256']:
                     shutil.copyfile(source,output/old['path'])
-                    return name,dict(old,reused_from_catalog_sha256=sha256((reuse/'catalog.json').read_bytes()).hexdigest()),None
+                    return name,dict(old,**source_units(name),reused_from_catalog_sha256=sha256((reuse/'catalog.json').read_bytes()).hexdigest()),None
             if name=='ff_daily' and local_ff:
                 blob=local_ff.read_bytes()
             else:
@@ -71,7 +83,7 @@ def capture(output,protocol,local_ff=None,reuse=None):
             filename=f'{name}.{fmt}';path=output/filename
             entry={'path':filename,'url':url,'provider':provider,'retrieved_at':timestamp,
                 'publication_vintage':vintage or 'Current revised source at capture; historical release vintage not supplied',
-                'frequency':freq,'convention':convention,'currency':'USD','sha256':sha256(blob).hexdigest(),
+                'frequency':freq,'convention':convention,**source_units(name),'sha256':sha256(blob).hexdigest(),
                 'license':'Local research capture only; redistribution not certified; retain original provider terms',
                 'license_url':'https://fred.stlouisfed.org/legal/' if fmt=='csv' else 'https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html',
                 'point_in_time_verified':False,'role':'ex_post_diagnostic_only' if name=='USREC' else 'research_input'}
@@ -92,6 +104,10 @@ def capture(output,protocol,local_ff=None,reuse=None):
                 with zipfile.ZipFile(io.BytesIO(blob)) as z:
                     text=z.read(next(n for n in z.namelist() if n.lower().endswith('.csv'))).decode('latin-1')
                 entry['source_header']=text.splitlines()[:6]
+                from letf.macro.data import french_daily
+                parsed=french_daily(blob,date_digits=6 if name=='ff_monthly' else 8)
+                entry.update(first_observation=str(parsed.index[0].date()),last_observation=str(parsed.index[-1].date()),
+                    observations=len(parsed),missing_observations=int(parsed.isna().to_numpy().sum()))
             path.write_bytes(blob)
             return name,entry,None
         except Exception as exc:

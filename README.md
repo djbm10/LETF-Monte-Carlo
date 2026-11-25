@@ -1,5 +1,13 @@
 Leveraged ETF Monte Carlo simulation testing multiple LETF strategies
 
+## Canonical research laboratory (2026-11-25)
+
+Use [the CLI and local dashboard guide](docs/RESEARCH_LAB.md) for portable demos,
+reviewed taxable/Roth portfolios, counterfactuals, conditional scenarios and safe
+candidate updates. Start with `python -m letf.lab demo --output audit-output/demo`.
+[Mission status](docs/AUTONOMOUS_MASTER_PLAN.md) distinguishes implemented
+mechanics from blocked data/legal/forecast evidence. No forecast model is approved.
+
 ## Financial realism and validation (2026-11-25)
 
 The [financial-realism report](docs/financial-realism-2026-11-25/REPORT.md)

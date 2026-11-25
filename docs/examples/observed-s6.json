@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "mode": "observed",
+  "bundles": {
+    "TQQQ": "../macro-learning/audit-output/fund-comparisons-v4/TQQQ-inputs",
+    "TMF": "../macro-learning/audit-output/TMF-issuer-bundle-v1"
+  },
+  "start": "2024-01-02",
+  "end": "2025-12-31",
+  "strategy": {"id": "S6", "version": "causal_cash_v2"},
+  "initial_capital": 10000.0,
+  "tax": {
+    "state": "FEDERAL_ONLY", "ordinary_income": 100000.0,
+    "filing_status": "single", "law_mode": "ACTUAL_DATED",
+    "external_wash_policy": "NO_OTHER_OWNER_REPLACEMENTS"
+  },
+  "cash_flows": [
+    {"date": "2024-01-02", "kind": "contribution", "amount": 3000.0, "magi": 100000.0, "compensation": 100000.0},
+    {"date": "2025-01-02", "kind": "contribution", "amount": 3000.0, "magi": 100000.0, "compensation": 100000.0}
+  ],
+  "roth_owner": {"birth_date": "1980-01-01", "first_tax_year": 2010, "regular_basis": 10000.0}
+}

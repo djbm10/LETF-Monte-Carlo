@@ -1,7 +1,8 @@
 # Test and source manifest
 
 Base commit: `9a6fb44f4fe95c4df6c4a8bc7598e515a3acc459`.
-Pinned dependency file: `requirements-audit.lock` (unchanged).
+Pinned dependency file: `requirements-audit.lock` (existing pins preserved;
+xlrd2.0.2 added to read the actual issuer2022 binary XLS without macros).
 Baseline expected: 282 tests, 97 workflow structural checks; actual repeat is
 recorded in the checkpoint when complete.
 
@@ -46,3 +47,12 @@ outside sandbox after explicit EPERM. Original environment failure retained at
 at `stage4-product-final-tests.txt`. JavaScript syntax checked with Node24.14.1.
 Future2-path account demonstration is not a convergence pass; exact conditional
 order-statistic intervals remain unbounded where sampling cannot identify tails.
+
+Stage5 integration: **335 passed**, four inherited warnings (35.47s).
+New six secured-option independent delivery/collateral fixtures pass alongside
+all old derivative tests. Seven additional source/prospective fixtures were
+then added; final full-suite result recorded after their integration. No
+drawdown/reconstruction/convergence thresholds changed. Updated CI runs a
+portable authored SOFTWARE_FIXTURE end-to-end demo; private market inputs are
+not uploaded. Optional existing candidate workflow additionally requires an
+approved-private-storage setting; all candidate evaluation defaults review-only.

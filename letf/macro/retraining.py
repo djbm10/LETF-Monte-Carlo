@@ -92,21 +92,34 @@ def issue_candidates(sources,registry,protocol,*,output,require_existing=False,a
     return result
 
 
-def evaluate_issued(sources,registry,protocol,forecast_ids,*,output):
+def evaluate_issued(sources,registry,protocol,forecast_ids,*,output,allow_promotion=False):
     output=Path(output);output.mkdir(parents=True,exist_ok=False)
     actual,meta=sources.panel();evaluations=[]
+    # Month-end labels in a partially downloaded current month are not future
+    # outcomes. No injected future observation may trigger promotion early.
+    now=pd.Timestamp(datetime.now(timezone.utc)).tz_localize(None).normalize()
+    actual=actual.loc[actual.index<now]
     champion_file=registry.root/'champion.json'
     incumbent=json.loads(champion_file.read_text())['release_id'] if champion_file.exists() else None
     implementations=set();specifications=set()
     expected_spec=sha256(canonical(dict(protocol,allow_incomplete_training=True,
         implementation_variant='adjacent-observation-v2'))).hexdigest()
+    if len(forecast_ids)!=len(set(forecast_ids)):
+        raise ValueError('Duplicate forecast identities are not independent evidence')
+    registered_windows=set()
     for fid in forecast_ids:
         f,_=registry.store.load('forecasts',fid)
+        key=(f['kind'],tuple(f['dates']))
+        if key in registered_windows:
+            raise ValueError('Multiple same-kind forecasts for one outcome window require pre-outcome selection')
+        registered_windows.add(key)
         if f.get('research_status')!='PROSPECTIVE_FROZEN_CANDIDATE':
             raise UnsupportedModelError('Retrospective forecasts cannot be relabeled as prospective validation')
         outcome_start=pd.Timestamp(f['dates'][0]).to_period('M').start_time.tz_localize('UTC')
         if pd.Timestamp(f['issued_at']).tz_convert('UTC')>=outcome_start:
             raise ValueError('Forecast was not frozen before its outcome period')
+        if pd.Timestamp(f['issued_at'])>pd.Timestamp(datetime.now(timezone.utc)):
+            raise ValueError('Cannot score a forecast issued in the future')
         model_meta,_=registry.store.load('models',f['model_id'])
         if f['kind']=='incumbent_approved' and f['model_id']!=incumbent:
             raise UnsupportedModelError('Scored incumbent differs from the exact current approved release')
@@ -133,6 +146,10 @@ def evaluate_issued(sources,registry,protocol,forecast_ids,*,output):
             result={'status':'PENDING_MINIMUM_DISJOINT_ERAS','promoted':False,
                 'evaluations':evaluations,'comparisons':decisions,'evidence_consumed':False}
             (output/'report.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n');return result
+        if not allow_promotion:
+            result={'status':'GATES_SCORED_REVIEW_REQUIRED','promoted':False,'comparisons':decisions,
+                'evaluations':evaluations,'evidence_consumed':False,'reason':'Explicit review-only pipeline; no champion/strategy mutation'}
+            (output/'report.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n');return result
         completed_ids=[e['forecast_id'] for e in complete]
         windows=sorted(set((e['evaluation_start'],e['evaluation_end']) for e in complete))
         batch=registry.store.put('batches',{'windows':windows,'forecast_ids':forecast_ids,
@@ -146,7 +163,7 @@ def evaluate_issued(sources,registry,protocol,forecast_ids,*,output):
     (output/'report.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n');return result
 
 
-def evaluate_pending(sources,registry,protocol,*,output):
+def evaluate_pending(sources,registry,protocol,*,output,allow_promotion=False):
     """Evaluate each fixed implementation cohort, excluding consumed intervals.
 
     Accumulate the required disjoint eras before making a selection decision.
@@ -157,7 +174,7 @@ def evaluate_pending(sources,registry,protocol,*,output):
     if history.exists():
         for line in history.read_text().splitlines():
             batch,_=registry.store.load('batches',json.loads(line)['batch_id']);consumed+=batch['windows']
-    ledger=registry.root/'issues.jsonl';groups={}
+    ledger=registry.root/'issues.jsonl';groups={};eligible_records=[]
     champion=registry.root/'champion.json'
     incumbent=json.loads(champion.read_text())['release_id'] if champion.exists() else None
     skipped=[]
@@ -170,11 +187,24 @@ def evaluate_pending(sources,registry,protocol,*,output):
         for fid in issue['forecast_ids']:
             f,_=registry.store.load('forecasts',fid);a,b=f['dates'][0],f['dates'][-1]
             if not any(a<=d and c<=b for c,d in consumed):eligible.append(fid)
-        if eligible:groups.setdefault((issue['implementation_sha256'],issue['protocol_sha256']),[]).extend(eligible)
+        for fid in eligible:
+            f,_=registry.store.load('forecasts',fid)
+            eligible_records.append((f['issued_at'],fid,(issue['implementation_sha256'],issue['protocol_sha256']),f))
+    # Repeated refreshes must not let an evaluator pick the best revision once
+    # outcomes arrive. Deterministically retain the earliest immutable issue,
+    # before loading any outcomes; preserve later artifacts and report them.
+    seen=set()
+    for _,fid,cohort,f in sorted(eligible_records,key=lambda x:(x[0],x[1])):
+        key=(cohort,f['kind'],tuple(f['dates']))
+        if key in seen:
+            skipped.append({'forecast_ids':[fid],'reason':'Later same-kind/window issue retained but excluded; earliest issue fixed before scoring'})
+            continue
+        seen.add(key);groups.setdefault(cohort,[]).append(fid)
     results=[]
     for i,ids in enumerate(groups.values()):
-        results.append(evaluate_issued(sources,registry,protocol,ids,output=output/f'cohort-{i}'))
+        results.append(evaluate_issued(sources,registry,protocol,ids,output=output/f'cohort-{i}',allow_promotion=allow_promotion))
     report={'status':'RESEARCH_EVALUATION_ONLY','cohorts':results,
         'ineligible_old_issue_cohorts':skipped,
-        'promoted':any(r['promoted'] for r in results),'strategy_change_authority':False}
+        'promoted':any(r['promoted'] for r in results),'strategy_change_authority':False,
+        'promotion_mode':'LOCKED_GATES' if allow_promotion else 'REVIEW_ONLY'}
     (output/'report.json').write_bytes(canonical(report));return report

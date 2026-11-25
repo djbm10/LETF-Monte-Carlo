@@ -1,0 +1,13 @@
+{
+  "url": "https://www.proshares.com/globalassets/proshares/documents/annual-reports/annual_proshares_geared_financial_statement.pdf",
+  "provider": "ProShares Trust",
+  "statement_date": "2026-05-31",
+  "sha256": "023caf84103b52366cbe67f5c7d76d1c0aa73dd26a9e88c85c832c251301fae9",
+  "format": "PDF",
+  "inspected_pdf_page": 162,
+  "printed_page": 159,
+  "scope": "TQQQ swap financing rate on contractual notional; excludes commissions",
+  "not_proven": "Historical daily notional, funding spread, collateral cash yield and fee/waiver schedules",
+  "parser": "pypdf==6.4.0, installed in /tmp only, not a runtime dependency",
+  "license": "Issuer copyright retained; PDF not redistributed in Git"
+}

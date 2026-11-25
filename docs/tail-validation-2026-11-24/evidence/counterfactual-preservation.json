@@ -1,0 +1,127 @@
+{
+  "exact_original_report_reproduction": true,
+  "report_sha256": "b51cd9367ba4688f3d7b1b386c60b424752cbaed2a2bc561654d098832d1a80b",
+  "first_source_observation": "1926-07-01",
+  "account_history_certification": "BLOCKED",
+  "evidence": "HYPOTHETICAL_STRESS",
+  "central_spread": 0.015,
+  "central_fee": 0.01,
+  "three_x_summaries": {
+    "US_BROAD_MARKET": {
+      "central": {
+        "terminal_index": 4909.830888837061,
+        "max_drawdown": 0.9971370874145595,
+        "max_underwater_observations": 7136,
+        "observations": 25301,
+        "liquidated": false,
+        "cagr": 0.09181935080307002,
+        "real_cagr": 0.0586935775030073,
+        "period_start_close": "1929-12-31",
+        "first_return_date": "1930-01-02",
+        "end": "2026-09-30",
+        "leverage": 3.0,
+        "annual_spread": 0.015,
+        "annual_fee": 0.01
+      },
+      "cagr_min_max": [
+        0.048483012451984386,
+        0.11982423421920019
+      ],
+      "max_drawdown_min_max": [
+        0.9969673417721572,
+        0.9973890073337848
+      ],
+      "sensitivity_cases": 9,
+      "first_genuine_observation": "1926-07-01"
+    },
+    "LARGE_GROWTH_BOOK_TO_MARKET": {
+      "central": {
+        "terminal_index": 2607.0871516205907,
+        "max_drawdown": 0.9959994256700362,
+        "max_underwater_observations": 7136,
+        "observations": 25301,
+        "liquidated": false,
+        "cagr": 0.08469918287075129,
+        "real_cagr": 0.05178943529748192,
+        "period_start_close": "1929-12-31",
+        "first_return_date": "1930-01-02",
+        "end": "2026-09-30",
+        "leverage": 3.0,
+        "annual_spread": 0.015,
+        "annual_fee": 0.01
+      },
+      "cagr_min_max": [
+        0.04164658241702468,
+        0.11252068463004372
+      ],
+      "max_drawdown_min_max": [
+        0.9957623196838631,
+        0.996351325244356
+      ],
+      "sensitivity_cases": 9,
+      "first_genuine_observation": "1926-07-01"
+    },
+    "SMALL_GROWTH_BOOK_TO_MARKET": {
+      "central": {
+        "terminal_index": 11.478057973151696,
+        "max_drawdown": 0.9979634532194818,
+        "max_underwater_observations": 14568,
+        "observations": 25301,
+        "liquidated": false,
+        "cagr": 0.02554513317017948,
+        "real_cagr": -0.0055698819331803096,
+        "period_start_close": "1929-12-31",
+        "first_return_date": "1930-01-02",
+        "end": "2026-09-30",
+        "leverage": 3.0,
+        "annual_spread": 0.015,
+        "annual_fee": 0.01
+      },
+      "cagr_min_max": [
+        -0.015202580176176705,
+        0.051878085974439436
+      ],
+      "max_drawdown_min_max": [
+        0.9975263539326009,
+        0.9996023579358102
+      ],
+      "sensitivity_cases": 9,
+      "first_genuine_observation": "1926-07-01"
+    },
+    "HISTORICAL_HITEC_INDUSTRY": {
+      "central": {
+        "terminal_index": 18.665693029809436,
+        "max_drawdown": 0.9998437220714245,
+        "max_underwater_observations": 8884,
+        "observations": 25301,
+        "liquidated": false,
+        "cagr": 0.030712363983010027,
+        "real_cagr": -0.000559424781092388,
+        "period_start_close": "1929-12-31",
+        "first_return_date": "1930-01-02",
+        "end": "2026-09-30",
+        "leverage": 3.0,
+        "annual_spread": 0.015,
+        "annual_fee": 0.01
+      },
+      "cagr_min_max": [
+        -0.010227721545063573,
+        0.057169360687409965
+      ],
+      "max_drawdown_min_max": [
+        0.9998317202755843,
+        0.9998871664445804
+      ],
+      "sensitivity_cases": 9,
+      "first_genuine_observation": "1926-07-01"
+    }
+  },
+  "total_sensitivity_cases": 108,
+  "closure_evidence": {
+    "1933-03-15": {
+      "previous_close": "1933-03-03",
+      "elapsed_days": 12,
+      "source": "https://www.federalreservehistory.org/essays/emergency-banking-act-of-1933"
+    }
+  }
+}

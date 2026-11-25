@@ -1,0 +1,134 @@
+{
+  "TQQQ": {
+    "taxable": {
+      "events_and_fills_exact": {
+        "taxable_fills.csv": true,
+        "taxable_pretax_fills.csv": true,
+        "taxable_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    },
+    "roth": {
+      "events_and_fills_exact": {
+        "roth_fills.csv": true,
+        "roth_pretax_fills.csv": true,
+        "roth_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    }
+  },
+  "QLD": {
+    "taxable": {
+      "events_and_fills_exact": {
+        "taxable_fills.csv": true,
+        "taxable_pretax_fills.csv": true,
+        "taxable_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    },
+    "roth": {
+      "events_and_fills_exact": {
+        "roth_fills.csv": true,
+        "roth_pretax_fills.csv": true,
+        "roth_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    }
+  },
+  "SSO": {
+    "taxable": {
+      "events_and_fills_exact": {
+        "taxable_fills.csv": true,
+        "taxable_pretax_fills.csv": true,
+        "taxable_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    },
+    "roth": {
+      "events_and_fills_exact": {
+        "roth_fills.csv": true,
+        "roth_pretax_fills.csv": true,
+        "roth_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    }
+  },
+  "UPRO": {
+    "taxable": {
+      "events_and_fills_exact": {
+        "taxable_fills.csv": true,
+        "taxable_pretax_fills.csv": true,
+        "taxable_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    },
+    "roth": {
+      "events_and_fills_exact": {
+        "roth_fills.csv": true,
+        "roth_pretax_fills.csv": true,
+        "roth_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    }
+  },
+  "QQQ": {
+    "taxable": {
+      "events_and_fills_exact": {
+        "taxable_fills.csv": true,
+        "taxable_pretax_fills.csv": true,
+        "taxable_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    },
+    "roth": {
+      "events_and_fills_exact": {
+        "roth_fills.csv": true,
+        "roth_pretax_fills.csv": true,
+        "roth_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    }
+  },
+  "TMF": {
+    "taxable": {
+      "events_and_fills_exact": {
+        "taxable_fills.csv": true,
+        "taxable_pretax_fills.csv": true,
+        "taxable_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    },
+    "roth": {
+      "events_and_fills_exact": {
+        "roth_fills.csv": true,
+        "roth_pretax_fills.csv": true,
+        "roth_events.json": true
+      },
+      "daily_cash_and_nav_exact": true,
+      "exported_daily_ledger_exact": true,
+      "residual_difference_max": 0.0
+    }
+  }
+}

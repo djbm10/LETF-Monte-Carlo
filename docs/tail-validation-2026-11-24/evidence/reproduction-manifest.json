@@ -1,0 +1,24 @@
+{
+  "base_sha": "140535f1ce8d80e31118a72b43aa9a83b4633c19",
+  "registered_protocol_commit": "4b1bb26",
+  "frozen_forecast_implementation_commit": "c990b9d",
+  "common_scale_and_sampling_implementation_commit": "e4e405a",
+  "year_end_engine_commit": "c1971be",
+  "raw_forecast_registry": "audit-output/tail-registry-v1",
+  "historical_macro_sources": "../macro-learning/audit-output/macro-sources-v4",
+  "official_nav_index_sources": "audit-output/official-index-nav-v4",
+  "raw_prices": "../../audit-output/public-daily-inputs-network",
+  "raw_inputs_are_licensed_local_snapshots_not_git_assets": true,
+  "copied_evidence_sha256": {
+    "initial-invalid-scale-comparison.json": "8ee5b2178799962fa65ffb914f8aac0bc481b2c5df91d609072d067a8026874c",
+    "common-scale-comparison.json": "8cc79b7501c5977e8b9b548de2fe7a63cee15cc17f47a3e76e0e9eec6e34c55e",
+    "official-reconstruction.json": "1a3c2f508263fbf5c406c05a4fe4f7d0f06533f37c3f4f0fb1f66c6cb0c2accd",
+    "official-source-catalog.json": "2be48a3a975ad9aa8f290b5c3d7f29ce832f436500878913a8ec8bf65ebc61e1",
+    "fair-six-reinvest.json": "a3d7f34f49fd6717b8620be6b14bb2dc78543401ff4afdabcd88d26b4e704710",
+    "fair-six-cash.json": "a8856c278a2ccfcc0a81bfa1b73e4ecd15704256bd97cc278c029e7319b647d2",
+    "fair-seven-2025.json": "27fbba0ca28a6dbd9dfa4646a060ef7fa9dbcac0905499eb987f15974e3ed175",
+    "unit-sampling-4096.json": "8ebe5acb801d7a17a44416c90e5844c08f84dbfeb15f6b54fa481bd1bf431ec3",
+    "canonical-40y-demonstration.json": "d250bb7a76ab9704dbb408b1ac590e1cd214024b30816eb83b2b9a524c7dcc2b",
+    "frozen-receipt.json": "21901662be4c60cb891f38b9a092396c384baa09a3e4f55a8aacecffc69f8b1d"
+  }
+}

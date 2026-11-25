@@ -1,0 +1,54 @@
+{
+  "baseline": "140535f1ce8d80e31118a72b43aa9a83b4633c19",
+  "tracked_baseline_files": 496,
+  "changed_existing_files": {
+    "letf/account_backtest.py": {
+      "before": "1d991be5bd797110229c7a3d41f1864492d17409d014c3ce72aa7dc4a8ec8db6",
+      "after": "43624cc199329d417b7763efc40b5c221aa24e146830c8d3b5b7b5be3fa84fba"
+    },
+    "letf/account_cli.py": {
+      "before": "c0534ec9685558c206cf356011b2ab32b9fc5fac07b9c20c91cf2dc38f22ee57",
+      "after": "f434a9c6b04fb37f596adbbf7cecb64a31ef7e5b8e6307fc83daf327573dfb55"
+    },
+    "letf/accounts.py": {
+      "before": "c9e958bb4ac71cfbe707366f4838a2dfd3c83e197265afe2981af8c285fd12fc",
+      "after": "c375ed1322eb0d25f46e8ebfbabb453e247002e6080eabf638b2fe4ebd29cbfa"
+    },
+    "letf/macro/cli.py": {
+      "before": "72c86e72eeafe38af5de084a4b719a374d23b00a0f5dff06e4041ec70887d925",
+      "after": "eab78218154fc22577802718eb28ac5f5c1ec777dfcb50c828867f2bd35c7181"
+    },
+    "letf/macro/explorer.py": {
+      "before": "ab7622ced28299d74104a9a4fcb30f8eea43569b37e3329be72fe4b5875e9258",
+      "after": "903379a139931d6375185acbb8ef32431e8fb1df4e8d2ebd324d45ecc23be4e0"
+    },
+    "letf/macro/learning.py": {
+      "before": "09a0b386e6da39520982bf346a0d2e59b6ed0ac363cacfdcd288ee786d424311",
+      "after": "ed387162b3179c99d8a080a287a8019157d0fba5535f6d2877d8dc14cbb3522f"
+    },
+    "letf/macro/models.py": {
+      "before": "01f28ab429fcdc50f5a49f20c3bed54f3cbcdf68fa81620cce3a101cb2142f8e",
+      "after": "741978157f7c4c0e10f716932363e5f3cadd4e426a418858dcbf8db0dcf3cd0a"
+    },
+    "letf/reconstruction.py": {
+      "before": "d6a25608e6d5f4ae457472d9822fda71bebf02d85d0436073f0113e49cfe95fb",
+      "after": "040ff448e958ef315c628ca733d74fe9b3c5fd96e234a6892d880d9bb49ef34a"
+    },
+    "scripts/build_multiyear_fund_bundle.py": {
+      "before": "65c02272d75e4e9a6ea429947c00b83b90e3a1289f123ee47c096f4687b08842",
+      "after": "3efe7a94d6e6a1c063459fb2895b5241442d7347120a1c6e5bc064dd42cb96af"
+    },
+    "tests/test_macro_explorer.py": {
+      "before": "3071b88cfe332b0e31f3e833168ffb24ca8c17c7ec45c55ff69fad9199bc4320",
+      "after": "67871bf09c2714f7cc04bb9fca6d3f9d9ef2e295bff9fbf3d10bce8a4ae2528b"
+    },
+    "tests/test_reconstruction_accuracy.py": {
+      "before": "557f45f335ea3e42b5a5becbd1e3b649f463bcb17722f24a9d345ec11de64797",
+      "after": "a57f3ceea0f265e87cf6fc4de54986c423f1d7cb7bdc9a409e3597d7e3098f53"
+    }
+  },
+  "unchanged_existing_files": 485,
+  "protected_research_workflows_holdouts_data_lock_unchanged": true,
+  "original_root_status": " M LETF35_analysis.py\n D letf/simulation/__pycache__/__init__.cpython-313.pyc\n D letf/simulation/__pycache__/bootstrap.cpython-313.pyc\n D letf/simulation/__pycache__/engine.compute_letf_return_correct-128.py313.1.nbc\n D letf/simulation/__pycache__/engine.compute_letf_return_correct-128.py313.nbi\n D letf/simulation/__pycache__/engine.cpython-313.pyc\n D letf/simulation/__pycache__/random_start.cpython-313.pyc\n D letf/tax/__pycache__/__init__.cpython-313.pyc\n D letf/tax/__pycache__/brackets.cpython-313.pyc\n D letf/tax/__pycache__/engine.cpython-313.pyc\n D letf/tax/__pycache__/lot_selection.cpython-313.pyc\n D letf/tax/__pycache__/marginal.cpython-313.pyc\n D letf/tax/__pycache__/regimes.cpython-313.pyc\n D letf/tax/__pycache__/wash_sale.cpython-313.pyc\n?? .claude/\n?? .serena/\n?? .worktrees/\n",
+  "original_root_user_edits_left_in_place": true
+}

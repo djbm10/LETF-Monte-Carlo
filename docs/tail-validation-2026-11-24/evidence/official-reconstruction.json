@@ -1,0 +1,937 @@
+{
+  "status": "DIAGNOSTIC_ALREADY_INSPECTED",
+  "investment_performance_certification": "BLOCKED",
+  "original_gate": {
+    "registered_before_evaluation": "2026-11-23",
+    "training_end": "2019-12-31",
+    "evaluation_start": "2020-01-01",
+    "evaluation_end": "2025-12-31",
+    "min_observations": 504,
+    "daily_rmse": 0.003,
+    "daily_bias": 0.0002,
+    "annual_tracking_error": 0.05,
+    "cagr_error": 0.02,
+    "drawdown_error": 0.05,
+    "terminal_relative_error": 0.15,
+    "scope": "New audit diagnostic; does not modify or replace any pre-existing sealed holdout. Numerical pass alone does not verify data provenance or historical tax/execution support."
+  },
+  "gate_sha256": "fa62413c93af6fb5eccf9b9743c4ae3837b9c38a2e0c082b31ede64e1c73f512",
+  "official_catalog_sha256": "2be48a3a975ad9aa8f290b5c3d7f29ce832f436500878913a8ec8bf65ebc61e1",
+  "vendor_manifest_sha256": "8a434afe840e8b5f22a0cd1d336cb81b33b672a1a534fb04b70f0900f558bb6c",
+  "products": {
+    "TQQQ": {
+      "errors": {
+        "n": 1508,
+        "daily_rmse": 0.0003484979900537215,
+        "daily_bias": 7.330686150704386e-05,
+        "annual_tracking_error": 0.005410249766381496,
+        "cagr_error": 0.024270821740895565,
+        "drawdown_error": 0.004801380450117465,
+        "terminal_relative_error": 0.11588962306159378,
+        "actual": {
+          "cagr": 0.3124533126888043,
+          "max_drawdown": -0.816741397339814,
+          "annual_volatility": 0.7695749564241066,
+          "terminal": 5.08895761003871
+        },
+        "proxy": {
+          "cagr": 0.33672413442969984,
+          "max_drawdown": -0.8119400168896965,
+          "annual_volatility": 0.7698044688555475,
+          "terminal": 5.6787149892425255
+        }
+      },
+      "checks": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": false,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "numerical_pass": false,
+      "provenance_verified": false,
+      "passed": false,
+      "evidence": "HYPOTHETICAL_STRESS",
+      "gate": {
+        "min_observations": 504,
+        "daily_rmse": 0.003,
+        "daily_bias": 0.0002,
+        "annual_tracking_error": 0.05,
+        "cagr_error": 0.02,
+        "drawdown_error": 0.05,
+        "terminal_relative_error": 0.15
+      },
+      "gate_sha256": "fa62413c93af6fb5eccf9b9743c4ae3837b9c38a2e0c082b31ede64e1c73f512",
+      "by_year": {
+        "2020": {
+          "n": 253,
+          "daily_rmse": 0.00016997136212628305,
+          "daily_bias": 6.538715324211953e-05,
+          "annual_tracking_error": 0.002495504034436886,
+          "cagr_error": 0.03332074368569016,
+          "drawdown_error": 0.0011703060117000952,
+          "terminal_relative_error": 0.01598850538831731,
+          "actual": {
+            "cagr": 1.0923794632541566,
+            "max_drawdown": -0.6996602205686817,
+            "annual_volatility": 1.090113244389771,
+            "terminal": 2.098518641614914
+          },
+          "proxy": {
+            "cagr": 1.1257002069398467,
+            "max_drawdown": -0.6984899145569816,
+            "annual_volatility": 1.0907954810450813,
+            "terminal": 2.132070818223858
+          }
+        },
+        "2021": {
+          "n": 252,
+          "daily_rmse": 7.455568433047721e-05,
+          "daily_bias": 5.546095052325154e-05,
+          "annual_tracking_error": 0.0007925377267538697,
+          "cagr_error": 0.025439798434478966,
+          "drawdown_error": 0.0006061088841657902,
+          "terminal_relative_error": 0.013954577398388679,
+          "actual": {
+            "cagr": 0.8230432716232865,
+            "max_drawdown": -0.30524793891299595,
+            "annual_volatility": 0.5564234671003105,
+            "terminal": 1.8230432716232865
+          },
+          "proxy": {
+            "cagr": 0.8484830700577655,
+            "max_drawdown": -0.30464183002883016,
+            "annual_volatility": 0.5565941858272333,
+            "terminal": 1.8484830700577655
+          }
+        },
+        "2022": {
+          "n": 251,
+          "daily_rmse": 0.0002931165003017623,
+          "daily_bias": 9.92874013529926e-05,
+          "annual_tracking_error": 0.004386753928457047,
+          "cagr_error": 0.005321765449746274,
+          "drawdown_error": 0.0045673589157613215,
+          "terminal_relative_error": 0.025428506033109866,
+          "actual": {
+            "cagr": -0.7915575112145771,
+            "max_drawdown": -0.8105181831757932,
+            "annual_volatility": 0.9747112281539839,
+            "terminal": 0.2097435843517654
+          },
+          "proxy": {
+            "cagr": -0.7862357457648308,
+            "max_drawdown": -0.8059508242600318,
+            "annual_volatility": 0.9747301242359767,
+            "terminal": 0.21507705035186037
+          }
+        },
+        "2023": {
+          "n": 250,
+          "daily_rmse": 0.0004986115194818871,
+          "daily_bias": 6.642645342736523e-05,
+          "annual_tracking_error": 0.007860393661427859,
+          "cagr_error": 0.05051456185765968,
+          "drawdown_error": 0.003607212418371919,
+          "terminal_relative_error": 0.016658298081347445,
+          "actual": {
+            "cagr": 2.008130339715955,
+            "max_drawdown": -0.3324533979504818,
+            "annual_volatility": 0.5431898055971861,
+            "terminal": 2.981951975093709
+          },
+          "proxy": {
+            "cagr": 2.0586449015736146,
+            "max_drawdown": -0.32884618553210987,
+            "annual_volatility": 0.5432991003208756,
+            "terminal": 3.0316262199590827
+          }
+        },
+        "2024": {
+          "n": 252,
+          "daily_rmse": 0.00046504897575593235,
+          "daily_bias": 6.77501258190118e-05,
+          "annual_tracking_error": 0.007318196658684719,
+          "cagr_error": 0.02672828044504527,
+          "drawdown_error": 0.0010032294392211538,
+          "terminal_relative_error": 0.016893009463086806,
+          "actual": {
+            "cagr": 0.5822095230248798,
+            "max_drawdown": -0.3744868987158648,
+            "annual_volatility": 0.5465483244455681,
+            "terminal": 1.5822095230248798
+          },
+          "proxy": {
+            "cagr": 0.6089378034699251,
+            "max_drawdown": -0.37348366927664367,
+            "annual_volatility": 0.5470888208610665,
+            "terminal": 1.608937803469925
+          }
+        },
+        "2025": {
+          "n": 250,
+          "daily_rmse": 0.00038062638181247325,
+          "daily_bias": 8.570742019069232e-05,
+          "annual_tracking_error": 0.005898891353644168,
+          "cagr_error": 0.029586329955648027,
+          "drawdown_error": 0.0013283513458417495,
+          "terminal_relative_error": 0.021782091107734436,
+          "actual": {
+            "cagr": 0.3473903290659299,
+            "max_drawdown": -0.5695270592372204,
+            "annual_volatility": 0.710011311933638,
+            "terminal": 1.3442055997279614
+          },
+          "proxy": {
+            "cagr": 0.37697665902157795,
+            "max_drawdown": -0.5681987078913786,
+            "annual_volatility": 0.7098744818527017,
+            "terminal": 1.3734852085687628
+          }
+        }
+      },
+      "by_holding_period_sessions": {
+        "21": {
+          "n": 71,
+          "median_relative_error": 0.0014251275048160483,
+          "max_abs_relative_error": 0.0034601983177142692
+        },
+        "63": {
+          "n": 69,
+          "median_relative_error": 0.004252028715376888,
+          "max_abs_relative_error": 0.008112368630330602
+        },
+        "252": {
+          "n": 60,
+          "median_relative_error": 0.017118540719510023,
+          "max_abs_relative_error": 0.02598295243654314
+        },
+        "1260": {
+          "n": 12,
+          "median_relative_error": 0.09343795482770711,
+          "max_abs_relative_error": 0.0981109181994313
+        }
+      },
+      "fitted_training_spread": 0.00019125262816430588,
+      "annual_fee_scenario": 0.0086,
+      "training_observations": 2488,
+      "index_convention": "Nasdaq-100 total-return index",
+      "actual_convention": "Issuer NAV, same-restatement cash reinvested at ex-date NAV",
+      "issuer_vs_vendor_total_return_errors": {
+        "n": 1508,
+        "daily_rmse": 0.0025519996021926027,
+        "daily_bias": 6.214144501272686e-05,
+        "annual_tracking_error": 0.0405131606935656,
+        "cagr_error": -0.0001969708991573782,
+        "drawdown_error": -0.00014292681360383863,
+        "terminal_relative_error": -0.0008976177450125133,
+        "actual": {
+          "cagr": 0.31265028358796165,
+          "max_drawdown": -0.8165984705262102,
+          "annual_volatility": 0.7489481613095917,
+          "terminal": 5.093529652639667
+        },
+        "proxy": {
+          "cagr": 0.3124533126888043,
+          "max_drawdown": -0.816741397339814,
+          "annual_volatility": 0.7695749564241066,
+          "terminal": 5.08895761003871
+        }
+      },
+      "cash_distributions_reviewed": 21,
+      "certification_blockers": [
+        "Historical fee/waiver/swap/collateral cash-yield schedules incomplete",
+        "Already inspected evaluation period; source correction cannot create new independent evidence",
+        "Current revised/downloaded inputs, not decision-time archive"
+      ]
+    },
+    "QLD": {
+      "errors": {
+        "n": 1508,
+        "daily_rmse": 0.00028198663200970224,
+        "daily_bias": 2.134929339168175e-05,
+        "annual_tracking_error": 0.004465031792629771,
+        "cagr_error": 0.006314910576003863,
+        "drawdown_error": 0.0029651022304102437,
+        "terminal_relative_error": 0.029579366684575836,
+        "actual": {
+          "cagr": 0.29320153855323583,
+          "max_drawdown": -0.6368917548657262,
+          "annual_volatility": 0.5121959036105302,
+          "terminal": 4.658271490485005
+        },
+        "proxy": {
+          "cagr": 0.2995164491292397,
+          "max_drawdown": -0.633926652635316,
+          "annual_volatility": 0.5132037691868191,
+          "terminal": 4.796060211018366
+        }
+      },
+      "checks": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": true,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "numerical_pass": true,
+      "provenance_verified": false,
+      "passed": false,
+      "evidence": "HYPOTHETICAL_STRESS",
+      "gate": {
+        "min_observations": 504,
+        "daily_rmse": 0.003,
+        "daily_bias": 0.0002,
+        "annual_tracking_error": 0.05,
+        "cagr_error": 0.02,
+        "drawdown_error": 0.05,
+        "terminal_relative_error": 0.15
+      },
+      "gate_sha256": "fa62413c93af6fb5eccf9b9743c4ae3837b9c38a2e0c082b31ede64e1c73f512",
+      "by_year": {
+        "2020": {
+          "n": 253,
+          "daily_rmse": 0.0004562207095228517,
+          "daily_bias": 2.136782414869499e-05,
+          "annual_tracking_error": 0.007248670928372817,
+          "cagr_error": 0.007018175949292438,
+          "drawdown_error": 0.0005870026278030904,
+          "terminal_relative_error": 0.003736816554024136,
+          "actual": {
+            "cagr": 0.8855830149573092,
+            "max_drawdown": -0.516744197795448,
+            "annual_volatility": 0.7248306706661082,
+            "terminal": 1.8903346532008953
+          },
+          "proxy": {
+            "cagr": 0.8926011909066016,
+            "max_drawdown": -0.5161571951676449,
+            "annual_volatility": 0.7271741081377374,
+            "terminal": 1.8973984870256217
+          }
+        },
+        "2021": {
+          "n": 252,
+          "daily_rmse": 0.0001242833066469166,
+          "daily_bias": 1.0344938340118211e-05,
+          "annual_tracking_error": 0.0019700024672527814,
+          "cagr_error": 0.0035824779710988963,
+          "drawdown_error": 6.378199108547644e-05,
+          "terminal_relative_error": 0.002321392690368018,
+          "actual": {
+            "cagr": 0.5432451329598509,
+            "max_drawdown": -0.21099605953633982,
+            "annual_volatility": 0.37029910773629704,
+            "terminal": 1.5432451329598509
+          },
+          "proxy": {
+            "cagr": 0.5468276109309498,
+            "max_drawdown": -0.21093227754525434,
+            "annual_volatility": 0.3710633536786863,
+            "terminal": 1.5468276109309498
+          }
+        },
+        "2022": {
+          "n": 251,
+          "daily_rmse": 0.00018833901662691974,
+          "daily_bias": 3.608983890115565e-05,
+          "annual_tracking_error": 0.00294024792441503,
+          "cagr_error": 0.0034453694325005113,
+          "drawdown_error": 0.0028338985160134555,
+          "terminal_relative_error": 0.008718114925750031,
+          "actual": {
+            "cagr": -0.6063784503742322,
+            "max_drawdown": -0.6309812032174906,
+            "annual_volatility": 0.6491762982397772,
+            "terminal": 0.39508059272528867
+          },
+          "proxy": {
+            "cagr": -0.6029330809417317,
+            "max_drawdown": -0.6281473047014772,
+            "annual_volatility": 0.6498302593605145,
+            "terminal": 0.3985249507376012
+          }
+        },
+        "2023": {
+          "n": 250,
+          "daily_rmse": 0.00028658675412105935,
+          "daily_bias": 2.2502664502298787e-05,
+          "annual_tracking_error": 0.0045444757306102625,
+          "cagr_error": 0.011879849967394662,
+          "drawdown_error": 0.001402571789044016,
+          "terminal_relative_error": 0.005395435692718165,
+          "actual": {
+            "cagr": 1.184311373546941,
+            "max_drawdown": -0.2261231818792654,
+            "annual_volatility": 0.36153851813110055,
+            "terminal": 2.1708088053535377
+          },
+          "proxy": {
+            "cagr": 1.1961912235143357,
+            "max_drawdown": -0.22472061009022137,
+            "annual_volatility": 0.3622070369910703,
+            "terminal": 2.182521264664009
+          }
+        },
+        "2024": {
+          "n": 252,
+          "daily_rmse": 0.0002862121142298881,
+          "daily_bias": 1.4990436177161008e-05,
+          "annual_tracking_error": 0.004546269761136626,
+          "cagr_error": 0.0048850161744438125,
+          "drawdown_error": 0.00012349580747239575,
+          "terminal_relative_error": 0.0034204449117685165,
+          "actual": {
+            "cagr": 0.42818150867921667,
+            "max_drawdown": -0.2621118690810462,
+            "annual_volatility": 0.3637225325622812,
+            "terminal": 1.4281815086792167
+          },
+          "proxy": {
+            "cagr": 0.4330665248536605,
+            "max_drawdown": -0.2619883732735738,
+            "annual_volatility": 0.3647109179737203,
+            "terminal": 1.4330665248536605
+          }
+        },
+        "2025": {
+          "n": 250,
+          "daily_rmse": 0.0002304782922177757,
+          "daily_bias": 2.2879779427668473e-05,
+          "annual_tracking_error": 0.00364796020972843,
+          "cagr_error": 0.0074296286685298085,
+          "drawdown_error": 0.0004921979871981286,
+          "terminal_relative_error": 0.005641765130055321,
+          "actual": {
+            "cagr": 0.3064169051172254,
+            "max_drawdown": -0.41887437363651436,
+            "annual_volatility": 0.4730363839608841,
+            "terminal": 1.3036484946873024
+          },
+          "proxy": {
+            "cagr": 0.3138465337857552,
+            "max_drawdown": -0.41838217564931623,
+            "annual_volatility": 0.4732606515131325,
+            "terminal": 1.3110033733064783
+          }
+        }
+      },
+      "by_holding_period_sessions": {
+        "21": {
+          "n": 71,
+          "median_relative_error": 0.00039456027933648663,
+          "max_abs_relative_error": 0.0012866133911120237
+        },
+        "63": {
+          "n": 69,
+          "median_relative_error": 0.001075323277077933,
+          "max_abs_relative_error": 0.003586910700837276
+        },
+        "252": {
+          "n": 60,
+          "median_relative_error": 0.004232071905704293,
+          "max_abs_relative_error": 0.00997134434360225
+        },
+        "1260": {
+          "n": 12,
+          "median_relative_error": 0.024504154150442936,
+          "max_abs_relative_error": 0.026349035760994788
+        }
+      },
+      "fitted_training_spread": 0.0048025920004569535,
+      "annual_fee_scenario": 0.0095,
+      "training_observations": 3405,
+      "index_convention": "Nasdaq-100 total-return index",
+      "actual_convention": "Issuer NAV, same-restatement cash reinvested at ex-date NAV",
+      "issuer_vs_vendor_total_return_errors": {
+        "n": 1508,
+        "daily_rmse": 0.0010169935240189887,
+        "daily_bias": 8.329897716301863e-06,
+        "annual_tracking_error": 0.016149085506213023,
+        "cagr_error": -0.0007779679549979601,
+        "drawdown_error": -4.690631465398276e-05,
+        "terminal_relative_error": -0.003592398015309528,
+        "actual": {
+          "cagr": 0.2939795065082338,
+          "max_drawdown": -0.6368448485510723,
+          "annual_volatility": 0.5067602542602007,
+          "terminal": 4.675066188983751
+        },
+        "proxy": {
+          "cagr": 0.29320153855323583,
+          "max_drawdown": -0.6368917548657262,
+          "annual_volatility": 0.5121959036105302,
+          "terminal": 4.658271490485005
+        }
+      },
+      "cash_distributions_reviewed": 25,
+      "certification_blockers": [
+        "Historical fee/waiver/swap/collateral cash-yield schedules incomplete",
+        "Already inspected evaluation period; source correction cannot create new independent evidence",
+        "Current revised/downloaded inputs, not decision-time archive"
+      ]
+    },
+    "UPRO": {
+      "errors": {
+        "n": 1508,
+        "daily_rmse": 0.00216393295403943,
+        "daily_bias": 1.7552042565918537e-05,
+        "annual_tracking_error": 0.03436163567859526,
+        "cagr_error": 0.01024311861460414,
+        "drawdown_error": 0.005029559320826049,
+        "terminal_relative_error": 0.05094182769490119,
+        "actual": {
+          "cagr": 0.22853702985144952,
+          "max_drawdown": -0.767271038926121,
+          "annual_volatility": 0.6274716785532188,
+          "terminal": 3.426972713450705
+        },
+        "proxy": {
+          "cagr": 0.23878014846605367,
+          "max_drawdown": -0.762241479605295,
+          "annual_volatility": 0.622327023867947,
+          "terminal": 3.601548966934439
+        }
+      },
+      "checks": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": true,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "numerical_pass": true,
+      "provenance_verified": false,
+      "passed": false,
+      "evidence": "HYPOTHETICAL_STRESS",
+      "gate": {
+        "min_observations": 504,
+        "daily_rmse": 0.003,
+        "daily_bias": 0.0002,
+        "annual_tracking_error": 0.05,
+        "cagr_error": 0.02,
+        "drawdown_error": 0.05,
+        "terminal_relative_error": 0.15
+      },
+      "gate_sha256": "fa62413c93af6fb5eccf9b9743c4ae3837b9c38a2e0c082b31ede64e1c73f512",
+      "by_year": {
+        "2020": {
+          "n": 253,
+          "daily_rmse": 0.003725224862100554,
+          "daily_bias": -2.531429168635056e-05,
+          "annual_tracking_error": 0.059251960670864495,
+          "cagr_error": 0.029872210114921582,
+          "drawdown_error": 0.005029559320826049,
+          "terminal_relative_error": 0.02722318343547192,
+          "actual": {
+            "cagr": 0.10172088471347229,
+            "max_drawdown": -0.767271038926121,
+            "annual_volatility": 1.0324658145655006,
+            "terminal": 1.102144487738698
+          },
+          "proxy": {
+            "cagr": 0.13159309482839388,
+            "max_drawdown": -0.762241479605295,
+            "annual_volatility": 1.0020536107390674,
+            "terminal": 1.132148369300803
+          }
+        },
+        "2021": {
+          "n": 252,
+          "daily_rmse": 0.0011491598040313147,
+          "daily_bias": 1.1774469760205205e-05,
+          "annual_tracking_error": 0.018277690056261037,
+          "cagr_error": 0.008246220518389524,
+          "drawdown_error": 0.0008404354137646619,
+          "terminal_relative_error": 0.004165534819885464,
+          "actual": {
+            "cagr": 0.9796306776800523,
+            "max_drawdown": -0.1524460730440934,
+            "annual_volatility": 0.39269503272047435,
+            "terminal": 1.9796306776800523
+          },
+          "proxy": {
+            "cagr": 0.9878768981984418,
+            "max_drawdown": -0.15160563763032875,
+            "annual_volatility": 0.3896674185520093,
+            "terminal": 1.9878768981984418
+          }
+        },
+        "2022": {
+          "n": 251,
+          "daily_rmse": 0.0012226977358604126,
+          "daily_bias": 4.277439654790494e-05,
+          "annual_tracking_error": 0.019436600825844114,
+          "cagr_error": 0.004053462278535314,
+          "drawdown_error": 0.0025052528538744845,
+          "terminal_relative_error": 0.009377565994510784,
+          "actual": {
+            "cagr": -0.5694722992741008,
+            "max_drawdown": -0.6396217224033427,
+            "annual_volatility": 0.7252691430658678,
+            "terminal": 0.4319698905229557
+          },
+          "proxy": {
+            "cagr": -0.5654188369955655,
+            "max_drawdown": -0.6371164695494682,
+            "annual_volatility": 0.7272635685168671,
+            "terminal": 0.4360207166789763
+          }
+        },
+        "2023": {
+          "n": 250,
+          "daily_rmse": 0.0009976842411256058,
+          "daily_bias": 2.3721679745848664e-05,
+          "annual_tracking_error": 0.01586503075263429,
+          "cagr_error": 0.010695212233907014,
+          "drawdown_error": 0.0014711575385314424,
+          "terminal_relative_error": 0.006273280050601793,
+          "actual": {
+            "cagr": 0.6913104185524508,
+            "max_drawdown": -0.3018441964422388,
+            "annual_volatility": 0.393021887692012,
+            "terminal": 1.6842712208796455
+          },
+          "proxy": {
+            "cagr": 0.7020056307863578,
+            "max_drawdown": -0.30037303890370737,
+            "annual_volatility": 0.3921553505387705,
+            "terminal": 1.6948371259293926
+          }
+        },
+        "2024": {
+          "n": 252,
+          "daily_rmse": 0.0014103065180253228,
+          "daily_bias": 1.2985017827621266e-05,
+          "annual_tracking_error": 0.02243152418151674,
+          "cagr_error": 0.006538390424391194,
+          "drawdown_error": 0.0014271793600156846,
+          "terminal_relative_error": 0.003999172264756989,
+          "actual": {
+            "cagr": 0.6349359296200867,
+            "max_drawdown": -0.24495484433363146,
+            "annual_volatility": 0.37926128789799524,
+            "terminal": 1.6349359296200867
+          },
+          "proxy": {
+            "cagr": 0.6414743200444779,
+            "max_drawdown": -0.24352766497361578,
+            "annual_volatility": 0.37734214808220423,
+            "terminal": 1.641474320044478
+          }
+        },
+        "2025": {
+          "n": 250,
+          "daily_rmse": 0.002892973891761759,
+          "daily_bias": 3.986724657573311e-05,
+          "annual_tracking_error": 0.046012292668972325,
+          "cagr_error": -0.0012108515824125199,
+          "drawdown_error": 0.0006116046950231935,
+          "terminal_relative_error": -0.0009077045019508789,
+          "actual": {
+            "cagr": 0.32338884455488204,
+            "max_drawdown": -0.4900258221094669,
+            "annual_volatility": 0.5622540354745478,
+            "terminal": 1.320449194216493
+          },
+          "proxy": {
+            "cagr": 0.3221779929724695,
+            "max_drawdown": -0.4894142174144437,
+            "annual_volatility": 0.5844062650569958,
+            "terminal": 1.3192506165383053
+          }
+        }
+      },
+      "by_holding_period_sessions": {
+        "21": {
+          "n": 71,
+          "median_relative_error": 0.0004335369456296423,
+          "max_abs_relative_error": 0.02380749472830246
+        },
+        "63": {
+          "n": 69,
+          "median_relative_error": 0.001212848072964512,
+          "max_abs_relative_error": 0.03327044450557226
+        },
+        "252": {
+          "n": 60,
+          "median_relative_error": 0.004139233753928218,
+          "max_abs_relative_error": 0.031567712799889014
+        },
+        "1260": {
+          "n": 12,
+          "median_relative_error": 0.020189687038528525,
+          "max_abs_relative_error": 0.05098625355580988
+        }
+      },
+      "fitted_training_spread": 0.004267900067511544,
+      "annual_fee_scenario": 0.0091,
+      "training_observations": 2647,
+      "index_convention": "Net ETF total-return PROXY; exact target index BLOCKED",
+      "actual_convention": "Issuer NAV, same-restatement cash reinvested at ex-date NAV",
+      "issuer_vs_vendor_total_return_errors": {
+        "n": 1508,
+        "daily_rmse": 0.0016639279594039323,
+        "daily_bias": 1.2409099480982978e-05,
+        "annual_tracking_error": 0.026422065013507245,
+        "cagr_error": -0.00022623116136921695,
+        "drawdown_error": 0.000897253781173224,
+        "terminal_relative_error": -0.0011012495589058924,
+        "actual": {
+          "cagr": 0.22876326101281874,
+          "max_drawdown": -0.7681682927072943,
+          "annual_volatility": 0.6222792591671589,
+          "terminal": 3.430750826284867
+        },
+        "proxy": {
+          "cagr": 0.22853702985144952,
+          "max_drawdown": -0.767271038926121,
+          "annual_volatility": 0.6274716785532188,
+          "terminal": 3.426972713450705
+        }
+      },
+      "cash_distributions_reviewed": 36,
+      "certification_blockers": [
+        "Historical fee/waiver/swap/collateral cash-yield schedules incomplete",
+        "Already inspected evaluation period; source correction cannot create new independent evidence",
+        "Current revised/downloaded inputs, not decision-time archive",
+        "Official S&P total-return index not available in this input bundle; SPY remains a proxy"
+      ]
+    },
+    "SSO": {
+      "errors": {
+        "n": 1508,
+        "daily_rmse": 0.001304870452938217,
+        "daily_bias": -5.461623655348889e-05,
+        "annual_tracking_error": 0.020702889248444958,
+        "cagr_error": -0.014909887718405068,
+        "drawdown_error": 0.0024174766659225133,
+        "terminal_relative_error": -0.07140147640240024,
+        "actual": {
+          "cagr": 0.2118995201546694,
+          "max_drawdown": -0.5916365656959343,
+          "annual_volatility": 0.4178569380952383,
+          "terminal": 3.158455876688201
+        },
+        "proxy": {
+          "cagr": 0.19698963243626433,
+          "max_drawdown": -0.5892190890300117,
+          "annual_volatility": 0.4148882989629597,
+          "terminal": 2.932937463940826
+        }
+      },
+      "checks": {
+        "min_observations": true,
+        "daily_rmse": true,
+        "daily_bias": true,
+        "annual_tracking_error": true,
+        "cagr_error": true,
+        "drawdown_error": true,
+        "terminal_relative_error": true
+      },
+      "numerical_pass": true,
+      "provenance_verified": false,
+      "passed": false,
+      "evidence": "HYPOTHETICAL_STRESS",
+      "gate": {
+        "min_observations": 504,
+        "daily_rmse": 0.003,
+        "daily_bias": 0.0002,
+        "annual_tracking_error": 0.05,
+        "cagr_error": 0.02,
+        "drawdown_error": 0.05,
+        "terminal_relative_error": 0.15
+      },
+      "gate_sha256": "fa62413c93af6fb5eccf9b9743c4ae3837b9c38a2e0c082b31ede64e1c73f512",
+      "by_year": {
+        "2020": {
+          "n": 253,
+          "daily_rmse": 0.0022560421469278733,
+          "daily_bias": -7.947206284482158e-05,
+          "annual_tracking_error": 0.03586227573740065,
+          "cagr_error": -0.008837611677635637,
+          "drawdown_error": 0.0024174766659225133,
+          "terminal_relative_error": -0.007302288424620551,
+          "actual": {
+            "cagr": 0.21503735430582682,
+            "max_drawdown": -0.5916365656959343,
+            "annual_volatility": 0.6863868637806956,
+            "terminal": 1.2159768390872412
+          },
+          "proxy": {
+            "cagr": 0.20619974262819118,
+            "max_drawdown": -0.5892190890300117,
+            "annual_volatility": 0.6680160514613912,
+            "terminal": 1.2070974254905678
+          }
+        },
+        "2021": {
+          "n": 252,
+          "daily_rmse": 0.0006845302518914035,
+          "daily_bias": -5.38753556556377e-05,
+          "annual_tracking_error": 0.010854430919332452,
+          "cagr_error": -0.020836231666709226,
+          "drawdown_error": -0.0010008090712706474,
+          "terminal_relative_error": -0.012999805441784362,
+          "actual": {
+            "cagr": 0.6028110389819201,
+            "max_drawdown": -0.10254919361891146,
+            "annual_volatility": 0.26157299877126294,
+            "terminal": 1.6028110389819201
+          },
+          "proxy": {
+            "cagr": 0.5819748073152109,
+            "max_drawdown": -0.10355000269018211,
+            "annual_volatility": 0.2597839590182177,
+            "terminal": 1.581974807315211
+          }
+        },
+        "2022": {
+          "n": 251,
+          "daily_rmse": 0.0007553515197717842,
+          "daily_bias": -4.538506730298457e-05,
+          "annual_tracking_error": 0.011993084041773286,
+          "cagr_error": -0.007350279901364387,
+          "drawdown_error": -0.004843809006153665,
+          "terminal_relative_error": -0.012013175591768399,
+          "actual": {
+            "cagr": -0.3905618065696428,
+            "max_drawdown": -0.46735860992145195,
+            "annual_volatility": 0.4834932104917486,
+            "terminal": 0.6106370082920155
+          },
+          "proxy": {
+            "cagr": -0.3979120864710072,
+            "max_drawdown": -0.4722024189276056,
+            "annual_volatility": 0.48487791223090027,
+            "terminal": 0.6033013186885714
+          }
+        },
+        "2023": {
+          "n": 250,
+          "daily_rmse": 0.0005875115587174746,
+          "daily_bias": -5.174519002181517e-05,
+          "annual_tracking_error": 0.009308849013047966,
+          "cagr_error": -0.018817102183086742,
+          "drawdown_error": -0.0023209718071885987,
+          "terminal_relative_error": -0.012706667411653605,
+          "actual": {
+            "cagr": 0.46920607726854047,
+            "max_drawdown": -0.20626741986456676,
+            "annual_volatility": 0.26194821542879604,
+            "terminal": 1.4647269177619595
+          },
+          "proxy": {
+            "cagr": 0.4503889750854537,
+            "max_drawdown": -0.20858839167175536,
+            "annual_volatility": 0.26144044632777297,
+            "terminal": 1.4461151199690618
+          }
+        },
+        "2024": {
+          "n": 252,
+          "daily_rmse": 0.000777629503726973,
+          "daily_bias": -5.782420775245795e-05,
+          "annual_tracking_error": 0.012334808040940167,
+          "cagr_error": -0.020384550464107143,
+          "drawdown_error": 6.863626196773609e-05,
+          "terminal_relative_error": -0.0142018930096377,
+          "actual": {
+            "cagr": 0.43534037682679116,
+            "max_drawdown": -0.1673329493801714,
+            "annual_volatility": 0.25255242584401383,
+            "terminal": 1.4353403768267912
+          },
+          "proxy": {
+            "cagr": 0.414955826362684,
+            "max_drawdown": -0.16726431311820367,
+            "annual_volatility": 0.25156108890513773,
+            "terminal": 1.414955826362684
+          }
+        },
+        "2025": {
+          "n": 250,
+          "daily_rmse": 0.00176632978028013,
+          "daily_bias": -3.911445378231343e-05,
+          "annual_tracking_error": 0.028088974382921104,
+          "cagr_error": -0.018333804014499355,
+          "drawdown_error": -0.00086631865143727,
+          "terminal_relative_error": -0.014382529642056219,
+          "actual": {
+            "cagr": 0.2646835802980254,
+            "max_drawdown": -0.3527687286725414,
+            "annual_volatility": 0.37574757229610956,
+            "terminal": 1.2623288270185096
+          },
+          "proxy": {
+            "cagr": 0.24634977628352606,
+            "max_drawdown": -0.35363504732397866,
+            "annual_volatility": 0.38959959146148215,
+            "terminal": 1.2441733452458938
+          }
+        }
+      },
+      "by_holding_period_sessions": {
+        "21": {
+          "n": 71,
+          "median_relative_error": -0.001134023150839325,
+          "max_abs_relative_error": 0.006193062500054136
+        },
+        "63": {
+          "n": 69,
+          "median_relative_error": -0.003434145875385708,
+          "max_abs_relative_error": 0.007515964506323414
+        },
+        "252": {
+          "n": 60,
+          "median_relative_error": -0.013852304693121431,
+          "max_abs_relative_error": 0.01777088998773735
+        },
+        "1260": {
+          "n": 12,
+          "median_relative_error": -0.06574946189924824,
+          "max_abs_relative_error": 0.07048466710292334
+        }
+      },
+      "fitted_training_spread": 0.01940907961220159,
+      "annual_fee_scenario": 0.0089,
+      "training_observations": 3405,
+      "index_convention": "Net ETF total-return PROXY; exact target index BLOCKED",
+      "actual_convention": "Issuer NAV, same-restatement cash reinvested at ex-date NAV",
+      "issuer_vs_vendor_total_return_errors": {
+        "n": 1508,
+        "daily_rmse": 0.0009746785979850871,
+        "daily_bias": 3.003086873193085e-06,
+        "annual_tracking_error": 0.015477602310770566,
+        "cagr_error": -0.00021457529764257188,
+        "drawdown_error": 0.0017740757214906866,
+        "terminal_relative_error": -0.001058876798902486,
+        "actual": {
+          "cagr": 0.21211409545231197,
+          "max_drawdown": -0.5934106414174249,
+          "annual_volatility": 0.41561648581216554,
+          "terminal": 3.16180383741432
+        },
+        "proxy": {
+          "cagr": 0.2118995201546694,
+          "max_drawdown": -0.5916365656959343,
+          "annual_volatility": 0.4178569380952383,
+          "terminal": 3.158455876688201
+        }
+      },
+      "cash_distributions_reviewed": 43,
+      "certification_blockers": [
+        "Historical fee/waiver/swap/collateral cash-yield schedules incomplete",
+        "Already inspected evaluation period; source correction cannot create new independent evidence",
+        "Current revised/downloaded inputs, not decision-time archive",
+        "Official S&P total-return index not available in this input bundle; SPY remains a proxy"
+      ]
+    }
+  }
+}

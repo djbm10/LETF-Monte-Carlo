@@ -1,0 +1,25 @@
+
+================================================================================
+FORWARD REALISM TESTS (T18–T27)
+================================================================================
+
+  [T18] PASS: all 10 required keys present
+  [T19] PASS: score=59.5
+  [T20] FAIL: realistic GARCH path score=59.5 < 65 (baselines or GARCH params may need tuning)
+  [T21] PASS: crisis path score=24.7 < 50
+  [T22] PASS: median=42.1 p10=28.2 p90=56.0
+  [T23] PASS: STRICT blocks: median_score=24.7 < threshold=70.0; p10_score=24.7 < threshold=50.0
+  [T24] PASS: WARN_ONLY does not block (warn only)
+  [T25] PASS: SKIP mode never blocks
+  [T26] PASS: attribution output contains all component names
+     Pool A (economy): Low vol=11, High vol=108
+     Pool B (tech):    Low vol=11, High vol=108
+  [INFO] BlockBootstrapReturns initialized:
+     Block size: 42 days (max, variable length in use)
+     Pool A (economy): Low vol=11, High vol=108
+     Pool B (tech):    Low vol=11, High vol=108
+  [T27] FAIL: BlockBootstrapReturns.sample_returns() got an unexpected keyword argument 'max_crisis_chain'
+
+  Forward realism tests: 8/10 passed
+  Some forward realism tests FAILED — see details above
+================================================================================

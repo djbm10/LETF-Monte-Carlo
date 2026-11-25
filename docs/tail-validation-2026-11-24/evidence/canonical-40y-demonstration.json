@@ -1,0 +1,660 @@
+{
+  "evidence": "HYPOTHETICAL_STRESS",
+  "investment_performance_certification": "BLOCKED",
+  "source_catalog_sha256": "1d0147b5c242baa5055ba3f9f42e4130ba23dfa2c97287040b2f53c29dcac376",
+  "model_id": "b3d214cf1c3c00c3114bc772826b765d9c78f6142a197985f7f72f6f67f0d436",
+  "forecast_id": "e7216ba46e222c64268e4addf8d2b0545d45b710a21e7aa31db34bb5341bb46c",
+  "model_type": "volatility_stationary_block",
+  "model_approval": "UNAPPROVED_RESEARCH_MODEL",
+  "daily_bridge": "empirical_variance_template",
+  "calibration_end_requested": "2026-09-30",
+  "training_end_actual": "2026-07-31",
+  "columns": [
+    "equity_log",
+    "short_rate",
+    "inflation_log",
+    "production_log",
+    "credit_spread",
+    "equity_log_variance"
+  ],
+  "blind_nowcast_bridge_months": 5,
+  "incomplete_training_months": 2,
+  "seed": 20261124,
+  "paths": 1,
+  "horizons": [
+    40
+  ],
+  "frozen_tax_and_roth_eligibility_year": 2026,
+  "initial_capital": 10000.0,
+  "annual_contribution": 0.0,
+  "monthly_withdrawal": 0.0,
+  "filing_status": "single",
+  "ordinary_income": 100000.0,
+  "state": "FEDERAL_ONLY",
+  "supplied_roth_owner_history": null,
+  "supplied_annual_roth_magi": null,
+  "supplied_annual_eligible_compensation": null,
+  "conditional_assumptions": {
+    "reference_rate": null,
+    "annual_inflation": null,
+    "annual_production_growth": null,
+    "constant_monthly_equity_annualized_constraint": null,
+    "equity_log_intercept_shift": null,
+    "joint_volatility_multiplier": 1.0,
+    "innovation_stock_bond_correlation": null,
+    "crash_month_zero_based": null,
+    "crash_return": null,
+    "annual_fund_fee": 0.01,
+    "borrowing_spread": 0.015,
+    "quarterly_nonqualified_distribution_yield": 0.01,
+    "cash_sweep": "max(reference rate minus 0.5%, 0) nominal APR; generic assumed contract",
+    "rebalance": "every 21 trading sessions",
+    "tax_payment": "assumed April15 advanced to next projected XNYS session"
+  },
+  "results": [
+    {
+      "horizon": 40,
+      "account": "taxable",
+      "strategy": "US1X_CF",
+      "paths": 1,
+      "wealth_p10_p50_p90": [
+        2617047.3465814637,
+        2617047.3465814637,
+        2617047.3465814637
+      ],
+      "purchasing_power_p10_p50_p90": [
+        829147.2551169976,
+        829147.2551169976,
+        829147.2551169976
+      ],
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "median_tax_drag_dollars": 776931.0341451837,
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.7934506856227626
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.7934506856227626
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.7934506856227626
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.7934506856227626
+        ]
+      },
+      "median_max_underwater_sessions": 1070.0
+    },
+    {
+      "horizon": 40,
+      "account": "taxable",
+      "strategy": "US2X_CF",
+      "paths": 1,
+      "wealth_p10_p50_p90": [
+        29475545.78089933,
+        29475545.78089933,
+        29475545.78089933
+      ],
+      "purchasing_power_p10_p50_p90": [
+        9338603.640179623,
+        9338603.640179623,
+        9338603.640179623
+      ],
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "median_tax_drag_dollars": 9304354.958584528,
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.20654931437723745,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.7934506856227626
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.7934506856227626
+        ],
+        "outperform_paired_1x": [
+          0.20654931437723745,
+          1.0
+        ]
+      },
+      "median_max_underwater_sessions": 1402.0
+    },
+    {
+      "horizon": 40,
+      "account": "taxable",
+      "strategy": "US3X_CF",
+      "paths": 1,
+      "wealth_p10_p50_p90": [
+        173876272.61625335,
+        173876272.61625335,
+        173876272.61625335
+      ],
+      "purchasing_power_p10_p50_p90": [
+        55088431.76187204,
+        55088431.76187204,
+        55088431.76187204
+      ],
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "median_tax_drag_dollars": 55674887.62036584,
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.20654931437723745,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.7934506856227626
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.7934506856227626
+        ],
+        "outperform_paired_1x": [
+          0.20654931437723745,
+          1.0
+        ]
+      },
+      "median_max_underwater_sessions": 1601.0
+    },
+    {
+      "horizon": 40,
+      "account": "taxable",
+      "strategy": "EQUITY60_CASH40_CF",
+      "paths": 1,
+      "wealth_p10_p50_p90": [
+        394266.56934698205,
+        394266.56934698205,
+        394266.56934698205
+      ],
+      "purchasing_power_p10_p50_p90": [
+        124913.69106694518,
+        124913.69106694518,
+        124913.69106694518
+      ],
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "median_tax_drag_dollars": 79707.10133878342,
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.7934506856227626
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.7934506856227626
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.7934506856227626
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.7934506856227626
+        ]
+      },
+      "median_max_underwater_sessions": 853.0
+    },
+    {
+      "horizon": 40,
+      "account": "roth",
+      "strategy": "US1X_CF",
+      "paths": 1,
+      "wealth_p10_p50_p90": [
+        3639523.9889508802,
+        3639523.9889508802,
+        3639523.9889508802
+      ],
+      "purchasing_power_p10_p50_p90": [
+        1153093.8977137657,
+        1153093.8977137657,
+        1153093.8977137657
+      ],
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "median_tax_drag_dollars": 0.0,
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.7934506856227626
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.7934506856227626
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.7934506856227626
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.7934506856227626
+        ]
+      },
+      "median_max_underwater_sessions": 860.0
+    },
+    {
+      "horizon": 40,
+      "account": "roth",
+      "strategy": "US2X_CF",
+      "paths": 1,
+      "wealth_p10_p50_p90": [
+        41821089.04607223,
+        41821089.04607223,
+        41821089.04607223
+      ],
+      "purchasing_power_p10_p50_p90": [
+        13249986.185328241,
+        13249986.185328241,
+        13249986.185328241
+      ],
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "median_tax_drag_dollars": 0.0,
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.20654931437723745,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.7934506856227626
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.7934506856227626
+        ],
+        "outperform_paired_1x": [
+          0.20654931437723745,
+          1.0
+        ]
+      },
+      "median_max_underwater_sessions": 1402.0
+    },
+    {
+      "horizon": 40,
+      "account": "roth",
+      "strategy": "US3X_CF",
+      "paths": 1,
+      "wealth_p10_p50_p90": [
+        250273085.5711084,
+        250273085.5711084,
+        250273085.5711084
+      ],
+      "purchasing_power_p10_p50_p90": [
+        79292887.91890281,
+        79292887.91890281,
+        79292887.91890281
+      ],
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "median_tax_drag_dollars": 0.0,
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.20654931437723745,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.7934506856227626
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.7934506856227626
+        ],
+        "outperform_paired_1x": [
+          0.20654931437723745,
+          1.0
+        ]
+      },
+      "median_max_underwater_sessions": 1502.0
+    },
+    {
+      "horizon": 40,
+      "account": "roth",
+      "strategy": "EQUITY60_CASH40_CF",
+      "paths": 1,
+      "wealth_p10_p50_p90": [
+        632030.1691961202,
+        632030.1691961202,
+        632030.1691961202
+      ],
+      "purchasing_power_p10_p50_p90": [
+        200243.2552948014,
+        200243.2552948014,
+        200243.2552948014
+      ],
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "median_tax_drag_dollars": 0.0,
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.7934506856227626
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.7934506856227626
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.7934506856227626
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.7934506856227626
+        ]
+      },
+      "median_max_underwater_sessions": 735.0
+    }
+  ],
+  "path_results": [
+    {
+      "path": 0,
+      "horizon": 40,
+      "strategy": "US1X_CF",
+      "account": "taxable",
+      "net_terminal_wealth": 2617047.3465814637,
+      "real_terminal_wealth": 829147.2551169976,
+      "tax_paid": 45047.38346619233,
+      "terminal_tax_payable": 731883.6506789915,
+      "metrics": {
+        "ending_wealth": 2617047.3465814637,
+        "max_drawdown": 0.3610494649685947,
+        "max_underwater_sessions": 1070,
+        "cagr": 0.14937196958227017,
+        "real_cagr": 0.11680652430587424,
+        "money_weighted_return": null,
+        "inflation_missing_interior_observations": 10040,
+        "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+        "time_weighted_cagr": 0.14937196958227017,
+        "real_time_weighted_cagr": 0.11680652430587424
+      },
+      "trading_costs": 709.308138353179,
+      "cost_attribution": {
+        "fund_fee_dollars_approx": 0.0,
+        "financing_dollars_approx": 0.0,
+        "method": "Modeled internal rate charges times held opening NAV; overnight charges before entry/exit make this an attribution approximation, not a cash debit"
+      },
+      "fund_liquidation": false,
+      "cash_residual_max": 0.0,
+      "terminal_wealth_scope": "Account assets net of modeled investment tax payable",
+      "nav_residual_max": 5.122274160385132e-09
+    },
+    {
+      "path": 0,
+      "horizon": 40,
+      "strategy": "US1X_CF",
+      "account": "roth",
+      "net_terminal_wealth": 3639523.9889508802,
+      "real_terminal_wealth": 1153093.8977137657,
+      "tax_paid": 0.0,
+      "terminal_tax_payable": 0.0,
+      "metrics": {
+        "ending_wealth": 3639523.9889508802,
+        "max_drawdown": 0.3591821950286511,
+        "max_underwater_sessions": 860,
+        "cagr": 0.1588903159719437,
+        "real_cagr": 0.1260551849918088,
+        "money_weighted_return": null,
+        "inflation_missing_interior_observations": 10040,
+        "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+        "time_weighted_cagr": 0.1588903159719437,
+        "real_time_weighted_cagr": 0.1260551849918088
+      },
+      "trading_costs": 775.7874480883185,
+      "cost_attribution": {
+        "fund_fee_dollars_approx": 0.0,
+        "financing_dollars_approx": 0.0,
+        "method": "Modeled internal rate charges times held opening NAV; overnight charges before entry/exit make this an attribution approximation, not a cash debit"
+      },
+      "fund_liquidation": false,
+      "cash_residual_max": 0.0,
+      "terminal_wealth_scope": "Cash inside the Roth after internal liquidation; personal distribution not executed",
+      "nav_residual_max": 6.51925802230835e-09
+    },
+    {
+      "path": 0,
+      "horizon": 40,
+      "strategy": "US2X_CF",
+      "account": "taxable",
+      "net_terminal_wealth": 29475545.78089933,
+      "real_terminal_wealth": 9338603.640179623,
+      "tax_paid": 397942.5361703214,
+      "terminal_tax_payable": 8906412.422414208,
+      "metrics": {
+        "ending_wealth": 29475545.78089933,
+        "max_drawdown": 0.7038506015959073,
+        "max_underwater_sessions": 1402,
+        "cagr": 0.22112048975673204,
+        "real_cagr": 0.1865221756012969,
+        "money_weighted_return": null,
+        "inflation_missing_interior_observations": 10040,
+        "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+        "time_weighted_cagr": 0.22112048975673204,
+        "real_time_weighted_cagr": 0.1865221756012969
+      },
+      "trading_costs": 7946.790914523104,
+      "cost_attribution": {
+        "fund_fee_dollars_approx": 1763198.881643362,
+        "financing_dollars_approx": 9743326.937031047,
+        "method": "Modeled internal rate charges times held opening NAV; overnight charges before entry/exit make this an attribution approximation, not a cash debit"
+      },
+      "fund_liquidation": false,
+      "cash_residual_max": 0.0,
+      "terminal_wealth_scope": "Account assets net of modeled investment tax payable",
+      "nav_residual_max": 8.195638656616211e-08
+    },
+    {
+      "path": 0,
+      "horizon": 40,
+      "strategy": "US2X_CF",
+      "account": "roth",
+      "net_terminal_wealth": 41821089.04607223,
+      "real_terminal_wealth": 13249986.185328241,
+      "tax_paid": 0.0,
+      "terminal_tax_payable": 0.0,
+      "metrics": {
+        "ending_wealth": 41821089.04607223,
+        "max_drawdown": 0.7006581129962708,
+        "max_underwater_sessions": 1402,
+        "cagr": 0.2318499714900657,
+        "real_cagr": 0.1969476562283934,
+        "money_weighted_return": null,
+        "inflation_missing_interior_observations": 10040,
+        "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+        "time_weighted_cagr": 0.2318499714900657,
+        "real_time_weighted_cagr": 0.1969476562283934
+      },
+      "trading_costs": 8718.200615470867,
+      "cost_attribution": {
+        "fund_fee_dollars_approx": 1900716.5141395943,
+        "financing_dollars_approx": 10498450.957425017,
+        "method": "Modeled internal rate charges times held opening NAV; overnight charges before entry/exit make this an attribution approximation, not a cash debit"
+      },
+      "fund_liquidation": false,
+      "cash_residual_max": 0.0,
+      "terminal_wealth_scope": "Cash inside the Roth after internal liquidation; personal distribution not executed",
+      "nav_residual_max": 8.940696716308594e-08
+    },
+    {
+      "path": 0,
+      "horizon": 40,
+      "strategy": "US3X_CF",
+      "account": "taxable",
+      "net_terminal_wealth": 173876272.61625335,
+      "real_terminal_wealth": 55088431.76187204,
+      "tax_paid": 2232701.352687334,
+      "terminal_tax_payable": 53442186.26767851,
+      "metrics": {
+        "ending_wealth": 173876272.61625335,
+        "max_drawdown": 0.8881434698798066,
+        "max_underwater_sessions": 1601,
+        "cagr": 0.27653539611822175,
+        "real_cagr": 0.24036699747458767,
+        "money_weighted_return": null,
+        "inflation_missing_interior_observations": 10040,
+        "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+        "time_weighted_cagr": 0.27653539611822175,
+        "real_time_weighted_cagr": 0.24036699747458767
+      },
+      "trading_costs": 46657.18813162504,
+      "cost_attribution": {
+        "fund_fee_dollars_approx": 7932697.471195189,
+        "financing_dollars_approx": 86941661.1857043,
+        "method": "Modeled internal rate charges times held opening NAV; overnight charges before entry/exit make this an attribution approximation, not a cash debit"
+      },
+      "fund_liquidation": false,
+      "cash_residual_max": 0.0,
+      "terminal_wealth_scope": "Account assets net of modeled investment tax payable",
+      "nav_residual_max": 4.76837158203125e-07
+    },
+    {
+      "path": 0,
+      "horizon": 40,
+      "strategy": "US3X_CF",
+      "account": "roth",
+      "net_terminal_wealth": 250273085.5711084,
+      "real_terminal_wealth": 79292887.91890281,
+      "tax_paid": 0.0,
+      "terminal_tax_payable": 0.0,
+      "metrics": {
+        "ending_wealth": 250273085.5711084,
+        "max_drawdown": 0.8867325273226384,
+        "max_underwater_sessions": 1502,
+        "cagr": 0.28821457622945035,
+        "real_cagr": 0.2517152684364279,
+        "money_weighted_return": null,
+        "inflation_missing_interior_observations": 10040,
+        "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+        "time_weighted_cagr": 0.28821457622945035,
+        "real_time_weighted_cagr": 0.2517152684364279
+      },
+      "trading_costs": 51618.47121507088,
+      "cost_attribution": {
+        "fund_fee_dollars_approx": 8641522.856694827,
+        "financing_dollars_approx": 94649898.70581435,
+        "method": "Modeled internal rate charges times held opening NAV; overnight charges before entry/exit make this an attribution approximation, not a cash debit"
+      },
+      "fund_liquidation": false,
+      "cash_residual_max": 0.0,
+      "terminal_wealth_scope": "Cash inside the Roth after internal liquidation; personal distribution not executed",
+      "nav_residual_max": 4.172325134277344e-07
+    },
+    {
+      "path": 0,
+      "horizon": 40,
+      "strategy": "EQUITY60_CASH40_CF",
+      "account": "taxable",
+      "net_terminal_wealth": 394266.56934698205,
+      "real_terminal_wealth": 124913.69106694518,
+      "tax_paid": 44659.14198781318,
+      "terminal_tax_payable": 35047.95935097024,
+      "metrics": {
+        "ending_wealth": 394266.56934698205,
+        "max_drawdown": 0.22720127464982087,
+        "max_underwater_sessions": 853,
+        "cagr": 0.09623800662550108,
+        "real_cagr": 0.06517801929377365,
+        "money_weighted_return": null,
+        "inflation_missing_interior_observations": 10040,
+        "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+        "time_weighted_cagr": 0.09623800662550108,
+        "real_time_weighted_cagr": 0.06517801929377365
+      },
+      "trading_costs": 122.64855510249544,
+      "cost_attribution": {
+        "fund_fee_dollars_approx": 0.0,
+        "financing_dollars_approx": 0.0,
+        "method": "Modeled internal rate charges times held opening NAV; overnight charges before entry/exit make this an attribution approximation, not a cash debit"
+      },
+      "fund_liquidation": false,
+      "cash_residual_max": 0.0,
+      "terminal_wealth_scope": "Account assets net of modeled investment tax payable",
+      "nav_residual_max": 3.4924596548080444e-10
+    },
+    {
+      "path": 0,
+      "horizon": 40,
+      "strategy": "EQUITY60_CASH40_CF",
+      "account": "roth",
+      "net_terminal_wealth": 632030.1691961202,
+      "real_terminal_wealth": 200243.2552948014,
+      "tax_paid": 0.0,
+      "terminal_tax_payable": 0.0,
+      "metrics": {
+        "ending_wealth": 632030.1691961202,
+        "max_drawdown": 0.21750453021463068,
+        "max_underwater_sessions": 735,
+        "cagr": 0.10925105215738906,
+        "real_cagr": 0.07782236293161571,
+        "money_weighted_return": null,
+        "inflation_missing_interior_observations": 10040,
+        "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+        "time_weighted_cagr": 0.10925105215738906,
+        "real_time_weighted_cagr": 0.07782236293161571
+      },
+      "trading_costs": 165.2954746560581,
+      "cost_attribution": {
+        "fund_fee_dollars_approx": 0.0,
+        "financing_dollars_approx": 0.0,
+        "method": "Modeled internal rate charges times held opening NAV; overnight charges before entry/exit make this an attribution approximation, not a cash debit"
+      },
+      "fund_liquidation": false,
+      "cash_residual_max": 0.0,
+      "terminal_wealth_scope": "Cash inside the Roth after internal liquidation; personal distribution not executed",
+      "nav_residual_max": 6.984919309616089e-10
+    }
+  ],
+  "macro_diagnostics": [
+    {
+      "path": 0,
+      "short_rate_min": 0.0,
+      "short_rate_max": 0.09902948120543748,
+      "monthly_equity_log_mean": 0.012288454936891265,
+      "diagnostic_bond_only": "Zero-bond model is a scenario diagnostic; taxable bond OID/distribution mechanics not certified"
+    }
+  ],
+  "uncertainty": {
+    "conditional_monte_carlo_paths": 1,
+    "convergence_certified": false,
+    "parameter_uncertainty": "Not included in these conditional path percentiles; compare training/model/specification sensitivities separately",
+    "source_uncertainty": "Current revised market history and limited macro vintages; research only"
+  },
+  "limitations": [
+    "Synthetic daily bridge, fund units and distribution policy are hypothetical, not observed TQQQ/UPRO quotes",
+    "Interest/inflation/growth interventions are conditional statistical assumptions, not identified causal effects",
+    "Fund price floor produces explicit closure; closed units cannot be bought or resurrected",
+    "Future tax law and Roth eligibility are explicit frozen-year assumptions; no prediction of enacted future law",
+    "Government bonds, futures and options are not ranked as interchangeable ETF sleeve implementations",
+    "Stock/bond correlation is an innovation intervention; realized correlation need not equal its input",
+    "Ordinary distribution policy is a disclosed tax stress assumption, not predicted future issuer classification",
+    "Internal expense attribution uses opening exposure approximately; expenses are deducted only once in modeled NAV",
+    "Small demonstration path counts do not establish calibrated real-world probabilities"
+  ]
+}

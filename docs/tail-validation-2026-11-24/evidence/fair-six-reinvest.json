@@ -1,0 +1,1554 @@
+{
+  "data_status": "OBSERVED",
+  "execution_status": "HYPOTHETICAL_STRESS",
+  "investment_performance_certification": "BLOCKED",
+  "common_inputs": {
+    "start": "2024-01-02",
+    "end": "2025-12-31",
+    "initial_capital": 100000.0,
+    "state": "FEDERAL_ONLY",
+    "filing_status": "single",
+    "ordinary_income": 100000.0,
+    "allocation": "Buy, hold and terminal sell",
+    "cash_distributions": "Reinvest through common daily allocation rule",
+    "cash_yield": 0.0,
+    "spread_bps": 2.0,
+    "slippage_bps": 1.0,
+    "fees": "Observed fund costs embedded in prices, never deducted twice"
+  },
+  "funds": {
+    "QLD": {
+      "data_status": "OBSERVED",
+      "execution_status": "HYPOTHETICAL_STRESS",
+      "investment_performance_certification": "BLOCKED",
+      "reason": "Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return",
+      "strategy": {
+        "rule": "buy_hold",
+        "lookback_sessions": 50,
+        "symbol": "QLD"
+      },
+      "cash_distribution_policy": "Reinvest through ordinary strategy rebalancing",
+      "qualified_holding_policy": "track_unhedged_common",
+      "start": "2024-01-02",
+      "end": "2025-12-31",
+      "source_manifest_sha256": "429283506c2a8ebfb0f2e3b2074d62103099a3618941aa327a9222bca33d203d",
+      "identical_pre_tax_trades": true,
+      "pre_tax_trade_count": 10,
+      "pre_tax_wealth": 189479.44676825515,
+      "accounts": {
+        "taxable": {
+          "ending_wealth_net_payable": 176021.22258773283,
+          "tax_paid": 55.1607763616812,
+          "terminal_tax_payable": 13366.750334102573,
+          "metrics": {
+            "ending_wealth": 176021.22258773283,
+            "max_drawdown": 0.4228806777750108,
+            "max_underwater_sessions": 143,
+            "cagr": 0.32749419032912686,
+            "real_cagr": 0.29500430808025313,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.32749419032912686,
+            "real_time_weighted_cagr": 0.29500430808025313
+          },
+          "trading_costs": 58.02905334427,
+          "tax_rows": [
+            {
+              "tax": 55.1607763616812,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 0.0,
+              "taxable_lt": 0.0,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13841.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 55.16077636168207,
+                "federal_total": 13896.160776361681,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13896.160776361681,
+                "effective_rate": 0.13845246473402234,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 518900,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 367.73850907788045,
+                      "tax_in_bracket": 55.16077636168207,
+                      "income_range": [
+                        85400.0,
+                        85767.73850907788
+                      ]
+                    }
+                  ],
+                  "total": 55.16077636168207,
+                  "ordinary_income_base": 85400.0,
+                  "ltcg_amount": 367.73850907788045,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13841.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13841.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13841.0,
+                "effective_rate": 0.13841,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2024,
+              "paid_on": "2025-04-15"
+            },
+            {
+              "tax": 13366.750334102573,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 77.72936763848813,
+              "taxable_lt": 88681.03466590543,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 17.100460880466926,
+                "federal_ltcg": 13349.649873222104,
+                "federal_total": 26815.750334102573,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 26815.750334102573,
+                "effective_rate": 0.14182570031008324,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 533400,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 88997.6658214807,
+                      "tax_in_bracket": 13349.649873222104,
+                      "income_range": [
+                        84327.72936763849,
+                        173325.39518911918
+                      ]
+                    }
+                  ],
+                  "total": 13349.649873222104,
+                  "ordinary_income_base": 84327.72936763849,
+                  "ltcg_amount": 88997.6658214807,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13449.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13449.0,
+                "effective_rate": 0.13449,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2025,
+              "paid_on": null
+            }
+          ],
+          "trade_count": 11,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "QLD": 0.0
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 189387.9729218354,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        },
+        "roth": {
+          "ending_wealth_net_payable": 189479.44676825515,
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "metrics": {
+            "ending_wealth": 189479.44676825515,
+            "max_drawdown": 0.4228806777750108,
+            "max_underwater_sessions": 143,
+            "cagr": 0.3774116635754594,
+            "real_cagr": 0.3437000714014127,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.3774116635754594,
+            "real_time_weighted_cagr": 0.3437000714014127
+          },
+          "trading_costs": 58.03634466512685,
+          "tax_rows": [],
+          "trade_count": 10,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "QLD": 1.346700528870315e-13
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 189479.44676825515,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        }
+      },
+      "assumptions": {
+        "state": "FEDERAL_ONLY",
+        "filing_status": "single",
+        "ordinary_income": 100000.0,
+        "settlement": "US T+2/T+1 effective dates",
+        "spread_bps": 2.0,
+        "slippage_bps": 1.0,
+        "commission": 0.0,
+        "cash_sweep_yield": 0.0,
+        "roth_owner_history": null,
+        "initial_roth_balance": "Existing balance, not a new contribution; internal liquidation does not execute a personal distribution",
+        "tax_timing": "Annual settlement funded; sufficient external salary withholding assumed for safe harbor",
+        "cpi": "Monthly CPI-U NSA mapped to its observation month for ex-post metrics only"
+      }
+    },
+    "QQQ": {
+      "data_status": "OBSERVED",
+      "execution_status": "HYPOTHETICAL_STRESS",
+      "investment_performance_certification": "BLOCKED",
+      "reason": "Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return",
+      "strategy": {
+        "rule": "buy_hold",
+        "lookback_sessions": 50,
+        "symbol": "QQQ"
+      },
+      "cash_distribution_policy": "Reinvest through ordinary strategy rebalancing",
+      "qualified_holding_policy": "track_unhedged_common",
+      "start": "2024-01-02",
+      "end": "2025-12-31",
+      "source_manifest_sha256": "7643e2acda58c1bf97370aa45bf4e653b4cc0f8f93340e4f120c00b2c365f846",
+      "identical_pre_tax_trades": true,
+      "pre_tax_trade_count": 10,
+      "pre_tax_wealth": 152961.297542628,
+      "accounts": {
+        "taxable": {
+          "ending_wealth_net_payable": 144980.96412837022,
+          "tax_paid": 105.43079531623698,
+          "terminal_tax_payable": 7840.41199062554,
+          "metrics": {
+            "ending_wealth": 144980.96412837022,
+            "max_drawdown": 0.22750650120212512,
+            "max_underwater_sessions": 85,
+            "cagr": 0.20453601573757685,
+            "real_cagr": 0.17505548497447165,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.20453601573757685,
+            "real_time_weighted_cagr": 0.17505548497447165
+          },
+          "trading_costs": 50.866706186382295,
+          "tax_rows": [
+            {
+              "tax": 105.43079531623698,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 0.0,
+              "taxable_lt": 0.0,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13841.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 105.4307953162361,
+                "federal_total": 13946.430795316237,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13946.430795316237,
+                "effective_rate": 0.13849089427797678,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 518900,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 702.8719687749074,
+                      "tax_in_bracket": 105.4307953162361,
+                      "income_range": [
+                        85400.0,
+                        86102.87196877491
+                      ]
+                    }
+                  ],
+                  "total": 105.4307953162361,
+                  "ordinary_income_base": 85400.0,
+                  "ltcg_amount": 702.8719687749074,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13841.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13841.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13841.0,
+                "effective_rate": 0.13841,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2024,
+              "paid_on": "2025-04-15"
+            },
+            {
+              "tax": 7840.41199062554,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 97.4535542139163,
+              "taxable_lt": 51432.94559558695,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 21.43978192706345,
+                "federal_ltcg": 7818.9722086984775,
+                "federal_total": 21289.41199062554,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 21289.41199062554,
+                "effective_rate": 0.1398558774495121,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 533400,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 52126.481391323185,
+                      "tax_in_bracket": 7818.9722086984775,
+                      "income_range": [
+                        84347.45355421392,
+                        136473.9349455371
+                      ]
+                    }
+                  ],
+                  "total": 7818.9722086984775,
+                  "ordinary_income_base": 84347.45355421392,
+                  "ltcg_amount": 52126.481391323185,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13449.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13449.0,
+                "effective_rate": 0.13449,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2025,
+              "paid_on": null
+            }
+          ],
+          "trade_count": 11,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "QQQ": 0.0
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 152821.37611899577,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        },
+        "roth": {
+          "ending_wealth_net_payable": 152961.297542628,
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "metrics": {
+            "ending_wealth": 152961.297542628,
+            "max_drawdown": 0.22750650120212512,
+            "max_underwater_sessions": 85,
+            "cagr": 0.23731073020362548,
+            "real_cagr": 0.20702805158819815,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.23731073020362548,
+            "real_time_weighted_cagr": 0.20702805158819815
+          },
+          "trading_costs": 50.87370019242519,
+          "tax_rows": [],
+          "trade_count": 10,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "QQQ": 0.0
+          },
+          "final_cash": 2.842170943040401e-14,
+          "unsettled_liquidation_proceeds": 152961.297542628,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        }
+      },
+      "assumptions": {
+        "state": "FEDERAL_ONLY",
+        "filing_status": "single",
+        "ordinary_income": 100000.0,
+        "settlement": "US T+2/T+1 effective dates",
+        "spread_bps": 2.0,
+        "slippage_bps": 1.0,
+        "commission": 0.0,
+        "cash_sweep_yield": 0.0,
+        "roth_owner_history": null,
+        "initial_roth_balance": "Existing balance, not a new contribution; internal liquidation does not execute a personal distribution",
+        "tax_timing": "Annual settlement funded; sufficient external salary withholding assumed for safe harbor",
+        "cpi": "Monthly CPI-U NSA mapped to its observation month for ex-post metrics only"
+      }
+    },
+    "SSO": {
+      "data_status": "OBSERVED",
+      "execution_status": "HYPOTHETICAL_STRESS",
+      "investment_performance_certification": "BLOCKED",
+      "reason": "Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return",
+      "strategy": {
+        "rule": "buy_hold",
+        "lookback_sessions": 50,
+        "symbol": "SSO"
+      },
+      "cash_distribution_policy": "Reinvest through ordinary strategy rebalancing",
+      "qualified_holding_policy": "track_unhedged_common",
+      "start": "2024-01-02",
+      "end": "2025-12-31",
+      "source_manifest_sha256": "27d35e9dd741ff0f86200bced91e24d87d823fe685b289b1620f340ac478d656",
+      "identical_pre_tax_trades": true,
+      "pre_tax_trade_count": 10,
+      "pre_tax_wealth": 183530.45324413243,
+      "accounts": {
+        "taxable": {
+          "ending_wealth_net_payable": 170886.98108066048,
+          "tax_paid": 194.7435949505034,
+          "terminal_tax_payable": 12348.188833415697,
+          "metrics": {
+            "ending_wealth": 170886.98108066048,
+            "max_drawdown": 0.35205597163192015,
+            "max_underwater_sessions": 96,
+            "cagr": 0.3079510991528924,
+            "real_cagr": 0.2759395261393589,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.3079510991528924,
+            "real_time_weighted_cagr": 0.2759395261393589
+          },
+          "trading_costs": 57.18480247905705,
+          "tax_rows": [
+            {
+              "tax": 194.7435949505034,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 0.0,
+              "taxable_lt": 0.0,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13874.708920056732,
+                "federal_st": 0.0,
+                "federal_ltcg": 161.03467489377226,
+                "federal_total": 14035.743594950503,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 14035.743594950503,
+                "effective_rate": 0.13864888940399717,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 518900,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 1073.564499291815,
+                      "tax_in_bracket": 161.03467489377226,
+                      "income_range": [
+                        85553.22236389424,
+                        86626.78686318605
+                      ]
+                    }
+                  ],
+                  "total": 161.03467489377226,
+                  "ordinary_income_base": 85553.22236389424,
+                  "ltcg_amount": 1073.564499291815,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 5.496029848528117
+              },
+              "baseline": {
+                "federal_ordinary": 13841.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13841.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13841.0,
+                "effective_rate": 0.13841,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2024,
+              "paid_on": "2025-04-15"
+            },
+            {
+              "tax": 12348.188833415697,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 264.91772881267445,
+              "taxable_lt": 80687.09873416986,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 58.281900338788546,
+                "federal_ltcg": 12289.906933076907,
+                "federal_total": 25797.188833415697,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 25797.188833415697,
+                "effective_rate": 0.14158904671920247,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 533400,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 81932.71288717938,
+                      "tax_in_bracket": 12289.906933076907,
+                      "income_range": [
+                        84514.91772881268,
+                        166447.63061599206
+                      ]
+                    }
+                  ],
+                  "total": 12289.906933076907,
+                  "ordinary_income_base": 84514.91772881268,
+                  "ltcg_amount": 81932.71288717938,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13449.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13449.0,
+                "effective_rate": 0.13449,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2025,
+              "paid_on": null
+            }
+          ],
+          "trade_count": 11,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "SSO": 0.0
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 183235.16991407616,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        },
+        "roth": {
+          "ending_wealth_net_payable": 183530.45324413243,
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "metrics": {
+            "ending_wealth": 183530.45324413243,
+            "max_drawdown": 0.35205597163192015,
+            "max_underwater_sessions": 92,
+            "cagr": 0.3555722200383773,
+            "real_cagr": 0.32239513939294584,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.3555722200383773,
+            "real_time_weighted_cagr": 0.32239513939294584
+          },
+          "trading_costs": 57.205231916547255,
+          "tax_rows": [],
+          "trade_count": 10,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "SSO": 0.0
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 183530.45324413243,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        }
+      },
+      "assumptions": {
+        "state": "FEDERAL_ONLY",
+        "filing_status": "single",
+        "ordinary_income": 100000.0,
+        "settlement": "US T+2/T+1 effective dates",
+        "spread_bps": 2.0,
+        "slippage_bps": 1.0,
+        "commission": 0.0,
+        "cash_sweep_yield": 0.0,
+        "roth_owner_history": null,
+        "initial_roth_balance": "Existing balance, not a new contribution; internal liquidation does not execute a personal distribution",
+        "tax_timing": "Annual settlement funded; sufficient external salary withholding assumed for safe harbor",
+        "cpi": "Monthly CPI-U NSA mapped to its observation month for ex-post metrics only"
+      }
+    },
+    "TMF": {
+      "data_status": "OBSERVED",
+      "execution_status": "HYPOTHETICAL_STRESS",
+      "investment_performance_certification": "BLOCKED",
+      "reason": "Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return",
+      "strategy": {
+        "rule": "buy_hold",
+        "lookback_sessions": 50,
+        "symbol": "TMF"
+      },
+      "cash_distribution_policy": "Reinvest through ordinary strategy rebalancing",
+      "qualified_holding_policy": "track_unhedged_common",
+      "start": "2024-01-02",
+      "end": "2025-12-31",
+      "source_manifest_sha256": "ebd9e9c042a57d1aeadb504118b28891ade899545a6dc7cc71f0bfe896ccc01f",
+      "identical_pre_tax_trades": true,
+      "pre_tax_trade_count": 10,
+      "pre_tax_wealth": 63587.484378816,
+      "accounts": {
+        "taxable": {
+          "ending_wealth_net_payable": 63361.907741174204,
+          "tax_paid": 473.5710962733774,
+          "terminal_tax_payable": -242.00869679800599,
+          "metrics": {
+            "ending_wealth": 63361.907741174204,
+            "max_drawdown": 0.455306291282622,
+            "max_underwater_sessions": 324,
+            "cagr": -0.20436792884070398,
+            "real_cagr": -0.2238407012970446,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": -0.20436792884070398,
+            "real_time_weighted_cagr": -0.2238407012970446
+          },
+          "trading_costs": 33.76782998660385,
+          "tax_rows": [
+            {
+              "tax": 473.5710962733774,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 0.0,
+              "taxable_lt": 0.0,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 14032.910091416816,
+                "federal_st": 0.0,
+                "federal_ltcg": 281.6610048565612,
+                "federal_total": 14314.571096273377,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 14314.571096273377,
+                "effective_rate": 0.1393144810540486,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 518900,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 1877.7400323770748,
+                      "tax_in_bracket": 281.6610048565612,
+                      "income_range": [
+                        86272.31859734916,
+                        88150.05862972623
+                      ]
+                    }
+                  ],
+                  "total": 281.6610048565612,
+                  "ordinary_income_base": 86272.31859734916,
+                  "ltcg_amount": 1877.7400323770748,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13841.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13841.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13841.0,
+                "effective_rate": 0.13841,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2024,
+              "paid_on": "2025-04-15"
+            },
+            {
+              "tax": -242.00869679800599,
+              "st_cf": 0.0,
+              "lt_cf": 38660.535005180274,
+              "taxable_st": 0.0,
+              "taxable_lt": 0.0,
+              "capital_loss_deduction": 3000.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 12922.255023900278,
+                "federal_st": 0.0,
+                "federal_ltcg": 284.7362793017155,
+                "federal_total": 13206.991303201994,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13206.991303201994,
+                "effective_rate": 0.13272831646998634,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 533400,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 1898.2418620114368,
+                      "tax_in_bracket": 284.7362793017155,
+                      "income_range": [
+                        81855.70465409217,
+                        83753.9465161036
+                      ]
+                    }
+                  ],
+                  "total": 284.7362793017155,
+                  "ordinary_income_base": 81855.70465409217,
+                  "ltcg_amount": 1898.2418620114368,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13449.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13449.0,
+                "effective_rate": 0.13449,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2025,
+              "paid_on": null
+            }
+          ],
+          "trade_count": 11,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 2.9103830456733704e-11,
+          "ending_positions": {
+            "TMF": 0.0
+          },
+          "final_cash": -1.1368683772161603e-13,
+          "unsettled_liquidation_proceeds": 63119.8990443762,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        },
+        "roth": {
+          "ending_wealth_net_payable": 63587.484378816,
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "metrics": {
+            "ending_wealth": 63587.484378816,
+            "max_drawdown": 0.45127125963945014,
+            "max_underwater_sessions": 324,
+            "cagr": -0.20295002526274286,
+            "real_cagr": -0.2224575003344499,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": -0.20295002526274286,
+            "real_time_weighted_cagr": -0.2224575003344499
+          },
+          "trading_costs": 33.769641645344436,
+          "tax_rows": [],
+          "trade_count": 10,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 2.9103830456733704e-11,
+          "ending_positions": {
+            "TMF": 0.0
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 63587.484378816,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        }
+      },
+      "assumptions": {
+        "state": "FEDERAL_ONLY",
+        "filing_status": "single",
+        "ordinary_income": 100000.0,
+        "settlement": "US T+2/T+1 effective dates",
+        "spread_bps": 2.0,
+        "slippage_bps": 1.0,
+        "commission": 0.0,
+        "cash_sweep_yield": 0.0,
+        "roth_owner_history": null,
+        "initial_roth_balance": "Existing balance, not a new contribution; internal liquidation does not execute a personal distribution",
+        "tax_timing": "Annual settlement funded; sufficient external salary withholding assumed for safe harbor",
+        "cpi": "Monthly CPI-U NSA mapped to its observation month for ex-post metrics only"
+      }
+    },
+    "TQQQ": {
+      "data_status": "OBSERVED",
+      "execution_status": "HYPOTHETICAL_STRESS",
+      "investment_performance_certification": "BLOCKED",
+      "reason": "Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return",
+      "strategy": {
+        "rule": "buy_hold",
+        "lookback_sessions": 50,
+        "symbol": "TQQQ"
+      },
+      "cash_distribution_policy": "Reinvest through ordinary strategy rebalancing",
+      "qualified_holding_policy": "track_unhedged_common",
+      "start": "2024-01-02",
+      "end": "2025-12-31",
+      "source_manifest_sha256": "f2d99cc1ffa766cf232e6f9b7686a0e7a8e18881341c93059dfecd67e2609891",
+      "identical_pre_tax_trades": true,
+      "pre_tax_trade_count": 10,
+      "pre_tax_wealth": 218422.98633422382,
+      "accounts": {
+        "taxable": {
+          "ending_wealth_net_payable": 199462.76951940503,
+          "tax_paid": 422.90675816935254,
+          "terminal_tax_payable": 18096.57100889963,
+          "metrics": {
+            "ending_wealth": 199462.76951940503,
+            "max_drawdown": 0.5801578152208924,
+            "max_underwater_sessions": 161,
+            "cagr": 0.413306437961376,
+            "real_cagr": 0.37871633573309005,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.413306437961376,
+            "real_time_weighted_cagr": 0.37871633573309005
+          },
+          "trading_costs": 64.29153596990847,
+          "tax_rows": [
+            {
+              "tax": 422.90675816935254,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 0.0,
+              "taxable_lt": 0.0,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 14206.411516572456,
+                "federal_st": 0.0,
+                "federal_ltcg": 57.495241596896854,
+                "federal_total": 14263.906758169353,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 14263.906758169353,
+                "effective_rate": 0.13978156470427497,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 518900,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 383.30161064597905,
+                      "tax_in_bracket": 57.495241596896854,
+                      "income_range": [
+                        87060.9614389657,
+                        87444.26304961169
+                      ]
+                    }
+                  ],
+                  "total": 57.495241596896854,
+                  "ordinary_income_base": 87060.9614389657,
+                  "ltcg_amount": 383.30161064597905,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13841.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13841.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13841.0,
+                "effective_rate": 0.13841,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2024,
+              "paid_on": "2025-04-15"
+            },
+            {
+              "tax": 18096.57100889963,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 635.3501927486675,
+              "taxable_lt": 113894.38333559042,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13624.231442185195,
+                "federal_st": 139.77704240470848,
+                "federal_ltcg": 17175.91912330896,
+                "federal_total": 30939.927607898862,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 605.6434010007688,
+                "total_tax": 31545.57100889963,
+                "effective_rate": 0.1460862530526232,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 533400,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 114506.1274887264,
+                      "tax_in_bracket": 17175.91912330896,
+                      "income_range": [
+                        85681.85674813592,
+                        200187.98423686234
+                      ]
+                    }
+                  ],
+                  "total": 17175.91912330896,
+                  "ordinary_income_base": 85681.85674813592,
+                  "ltcg_amount": 114506.1274887264,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "baseline": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13449.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13449.0,
+                "effective_rate": 0.13449,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2025,
+              "paid_on": null
+            }
+          ],
+          "trade_count": 11,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "TQQQ": 0.0
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 217559.34052830466,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        },
+        "roth": {
+          "ending_wealth_net_payable": 218422.98633422382,
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "metrics": {
+            "ending_wealth": 218422.98633422382,
+            "max_drawdown": 0.5801578152208924,
+            "max_underwater_sessions": 161,
+            "cagr": 0.4790905145748132,
+            "real_cagr": 0.44289037373498963,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.4790905145748132,
+            "real_time_weighted_cagr": 0.44289037373498963
+          },
+          "trading_costs": 64.38049686765832,
+          "tax_rows": [],
+          "trade_count": 10,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "TQQQ": 4.0678571622265736e-13
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 218422.98633422382,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        }
+      },
+      "assumptions": {
+        "state": "FEDERAL_ONLY",
+        "filing_status": "single",
+        "ordinary_income": 100000.0,
+        "settlement": "US T+2/T+1 effective dates",
+        "spread_bps": 2.0,
+        "slippage_bps": 1.0,
+        "commission": 0.0,
+        "cash_sweep_yield": 0.0,
+        "roth_owner_history": null,
+        "initial_roth_balance": "Existing balance, not a new contribution; internal liquidation does not execute a personal distribution",
+        "tax_timing": "Annual settlement funded; sufficient external salary withholding assumed for safe harbor",
+        "cpi": "Monthly CPI-U NSA mapped to its observation month for ex-post metrics only"
+      }
+    },
+    "UPRO": {
+      "data_status": "OBSERVED",
+      "execution_status": "HYPOTHETICAL_STRESS",
+      "investment_performance_certification": "BLOCKED",
+      "reason": "Observed daily OHLC + disclosed fill/annual-tax schedule; no NBBO or full household tax return",
+      "strategy": {
+        "rule": "buy_hold",
+        "lookback_sessions": 50,
+        "symbol": "UPRO"
+      },
+      "cash_distribution_policy": "Reinvest through ordinary strategy rebalancing",
+      "qualified_holding_policy": "track_unhedged_common",
+      "start": "2024-01-02",
+      "end": "2025-12-31",
+      "source_manifest_sha256": "c81828b65c01562ba892f14acfc1c6b7f1ab5dbd7402f2f3edc2fba76403a422",
+      "identical_pre_tax_trades": true,
+      "pre_tax_trade_count": 10,
+      "pre_tax_wealth": 220111.05046708995,
+      "accounts": {
+        "taxable": {
+          "ending_wealth_net_payable": 201078.12190319048,
+          "tax_paid": 274.95663065153894,
+          "terminal_tax_payable": 18536.047385488928,
+          "metrics": {
+            "ending_wealth": 201078.12190319048,
+            "max_drawdown": 0.48856564503045474,
+            "max_underwater_sessions": 107,
+            "cagr": 0.4190293979037296,
+            "real_cagr": 0.38429922855048226,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.4190293979037296,
+            "real_time_weighted_cagr": 0.38429922855048226
+          },
+          "trading_costs": 64.65710495963208,
+          "tax_rows": [
+            {
+              "tax": 274.95663065153894,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 0.0,
+              "taxable_lt": 0.0,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13983.523057678241,
+                "federal_st": 0.0,
+                "federal_ltcg": 132.4335729732975,
+                "federal_total": 14115.956630651539,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 14115.956630651539,
+                "effective_rate": 0.1390245260850519,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 518900,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 882.89048648865,
+                      "tax_in_bracket": 132.4335729732975,
+                      "income_range": [
+                        86047.83208035563,
+                        86930.72256684428
+                      ]
+                    }
+                  ],
+                  "total": 132.4335729732975,
+                  "ordinary_income_base": 86047.83208035563,
+                  "ltcg_amount": 882.89048648865,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 5.0066182041993175
+              },
+              "baseline": {
+                "federal_ordinary": 13841.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13841.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13841.0,
+                "effective_rate": 0.13841,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2024,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2024,
+              "paid_on": "2025-04-15"
+            },
+            {
+              "tax": 18536.047385488928,
+              "st_cf": 0.0,
+              "lt_cf": 0.0,
+              "taxable_st": 465.2572552375418,
+              "taxable_lt": 116050.78592530792,
+              "capital_loss_deduction": 0.0,
+              "state_st_cf": 0.0,
+              "state_lt_cf": 0.0,
+              "calculation": {
+                "federal_ordinary": 13618.124795570839,
+                "federal_st": 102.35659615225813,
+                "federal_ltcg": 17567.1369178631,
+                "federal_total": 31287.618309586196,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 697.4290759027324,
+                "total_tax": 31985.047385488928,
+                "effective_rate": 0.14648293941775506,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [
+                    {
+                      "bracket_num": 2,
+                      "bracket_ceiling": 533400,
+                      "rate": 0.15,
+                      "rate_pct": "15%",
+                      "ltcg_in_bracket": 117114.24611908733,
+                      "tax_in_bracket": 17567.1369178631,
+                      "income_range": [
+                        85484.00632601407,
+                        202598.2524451014
+                      ]
+                    }
+                  ],
+                  "total": 17567.1369178631,
+                  "ordinary_income_base": 85484.00632601407,
+                  "ltcg_amount": 117114.24611908733,
+                  "effective_ltcg_rate": 0.15
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 5.144289181046388
+              },
+              "baseline": {
+                "federal_ordinary": 13449.0,
+                "federal_st": 0.0,
+                "federal_ltcg": 0.0,
+                "federal_total": 13449.0,
+                "state_tax": 0.0,
+                "state_calculation": null,
+                "niit_tax": 0.0,
+                "total_tax": 13449.0,
+                "effective_rate": 0.13449,
+                "marginal_rate_used": true,
+                "ltcg_breakdown": {
+                  "breakdown": [],
+                  "total": 0.0
+                },
+                "ltcg_stacking_used": true,
+                "tax_year": 2025,
+                "scope": "regular federal tax and NIIT; excludes AMT/credits/special-rate gains",
+                "state_scope": "FEDERAL ONLY",
+                "section199a_dividend_deduction": 0.0
+              },
+              "evidence": "OBSERVED",
+              "scope": "regular federal tax/NIIT, supplied income; excludes AMT/credits",
+              "year": 2025,
+              "paid_on": null
+            }
+          ],
+          "trade_count": 11,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 5.820766091346741e-11,
+          "ending_positions": {
+            "UPRO": 1.0036416142611415e-13
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 219614.1692886794,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        },
+        "roth": {
+          "ending_wealth_net_payable": 220111.05046708995,
+          "tax_paid": 0.0,
+          "terminal_tax_payable": 0.0,
+          "metrics": {
+            "ending_wealth": 220111.05046708995,
+            "max_drawdown": 0.48856564503045474,
+            "max_underwater_sessions": 107,
+            "cagr": 0.48480667165935665,
+            "real_cagr": 0.4484666301917595,
+            "money_weighted_return": null,
+            "inflation_missing_interior_observations": 23,
+            "inflation_scope": "Observed endpoints only; no missing daily/monthly CPI path inferred",
+            "time_weighted_cagr": 0.48480667165935665,
+            "real_time_weighted_cagr": 0.4484666301917595
+          },
+          "trading_costs": 64.70216951346261,
+          "tax_rows": [],
+          "trade_count": 10,
+          "max_cash_residual": 0.0,
+          "max_nav_residual": 8.731149137020111e-11,
+          "ending_positions": {
+            "UPRO": 5.861977570020827e-14
+          },
+          "final_cash": 0.0,
+          "unsettled_liquidation_proceeds": 220111.05046708995,
+          "ending_distribution_receivables": 0,
+          "days": 502,
+          "external_flows_investor": []
+        }
+      },
+      "assumptions": {
+        "state": "FEDERAL_ONLY",
+        "filing_status": "single",
+        "ordinary_income": 100000.0,
+        "settlement": "US T+2/T+1 effective dates",
+        "spread_bps": 2.0,
+        "slippage_bps": 1.0,
+        "commission": 0.0,
+        "cash_sweep_yield": 0.0,
+        "roth_owner_history": null,
+        "initial_roth_balance": "Existing balance, not a new contribution; internal liquidation does not execute a personal distribution",
+        "tax_timing": "Annual settlement funded; sufficient external salary withholding assumed for safe harbor",
+        "cpi": "Monthly CPI-U NSA mapped to its observation month for ex-post metrics only"
+      }
+    }
+  },
+  "independent_checks": {
+    "QLD": {
+      "taxable": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 176021.22258773283,
+        "ledger_sha256": "2f0d8ef06850c0885db3dd66dc7e1f48a3776773f252fc086d6fde5d49531911"
+      },
+      "roth": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 189479.44676825515,
+        "ledger_sha256": "6cfcd532b7a1123267c0204877de35f5a4547731fc882d628bff534f55c24b4a"
+      }
+    },
+    "QQQ": {
+      "taxable": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 5.820766091346741e-11,
+        "net_terminal_identity": 144980.96412837022,
+        "ledger_sha256": "a9af5d41759063a47856e582b9105fa65310c850ec43804bd211a1f58d2f5de7"
+      },
+      "roth": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 152961.297542628,
+        "ledger_sha256": "a65926faef16fcc6c6f7fe33aa8733c0d91f95e8c79fa641a9ba37c7e74977ef"
+      }
+    },
+    "SSO": {
+      "taxable": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 170886.98108066048,
+        "ledger_sha256": "b3a9ec8230acd847c815c39233433f6341949f2d1b6ae01245bbe555dd875186"
+      },
+      "roth": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 183530.45324413243,
+        "ledger_sha256": "eba205b6924ea5e5da24b049cbc096980963fd4696ba815f528110d1de7e7c95"
+      }
+    },
+    "TMF": {
+      "taxable": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 2.9103830456733704e-11,
+        "net_terminal_identity": 63361.907741174204,
+        "ledger_sha256": "a543d5e6b44b1ac3a3506e6b454ca637dc7a2dcb50ace1ab22faf57dbb384f2d"
+      },
+      "roth": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 2.9103830456733704e-11,
+        "net_terminal_identity": 63587.484378816,
+        "ledger_sha256": "0ca4448d722b91dc3853e708cabbd6521c62a156c2abd9ca43c2ac36eb962e05"
+      }
+    },
+    "TQQQ": {
+      "taxable": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 199462.769519405,
+        "ledger_sha256": "7de8bcfd1107378c9df02008e4b0ada47b61c69a28d99e0294e36fe6ea7c1eaa"
+      },
+      "roth": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 218422.98633422385,
+        "ledger_sha256": "25b77ffd333620fdc8d607403a2dd80c250b506a11b403a566c2eed6ec7adf9e"
+      }
+    },
+    "UPRO": {
+      "taxable": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 201078.12190319048,
+        "ledger_sha256": "061e6cb38dd5b1bd6b49f72e647f074a30ea16bc1d46cbb0f8bc027d11dd1428"
+      },
+      "roth": {
+        "daily_rows": 502,
+        "max_independent_nav_residual": 8.731149137020111e-11,
+        "net_terminal_identity": 220111.05046708995,
+        "ledger_sha256": "02c6b70b5099fbb936bd790964503a9e6cacd0b50d8bc801edde0ddc33c6f544"
+      }
+    }
+  },
+  "limitations": [
+    "Hypothetical daily OHLC execution, no contemporaneous NBBO verification",
+    "Existing Roth balance; terminal internal sale is not a personal withdrawal",
+    "Salary withholding/safe harbor supplied assumption, not complete household tax advice",
+    "Actual unhedged common-share QDI tracking; hedged/preferred/Section199A forward eligibility remains gated",
+    "No investment ranking is certified; different fund risks are not matched portfolios"
+  ]
+}

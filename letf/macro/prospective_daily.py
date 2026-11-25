@@ -100,12 +100,22 @@ def assess_daily(sources,commitment,*,output):
     else:
         actual,meta=sources.panel();daily=sources.daily_factors()
         if daily.index.max().date()>now.date():raise ValueError('Future-dated observations cannot be assessed')
-        eq=np.log1p(daily['Mkt-RF']+daily.RF);rows=[]
+        eq=np.log1p(daily['Mkt-RF']+daily.RF);rows=[];prefix_rows=[];complete={}
+        import exchange_calendars as xcals
+        calendar=xcals.get_calendar('XNYS',start=dates[0].to_period('M').start_time,end=dates[-1])
+        for day in due:
+            start=day.to_period('M').start_time
+            observed=eq.loc[start:day]
+            expected=calendar.sessions_in_range(start,day).tz_localize(None)
+            # A partial downloaded month must not masquerade as a completed
+            # quiet market. No synthetic return fills are allowed here.
+            if len(expected) and expected.isin(observed.index).all() and np.isfinite(observed).all():
+                complete[day]=observed
         for t,day in enumerate(dates):
             if day not in due:continue
             if day not in actual.index or not np.isfinite(actual.loc[day,list(CORE)]).all():continue
-            observed=eq.loc[day.to_period('M').start_time:day]
-            if observed.empty:continue
+            if day not in complete:continue
+            observed=complete[day]
             for model in f['models']:
                 losses={c:weighted_interval_score(model['monthly_quantiles'][t][f['columns'].index(c)],actual.loc[day,c])/
                     f['common_training_scale'][f['columns'].index(c)] for c in CORE}
@@ -113,11 +123,29 @@ def assess_daily(sources,commitment,*,output):
                 rows.append({'kind':model['kind'],'date':str(day.date()),'normalized_wis':losses,
                     'daily_90_interval_coverage':float(np.mean((truth>=q[0])&(truth<=q[-1]))),
                     'daily_lower5_breach_rate':float(np.mean(truth<q[0])),
+                    'daily_mean_wis':float(np.mean([weighted_interval_score(q,y) for y in truth])),
                     'observed_sessions':len(observed),'observed_crashes_minus5':int((truth<np.log(.95)).sum())})
+        for model in f['models']:
+            for prediction in model['prefix_tails']:
+                prefix=dates[:prediction['months']]
+                if len(prefix)!=prediction['months'] or any(day not in complete for day in prefix):continue
+                truth=np.concatenate([complete[day].to_numpy() for day in prefix])[None,:]
+                dd=float(drawdowns(truth)[0]);underwater=int(longest_underwater(truth)[0])
+                crashes={key:float((truth<np.log1p(float(key))).sum()*252/truth.shape[1])
+                         for key in prediction['crash_rate_per252_p50_p95']}
+                prefix_rows.append({'kind':model['kind'],'months':prediction['months'],
+                    'observed_sessions':truth.shape[1],'observed_max_drawdown':dd,
+                    'observed_underwater_sessions':underwater,'observed_crash_rate_per252':crashes,
+                    'drawdown_exceeds_p95':dd>prediction['max_drawdown_p50_p95_p99'][1],
+                    'drawdown_exceeds_p99':dd>prediction['max_drawdown_p50_p95_p99'][2],
+                    'underwater_exceeds_p95':underwater>prediction['underwater_sessions_p50_p95'][1],
+                    'crash_rate_exceeds_p95':{key:value>prediction['crash_rate_per252_p50_p95'][key][1] for key,value in crashes.items()},
+                    'scope':'Frozen reference tail diagnostics; overlapping prefixes are not independent eras'})
         result={'status':'ASSESSED_ELAPSED_OUTCOMES_ONLY' if rows else 'PENDING_VERIFIED_OUTCOME_DATA',
-            'evaluated_rows':rows,'source_catalog_sha256':sources.catalog_hash,'promoted':False,
+            'evaluated_rows':rows,'evaluated_prefix_tails':prefix_rows,'source_catalog_sha256':sources.catalog_hash,'promoted':False,
             'reason':'These reference diagnostics cannot approve a candidate or reuse historical rejected evidence'}
     result['commitment_sha256']=sha256(Path(commitment).read_bytes()).hexdigest();result['assessed_at']=now.isoformat()
+    result['assessment_implementation_sha256']=sha256(Path(__file__).read_bytes()).hexdigest()
     output.parent.mkdir(parents=True,exist_ok=True);output.write_bytes(canonical(result));return result
 
 

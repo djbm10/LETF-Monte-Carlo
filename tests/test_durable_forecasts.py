@@ -47,3 +47,41 @@ def test_portable_source_and_forecast_archive_verifies_every_byte_and_rejects_ex
     with pytest.raises(ValueError):seal_snapshot(sources,registry,commitment,archive)
     (registry/'.env').write_text('FAKE_TEST_ONLY')
     with pytest.raises(ValueError,match='Unreviewed'):seal_snapshot(sources,registry,commitment,tmp_path/'other.tar.gz')
+
+
+def test_elapsed_assessment_scores_frozen_tails_and_rejects_partial_daily_month(tmp_path,monkeypatch):
+    # Artificial clock/data are test-only. Production CLI has no backdating flag.
+    from datetime import datetime,timezone
+    import pandas as pd
+    import exchange_calendars as xcals
+    import letf.macro.prospective_daily as module
+    from letf.macro.data import CORE
+    monkeypatch.setattr(module,'utc_now',lambda:datetime(2027,2,1,tzinfo=timezone.utc))
+    dates=xcals.get_calendar('XNYS',start='2026-12-01',end='2027-01-01').sessions_in_range('2026-12-01','2026-12-31').tz_localize(None)
+    factors=pd.DataFrame({'Mkt-RF':0.,'RF':0.},index=dates);factors.iloc[0,0]=-.06
+    class Outcomes:
+        catalog_hash='test-only'
+        def panel(self):
+            p=pd.DataFrame(0.,index=pd.to_datetime(['2026-12-31']),columns=CORE)
+            p.loc[:,'equity_log']=np.log(.94)
+            return p,{}
+        def daily_factors(self):return factors
+    prediction={'kind':'joint_block','monthly_quantiles':[[[0.]*7 for _ in CORE]],'daily_marginal_quantiles':[[0.]*7],
+        'prefix_tails':[{'months':1,'max_drawdown_p50_p95_p99':[.02,.05,.07],
+            'underwater_sessions_p50_p95':[3.,5.],'crash_rate_per252_p50_p95':{'-0.05':[0.,2.]}}]}
+    commitment={'issued_at':'2026-11-25T12:00:00+00:00','outcome_dates':['2026-12-31'],'columns':list(CORE),
+        'common_training_scale':[1.]*len(CORE),'models':[prediction]}
+    path=tmp_path/'frozen.json';path.write_text(json.dumps(commitment));before=path.read_bytes()
+    result=assess_daily(Outcomes(),path,output=tmp_path/'scored.json')
+    row=result['evaluated_prefix_tails'][0]
+    assert row['observed_max_drawdown']==pytest.approx(.06)
+    assert row['drawdown_exceeds_p95'] and not row['drawdown_exceeds_p99']
+    assert row['observed_underwater_sessions']==len(dates) and row['underwater_exceeds_p95']
+    assert row['observed_crash_rate_per252']['-0.05']==pytest.approx(252/len(dates))
+    assert row['crash_rate_exceeds_p95']['-0.05']
+    assert result['evaluated_rows'][0]['daily_mean_wis']==pytest.approx(abs(np.log(.94))/len(dates))
+    assert not result['promoted'] and path.read_bytes()==before
+    factors=factors.iloc[:-1]
+    pending=assess_daily(Outcomes(),path,output=tmp_path/'incomplete.json')
+    assert pending['status']=='PENDING_VERIFIED_OUTCOME_DATA'
+    assert pending['evaluated_rows']==pending['evaluated_prefix_tails']==[]

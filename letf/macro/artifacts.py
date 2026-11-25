@@ -5,6 +5,8 @@ import fcntl
 from hashlib import sha256
 import json
 import os
+import shutil
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -41,12 +43,25 @@ class ArtifactStore:
         with lock(self.root):
             if directory.exists():
                 self.load(kind,identifier);return identifier
-            directory.mkdir(parents=True)
-            data_path=directory/'arrays.npz'
-            with data_path.open('xb') as f:np.savez_compressed(f,**arrays)
-            envelope={'id':identifier,'identity':identity,'arrays_file_sha256':sha256(data_path.read_bytes()).hexdigest(),
-                      'created_at':datetime.now(timezone.utc).isoformat()}
-            with (directory/'manifest.json').open('xb') as f:f.write(canonical(envelope))
+            directory.parent.mkdir(parents=True,exist_ok=True)
+            pending=self.root/'.pending';pending.mkdir(exist_ok=True)
+            staging=Path(tempfile.mkdtemp(dir=pending))
+            try:
+                data_path=staging/'arrays.npz'
+                with data_path.open('xb') as f:
+                    np.savez_compressed(f,**arrays);f.flush();os.fsync(f.fileno())
+                envelope={'id':identifier,'identity':identity,'arrays_file_sha256':sha256(data_path.read_bytes()).hexdigest(),
+                          'created_at':datetime.now(timezone.utc).isoformat()}
+                with (staging/'manifest.json').open('xb') as f:
+                    f.write(canonical(envelope));f.flush();os.fsync(f.fileno())
+                # Publish both files atomically. A failed/terminated write can
+                # never expose a half-written content-addressed artifact.
+                os.rename(staging,directory)
+                descriptor=os.open(directory.parent,os.O_RDONLY)
+                try:os.fsync(descriptor)
+                finally:os.close(descriptor)
+            finally:
+                if staging.exists():shutil.rmtree(staging)
         return identifier
 
     def load(self,kind,identifier):

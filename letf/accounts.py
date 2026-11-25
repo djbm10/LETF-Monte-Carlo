@@ -105,6 +105,7 @@ class Account:
     income: dict = field(default_factory=dict)
     unsettled: list = field(default_factory=list)
     collateral_reservations: dict = field(default_factory=dict)
+    share_reservations: dict = field(default_factory=dict)
 
     @property
     def buying_power(self):
@@ -270,6 +271,9 @@ class PortfolioLedger:
                 raise UnsupportedModelError('Audited lot methods: FIFO, HIFO, SPEC_ID')
             if sum(l.shares for l in lots) < qty - 1e-9:
                 raise ValueError('Insufficient shares; naked short sales are unsupported')
+            reserved=sum(items.get(symbol,0.) for items in account.share_reservations.values())
+            if self.quantity(account_id,symbol)-reserved < qty-1e-9:
+                raise ValueError('Shares are reserved as covered-option collateral')
             proceeds = qty * execution_price - commission
             if proceeds < 0:
                 raise ValueError('Commission exceeds sale proceeds')
@@ -321,6 +325,8 @@ class PortfolioLedger:
         """Sourced cash liquidation, including zero residual NAV; not a mark."""
         when=calendar_date(when);positive(cash_per_share,'liquidation proceeds',True)
         if not source:raise ValueError('Liquidation evidence required')
+        if any(items.get(symbol,0.)>0 for a in self.accounts.values() for items in a.share_reservations.values()):
+            raise UnsupportedModelError('Underlying liquidation with covered-option obligations requires reviewed contract/deliverable actions')
         if cash_per_share==0 and any(a.profile.account_type=='taxable' and self.quantity(key,symbol)>1e-10
                                     for key,a in self.accounts.items()):
             raise UnsupportedModelError('Zero-residual taxable securities require reviewed worthless-security/IRC165(g) tax treatment')
@@ -396,6 +402,8 @@ class PortfolioLedger:
 
     def split(self, when, symbol, ratio):
         positive(ratio, 'split ratio')
+        if any(items.get(symbol,0.)>0 for a in self.accounts.values() for items in a.share_reservations.values()):
+            raise UnsupportedModelError('Covered-option collateral crosses a split; an OCC deliverable action is required')
         when = self._advance(when)
         if any(r.unmatched > 1e-10 and abs((when - r.sold).days) <= 30
                and self._identity(r.security) == self._identity(symbol) for r in self.realizations):

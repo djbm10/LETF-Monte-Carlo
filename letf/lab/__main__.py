@@ -14,6 +14,8 @@ def main(argv=None):
     sub=parser.add_subparsers(dest='command',required=True)
     for name in ('observed','tournament','simulate','cycle'):
         p=sub.add_parser(name);p.add_argument('--config',required=True,type=Path);p.add_argument('--output',required=True,type=Path)
+    p=sub.add_parser('account-precision');p.add_argument('--config',required=True,type=Path);p.add_argument('--output',required=True,type=Path)
+    p.add_argument('--max-new-runs',type=int,default=1)
     p=sub.add_parser('sources');p.add_argument('--lake',required=True,type=Path);p.add_argument('--output',type=Path)
     p=sub.add_parser('ingest');p.add_argument('--lake',required=True,type=Path);p.add_argument('--folder',required=True,type=Path)
     p.add_argument('--catalog-file',default='catalog.json');p.add_argument('--namespace',required=True)
@@ -21,6 +23,7 @@ def main(argv=None):
     sub.add_parser('strategies')
     p=sub.add_parser('derivative-inputs');p.add_argument('--folder',required=True,type=Path);p.add_argument('--output',required=True,type=Path)
     p.add_argument('--decision-at')
+    p=sub.add_parser('cboe-sample');p.add_argument('--archive',required=True,type=Path);p.add_argument('--output',required=True,type=Path)
     p=sub.add_parser('demo');p.add_argument('--output',required=True,type=Path)
     p=sub.add_parser('counterfactual');p.add_argument('--sources',required=True,type=Path);p.add_argument('--output',required=True,type=Path)
     p.add_argument('--start',default='1930-01-01');p.add_argument('--end')
@@ -49,6 +52,9 @@ def main(argv=None):
             from letf.lab.derivative_inputs import load_inputs
             result=load_inputs(a.folder,decision_at=a.decision_at)['summary'];private_json(a.output,result)
             print(json.dumps(result));return 0
+        if a.command=='cboe-sample':
+            from letf.lab.derivative_inputs import inspect_cboe_sample
+            result=inspect_cboe_sample(a.archive);private_json(a.output,result);print(json.dumps(result));return 0
         if a.command=='demo':
             from letf.lab.fixtures import demo
             result=demo(a.output);print(json.dumps(result));return 0
@@ -75,6 +81,10 @@ def main(argv=None):
             from letf.lab.workflows import simulate
             result=simulate(json.loads(a.config.read_text()),output=a.output)
             print(json.dumps({'classification':result['classification'],'model_approved':False,'report':str(a.output/'laboratory-report.json')}));return 0
+        if a.command=='account-precision':
+            from letf.lab.account_precision import study
+            result=study(json.loads(a.config.read_text()),a.output,max_new_runs=a.max_new_runs)
+            print(json.dumps(result));return 0 if result['account_convergence_certified'] else 2
         if a.command=='tournament':
             from letf.lab.workflows import tournament
             result=tournament(json.loads(a.config.read_text()),output=a.output)

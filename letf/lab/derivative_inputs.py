@@ -9,6 +9,8 @@ from pathlib import Path
 import json
 from math import isfinite
 from zoneinfo import ZoneInfo
+from io import BytesIO
+import zipfile
 
 import pandas as pd
 
@@ -121,3 +123,35 @@ def quote_at(inputs,symbol,decision_at):
              if q.contract_symbol==symbol and pub<=when and q.timestamp<=when]
     if not choices:raise UnsupportedModelError('No time-available quote for this decision')
     return max(choices,key=lambda q:q.timestamp)
+
+
+def inspect_cboe_sample(archive):
+    """Inspect the offered EOD sample without calling it a verified tape.
+
+    The provider README explicitly says demonstration/subset/representative.
+    Two entitlement variants contain the same economic records, not two days
+    or independent observations. Index-underlying zeros are not market prices.
+    """
+    with zipfile.ZipFile(archive) as z:
+        if sum(x.file_size for x in z.infolist())>100_000_000:raise ValueError('Sample exceeds reviewed size')
+        name='UnderlyingOptionsEODCalcs_2023-08-25_no_cgi_subscription.csv'
+        readme=z.read('OptionEOD_Sample_ReadMe.txt').decode('utf-8')
+        if 'demonstration purposes' not in readme:raise UnsupportedModelError('Provider sample disclaimer changed; review source terms')
+        frame=pd.read_csv(BytesIO(z.read(name)))
+    required={'underlying_symbol','quote_date','root','expiration','strike','option_type','delivery_code',
+        'bid_size_1545','bid_1545','ask_size_1545','ask_1545','bid_size_eod','bid_eod','ask_size_eod','ask_eod'}
+    if not required.issubset(frame):raise ValueError('Cboe EOD schema changed')
+    if frame.empty or not pd.to_datetime(frame.quote_date).eq(pd.Timestamp('2023-08-25')).all():
+        raise UnsupportedModelError('Only the published dated sample schema is reviewed')
+    missing_depth=~frame[['bid_size_1545','ask_size_1545']].apply(pd.to_numeric,errors='raise').ge(0).all(axis=1)
+    bid=pd.to_numeric(frame.bid_1545,errors='raise');ask=pd.to_numeric(frame.ask_1545,errors='raise')
+    invalid_quote=~((bid>=0)&(ask>0)&(ask>=bid))
+    return {'classification':'SOFTWARE_FIXTURE','provider':'Cboe public demonstration sample',
+        'archive_sha256':file_hash(archive),'selected_variant':name,'rows':len(frame),
+        'quote_date':'2023-08-25','columns':list(frame),'underlyings':sorted(frame.underlying_symbol.unique()),
+        'rows_without_nonnegative_depth':int(missing_depth.sum()),'nonexecutable_1545_markets':int(invalid_quote.sum()),
+        'other_entitlement_variant_is_independent_data':False,'historical_execution_certification':'BLOCKED',
+        'missing_evidence':['Provider verification that sample records are actual complete historical observations',
+            'Exercise style, expiry/session timestamp and OCC deliverables; delivery_code alone is not a reviewed OCC memo',
+            'Longitudinal contracts, fills, assignments, margins/permissions and legal redistribution rights'],
+        'source':'https://datashop.cboe.com/download/sample/217'}

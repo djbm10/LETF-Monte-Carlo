@@ -39,6 +39,14 @@ def test_catalog_adapter_preserves_missing_provenance_and_checks_original_hash(t
     with pytest.raises(ValueError,match='checksum'):lake.ingest(source,namespace='original')
 
 
+def test_mixed_observed_and_demonstration_catalog_does_not_label_everything_observed(tmp_path):
+    lake=SourceLake(tmp_path/'lake');lake.put('observed',b'one',metadata())
+    lake.put('sample',b'two',dict(metadata(),classification='SOFTWARE_FIXTURE'))
+    r=lake.audit()
+    assert r['classification']=='BLOCKED' and r['snapshots_verified']==2
+    assert r['source_classifications']==['OBSERVED_MARKET','SOFTWARE_FIXTURE']
+
+
 @pytest.mark.parametrize('relative',['../outside.csv','/etc/passwd','x/../x.csv','./x.csv','x\\csv'])
 def test_import_never_reads_traversal(tmp_path,relative):
     root=tmp_path/'inputs';root.mkdir();(root/'catalog.json').write_text(json.dumps({'sources':{'x':dict(metadata(),path=relative,sha256='0'*64)}}))

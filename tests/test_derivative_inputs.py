@@ -56,3 +56,18 @@ def test_futures_are_dated_ticks_and_source_hashes_not_continuous_charts(tmp_pat
         (root/'settlements.csv').write_text('corrupt');load_inputs(root)
     with pytest.raises(ValueError,match='grid'):load_inputs(bundle(tmp_path/'offtick','future',settlement=5000.1))
     with pytest.raises(ValueError,match='expiry'):load_inputs(bundle(tmp_path/'expiry','future',expiry='2026-03-20'))
+
+
+def test_provider_demo_and_two_entitlement_variants_never_certify_actual_option_history(tmp_path):
+    import zipfile
+    from letf.lab.derivative_inputs import inspect_cboe_sample
+    row=dict(underlying_symbol='SPY',quote_date='2023-08-25',root='SPY',expiration='2023-09-15',strike=400.,option_type='C',delivery_code='UNKNOWN',
+        bid_size_1545=1,bid_1545=2.,ask_size_1545=1,ask_1545=3.,bid_size_eod=0,bid_eod=0.,ask_size_eod=0,ask_eod=0.)
+    p=tmp_path/'sample.zip'
+    with zipfile.ZipFile(p,'w') as z:
+        z.writestr('OptionEOD_Sample_ReadMe.txt','Sample files are for demonstration purposes only.')
+        z.writestr('UnderlyingOptionsEODCalcs_2023-08-25_no_cgi_subscription.csv',pd.DataFrame([row]).to_csv(index=False))
+    r=inspect_cboe_sample(p)
+    assert r['classification']=='SOFTWARE_FIXTURE' and r['rows']==1
+    assert not r['other_entitlement_variant_is_independent_data']
+    assert r['historical_execution_certification']=='BLOCKED'

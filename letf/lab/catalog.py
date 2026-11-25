@@ -84,6 +84,9 @@ class SourceLake:
         for key in ('provider', 'url', 'retrieved_at', 'license', 'convention'):
             if not metadata.get(key): raise ValueError(f'Missing source metadata: {key}')
         if not name or not isinstance(name, str): raise ValueError('Source name required')
+        if 'classification' in metadata:
+            from letf.lab.evidence import ResultClass
+            ResultClass(metadata['classification'])
         digest = sha256(blob).hexdigest()
         identity = {'schema': 1, 'name': name, 'raw_sha256': digest,
                     'raw_bytes': len(blob), 'metadata': metadata}
@@ -164,7 +167,9 @@ class SourceLake:
             if sha256(canonical(record)).hexdigest() != path.stem:
                 raise ValueError('Import manifest tampered')
             for identifier in [record['catalog_snapshot'], *record['sources'].values()]: self.load(identifier)
-        return {'classification': 'OBSERVED_MARKET', 'source_integrity_only': True,
+        labels=sorted(set(row['metadata'].get('classification','OBSERVED_MARKET') for row in rows))
+        return {'classification': labels[0] if len(labels)==1 else 'BLOCKED',
+                'source_classifications':labels,'source_integrity_only': True,
                 'snapshots_verified': len(rows), 'sources': rows, 'financial_certification': 'BLOCKED'}
 
 

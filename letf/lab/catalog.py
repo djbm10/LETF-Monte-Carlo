@@ -175,7 +175,7 @@ class SourceLake:
 
 def require_available_at(metadata, decision_time):
     """Do not infer old releases from a current download or vintage label."""
-    if not metadata.get('point_in_time_verified') or not metadata.get('available_at'):
+    if metadata.get('point_in_time_verified') is not True or not metadata.get('available_at'):
         raise UnsupportedModelError('No independently verified release-time availability')
     available = datetime.fromisoformat(metadata['available_at'].replace('Z', '+00:00'))
     decision = datetime.fromisoformat(str(decision_time).replace('Z', '+00:00'))

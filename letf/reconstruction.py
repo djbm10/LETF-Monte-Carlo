@@ -188,6 +188,8 @@ def reconstruction_errors(actual, predicted):
 
 
 def validate_reconstruction(actual, predicted, *, training_end, gate, provenance_verified=False):
+    if type(provenance_verified)is not bool:
+        raise ValueError('Provenance verification requires an explicit boolean')
     if len(actual) == 0 or pd.Timestamp(training_end) >= actual.index[0]:
         raise ValueError('Evaluation must start strictly after all training observations')
     errors = reconstruction_errors(actual, predicted)

@@ -125,7 +125,7 @@ class FuturesBook:
             raise UnsupportedModelError('Contract expired or margin schedule not yet available')
         if contract.first_notice is not None and when >= contract.first_notice:
             raise UnsupportedModelError('Physical delivery/notice requires an explicit delivery handler')
-        if not contract.section1256:
+        if contract.section1256 is not True:
             raise UnsupportedModelError('Non-1256 futures require a separate tax classification model')
         contract.validate_price(price)
         existing = self.positions.get(contract.symbol)
@@ -282,7 +282,7 @@ class OptionQuote:
     contract_symbol: str = None
 
     def fill(self, timestamp, side, contracts, *, max_age=timedelta(minutes=1)):
-        if not self.observed or not self.source or not self.contract_symbol:
+        if self.observed is not True or not self.source or not self.contract_symbol:
             raise UnsupportedModelError('Theoretical option values cannot be used as historical executable quotes')
         if self.timestamp.tzinfo is None or timestamp.tzinfo is None:
             raise ValueError('Timezone-aware option quote and order timestamps are required')

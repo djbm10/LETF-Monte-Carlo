@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "sources": "../macro-learning/audit-output/macro-sources-v4",
+  "registry": "audit-output/new-current-date-candidate-registry",
+  "protocol": "docs/macro-learning-2026-11-24/protocol.json",
+  "commitment": "docs/precision-reliability-2026-11-24/evidence/prospective-commitment.json",
+  "commitment_sha256": "2dfb140547120ffee01f85769059b0f079cc5fd65d2056d1fbfc6837bd9bd0c9",
+  "issue_candidates": true,
+  "require_existing_registry": false,
+  "new_registry_intent": "BEGIN_CURRENT_DATE_ONLY"
+}

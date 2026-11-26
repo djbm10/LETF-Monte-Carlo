@@ -18,6 +18,19 @@ from letf.account_backtest import run_account_backtest, Distribution
 from letf.accuracy import UnsupportedModelError
 
 
+def modeled_tax_payment_dates(start,end):
+    """Early modeled payments, not a claim about household filing deadlines.
+
+    April15 may be a holiday/weekend. Use the preceding exchange session so
+    the canonical engine can schedule settlement-safe funding sales.
+    """
+    from letf.account_backtest import equity_calendar
+    first,last=pd.Timestamp(start),pd.Timestamp(end)
+    calendar=equity_calendar(first.date(),last.date())
+    return {year:calendar.date_to_session(pd.Timestamp(date(year+1,4,15)),direction='previous').date()
+            for year in range(first.year,last.year)}
+
+
 def _verified_flag(value):
     if value is None or pd.isna(value):return False
     if isinstance(value,(bool,np.bool_)):return bool(value)
@@ -32,10 +45,11 @@ def _issuer_year(value):
     return int(float(value))
 
 
-def load_bundle(folder):
+def load_bundle(folder, *, allow_fixture=False):
     folder = Path(folder)
     manifest = json.loads((folder / 'manifest.json').read_text())
-    if manifest.get('data_status') != 'OBSERVED' or manifest.get('price_convention') != 'as_traded':
+    status=manifest.get('data_status')
+    if (status != 'OBSERVED' and not (allow_fixture and status=='SOFTWARE_FIXTURE')) or manifest.get('price_convention') != 'as_traded':
         raise UnsupportedModelError('Account replay needs observed as-traded quotes and reviewed corporate actions')
     if manifest.get('currency') != 'USD' or manifest.get('frequency') != 'daily':
         raise UnsupportedModelError('Only daily USD account inputs are integrated')
@@ -52,7 +66,7 @@ def load_bundle(folder):
             files[name] = pd.read_csv(path, index_col=0, parse_dates=True)
     symbol = manifest['symbol']
     prices = files['prices']
-    if not manifest.get('distributions_complete'):
+    if manifest.get('distributions_complete') is not True:
         raise UnsupportedModelError('Distribution classification/payable dates are incomplete')
     distributions = []
     if 'distributions' in files:
@@ -72,7 +86,7 @@ def load_bundle(folder):
         actions=manifest.get('split_events',[])
         observed=prices.loc[prices['Stock Splits'].ne(0),'Stock Splits']
         supplied={pd.Timestamp(a['date']):a['ratio'] for a in actions}
-        if (not manifest.get('corporate_actions_reviewed') or len(supplied)!=len(actions) or
+        if (manifest.get('corporate_actions_reviewed') is not True or len(supplied)!=len(actions) or
             set(supplied)!=set(observed.index) or any(not a.get('source') or a.get('security')!=symbol for a in actions) or
             any(not np.isfinite(v) or v<=0 or v!=float(observed.loc[d]) for d,v in supplied.items())):
             raise UnsupportedModelError('Use a reviewed split/deliverable bundle; vendor split-restated OHLC is not sufficient')
@@ -120,6 +134,19 @@ def _serialize(value):
     raise TypeError(type(value).__name__)
 
 
+def _report_safe(value, key=None):
+    """Encode unbounded legal bracket metadata; reject nonfinite money/results."""
+    if isinstance(value, dict):
+        return {k: _report_safe(v, k) for k, v in value.items()}
+    if isinstance(value, (tuple, list)):
+        return [_report_safe(v) for v in value]
+    if isinstance(value, np.generic): value=value.item()
+    if isinstance(value, float) and not np.isfinite(value):
+        if key == 'bracket_ceiling' and np.isposinf(value): return 'UNBOUNDED'
+        raise ValueError('Nonfinite financial result cannot be exported')
+    return value
+
+
 def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02', end='2025-12-31',
                      initial_capital=100000., state='MA', ordinary_income=100000.,
                      filing_status='single',cash_flows=(),roth_history_config=None,output=None,
@@ -140,7 +167,7 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
     # Equal ex ante costs for equal instruments in the compared cash accounts.
     profiles = {'taxable': replace(TAXABLE_CASH, spread_bps=2., slippage_bps=1.),
                 'roth': replace(CONSERVATIVE_ROTH, spread_bps=2., slippage_bps=1.)}
-    payments = {year: date(year + 1, 4, 15) for year in range(pd.Timestamp(start).year, market.index[-1].year)}
+    payments = modeled_tax_payment_dates(start,market.index[-1])
     common = dict(initial_capital=initial_capital, allocator=rules, price_convention='as_traded',
         distributions_complete=True, distributions=distributions, trade_start=start,
         terminal_liquidation=True, inflation_index=cpi, settlement_policy='us_equity',
@@ -198,6 +225,8 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
             'unsettled_liquidation_proceeds': float(reconciled.unsettled.iloc[-1]),
             'ending_distribution_receivables':result['ending_distribution_receivables'],
             'days': len(reconciled), 'external_flows_investor': result['external_flows_investor']}
+    summary=_report_safe(summary)
+    serialized=json.dumps(summary,default=_serialize,indent=2,allow_nan=False)+'\n'
     if output is not None:
         output = Path(output);output.mkdir(parents=True, exist_ok=False)
         for account in net:
@@ -205,7 +234,7 @@ def compare_accounts(bundle, *, strategy='sma', lookback=50, start='2024-01-02',
             pd.DataFrame(_fills(net[account])).to_csv(output/f'{account}_fills.csv', index=False)
             pd.DataFrame(_fills(gross[account])).to_csv(output/f'{account}_pretax_fills.csv', index=False)
             (output/f'{account}_events.json').write_text(json.dumps(net[account]['ledger'].events, default=_serialize, indent=2))
-        (output/'summary.json').write_text(json.dumps(summary, default=_serialize, indent=2, allow_nan=False) + '\n')
+        (output/'summary.json').write_text(serialized)
     return summary
 
 

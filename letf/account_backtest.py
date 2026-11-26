@@ -43,6 +43,8 @@ class Distribution:
     record_date: date | None = None
 
     def __post_init__(self):
+        if type(self.qualified_verified)is not bool or type(self.section199a_verified)is not bool:
+            raise ValueError('Distribution verification requires explicit boolean flags')
         if self.pay_date < self.ex_date or not self.source or not isfinite(self.amount_per_share) or self.amount_per_share < 0:
             raise ValueError('Invalid sourced distribution schedule')
         if self.category not in ('interest', 'ordinary_dividend', 'qualified_dividend', 'capital_gain_distribution','section199a_dividend'):
@@ -119,7 +121,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                          lot_method='FIFO', source_manifest=None,
                          linked_accounts=(), linked_trades=(), liquidation_events=(),
                          freeze_roth_contribution_year=None,qualified_holding_policy='verified_at_ex',
-                         audit_detail=False):
+                         audit_detail=False,progress_callback=None):
     """One daily account engine for market replay and generated scenarios.
 
     Signals see previous closes. Fills use the current open with configured
@@ -318,6 +320,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
     for distribution in schedules:ex_schedules.setdefault(distribution.ex_date,[]).append(distribution)
     payment_items=sorted(payments.items())
     for step,timestamp in enumerate(trading.index):
+        if progress_callback is not None:
+            progress_callback(step,len(trading),timestamp)
         when = timestamp.date()
         # Reconcile maturation of the previous day's receivables separately.
         prior_pending = list(book.accounts[account_id].unsettled)
@@ -347,7 +351,7 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                     signal_market.loc[signal_market.index<timestamp,f"{action['security']}_{suffix}"]/=action['ratio']
         for distribution in ex_schedules.get(when,[]):
             if distribution.ex_date == when:
-                if distribution.category=='qualified_dividend' and qualified_holding_policy=='track_unhedged_common':
+                if distribution.category in ('qualified_dividend','section199a_dividend') and qualified_holding_policy=='track_unhedged_common':
                     holding_trackers[id(distribution)]=DividendHolding(distribution,book,account_id)
                     holding_trackers[id(distribution)].update(when,book)
                 elif taxable and distribution.category in ('qualified_dividend','section199a_dividend'):
@@ -368,8 +372,9 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                         section199a_verified=distribution.section199a_verified)
                 else:
                     tracker.update(when,book);qualified=tracker.qualified_amount
-                    if qualified:book.distribution_tax(when,account_id,qualified,'qualified_dividend',tax_date=distribution.tax_date,
-                        source=distribution.tax_date_source,qualified_verified=True)
+                    if qualified:book.distribution_tax(when,account_id,qualified,distribution.category,tax_date=distribution.tax_date,
+                        source=distribution.tax_date_source,qualified_verified=distribution.qualified_verified,
+                        section199a_verified=distribution.section199a_verified)
                     if amount-qualified>1e-10:book.distribution_tax(when,account_id,amount-qualified,'ordinary_dividend',
                         tax_date=distribution.tax_date,source=distribution.tax_date_source)
                     tracker.booked_year=distribution.tax_date.year;tracker.booked_qualified=qualified
@@ -384,7 +389,8 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 else:
                     tracker.update(when,book)
                     qualified=tracker.qualified_amount
-                    if qualified:book.income(when,account_id,qualified,'qualified_dividend',qualified_verified=True)
+                    if qualified:book.income(when,account_id,qualified,distribution.category,
+                        qualified_verified=distribution.qualified_verified,section199a_verified=distribution.section199a_verified)
                     if amount-qualified>1e-10:book.income(when,account_id,amount-qualified,'ordinary_dividend')
                     tracker.booked_year=when.year;tracker.booked_qualified=qualified
                 receivables.remove((distribution, amount))
@@ -531,7 +537,9 @@ def run_account_backtest(market, securities, profile, *, initial_capital,
                 if change>1e-9:
                     if tracker.booked_year in paid_years:raise UnsupportedModelError('QDI reclassification after finalized tax payment requires an amended liability')
                     book.reclassify_dividend(when,account_id,tracker.booked_year,change,
-                        source=tracker.distribution.source+'; actual unhedged common-share calendar holding days',qualified_verified=True)
+                        source=tracker.distribution.source+'; actual unhedged common-share calendar holding days',
+                        category=tracker.distribution.category,qualified_verified=tracker.distribution.qualified_verified,
+                        section199a_verified=tracker.distribution.section199a_verified)
                     tracker.booked_qualified=tracker.qualified_amount
         # Independently replay signed cash movements, not changes in NAV.
         for event in book.events[event_cursor:]:

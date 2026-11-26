@@ -1,0 +1,26 @@
+{
+  "classification": "OBSERVED_MARKET",
+  "supersedes_initial_importer_limits": true,
+  "QLD_2023": "BLOCKED: positive vendor payout conflicts with affirmative zero ICI/API",
+  "SSO_2021_2025": "Reviewed explicit zero rows, split factors and all20 cash-source checks",
+  "sources": [
+    {
+      "year": 2021,
+      "url": "https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_2021.xlsx",
+      "sha256": "0d63bb36f253839f0f33a717c6d7bac3e769aa764f88436b5f111a83f490b287",
+      "license": "Issuer copyright; private raw preservation only"
+    },
+    {
+      "year": 2022,
+      "url": "https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_2022.xls",
+      "sha256": "7131e8096325ac0b8cd159214779967e4c27344385cc7d1c56b6dac39e34817c",
+      "license": "Issuer copyright; private raw preservation only"
+    },
+    {
+      "year": 2023,
+      "url": "https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_2023.xlsx",
+      "sha256": "5530f532dcc558f82f3ce778df92b6837a5b4acdd5fb3411b8acf34f865bdb77",
+      "license": "Issuer copyright; private raw preservation only"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "new_issuer_tax_source": {
+    "url": "https://www.proshares.com/globalassets/proshares/documents/tax/ici_primary_2023.xlsx",
+    "sha256": "5530f532dcc558f82f3ce778df92b6837a5b4acdd5fb3411b8acf34f865bdb77",
+    "year": 2023
+  },
+  "supported_extended_funds": [
+    "TQQQ",
+    "UPRO"
+  ],
+  "blocked_extensions": {
+    "QLD": "2023 API absent March/June/September ex-dates in dated ICI",
+    "SSO": "2023 API absent March/June/September ex-dates in dated ICI",
+    "2022_ProShares_ICI": "HTTP404",
+    "2021_ProShares_ICI": "Header schema mismatch; not guessed"
+  },
+  "prior_reconstruction_CAGR_error_pp": 2.4270821740895565,
+  "prediction_skill_certification": "BLOCKED"
+}

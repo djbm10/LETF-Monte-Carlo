@@ -1,0 +1,16 @@
+{
+  "classification": "SOFTWARE_FIXTURE",
+  "commit": "e311bd32bd5db46414670140eaddcd5005bb8b1d",
+  "run": 45739285337,
+  "url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45739285337",
+  "raw_log_sha256": "631d59fc837e55bd718c8d662df2ae1ef8b80878fafdf5a224c5cf512455001a",
+  "selected_test_lines": [
+    "2026-11-26T01:59:47.1980568Z 366 passed, 4 warnings in 41.74s",
+    "2026-11-26T01:59:47.6128011Z ##[group]Run python -m letf.lab demo --output audit-output/ci-software-fixture",
+    "2026-11-26T01:59:47.6128696Z python -m letf.lab demo --output audit-output/ci-software-fixture",
+    "2026-11-26T01:59:47.1980566Z 366 passed, 4 warnings in 41.74s",
+    "2026-11-26T01:59:47.6127996Z ##[group]Run python -m letf.lab demo --output audit-output/ci-software-fixture",
+    "2026-11-26T01:59:47.6128692Z python -m letf.lab demo --output audit-output/ci-software-fixture"
+  ],
+  "financial_certification": "BLOCKED"
+}

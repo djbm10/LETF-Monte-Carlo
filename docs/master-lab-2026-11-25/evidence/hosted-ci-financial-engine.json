@@ -1,0 +1,168 @@
+{
+  "classification": "SOFTWARE_FIXTURE",
+  "engine_commit": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+  "all_listed_runs_successful": true,
+  "runs": [
+    {
+      "id": 45731145304,
+      "name": "Safe frontier hostile confirmation",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145304",
+      "updated_at": "2026-11-26T00:54:31Z"
+    },
+    {
+      "id": 45731145332,
+      "name": "TQQQ dip-buy overlay screen",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145332",
+      "updated_at": "2026-11-26T00:47:06Z"
+    },
+    {
+      "id": 45731145486,
+      "name": "Friend safe crisis frontier",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145486",
+      "updated_at": "2026-11-26T00:46:59Z"
+    },
+    {
+      "id": 45731145522,
+      "name": "Friend crisis windows",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145522",
+      "updated_at": "2026-11-26T00:47:01Z"
+    },
+    {
+      "id": 45731145346,
+      "name": "True dip reversal screen",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145346",
+      "updated_at": "2026-11-26T00:47:03Z"
+    },
+    {
+      "id": 45731145320,
+      "name": "Fortress cap historical crises",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145320",
+      "updated_at": "2026-11-26T00:47:11Z"
+    },
+    {
+      "id": 45731145563,
+      "name": "Financial mechanics regression checks",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145563",
+      "updated_at": "2026-11-26T00:47:42Z"
+    },
+    {
+      "id": 45731145363,
+      "name": "Fortress cap sweep",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145363",
+      "updated_at": "2026-11-26T00:48:06Z"
+    },
+    {
+      "id": 45731145426,
+      "name": "True dip hostile confirmation",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145426",
+      "updated_at": "2026-11-26T00:48:45Z"
+    },
+    {
+      "id": 45731145337,
+      "name": "Risk averse final",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145337",
+      "updated_at": "2026-11-26T00:49:12Z"
+    },
+    {
+      "id": 45731145461,
+      "name": "One shot recovery boost",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145461",
+      "updated_at": "2026-11-26T00:49:14Z"
+    },
+    {
+      "id": 45731145327,
+      "name": "Aggressive final hostile",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145327",
+      "updated_at": "2026-11-26T00:49:20Z"
+    },
+    {
+      "id": 45731145523,
+      "name": "Aggressive S9 micro sweep",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145523",
+      "updated_at": "2026-11-26T00:51:25Z"
+    },
+    {
+      "id": 45731145385,
+      "name": "Friend safe final",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145385",
+      "updated_at": "2026-11-26T00:51:01Z"
+    },
+    {
+      "id": 45731145384,
+      "name": "Friend safe frontier",
+      "event": "pull_request",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731145384",
+      "updated_at": "2026-11-26T00:51:21Z"
+    },
+    {
+      "id": 45731140154,
+      "name": "Financial mechanics regression checks",
+      "event": "push",
+      "head_sha": "6641ac06b27c5202a3c5724fbbd88fa7a60a3fae",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45731140154",
+      "updated_at": "2026-11-26T00:47:58Z"
+    }
+  ],
+  "scope": "Public hosted workflow states, not investment confidence gates; latest delivery head may have additional runs"
+}

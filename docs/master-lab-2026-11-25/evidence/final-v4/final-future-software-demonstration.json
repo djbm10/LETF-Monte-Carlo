@@ -1,0 +1,2409 @@
+{
+  "classification": "CONDITIONAL_STRESS",
+  "model_approved": false,
+  "model_type": "stationary_block",
+  "model_id": "998c4a94b9082c30a8b396a6495150ad2d475f14d68e5f2e6a8ec4c46439c6e1",
+  "forecast_id": "7eb8758d11bdb0e912fbaba12946bb6353bbadb1a8ab0e4e7108de5294940696",
+  "source_catalog_sha256": "1d0147b5c242baa5055ba3f9f42e4130ba23dfa2c97287040b2f53c29dcac376",
+  "conditional_distributions": [
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.6576197724933469
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 5,
+      "median_max_underwater_sessions": 330.0,
+      "median_tax_drag_dollars": 1955.6907535591454,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        27258.310847272194,
+        31273.227750188293,
+        35288.14465310439
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        30476.176966479397,
+        35434.013610189664,
+        40391.85025389994
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.6576197724933469
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 5,
+      "median_max_underwater_sessions": 374.5,
+      "median_tax_drag_dollars": 2875.7614029105316,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        27050.865060906817,
+        35671.37521116911,
+        44291.88536143139
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        30279.228163484,
+        40502.02518866237,
+        50724.82221384074
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.09453120573423074,
+          0.9054687942657693
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 5,
+      "median_max_underwater_sessions": 385.5,
+      "median_tax_drag_dollars": 3732.2101858601236,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.5,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        25870.27919418878,
+        39992.56588790568,
+        54114.85258162258
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        29002.10388997628,
+        45501.834214222865,
+        62001.56453846946
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.6576197724933469
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 5,
+      "median_max_underwater_sessions": 329.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        28214.204940833813,
+        33020.0589117793,
+        37825.91288272478
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        31549.821365422064,
+        37425.132862228165,
+        43300.44435903427
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.6576197724933469
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 5,
+      "median_max_underwater_sessions": 374.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        27965.995791613983,
+        38225.00065192779,
+        48484.005512241594
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        31313.73835093211,
+        43422.8751045726,
+        55532.011858213096
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.09453120573423074,
+          0.9054687942657693
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 5,
+      "median_max_underwater_sessions": 383.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.5,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        26481.684740573175,
+        43289.28821607778,
+        60096.891691582394
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        29705.271195580422,
+        49284.59113621898,
+        68863.91107685753
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.6576197724933469
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 10,
+      "median_max_underwater_sessions": 459.5,
+      "median_tax_drag_dollars": 7043.0546231506905,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        55725.86168850747,
+        59320.53408134275,
+        62915.20647417803
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        72719.2290717616,
+        77655.49136800438,
+        82591.75366424717
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 10,
+      "median_max_underwater_sessions": 518.5,
+      "median_tax_drag_dollars": 8618.208494203718,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        56089.701529527585,
+        65573.64428902324,
+        75057.58704851891
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        73206.91729676368,
+        85874.98441630285,
+        98543.05153584202
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 10,
+      "median_max_underwater_sessions": 520.0,
+      "median_tax_drag_dollars": 7865.7417944738545,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        47684.05811667109,
+        61695.80281948045,
+        75707.5475222898
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        62249.15553665085,
+        80827.65713798866,
+        99406.15873932646
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.6576197724933469
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 10,
+      "median_max_underwater_sessions": 459.0,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        60602.03284056418,
+        64947.83778655211,
+        69293.64273254004
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        79083.32804244291,
+        85024.60275580107,
+        90965.87746915923
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 10,
+      "median_max_underwater_sessions": 518.0,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        60900.833563963286,
+        72343.95876685827,
+        83787.08396975325
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        79488.80907033643,
+        94747.34659619996,
+        110005.88412206348
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 10,
+      "median_max_underwater_sessions": 519.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        50655.75465039417,
+        67628.16982459601,
+        84600.58499879786
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        66133.14650649356,
+        88609.50330754192,
+        111085.86010859026
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.6576197724933469
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 20,
+      "median_max_underwater_sessions": 990.5,
+      "median_tax_drag_dollars": 60661.09189305873,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        183571.71409564957,
+        194541.13506090827,
+        205510.55602616695
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        332903.9521147661,
+        346989.0753213749,
+        361074.1985279837
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 20,
+      "median_max_underwater_sessions": 1468.5,
+      "median_tax_drag_dollars": 124000.96028839206,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        293596.72489447636,
+        325574.51986616245,
+        357552.31483784853
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        532202.4455254341,
+        580101.4452650254,
+        628000.4450046166
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.09453120573423074,
+          0.9054687942657693
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 20,
+      "median_max_underwater_sessions": 1712.0,
+      "median_tax_drag_dollars": 168064.34966827367,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.5,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        338504.41377189965,
+        405319.53680277267,
+        472134.6598336457
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        613129.6758023117,
+        720994.7717873985,
+        828859.8677724851
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.0,
+          0.6576197724933469
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 20,
+      "median_max_underwater_sessions": 985.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        219246.68275178416,
+        232777.00859292515,
+        246307.33443406614
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        397593.0226739523,
+        415169.7492878954,
+        432746.4759018385
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 20,
+      "median_max_underwater_sessions": 1445.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        361652.02490106603,
+        403668.5796504112,
+        445685.1343997564
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        655524.3854234762,
+        719142.9385323039,
+        782761.4916411316
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.09453120573423074,
+          0.9054687942657693
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 20,
+      "median_max_underwater_sessions": 1711.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.5,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        422152.08655354177,
+        511068.05221337394,
+        599984.0178732062
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        764550.8503996766,
+        908896.9396430999,
+        1053243.0288865233
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.09453120573423074,
+          0.9054687942657693
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 30,
+      "median_max_underwater_sessions": 1237.5,
+      "median_tax_drag_dollars": 267601.35645083495,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.5,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        374744.12395617703,
+        455035.0562111543,
+        535325.9884661317
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        847190.8604166261,
+        1078293.4870857475,
+        1309396.113754869
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 30,
+      "median_max_underwater_sessions": 1816.5,
+      "median_tax_drag_dollars": 754806.7664991854,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        568219.5020189015,
+        1094213.3429505602,
+        1620207.1838822186
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        1306035.1875150285,
+        2642022.124935984,
+        3978009.06235694
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.34238022750665303,
+          1.0
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 30,
+      "median_max_underwater_sessions": 2121.0,
+      "median_tax_drag_dollars": 1459716.0864046887,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 1.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        642896.7160229557,
+        2000565.6595589349,
+        3358234.603094914
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        1518142.1248277933,
+        4888814.482532188,
+        8259486.840236584
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.09453120573423074,
+          0.9054687942657693
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 30,
+      "median_max_underwater_sessions": 1182.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.5,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        474417.2949509346,
+        586871.8068025376,
+        699326.3186541407
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        1073097.3288671745,
+        1392018.1407396214,
+        1710938.9526120683
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 30,
+      "median_max_underwater_sessions": 1811.0,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        731783.0113069064,
+        1458787.898499838,
+        2185792.78569277
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        1684613.0085213757,
+        3526098.799109725,
+        5367584.589698074
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.34238022750665303,
+          1.0
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.09453120573423074,
+          0.9054687942657693
+        ]
+      },
+      "horizon": 30,
+      "median_max_underwater_sessions": 2121.0,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 1.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.5,
+      "purchasing_power_p10_p50_p90": [
+        826473.5351755968,
+        2698240.4383751974,
+        4570007.341574797
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        1958350.4379512449,
+        6599721.835836004,
+        11241093.233720763
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.09453120573423074,
+          0.9054687942657693
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 40,
+      "median_max_underwater_sessions": 1237.5,
+      "median_tax_drag_dollars": 804258.6716515708,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.5,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        860773.9144220016,
+        906552.7961772876,
+        952331.6779325735
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        2694923.3781330693,
+        2833019.10621934,
+        2971114.8343056105
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 40,
+      "median_max_underwater_sessions": 1852.5,
+      "median_tax_drag_dollars": 1917202.7831244336,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        1818436.4757660865,
+        2047171.9550990486,
+        2275907.4344320106
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        5692778.742070119,
+        6396429.219643468,
+        7100079.697216816
+      ]
+    },
+    {
+      "account": "taxable",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.34238022750665303,
+          1.0
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 40,
+      "median_max_underwater_sessions": 2594.0,
+      "median_tax_drag_dollars": 2093442.696935555,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 1.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        1832843.8695400837,
+        2226890.3939591805,
+        2620936.9183782777
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        5737376.639135197,
+        6956715.1562715005,
+        8176053.673407805
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.09453120573423074,
+          0.9054687942657693
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.0,
+          0.6576197724933469
+        ]
+      },
+      "horizon": 40,
+      "median_max_underwater_sessions": 1182.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 0.5,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 0.0,
+      "purchasing_power_p10_p50_p90": [
+        1165345.3605886206,
+        1228083.09311375,
+        1290820.8256388793
+      ],
+      "strategy": "US1X_CF",
+      "wealth_p10_p50_p90": [
+        3648477.698707561,
+        3837809.838801915,
+        4027141.9788962686
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.0,
+          0.6576197724933469
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 40,
+      "median_max_underwater_sessions": 1849.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 0.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        2504203.0787551007,
+        2822723.590376294,
+        3141244.1019974872
+      ],
+      "strategy": "US2X_CF",
+      "wealth_p10_p50_p90": [
+        7839621.794427357,
+        8819628.725875594,
+        9799635.657323834
+      ]
+    },
+    {
+      "account": "roth",
+      "conditional_sampling_95_intervals": {
+        "drawdown_over_50": [
+          0.34238022750665303,
+          1.0
+        ],
+        "drawdown_over_90": [
+          0.34238022750665303,
+          1.0
+        ],
+        "fund_liquidation": [
+          0.0,
+          0.6576197724933469
+        ],
+        "outperform_paired_1x": [
+          0.34238022750665303,
+          1.0
+        ]
+      },
+      "horizon": 40,
+      "median_max_underwater_sessions": 2591.5,
+      "median_tax_drag_dollars": 0.0,
+      "paths": 2,
+      "probability_drawdown_over_50": 1.0,
+      "probability_drawdown_over_90": 1.0,
+      "probability_fund_liquidation": 0.0,
+      "probability_outperform_paired_1x": 1.0,
+      "purchasing_power_p10_p50_p90": [
+        2526511.2434878787,
+        3083380.412545856,
+        3640249.5816038335
+      ],
+      "strategy": "US3X_CF",
+      "wealth_p10_p50_p90": [
+        7908730.914898587,
+        9632258.378375338,
+        11355785.84185209
+      ]
+    }
+  ],
+  "sampling_uncertainty": {
+    "account_convergence_certified": false,
+    "classification": "CONDITIONAL_STRESS",
+    "fixed_look_family_alpha": 0.025,
+    "missing_required_evidence": [
+      "Independent root-seed replication",
+      "Registered latest-doubling stability",
+      "Account-specific probability precision"
+    ],
+    "quantile_log_error_goal": 0.02,
+    "results": [
+      {
+        "account": "roth",
+        "horizon": 5,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.311648805816908,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.311648805816908,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.709277295423544,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 5,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.28318065741107,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.28318065741107,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.636607793329425,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 5,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.250138317540141,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.250138317540141,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.977795127501178,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 5,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.230036750655351,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.230036750655351,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.883326092518764,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 5,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.1190198600997,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.1190198600997,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.208554790053594,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 5,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.121705847017935,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.121705847017935,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.099324809653355,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 10,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.259297053317837,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.259297053317837,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.434436175049568,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 10,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.177245203621604,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.177245203621604,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.3364963444845,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 10,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.234192227836006,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.234192227836006,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.642378087616159,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 10,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.156820366022979,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.156820366022979,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.529881577291098,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 10,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.010630969198463,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.010630969198463,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.667404227905358,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 10,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.961356491791312,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 10.961356491791312,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 11.552634367974651,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 20,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 12.882070719693496,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 12.882070719693496,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 12.988010293124404,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 20,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 12.704975488520741,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 12.704975488520741,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 12.806543742163644,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 20,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.368629133677766,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.368629133677766,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.590698277493638,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 20,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.162021870853478,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.162021870853478,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.369184696677738,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 20,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.498693937171181,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.498693937171181,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.901072974314863,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 20,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.28135387236218,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.28135387236218,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.65982252908485,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 30,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.808855588596305,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.808855588596305,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 14.398099937892999,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 30,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.579047701905509,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.579047701905509,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 14.128254762839331,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 30,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 14.017832076238202,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 14.017832076238202,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.578176902916887,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 30,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.787150643524047,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.787150643524047,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.276913735891073,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 30,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.589873385760235,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.589873385760235,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 16.33332283703008,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 30,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.42316999804438,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 13.42316999804438,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 16.024021748910528,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 40,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.096762315021529,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.096762315021529,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.220252465417769,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 40,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 14.79398683719493,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 14.79398683719493,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 14.91600067119145,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US1X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 40,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.842950667950365,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.842950667950365,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 16.122549457041615,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 40,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.52332052563365,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.52332052563365,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.800090762628685,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US2X_CF"
+      },
+      {
+        "account": "roth",
+        "horizon": 40,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.827455748307084,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.827455748307084,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 16.282479595390374,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      },
+      {
+        "account": "taxable",
+        "horizon": 40,
+        "interval_error_goal_passed": false,
+        "log_wealth_order_statistic_intervals": {
+          "0.1": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.507917724143313,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.5": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.507917724143313,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          },
+          "0.9": {
+            "alpha": 0.0002777777777777778,
+            "estimate": 15.953325754957836,
+            "high": "POSITIVE_INFINITY_UNBOUNDED",
+            "low": "NEGATIVE_INFINITY_ZERO_NAV",
+            "lower_rank": 0,
+            "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+            "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+            "upper_rank": 3
+          }
+        },
+        "paths": 2,
+        "strategy": "US3X_CF"
+      }
+    ],
+    "scope": "Sampling error conditional on exactly this model, cash/tax/flow policy; not model or future-law uncertainty"
+  },
+  "structural_uncertainty": {
+    "not_in_sampling_CI": [
+      "Historical regime support/duration",
+      "Unprecedented catastrophe frequencies",
+      "Funding/collateral/fee contracts",
+      "Future tax law and income/eligibility",
+      "Daily bridge, monetary regime, source revisions and unobserved daily tail behavior"
+    ],
+    "sensitivity_method": "Separate explicit configurations/seeds; no mixture weights or Bayesian credible intervals implied",
+    "weights_or_probabilities_assigned": false
+  },
+  "elapsed_seconds": 157.33388885800377,
+  "process_peak_rss_bytes": 227950592,
+  "runtime_scope": "Wall time for this call; peak RSS is process lifetime including source/model setup",
+  "rankings_released": false
+}

@@ -1,0 +1,39 @@
+{
+  "classification": "BLOCKED",
+  "purpose": "Mixed evidence pack; no investment-prediction certification",
+  "exporter_commit": "43dbaa3fa54863a777a88a456eb5bcf6a82b88c5",
+  "exporter_sha256": "00dd01d727ecedae0eccdf800c4050d21158b3d2e7b1c63ada8e85549b7580c7",
+  "private_producer_artifact_hashes": {
+    "audit-output/observed-five-year-cohort-v4-final-engine/report.json": "72f95698ca27020d82cf9215cb5be113e04f843875def0e1b4577199a32ed832",
+    "audit-output/s6-observed-v3-final-engine/report.json": "c36bc5c9cefb8d9485733d978bce03a57869b93d1f97ea091697834f00bf534e",
+    "audit-output/s6-hfea-common-v2/report.json": "14cca2d69aab690bec0ee323cf460cde5804380753601c86ae2f62308a3cdd4b",
+    "audit-output/all-cash-v1/report.json": "f523ab4c675edda948cda9223c2311df257488b200ed9021d2ae8fc48b5e9fcf",
+    "audit-output/1930-counterfactual-v2/report.json": "cdc5df1efd0279295c73b5c54ec3f3a93d7a23c093274652c358b3aecab5b140",
+    "audit-output/canonical-future-v1/laboratory-report.json": "6371e8700dd0fc4c10f45d42b29815afacbcff1d651c3befb06a47af32761584",
+    "audit-output/full-account-precision-v1/assessment-621e363a801582a8358c952b117d1724e0f49e48ba90c1cb291e0d6942330b1e.json": "621e363a801582a8358c952b117d1724e0f49e48ba90c1cb291e0d6942330b1e",
+    "audit-output/refreshed-nav-diagnostic-v2.json": "74ec1eed1e87cb78d688f3e0090c244295e181042bafb127d825ec2e7d75c4ab",
+    "audit-output/cohort-2025-v4-wash-split/report.json": "dd466f1de656e3460c50be4c6f3ddbd2bfe09a238df179dbfc9cd686f7a4bab6",
+    "audit-output/master-operations-v1/operations-report.json": "19388cd8e1f0c4ce7ac6605af35dfe777c4e94d038c1125717f31c9ab544641c",
+    "audit-output/refreshed-operations-v1/operations-report.json": "df73c7f2ae9e83c475425207e833bd010bd9967dde05b0c7efdbf79d108b8151",
+    "audit-output/free-derivative-samples-v1/sample-inspection.json": "13c7b0541fbce578731ee6974943d362938e909eae51c8710863675f00b49dcc",
+    "audit-output/master-mission-baseline/legacy-realism-v1.json": "63507da1c1fe9eb06c55eb34d7638304d8dddab8a1ee47c8c744c7174b1be41b",
+    "docs/financial-realism-2026-11-25/evidence/preserved-hashes.json": "364c446a481cef2344d857d6359cc8e82ced11988a4fed3f5abdbb7013655dc3"
+  },
+  "public_aggregate_hashes": {
+    "final-source-catalog.json": "6e9332348a95d5ef752b25603b20a9e7a6b579f37c7151b8ebdff4091eb63ee1",
+    "final-observed-accounts.json": "2d448b619e48360e4622d9b165936780b2c05b19a3dd376252e194da7b72534a",
+    "final-s6-flow-comparison.json": "2e80319765399f32e8c020c156eb518eb1fe6e48e0b389ea0238bbc1fbc2739b",
+    "final-s6-hfea-flow-cohort.json": "13769bca4d76a578f516eacac6de70c96927d49ce56923c265007c4c97f6dee2",
+    "final-all-cash-conformance.json": "f39691a6ddb1b9f4176acfc978bbd595028c070e3ba83a071dbe4d0f3d883ba3",
+    "final-counterfactual-summary.json": "d2fe974e76dbdad0acff3ca63b1b5a4a721e3f91de64fa663920b206228a9c37",
+    "final-future-software-demonstration.json": "87728249ddf28e81bf5c257f9bcf813f56156b8d99ecf8882969786920115b7b",
+    "final-full-account-precision.json": "2345df1c1098eb2661ed12db277c7d553acad1269a8a9bd02647b8c6ca142e62",
+    "final-fixed-parameter-nav-diagnostic.json": "71606218a411c78c4775812d96ae8bd43da07cc8a39d0fc7e5e6e583545b2e82",
+    "final-strategy-cohort.json": "072aa48fec58789f36d5029255d8558039ea83cc948f714555db018defce02df",
+    "final-prospective-operations.json": "00168e724c825eea45bb42e327c5840773c7f9710e0c651e4dd8beb2a0e2d237",
+    "final-provider-demo-inspection.json": "36e83961b5ef64e175c65741aecf741fd9d3fb8183cc7fee964f5dbc94eeae11",
+    "final-legacy-realism.json": "be29e716071deb6f0ab8b83f07708ab6aad821113d13dfde2fd362898ed25272",
+    "final-preservation.json": "34f25b469bcd913e9740a8a7e55d56a04a19775ac7e9dd6efe56010951c3669b",
+    "final-issuer-extension-sources.json": "61e7cbf02e330c1b6419e8f222138614e002f25df28cc2f3ccf5608a02d0c5b1"
+  }
+}

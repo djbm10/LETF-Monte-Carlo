@@ -13,8 +13,13 @@ from dateutil.relativedelta import relativedelta
 from letf.accounts import calendar_date, positive
 from letf.accuracy import UnsupportedModelError
 
-LIMITS = {2024: (7000, 1000), 2025: (7000, 1000), 2026: (7500, 1100)}
-PHASEOUT = {2024: {'single': (146000, 161000), 'married': (230000, 240000)},
+LIMITS = {2021: (6000, 1000), 2022: (6000, 1000), 2023: (6500, 1000),
+          2024: (7000, 1000), 2025: (7000, 1000), 2026: (7500, 1100)}
+# IRS Notices 2020-79, 2021-61, 2022-55; IRC219 catch-up $1,000.
+PHASEOUT = {2021: {'single': (125000, 140000), 'married': (198000, 208000)},
+            2022: {'single': (129000, 144000), 'married': (204000, 214000)},
+            2023: {'single': (138000, 153000), 'married': (218000, 228000)},
+            2024: {'single': (146000, 161000), 'married': (230000, 240000)},
             2025: {'single': (150000, 165000), 'married': (236000, 246000)},
             2026: {'single': (153000, 168000), 'married': (242000, 252000)}}
 

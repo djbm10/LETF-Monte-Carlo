@@ -100,7 +100,10 @@ def assess_daily(sources,commitment,*,output):
     else:
         actual,meta=sources.panel();daily=sources.daily_factors()
         if daily.index.max().date()>now.date():raise ValueError('Future-dated observations cannot be assessed')
-        eq=np.log1p(daily['Mkt-RF']+daily.RF);rows=[];prefix_rows=[];complete={}
+        for name in meta.get('source_hashes',{}):
+            item=sources.catalog['sources'][name]
+            if pd.Timestamp(item['retrieved_at'])>pd.Timestamp(now):raise ValueError('Outcome source captured after assessment time')
+        eq=np.log1p(daily['Mkt-RF']+daily.RF);rows=[];prefix_rows=[];complete={};coverage=[]
         import exchange_calendars as xcals
         calendar=xcals.get_calendar('XNYS',start=dates[0].to_period('M').start_time,end=dates[-1])
         for day in due:
@@ -109,7 +112,12 @@ def assess_daily(sources,commitment,*,output):
             expected=calendar.sessions_in_range(start,day).tz_localize(None)
             # A partial downloaded month must not masquerade as a completed
             # quiet market. No synthetic return fills are allowed here.
-            if len(expected) and expected.isin(observed.index).all() and np.isfinite(observed).all():
+            valid_daily=bool(len(expected) and observed.index.equals(expected) and np.isfinite(observed).all())
+            missing=[c for c in CORE if day not in actual.index or c not in actual or not np.isfinite(actual.loc[day,c])]
+            coverage.append({'date':str(day.date()),'expected_sessions':len(expected),'observed_sessions':len(observed),
+                'daily_complete':valid_daily,'missing_macro_variables':missing,
+                'joint_outcome_complete':valid_daily and not missing})
+            if valid_daily:
                 complete[day]=observed
         for t,day in enumerate(dates):
             if day not in due:continue
@@ -140,9 +148,12 @@ def assess_daily(sources,commitment,*,output):
                     'drawdown_exceeds_p99':dd>prediction['max_drawdown_p50_p95_p99'][2],
                     'underwater_exceeds_p95':underwater>prediction['underwater_sessions_p50_p95'][1],
                     'crash_rate_exceeds_p95':{key:value>prediction['crash_rate_per252_p50_p95'][key][1] for key,value in crashes.items()},
-                    'scope':'Frozen reference tail diagnostics; overlapping prefixes are not independent eras'})
+                    'macro_outcomes_complete':all(c['joint_outcome_complete'] for c in coverage if pd.Timestamp(c['date'])in prefix),
+                    'scope':'Daily-only frozen reference tail diagnostics; missing CPI/credit is not a complete joint outcome; overlapping prefixes are not independent eras'})
         result={'status':'ASSESSED_ELAPSED_OUTCOMES_ONLY' if rows else 'PENDING_VERIFIED_OUTCOME_DATA',
             'evaluated_rows':rows,'evaluated_prefix_tails':prefix_rows,'source_catalog_sha256':sources.catalog_hash,'promoted':False,
+            'evaluated_months':sum(c['joint_outcome_complete'] for c in coverage),
+            'outcome_coverage':coverage,
             'reason':'These reference diagnostics cannot approve a candidate or reuse historical rejected evidence'}
     result['commitment_sha256']=sha256(Path(commitment).read_bytes()).hexdigest();result['assessed_at']=now.isoformat()
     result['assessment_implementation_sha256']=sha256(Path(__file__).read_bytes()).hexdigest()

@@ -1,0 +1,56 @@
+{
+  "sources": {
+    "ma-2023": {
+      "sha256": "9c220e87530aae4032b2231a65907cd1816f1d4028aaddcaf9160c275dd178a4",
+      "bytes": 723273,
+      "url": "https://www.mass.gov/doc/2023-form-1-instructions/download",
+      "captured_at": "2026-11-25T20:21:59.734499+00:00",
+      "historical_publication_availability_not_inferred": true
+    },
+    "n-20-79": {
+      "sha256": "fcabeb97d4ab3045472d96bbc16aa9fab978cfebc2c6369f3368c6875fade001",
+      "bytes": 77574,
+      "url": "https://www.irs.gov/pub/irs-drop/n-20-79.pdf",
+      "captured_at": "2026-11-25T20:21:59.852643+00:00",
+      "historical_publication_availability_not_inferred": true
+    },
+    "n-21-61": {
+      "sha256": "8016c2fdf5834b1d9e0fb68548aa07659bb2a9cfeb20a62633c51799c5e74004",
+      "bytes": 119851,
+      "url": "https://www.irs.gov/pub/irs-drop/n-21-61.pdf",
+      "captured_at": "2026-11-25T20:21:59.939253+00:00",
+      "historical_publication_availability_not_inferred": true
+    },
+    "n-22-55": {
+      "sha256": "204a8ef116142cb3effaa7b864a10783ef33efb830e285349f2508fd37b92b6f",
+      "bytes": 124629,
+      "url": "https://www.irs.gov/pub/irs-drop/n-22-55.pdf",
+      "captured_at": "2026-11-25T20:22:00.037862+00:00",
+      "historical_publication_availability_not_inferred": true
+    },
+    "rp-20-45": {
+      "sha256": "12cfb00115b86e3bb97937f1a5fc340cf98c0d61b7508c800b9a3a4674aac52d",
+      "bytes": 200661,
+      "url": "https://www.irs.gov/pub/irs-drop/rp-20-45.pdf",
+      "captured_at": "2026-11-25T20:22:00.743862+00:00",
+      "historical_publication_availability_not_inferred": true
+    },
+    "rp-21-45": {
+      "sha256": "405535647b6287103f5392258d4342cdb70535bf07ff05d89eebc71768083627",
+      "bytes": 196541,
+      "url": "https://www.irs.gov/pub/irs-drop/rp-21-45.pdf",
+      "captured_at": "2026-11-25T20:22:01.259895+00:00",
+      "historical_publication_availability_not_inferred": true
+    },
+    "rp-22-38": {
+      "sha256": "6c20f8a6c9a3bdf4251fcf50dbf2e2382abc8cbeb1e5e2d3eecdc38b2cbf6bbf",
+      "bytes": 240315,
+      "url": "https://www.irs.gov/pub/irs-drop/rp-22-38.pdf",
+      "captured_at": "2026-11-25T20:22:01.789187+00:00",
+      "historical_publication_availability_not_inferred": true
+    }
+  },
+  "blocked": {
+    "ma-2022": "Original instruction URL HTTP404; no pre-2023 MA coverage added"
+  }
+}

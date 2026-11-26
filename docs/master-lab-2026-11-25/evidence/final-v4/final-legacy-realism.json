@@ -1,0 +1,46 @@
+{
+  "classification": "SOFTWARE_FIXTURE",
+  "T18": {
+    "passed": true,
+    "missing_keys": []
+  },
+  "T19": {
+    "passed": true,
+    "score": 59.50749533337072
+  },
+  "T20": {
+    "passed": false,
+    "score": 59.50749533337072
+  },
+  "T21": {
+    "passed": true,
+    "score": 24.727474032254722
+  },
+  "T22": {
+    "passed": true,
+    "aggregate": {
+      "median_score": 42.11748468281272,
+      "p10_score": 28.205476162366324,
+      "p90_score": 56.02949320325912,
+      "n_paths": 2.0
+    }
+  },
+  "T23": {
+    "passed": true,
+    "median_score": 24.727474032254722
+  },
+  "T24": {
+    "passed": true
+  },
+  "T25": {
+    "passed": true
+  },
+  "T26": {
+    "passed": true
+  },
+  "T27": {
+    "passed": false,
+    "error": "BlockBootstrapReturns.sample_returns() got an unexpected keyword argument 'max_crisis_chain'"
+  },
+  "all_passed": false
+}

@@ -39,4 +39,4 @@ def test_ma_unmodeled_low_income_or_old_year_is_explicit():
     with pytest.raises(UnsupportedModelError):
         massachusetts_tax(2025, 0, lt_gains=10000)
     with pytest.raises(UnsupportedModelError):
-        massachusetts_tax(2023, 100000)
+        massachusetts_tax(2022, 100000)

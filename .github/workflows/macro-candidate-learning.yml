@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   candidate:
-    if: vars.ENABLE_MACRO_RETRAINING == 'true' && vars.MACRO_SOURCE_RIGHTS_ACKNOWLEDGED == 'true'
+    if: vars.ENABLE_MACRO_RETRAINING == 'true' && vars.MACRO_SOURCE_RIGHTS_ACKNOWLEDGED == 'true' && vars.MACRO_APPROVED_PRIVATE_STORAGE == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

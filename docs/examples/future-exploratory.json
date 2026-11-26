@@ -1,0 +1,12 @@
+{
+  "schema": 1, "mode": "future",
+  "sources": "../macro-learning/audit-output/macro-sources-v4",
+  "calibration_end": "2026-09-30", "model_type": "stationary_block",
+  "paths": 2, "horizons": [5, 10, 20, 30, 40],
+  "strategies": ["US1X_CF", "US2X_CF", "US3X_CF"],
+  "seed": 20261125, "initial_capital": 10000.0, "annual_contribution": 3000.0,
+  "roth_birth_date": "1980-01-01", "roth_first_tax_year": 2010,
+  "roth_regular_basis": 10000.0, "roth_magi": 100000.0,
+  "annual_compensation": 100000.0, "ordinary_income": 100000.0,
+  "state": "FEDERAL_ONLY", "frozen_tax_year": 2026
+}

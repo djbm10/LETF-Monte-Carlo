@@ -1,0 +1,70 @@
+{
+  "classification": "BLOCKED",
+  "reason": "Intermediate aggregate drafts retained unchanged privately; final-v4 is the compact public evidence pack. No source experiment or frozen forecast was altered.",
+  "drafts": {
+    "final-v1": {
+      "retained_private_path": "audit-output/aggregate-drafts-v1/final-v1",
+      "files": 15,
+      "original_hashes": {
+        "final-issuer-extension-sources.json": "61e7cbf02e330c1b6419e8f222138614e002f25df28cc2f3ccf5608a02d0c5b1",
+        "final-provider-demo-inspection.json": "36e83961b5ef64e175c65741aecf741fd9d3fb8183cc7fee964f5dbc94eeae11",
+        "final-manifest.json": "1852469cfb49786fdc70510708868b3c9606208e1461003526a58f91692255f2",
+        "SUPERSEDED.md": "62615bc78ca26801199304d431df91c669a8f19387d0c8ba4a79e9f3bef2bb08",
+        "final-prospective-operations.json": "00168e724c825eea45bb42e327c5840773c7f9710e0c651e4dd8beb2a0e2d237",
+        "final-s6-flow-comparison.json": "1a866ca93e56b7a45831f4d15bbbb5fc04fc81951ad5518419c7e1c7483e76bc",
+        "final-observed-accounts.json": "ff86a34c53611b4cf46c2b11ba01158b19c5dfc319b4fa9313f814a8bba836c5",
+        "final-counterfactual-summary.json": "6d7b418560011c62c6f7557a84c5d1c8d378697841d42750cd6ddb567f0d66c3",
+        "final-fixed-parameter-nav-diagnostic.json": "71606218a411c78c4775812d96ae8bd43da07cc8a39d0fc7e5e6e583545b2e82",
+        "final-strategy-cohort.json": "af8cdf29cb7fddb13e48032fafd9fc3edf7fef721cf9a80b71516c1c3cb1e025",
+        "final-preservation.json": "34f25b469bcd913e9740a8a7e55d56a04a19775ac7e9dd6efe56010951c3669b",
+        "final-legacy-realism.json": "be29e716071deb6f0ab8b83f07708ab6aad821113d13dfde2fd362898ed25272",
+        "final-full-account-precision.json": "2345df1c1098eb2661ed12db277c7d553acad1269a8a9bd02647b8c6ca142e62",
+        "final-future-software-demonstration.json": "87728249ddf28e81bf5c257f9bcf813f56156b8d99ecf8882969786920115b7b",
+        "final-source-catalog.json": "13d3e2ca793a031435b9ce3a2bac0691ca0a6dcce9efdd7e50e7e1a9ddd1004d"
+      }
+    },
+    "final-v2": {
+      "retained_private_path": "audit-output/aggregate-drafts-v1/final-v2",
+      "files": 15,
+      "original_hashes": {
+        "final-issuer-extension-sources.json": "61e7cbf02e330c1b6419e8f222138614e002f25df28cc2f3ccf5608a02d0c5b1",
+        "final-provider-demo-inspection.json": "36e83961b5ef64e175c65741aecf741fd9d3fb8183cc7fee964f5dbc94eeae11",
+        "final-manifest.json": "783b2b374383dd25d90e43d41d17630c1b128a248f2d5a81f5fe567e9bd9dd35",
+        "SUPERSEDED.md": "9baefa46c2a285b44ee1c10aeb73aa0296a7901d1470ca094b5196d7eacfd12d",
+        "final-prospective-operations.json": "00168e724c825eea45bb42e327c5840773c7f9710e0c651e4dd8beb2a0e2d237",
+        "final-s6-flow-comparison.json": "1a866ca93e56b7a45831f4d15bbbb5fc04fc81951ad5518419c7e1c7483e76bc",
+        "final-observed-accounts.json": "ff86a34c53611b4cf46c2b11ba01158b19c5dfc319b4fa9313f814a8bba836c5",
+        "final-counterfactual-summary.json": "7dda884a49057ad8053705748c7ccb674634b8e3405dcecdf4fb58441f24c67e",
+        "final-fixed-parameter-nav-diagnostic.json": "71606218a411c78c4775812d96ae8bd43da07cc8a39d0fc7e5e6e583545b2e82",
+        "final-strategy-cohort.json": "af8cdf29cb7fddb13e48032fafd9fc3edf7fef721cf9a80b71516c1c3cb1e025",
+        "final-preservation.json": "34f25b469bcd913e9740a8a7e55d56a04a19775ac7e9dd6efe56010951c3669b",
+        "final-legacy-realism.json": "be29e716071deb6f0ab8b83f07708ab6aad821113d13dfde2fd362898ed25272",
+        "final-full-account-precision.json": "2345df1c1098eb2661ed12db277c7d553acad1269a8a9bd02647b8c6ca142e62",
+        "final-future-software-demonstration.json": "87728249ddf28e81bf5c257f9bcf813f56156b8d99ecf8882969786920115b7b",
+        "final-source-catalog.json": "13d3e2ca793a031435b9ce3a2bac0691ca0a6dcce9efdd7e50e7e1a9ddd1004d"
+      }
+    },
+    "final-v3": {
+      "retained_private_path": "audit-output/aggregate-drafts-v1/final-v3",
+      "files": 16,
+      "original_hashes": {
+        "final-issuer-extension-sources.json": "61e7cbf02e330c1b6419e8f222138614e002f25df28cc2f3ccf5608a02d0c5b1",
+        "final-provider-demo-inspection.json": "36e83961b5ef64e175c65741aecf741fd9d3fb8183cc7fee964f5dbc94eeae11",
+        "final-manifest.json": "cfe6fdcaba9fbfce62e7a767bb27f9df48555033c0b367ff81183d01d16a2d1b",
+        "final-prospective-operations.json": "00168e724c825eea45bb42e327c5840773c7f9710e0c651e4dd8beb2a0e2d237",
+        "final-s6-flow-comparison.json": "2e80319765399f32e8c020c156eb518eb1fe6e48e0b389ea0238bbc1fbc2739b",
+        "final-observed-accounts.json": "2d448b619e48360e4622d9b165936780b2c05b19a3dd376252e194da7b72534a",
+        "final-counterfactual-summary.json": "7dda884a49057ad8053705748c7ccb674634b8e3405dcecdf4fb58441f24c67e",
+        "final-fixed-parameter-nav-diagnostic.json": "71606218a411c78c4775812d96ae8bd43da07cc8a39d0fc7e5e6e583545b2e82",
+        "final-strategy-cohort.json": "072aa48fec58789f36d5029255d8558039ea83cc948f714555db018defce02df",
+        "final-preservation.json": "34f25b469bcd913e9740a8a7e55d56a04a19775ac7e9dd6efe56010951c3669b",
+        "final-legacy-realism.json": "be29e716071deb6f0ab8b83f07708ab6aad821113d13dfde2fd362898ed25272",
+        "final-s6-hfea-flow-cohort.json": "13769bca4d76a578f516eacac6de70c96927d49ce56923c265007c4c97f6dee2",
+        "final-full-account-precision.json": "2345df1c1098eb2661ed12db277c7d553acad1269a8a9bd02647b8c6ca142e62",
+        "final-future-software-demonstration.json": "87728249ddf28e81bf5c257f9bcf813f56156b8d99ecf8882969786920115b7b",
+        "final-source-catalog.json": "6e9332348a95d5ef752b25603b20a9e7a6b579f37c7151b8ebdff4091eb63ee1",
+        "final-all-cash-conformance.json": "f39691a6ddb1b9f4176acfc978bbd595028c070e3ba83a071dbe4d0f3d883ba3"
+      }
+    }
+  }
+}

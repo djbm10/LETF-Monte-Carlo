@@ -46,6 +46,8 @@ class BrokerProfile:
     def __post_init__(self):
         if self.account_type not in ('taxable', 'roth'):
             raise ValueError('Account type must be taxable or roth')
+        if type(self.fractional_shares)is not bool:
+            raise ValueError('Fractional-share permission must be an explicit boolean')
         for name in ('minimum_equity', 'commission', 'spread_bps', 'slippage_bps'):
             positive(getattr(self, name), name, True)
 
@@ -90,6 +92,7 @@ class Realization:
     disallowed: float = 0.
     permanent_disallowed: float = 0.
     unmatched: float = 0.
+    matching_share_factor: float = 1. # current units per originally sold share; dollar sale/basis stay immutable
 
     @property
     def gain(self):
@@ -105,6 +108,7 @@ class Account:
     income: dict = field(default_factory=dict)
     unsettled: list = field(default_factory=list)
     collateral_reservations: dict = field(default_factory=dict)
+    share_reservations: dict = field(default_factory=dict)
 
     @property
     def buying_power(self):
@@ -171,7 +175,7 @@ class PortfolioLedger:
         if realization.unmatched <= 1e-10 or lot.replacement_used or lot.shares <= 1e-10:
             return
         qty = min(realization.unmatched, lot.shares)
-        loss_per_share = (realization.basis - realization.proceeds) / realization.shares
+        loss_per_share = (realization.basis - realization.proceeds) / (realization.shares*realization.matching_share_factor)
         # Split partial replacements so basis and holding periods do not leak
         # into shares that did not replace the sold shares.
         if qty < lot.shares - 1e-10:
@@ -270,6 +274,9 @@ class PortfolioLedger:
                 raise UnsupportedModelError('Audited lot methods: FIFO, HIFO, SPEC_ID')
             if sum(l.shares for l in lots) < qty - 1e-9:
                 raise ValueError('Insufficient shares; naked short sales are unsupported')
+            reserved=sum(items.get(symbol,0.) for items in account.share_reservations.values())
+            if self.quantity(account_id,symbol)-reserved < qty-1e-9:
+                raise ValueError('Shares are reserved as covered-option collateral')
             proceeds = qty * execution_price - commission
             if proceeds < 0:
                 raise ValueError('Commission exceeds sale proceeds')
@@ -321,6 +328,8 @@ class PortfolioLedger:
         """Sourced cash liquidation, including zero residual NAV; not a mark."""
         when=calendar_date(when);positive(cash_per_share,'liquidation proceeds',True)
         if not source:raise ValueError('Liquidation evidence required')
+        if any(items.get(symbol,0.)>0 for a in self.accounts.values() for items in a.share_reservations.values()):
+            raise UnsupportedModelError('Underlying liquidation with covered-option obligations requires reviewed contract/deliverable actions')
         if cash_per_share==0 and any(a.profile.account_type=='taxable' and self.quantity(key,symbol)>1e-10
                                     for key,a in self.accounts.items()):
             raise UnsupportedModelError('Zero-residual taxable securities require reviewed worthless-security/IRC165(g) tax treatment')
@@ -339,9 +348,9 @@ class PortfolioLedger:
         positive(amount, 'income', True)
         if category not in ('interest', 'ordinary_dividend', 'qualified_dividend', 'capital_gain_distribution','section199a_dividend'):
             raise UnsupportedModelError('Unsupported distribution classification')
-        if category == 'qualified_dividend' and not qualified_verified:
+        if category == 'qualified_dividend' and qualified_verified is not True:
             raise UnsupportedModelError('Qualified-dividend issuer and holding-period tests must be verified')
-        if category == 'section199a_dividend' and not section199a_verified:
+        if category == 'section199a_dividend' and section199a_verified is not True:
             raise UnsupportedModelError('Section 199A issuer and investor holding-period tests must be verified')
         when = self._advance(when)
         account = self.accounts[account_id]
@@ -363,8 +372,8 @@ class PortfolioLedger:
         if not source or tax_date>calendar_date(when):raise ValueError('Dated tax-recognition evidence required')
         if category not in ('ordinary_dividend','qualified_dividend','capital_gain_distribution','section199a_dividend'):
             raise UnsupportedModelError('Unsupported noncash distribution tax classification')
-        if category=='qualified_dividend' and not qualified_verified:raise UnsupportedModelError('Verified QDI required')
-        if category=='section199a_dividend' and not section199a_verified:raise UnsupportedModelError('Verified 199A required')
+        if category=='qualified_dividend' and qualified_verified is not True:raise UnsupportedModelError('Verified QDI required')
+        if category=='section199a_dividend' and section199a_verified is not True:raise UnsupportedModelError('Verified 199A required')
         when=self._advance(when);bucket=self.accounts[account_id].income.setdefault(tax_date.year,{})
         bucket[category]=bucket.get(category,0.)+amount
         self.events.append({'date':when,'account':account_id,'action':'DISTRIBUTION_TAX','category':category,
@@ -377,29 +386,40 @@ class PortfolioLedger:
         when=self._advance(when);self.accounts[account_id].cash+=amount
         self.events.append({'date':when,'account':account_id,'action':'DISTRIBUTION_CASH','amount':amount,'source':source})
 
-    def reclassify_dividend(self,when,account_id,tax_year,amount,*,source,qualified_verified=False):
+    def reclassify_dividend(self,when,account_id,tax_year,amount,*,source,qualified_verified=False,
+                            category='qualified_dividend',section199a_verified=False):
         """Tax-only correction after actual QDI holding days become observable.
 
         Cash was already paid. Never manufacture another distribution or move
         its original receipt tax year merely because proof arrives later.
         """
-        positive(amount,'QDI reclassification',True)
-        if not source or not qualified_verified:raise UnsupportedModelError('Issuer and actual investor holding evidence required')
+        positive(amount,'Preferential dividend reclassification',True)
+        verified=(qualified_verified is True if category=='qualified_dividend' else
+                  section199a_verified is True if category=='section199a_dividend' else False)
+        if not source or not verified:raise UnsupportedModelError('Issuer and actual investor holding evidence required')
         when=self._advance(when)
         if type(tax_year)is not int or tax_year>when.year:raise ValueError('Original receipt tax year required')
         bucket=self.accounts[account_id].income.setdefault(tax_year,{})
         if amount>bucket.get('ordinary_dividend',0.)+1e-8:raise ValueError('Cannot reclassify more than recorded ordinary dividends')
         bucket['ordinary_dividend']=max(0.,bucket.get('ordinary_dividend',0.)-amount)
-        bucket['qualified_dividend']=bucket.get('qualified_dividend',0.)+amount
+        bucket[category]=bucket.get(category,0.)+amount
         self.events.append({'date':when,'account':account_id,'action':'DIVIDEND_RECLASSIFICATION',
-            'tax_year':tax_year,'amount':amount,'from':'ordinary_dividend','to':'qualified_dividend','source':source})
+            'tax_year':tax_year,'amount':amount,'from':'ordinary_dividend','to':category,'source':source})
 
     def split(self, when, symbol, ratio):
         positive(ratio, 'split ratio')
+        if any(items.get(symbol,0.)>0 for a in self.accounts.values() for items in a.share_reservations.values()):
+            raise UnsupportedModelError('Covered-option collateral crosses a split; an OCC deliverable action is required')
+        if any(other!=symbol and self._identity(other)==self._identity(symbol) for other in self.securities):
+            raise UnsupportedModelError('Split across different-ticker wash identities requires a reviewed share-conversion mapping')
         when = self._advance(when)
-        if any(r.unmatched > 1e-10 and abs((when - r.sold).days) <= 30
-               and self._identity(r.security) == self._identity(symbol) for r in self.realizations):
-            raise UnsupportedModelError('Split during pending wash matching requires adjusted share identities')
+        # A split is not a new purchase. Restate open replacement quantities,
+        # not historical sale shares/proceeds, so dollar losses are unchanged.
+        for realization in self.realizations:
+            if (realization.security==symbol and realization.unmatched>1e-10 and
+                    0 <= (when-realization.sold).days <= 30):
+                realization.unmatched*=ratio
+                realization.matching_share_factor*=ratio
         for lot in self.lots:
             if lot.security == symbol:
                 lot.shares *= ratio

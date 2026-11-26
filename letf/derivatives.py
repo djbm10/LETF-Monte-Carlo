@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from math import isclose, isfinite
 from numbers import Integral
+from zoneinfo import ZoneInfo
 
 from letf.accounts import positive, calendar_date
 from letf.accuracy import Evidence, UnsupportedModelError
@@ -115,13 +116,16 @@ class FuturesBook:
 
     def trade(self, when, contract, quantity, price):
         when = calendar_date(when)
+        if (self.ledger.accounts[self.account_id].profile.account_type=='roth' and
+                when<calendar_date(self.profile_verified_on)):
+            raise UnsupportedModelError('IRA futures permission cannot be backdated before its supplied verification date')
         if type(quantity) is not int or quantity == 0:
             raise ValueError('Integer nonzero futures contracts required')
         if when > contract.expiry or when < contract.margin_as_of:
             raise UnsupportedModelError('Contract expired or margin schedule not yet available')
         if contract.first_notice is not None and when >= contract.first_notice:
             raise UnsupportedModelError('Physical delivery/notice requires an explicit delivery handler')
-        if not contract.section1256:
+        if contract.section1256 is not True:
             raise UnsupportedModelError('Non-1256 futures require a separate tax classification model')
         contract.validate_price(price)
         existing = self.positions.get(contract.symbol)
@@ -137,11 +141,12 @@ class FuturesBook:
         pnl = old_qty * contract.multiplier * (price - prior)
         new_reserved = (self.reserved() - abs(old_qty) * contract.initial_margin * self.multiplier
                         + abs(new_qty) * contract.initial_margin * self.multiplier)
+        when = self.ledger._advance(when)
         account = self.ledger.accounts[self.account_id]
         other_reserves = sum(v for k, v in account.collateral_reservations.items() if k != 'futures')
-        if new_reserved > account.cash - other_reserves + pnl - cost + 1e-9 and abs(new_qty) > abs(old_qty):
+        opens_risk = abs(new_qty) > abs(old_qty) or old_qty * new_qty < 0
+        if new_reserved > account.cash - other_reserves + pnl - cost + 1e-9 and opens_risk:
             raise ValueError('Insufficient initial/house margin')
-        when = self.ledger._advance(when)
         self._book_pnl(when, pnl - cost)
         if new_qty:
             self.positions[contract.symbol] = FuturesPosition(contract, new_qty, price)
@@ -169,18 +174,19 @@ class FuturesBook:
             contract.validate_price(adverse_extreme)
             if not extreme_source:
                 raise ValueError('Daily adverse extreme requires a price source')
+        when = self.ledger._advance(when)
         account = self.ledger.accounts[self.account_id]
+        other_reserves=sum(v for k,v in account.collateral_reservations.items() if k!='futures')
         pnl = position.quantity * contract.multiplier * (settlement - position.settlement)
         if adverse_extreme is None:
             possible_intraday_breach = None  # unknown, not False
         else:
             adverse_pnl = position.quantity * contract.multiplier * (adverse_extreme - position.settlement)
-            possible_intraday_breach = account.cash + adverse_pnl < self.reserved(maintenance=True)
-        when = self.ledger._advance(when)
+            possible_intraday_breach = account.cash - other_reserves + adverse_pnl < self.reserved(maintenance=True)
         self._book_pnl(when, pnl)
         position.settlement = settlement
         self.last_settlement[symbol] = when
-        margin_call = account.cash < self.reserved(maintenance=True)
+        margin_call = account.cash - other_reserves < self.reserved(maintenance=True)
         event = {'date': when, 'account': self.account_id, 'action': 'DAILY_SETTLEMENT',
                  'contract': symbol, 'variation_margin': pnl, 'margin_call': margin_call,
                  'possible_intraday_breach': possible_intraday_breach,
@@ -213,7 +219,9 @@ class FuturesBook:
         when = self.ledger._advance(when)
         self.positions[symbol].contract = contract
         self.ledger.accounts[self.account_id].collateral_reservations['futures'] = self.reserved()
-        breach = self.ledger.accounts[self.account_id].cash < self.reserved(maintenance=True)
+        account=self.ledger.accounts[self.account_id]
+        other_reserves=sum(v for k,v in account.collateral_reservations.items() if k!='futures')
+        breach = account.cash - other_reserves < self.reserved(maintenance=True)
         self.ledger.events.append({'date': when, 'action': 'MARGIN_CHANGE', 'contract': symbol,
                                    'initial': initial, 'maintenance': maintenance, 'margin_call': breach})
         return breach
@@ -274,7 +282,7 @@ class OptionQuote:
     contract_symbol: str = None
 
     def fill(self, timestamp, side, contracts, *, max_age=timedelta(minutes=1)):
-        if not self.observed or not self.source or not self.contract_symbol:
+        if self.observed is not True or not self.source or not self.contract_symbol:
             raise UnsupportedModelError('Theoretical option values cannot be used as historical executable quotes')
         if self.timestamp.tzinfo is None or timestamp.tzinfo is None:
             raise ValueError('Timezone-aware option quote and order timestamps are required')
@@ -331,6 +339,7 @@ class LongOptionBook:
         self.account_id = account_id
         self.positions = {}
         self.action_cursor = {}
+        self.last_timestamp = None
         positive(commission_per_contract, 'option commission', True)
         self.commission = commission_per_contract
         account = ledger.accounts[account_id]
@@ -367,7 +376,9 @@ class LongOptionBook:
         if quote.contract_symbol != contract.symbol:
             raise ValueError('Option quote does not match the dated contract')
         price = quote.fill(timestamp, side, contracts)
-        when = timestamp.date()
+        if self.last_timestamp is not None and timestamp < self.last_timestamp:
+            raise ValueError('Option executions must be chronological within each session')
+        when = timestamp.astimezone(ZoneInfo('America/New_York')).date()
         if when > contract.expiry:
             raise ValueError('Option expired')
         account = self.ledger.accounts[self.account_id]
@@ -406,6 +417,7 @@ class LongOptionBook:
                                    'settlement_date':settle,
                                    'evidence': Evidence.OBSERVED.value,
                                    'execution_exact': False})
+        self.last_timestamp=timestamp
         return self.ledger.events[-1]
 
     def exercise(self,when,symbol,contracts,*,notice_source,exercise_fee=0.):
@@ -455,6 +467,9 @@ class LongOptionBook:
                                    'contract': symbol, 'cash': proceeds,'settlement_date':settle})
 
     def mark(self, timestamp, quotes):
+        if timestamp.tzinfo is None:raise ValueError('Option valuation timestamp must be timezone-aware')
+        if self.last_timestamp is not None and timestamp<self.last_timestamp:
+            raise ValueError('Cannot value positions before their latest option execution')
         value = 0.
         for symbol, (contract, quantity) in self.positions.items():
             self._check_actions(symbol)
@@ -463,7 +478,7 @@ class LongOptionBook:
             quote = quotes[symbol]
             if quote.contract_symbol != symbol:
                 raise ValueError('Valuation quote does not match the held option contract')
-            if timestamp.date() > contract.expiry:
+            if timestamp.astimezone(ZoneInfo('America/New_York')).date() > contract.expiry:
                 raise UnsupportedModelError('Expired position requires explicit expiry/exercise settlement')
             quote.fill(timestamp, 'SELL', 1)
             value += quote.bid * quantity * contract.multiplier

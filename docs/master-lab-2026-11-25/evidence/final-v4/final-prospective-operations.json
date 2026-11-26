@@ -1,0 +1,56 @@
+{
+  "classification": "CONDITIONAL_STRESS",
+  "frozen_candidate_issue": {
+    "first_future_month": "2026-12-31",
+    "forecast_ids": [
+      "babe096b19c20a025aa609f25fc5359b5bb077bca3a761307ef47e3df9dd3af7",
+      "f98190829206c61728c34c042c1e3a53aed80cd24d428ef176785ea7cb5d1fe1",
+      "66a14446957ff168a856a3c4058a65d32aa55d93a768f663068df38f77eeda84"
+    ],
+    "implementation_sha256": "b06e2507837c6878bf7f66ca923c024aab6b3c0e401bbb3799cc11ee5c1a3170",
+    "issuance_code_sha256": "a3eccc9fb4cd8d9c18b3303eb335314a96811246a1c1a34f81a51d88749225c0",
+    "issued_at": "2026-11-25T20:59:56.522087+00:00",
+    "model_ids": [
+      "74c585f4bdace13ef040ae989c2999fe17ce5c39e30810af0baee039c9e02da9",
+      "631c5304b80b0653c81ca04e1e2c0f801bf4191054d9d5b9bf14fe08fcf20b79",
+      "5775f7bb61cccdb8f9f730cffe413dc6b1811af6db67497c4865bc19bf19f684"
+    ],
+    "models_created": 3,
+    "promoted": false,
+    "protocol_sha256": "792f27ff7fef7779bc45d0ad138550211fb07c7cc2c070bca68f96154415c266",
+    "reason": "Actual future outcomes and disjoint evidence gates are not yet available",
+    "status": "CANDIDATES_ISSUED_PENDING_FUTURE_VALIDATION",
+    "training_end": "2026-09-30",
+    "training_sha256": "6890ff3704166169acc5ef63bffbe9b989d253d2e22fffdc8040e0cb362991e8"
+  },
+  "first_source_catalog_sha256": "1d0147b5c242baa5055ba3f9f42e4130ba23dfa2c97287040b2f53c29dcac376",
+  "refreshed_source_catalog_sha256": "8a57789fc71a67db3136f8ab5e58239991f36b92e292f248ef8170225a62f345",
+  "refreshed_issuance_status": "NO_NEW_VERIFIED_TRAINING_DATA",
+  "evaluated_months": 0,
+  "promotion_mode": "REVIEW_ONLY",
+  "promoted": false,
+  "local_archive": {
+    "approved_remote_destination": null,
+    "archive_bytes": 7612734,
+    "archive_sha256": "d069fa52fe51181b20b3dc92bea0c183e30334c772f0ee4f36944bfa021cd79b",
+    "created_at": "2026-11-25T21:52:27.591769+00:00",
+    "files": 68,
+    "off_host_verified": false,
+    "uncompressed_bytes": 8952507,
+    "verified_member_hashes": true
+  },
+  "local_recovery": {
+    "archive_sha256": "d069fa52fe51181b20b3dc92bea0c183e30334c772f0ee4f36944bfa021cd79b",
+    "directory_mode": "0700",
+    "file_mode": "0600",
+    "files": 68,
+    "off_host_verified": false,
+    "provenance": {
+      "commitment_sha256": "2dfb140547120ffee01f85769059b0f079cc5fd65d2056d1fbfc6837bd9bd0c9",
+      "purpose": "Private local current-prospective cycle, no off-host transfer",
+      "source_catalog_sha256": "8a57789fc71a67db3136f8ab5e58239991f36b92e292f248ef8170225a62f345"
+    },
+    "status": "VERIFIED_LOCAL_RECOVERY"
+  },
+  "off_host_verified": false
+}

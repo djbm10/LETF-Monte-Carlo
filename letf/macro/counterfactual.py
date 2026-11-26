@@ -46,6 +46,22 @@ def dated_statistics(returns,elapsed):
     return stats
 
 
+def endpoint_real_statistics(stats,cpi):
+    """Align monthly purchasing power to the actual initial close month.
+
+    CPI is a monthly average proxy, not an observed daily price level. A Jan2
+    first return starts from Dec31 wealth, so its CPI base belongs to December.
+    """
+    start=pd.Timestamp(stats['period_start_close']);end=pd.Timestamp(stats['end'])
+    months=pd.DatetimeIndex([start.to_period('M').to_timestamp('M'),end.to_period('M').to_timestamp('M')])
+    values=cpi.reindex(months).to_numpy(float)
+    if not np.isfinite(values).all() or (values<=0).any():raise UnsupportedModelError('Missing observed CPI endpoint month; no purchasing-power interpolation')
+    years=(end-start).days/365.2425
+    return {'real_cagr':(stats['terminal_index']/(values[1]/values[0]))**(1/years)-1,
+        'inflation_base_month':str(months[0].date()),'inflation_end_month':str(months[1].date()),
+        'inflation_convention':'Observed monthly CPI proxy aligned to initial-close/end months; not daily price levels'}
+
+
 def historical_windows(returns,elapsed):
     eras={}
     failed=returns.index[returns.eq(-1)]
@@ -89,7 +105,8 @@ def historical_counterfactual(sources,*,start='1930-01-01',end=None,output):
     provenance=SourceRecord(provider=meta['provider'],url=meta['url'],retrieved_at=meta['retrieved_at'],
         publication_vintage=str(meta['source_header']),sha256=meta['sha256'],first_observation=str(ff.index[0].date()),
         currency='USD',convention='Observed daily total returns of research portfolios',frequency='daily',fees_embedded=False)
-    report={'source_catalog_sha256':sources.catalog_hash,'start_requested':start,'end_requested':end,
+    report={'method_version':'daily-counterfactual-v2-initial-close-CPI',
+        'source_catalog_sha256':sources.catalog_hash,'start_requested':start,'end_requested':end,
         'evidence':'HYPOTHETICAL_STRESS','account_history_certification':'BLOCKED',
         'not_literal_modern_products':True,'closure_evidence':CLOSURES,'exposures':{},
         'financing_proxy':'Previous completed month French one-month bill return annualized, held until next month; not observed historical swap borrowing',
@@ -120,10 +137,7 @@ def historical_counterfactual(sources,*,start='1930-01-01',end=None,output):
                     result=daily_reset_returns(series,leverage,annual_fee=fee,funding_rate_at_previous_close=r,
                         borrowing_spread=spread,elapsed_calendar_days=days,source=provenance,verified_closures=CLOSURES)
                     stats=dated_statistics(result['return'],days)
-                    years=(series.index[-1]-pd.Timestamp(stats['period_start_close'])).days/365.2425
-                    pi0=cpi.reindex([series.index[0].to_period('M').to_timestamp('M')]).iloc[0]
-                    pi1=cpi.reindex([series.index[-1].to_period('M').to_timestamp('M')]).iloc[0]
-                    stats['real_cagr']=(stats['terminal_index']/(pi1/pi0))**(1/years)-1
+                    stats.update(endpoint_real_statistics(stats,cpi))
                     stats.update(leverage=leverage,annual_spread=spread,annual_fee=fee,
                         financing_rate_days_sum=float(result.financing.sum()),fund_fee_rate_days_sum=float(result.fund_fee.sum()),
                         start=str(series.index[0].date()),end=str(series.index[-1].date()))

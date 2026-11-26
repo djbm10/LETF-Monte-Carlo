@@ -1,13 +1,13 @@
 """Full-year resident wage + ordinary corporate investment-income subset.
 
-MA DOR Form 1/Schedules B/D, 2024-25; MGL c.62 ss.2,4,5; DOR dated
+MA DOR Form 1/Schedules B/D, 2023-25; MGL c.62 ss.2,4,5; DOR dated
 surtax table 2024-26. No federal capital-loss wage deduction is imported.
 Sources and exclusions: docs/integration-2026-11-24/TAX_AND_DATA.md.
 """
 from math import isfinite
 from letf.accuracy import UnsupportedModelError
 
-SURTAX_THRESHOLDS = {2024: 1053750., 2025: 1083150., 2026: 1107750.}
+SURTAX_THRESHOLDS = {2023: 1000000., 2024: 1053750., 2025: 1083150., 2026: 1107750.}
 EXEMPTIONS = {'single': 4400., 'married': 8800., 'married_filing_jointly': 8800.,
               'head_of_household': 6800., 'married_filing_separately': 4400.}
 

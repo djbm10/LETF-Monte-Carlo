@@ -39,7 +39,7 @@ uses prior-close TR signals/cash caps; original configuration/source hashes are
 returned by `python -m letf.lab strategies`. S16 same-bar legacy VIX remains
 blocked. Corrected versions do not silently replace historical definitions.
 
-The actual2025 cohort used the same five source bundles, capital, tax profile,
+The actual2025 cohort used the same six source bundles, capital, tax profile,
 session dates and an **explicit common daily rebalance override**. It is not a
 rerun of the original S6/HFEA monthly execution policy. Required long signal
 warmup can keep a strategy in cash; no missing prior-year distribution history

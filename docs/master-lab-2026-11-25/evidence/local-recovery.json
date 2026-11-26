@@ -1,0 +1,69 @@
+{
+  "classification": "SOFTWARE_FIXTURE",
+  "purpose": "Local recovery and numerical replay conformance, not forecast validation",
+  "code_commit": "e311bd32bd5db46414670140eaddcd5005bb8b1d",
+  "archive": {
+    "archive_sha256": "308d50e63b3e9015625a1ae75c9f57ba745f425252c41d33348eacbb5b3a8085",
+    "archive_bytes": 71743728,
+    "files": 1831,
+    "uncompressed_bytes": 210395527,
+    "verified_member_hashes": true,
+    "off_host_verified": false,
+    "approved_remote_destination": null,
+    "created_at": "2026-11-26T01:59:32.439356+00:00"
+  },
+  "restore": {
+    "status": "VERIFIED_LOCAL_RECOVERY",
+    "files": 1831,
+    "archive_sha256": "308d50e63b3e9015625a1ae75c9f57ba745f425252c41d33348eacbb5b3a8085",
+    "off_host_verified": false,
+    "file_mode": "0600",
+    "directory_mode": "0700",
+    "provenance": {
+      "commit": "e311bd32bd5db46414670140eaddcd5005bb8b1d",
+      "encrypted": false,
+      "off_host": false,
+      "role": "Supplement previous private base/dirty-user-edit archives",
+      "source_snapshots": 175
+    },
+    "source_snapshots_verified": 175,
+    "staged_files_verified": 1829,
+    "excluded_originals_preserved": 14,
+    "code_commit": "e311bd32bd5db46414670140eaddcd5005bb8b1d"
+  },
+  "economic_recovery": {
+    "observed_input_period": "2021-01-04/2025-12-31",
+    "initial_balance": 100000.0,
+    "state": "FEDERAL_ONLY",
+    "ordinary_income": 100000.0,
+    "distribution_policy": "Reinvest",
+    "account_wealth": {
+      "taxable": 216418.1339354625,
+      "roth": 239721.5817711129
+    },
+    "expected_account_wealth": {
+      "taxable": 216418.1339354625,
+      "roth": 239721.5817711129
+    },
+    "matched_exactly": true,
+    "same_pre_tax_fills": true,
+    "independent_checks": {
+      "taxable": {
+        "daily_rows": 1255,
+        "max_independent_nav_residual": 1.7462298274040222e-10,
+        "net_terminal_identity": 216418.1339354625,
+        "ledger_sha256": "62b09b472b591e1763bc893d1d749a023de0c1e3a51ece574b94725b7f570a49"
+      },
+      "roth": {
+        "daily_rows": 1255,
+        "max_independent_nav_residual": 1.4551915228366852e-10,
+        "net_terminal_identity": 239721.5817711129,
+        "ledger_sha256": "312d61e1c620881d600dcb2960cb538692f85a0f17f02f44ed638e827f564fd5"
+      }
+    },
+    "report_sha256": "d1a184eb92c2ca0c9e3dcd6e6c9343131a9fbce35b213c67ba0df8776607ea43"
+  },
+  "encrypted": false,
+  "off_host_verified": false,
+  "off_host_authority": "BLOCKED: approved private destination, rights and key custody not supplied"
+}

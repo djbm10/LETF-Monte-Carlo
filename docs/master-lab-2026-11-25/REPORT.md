@@ -27,7 +27,7 @@ confirmed defects, deliberately blocked capabilities and unverified assumptions.
 | Canonical multi-instrument taxable/Roth API | DONE bounded mechanics | One PortfolioLedger, same nominal prices/decisions, costs, settlement, distributions, flows and independent reconciliation |
 | Historical federal/Roth/MA laws | PARTIAL | Federal/Roth2021–26 and MA2023–26 supported subsets; complete1040, earlier laws and special rules not implied |
 | Real-fund account comparisons | DONE bounded historical replay | Three funds2021–25, S6 flow example2024–25; source-observed prices with hypothetical OHLC fills |
-| Source lake/public updating | DONE infrastructure |175 original-byte snapshots, hashes/coverage/rights; revised snapshots never masquerade as old vintages |
+| Source lake/public updating | DONE infrastructure |175 immutable byte snapshots, hashes/coverage/rights; client-processed CSV captures explicitly labeled; revised snapshots never masquerade as old vintages |
 | Daily1930 counterfactuals | DONE bounded counterfactual |108 configurations, four genuine return proxies, fees/rates/closures/era and rolling windows; no actual1930 modern fund/Roth claim |
 | Fund reconstruction certification | BLOCKED | TQQQ bias persists; UPRO exact benchmark/funding provenance absent; no threshold reset |
 | Prospective issue/score/retrain | DONE infrastructure; PENDING evidence | Original26+25 and old commitments preserved; three new frozen candidates; no future complete month or promotion |
@@ -224,3 +224,29 @@ summaries, era statistics and rolling-window counts/quantiles/worst cases.
 [Intermediate archive manifests](evidence/intermediate-aggregate-manifests.json)
 preserve the earlier copies without duplicating150,000 lines of window records
 in the review diff. No historical experiment, source bytes or forecast changed.
+
+
+## Verified local recovery at this delivery
+
+A new private delta preserves1831 files (71,743,728 compressed bytes;
+210,395,527 original bytes), including all175 source snapshots,
+new immutable candidate/precision artifacts, observed account inputs and a complete
+Git branch bundle at `e311bd32bd5db46414670140eaddcd5005bb8b1d`.
+Trusted archive SHA-256:`308d50e63b3e9015625a1ae75c9f57ba745f425252c41d33348eacbb5b3a8085`.
+A fresh local restore verified every member; code cloned from the restored bundle
+and the restored TQQQ2021–25 inputs reproduced taxable216418.1339354625 and
+Roth239721.5817711129 **exactly**, with identical pre-tax controls and independent
+NAV identities. Source snapshots were not read from their old locations.
+[Recovery receipt](evidence/local-recovery.json) records the actual checks.
+This supplements the earlier551-file base/user-edit archives. Generated HTML,
+old duplicate compressed archives and runtime locks were explicitly inventoried
+as exclusions, retained at their original locations, and not treated as inputs.
+No encryption or private off-host recovery is claimed.
+
+
+Delivery code e311bd32bd5db46414670140eaddcd5005bb8b1d hosted regression
+[45739285337](https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45739285337)
+and push45739279325 passed. The downloaded PR log independently records366 tests,
+four warnings,41.74s, and the portable CLI fixture command; successful job status
+includes its HTML/export check. Full hosted status is in the delivery-code CI receipt.
+Subsequent recovery/report receipt commits change documentation only.

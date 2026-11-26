@@ -201,3 +201,28 @@ Run only where optional package/browser downloads and local sockets are permitte
 The driver forbids outside page requests and closes its browser/server on return.
 This environment’s repeated package timeout was retained; screenshots and browser
 conformance were not claimed. The simulator requires none of these optional tools.
+
+
+## Restore the reviewed private delivery delta
+
+The archive is local and not distributed in Git. Its trusted checksum is in
+[the committed recovery receipt](evidence/local-recovery.json). Use new targets:
+
+```bash
+$LETF_PY -m letf.research_backup restore \
+  --archive audit-output/master-final-recovery-v1/research-delta.tar.gz \
+  --trusted-sha256 308d50e63b3e9015625a1ae75c9f57ba745f425252c41d33348eacbb5b3a8085 \
+  --target audit-output/new-private-restore \
+  --receipt audit-output/new-private-restore-receipt.json
+git clone --branch develop/research-lab-end-to-end-2026-11-25 \
+  audit-output/new-private-restore/code/master-final-branch-v1.bin \
+  audit-output/new-recovered-code
+```
+
+The restored `research/` directory retains the original audit-output-relative
+layout. Run the restored `scripts/compare_verified_funds.py` against
+`RESTORED/research/extended-accounts-v3/TQQQ-2021`, with the same2021–25/federal/
+reinvestment arguments above. This exact fresh-code/fresh-input drill was run
+and reproduced both account wealth values exactly. Later documentation-only
+receipts need not match the source bundle's recorded commit.
+No remote address, cloud credential or decryption key was used or inferred.

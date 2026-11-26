@@ -137,3 +137,18 @@ Section1256, historical-availability and reconstruction-provenance evidence. Ind
 fixture plus reconstruction/source suites:20 passed. Full regression366 passed,
 four inherited warnings,65.50s;97 workflow structure checks and supported compile pass.
 No reconstruction, tail, legacy or forecast-approval threshold was changed.
+
+
+Final local recovery receipt: master-lab-2026-11-25/evidence/local-recovery.json.
+Archive1831 files/71743728 bytes, SHA-256 308d50e63b3e9015625a1ae75c9f57ba745f425252c41d33348eacbb5b3a8085.
+All175 restored source snapshots and all member hashes pass. Restored Git e311bd3
+plus relocated TQQQ inputs reproduces five-year taxable216418.1339354625 and
+Roth239721.5817711129 exactly. Local only; off-host/encryption not established.
+
+
+Delivery code e311bd32bd5db46414670140eaddcd5005bb8b1d hosted regression
+[45739285337](https://github.com/djbm10/LETF-Monte-Carlo/actions/runs/45739285337)
+and push45739279325 passed. The downloaded PR log independently records366 tests,
+four warnings,41.74s, and the portable CLI fixture command; successful job status
+includes its HTML/export check. Full hosted status is in the delivery-code CI receipt.
+Subsequent recovery/report receipt commits change documentation only.

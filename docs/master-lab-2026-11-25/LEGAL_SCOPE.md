@@ -64,3 +64,21 @@ No credential should be pasted into source code, CLI history or public reports.
 The optional existing hosted candidate workflow now additionally requires the
 approved-private-storage setting. It remains unconfigured here. Ordinary hosted
 CI uses authored fixtures and publishes no private raw histories or ensembles.
+
+
+## Verified local recovery at this delivery
+
+A new private delta preserves1831 files (71,743,728 compressed bytes;
+210,395,527 original bytes), including all175 source snapshots,
+new immutable candidate/precision artifacts, observed account inputs and a complete
+Git branch bundle at `e311bd32bd5db46414670140eaddcd5005bb8b1d`.
+Trusted archive SHA-256:`308d50e63b3e9015625a1ae75c9f57ba745f425252c41d33348eacbb5b3a8085`.
+A fresh local restore verified every member; code cloned from the restored bundle
+and the restored TQQQ2021–25 inputs reproduced taxable216418.1339354625 and
+Roth239721.5817711129 **exactly**, with identical pre-tax controls and independent
+NAV identities. Source snapshots were not read from their old locations.
+[Recovery receipt](evidence/local-recovery.json) records the actual checks.
+This supplements the earlier551-file base/user-edit archives. Generated HTML,
+old duplicate compressed archives and runtime locks were explicitly inventoried
+as exclusions, retained at their original locations, and not treated as inputs.
+No encryption or private off-host recovery is claimed.

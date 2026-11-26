@@ -95,10 +95,21 @@ def inspect(name, blob):
         frame.index = pd.DatetimeIndex(dates)
         frame = frame.sort_index()
         frequency = 'provider observation frequency; gaps retained'
-    if frame.empty or not frame.index.is_unique or not frame.index.is_monotonic_increasing:
-        raise ValueError('Source dates empty, duplicate or out of order')
+    if frame.empty or frame.index.hasnans or not frame.index.is_unique or not frame.index.is_monotonic_increasing:
+        raise ValueError('Source dates empty, invalid, duplicate or out of order')
     values = frame.to_numpy(float)
     if np.isinf(values).any() or not np.isfinite(values).any(): raise ValueError('Invalid source values')
+    # A zero/negative issuer NAV is not an ordinary valid market observation.
+    # A genuine fund extinction requires separately sourced closure/recovery
+    # evidence; never infer it from a bad row or import it into daily returns.
+    if fmt == 'nav' and (not np.isfinite(values).all() or (values <= 0).any()):
+        raise ValueError('Issuer NAV must be finite and strictly positive; extinction needs separate evidence')
+    # Index levels are strictly positive, unlike economically valid negative
+    # interest rates. Preserve FRED's documented "." missing observations.
+    if fmt == 'fred' and name in ('SP500', 'NASDAQ100', 'NASDAQXNDX'):
+        observed = values[np.isfinite(values)]
+        if (observed <= 0).any():
+            raise ValueError('Official index level must be strictly positive')
     finite_dates = frame.dropna(how='all').index
     if finite_dates.max().date() > datetime.now(timezone.utc).date(): raise ValueError('Future source observation')
     extra={}

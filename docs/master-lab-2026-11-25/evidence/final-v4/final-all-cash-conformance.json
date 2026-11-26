@@ -1,0 +1,12 @@
+{
+  "classification": "SOFTWARE_FIXTURE",
+  "expected_wealth": 16000.0,
+  "initial": 10000.0,
+  "deposits": 6000.0,
+  "cash_yield_assumption": 0.0,
+  "account_wealth": {
+    "roth": 16000.0,
+    "taxable": 16000.0
+  },
+  "scope": "Independent cash-flow arithmetic against canonical observed-source plumbing; no market exposure or interest forecast"
+}

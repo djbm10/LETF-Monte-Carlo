@@ -175,3 +175,26 @@ private-storage settings. Review the repository/storage visibility before enabli
 it; no new permission or credential is configured here. Evaluation defaults to
 review-only. Later same-kind/window forecast revisions are retained but excluded
 from prospective selection in favor of the earliest immutable issuance.
+
+
+## Registered full-account numerical precision
+
+`python -m letf.lab account-precision --config STUDY.json --output NEW_PRIVATE_DIR
+--max-new-runs 1` preregisters exact source/code, at least two distinct root seeds
+and fixed doubling counts. Reinvoke with the same inputs/code to resume new runs;
+completed reports are hash-checked and never overwritten. Immutable assessments
+cover exact quantile/binomial intervals, independent-root differences and latest
+doubling stability under the original .02/.025 goals. Incomplete or blocked paths
+cannot disappear from a passing sample. Exit2 means pending/failed precision.
+This uses the full canonical ledger, not a terminal tax lookup accelerator, and
+never approves a forecast model. See the checkpoint reproduction guide for schema
+and the deliberately failing tiny-count acceptance demonstration.
+
+
+The dashboard clears prior wealth/results when a new request starts, including
+when input validation rejects it. HTTP controls/cancellation/export and JS syntax
+are verified. Optional `scripts/smoke_lab_browser.py --output NEW` drives only an
+authored fixture through a loopback browser, filters/accounts/curves/downloads
+and an unsupported-state rejection. It requires separately installed Playwright
+and Chromium. This environment’s optional pinned installation timed out; no
+browser execution or screenshot success is claimed. It is not a runtime dependency.

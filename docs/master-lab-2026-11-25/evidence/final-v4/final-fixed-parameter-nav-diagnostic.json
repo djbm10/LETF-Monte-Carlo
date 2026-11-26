@@ -1,0 +1,74 @@
+{
+  "annual_fee_scenario_unchanged": 0.0086,
+  "classification": "HISTORICAL_COUNTERFACTUAL",
+  "end": "2026-11-24",
+  "fitted_training_spread_unchanged": 0.00019125262816430588,
+  "investment_performance_certification": "BLOCKED",
+  "limitations": [
+    "Elapsed2026 data are retrospective, not frozen-before-outcomes evidence",
+    "Current index/NAV/cash restatements; exact dated financing/fee/collateral/target-index vintage incomplete",
+    "Cash API does not certify final tax classes or independently prove annual distribution completeness",
+    "Partial-year CAGR is annualized, not realized full-year performance; no gate reset or model promotion"
+  ],
+  "new_errors": {
+    "actual": {
+      "annual_volatility": 0.7208725684649471,
+      "cagr": -0.13159406613727365,
+      "max_drawdown": -0.5310772341644929,
+      "terminal": 0.8811402397262718
+    },
+    "annual_tracking_error": 0.005692884963539954,
+    "cagr_error": 0.023250287261934344,
+    "daily_bias": 0.00010369634733639343,
+    "daily_rmse": 0.00037254634206168217,
+    "drawdown_error": 0.006559710943816244,
+    "n": 226,
+    "proxy": {
+      "annual_volatility": 0.7205568344734047,
+      "cagr": -0.1083437788753393,
+      "max_drawdown": -0.5245175232206767,
+      "terminal": 0.9022685154135673
+    },
+    "terminal_relative_error": 0.023978334815192515
+  },
+  "new_period_meets_original_minimum": false,
+  "old_INSPECTED_2020_2025_errors": {
+    "actual": {
+      "annual_volatility": 0.7695749564241066,
+      "cagr": 0.3124533126888043,
+      "max_drawdown": -0.816741397339814,
+      "terminal": 5.08895761003871
+    },
+    "annual_tracking_error": 0.005410249766381496,
+    "cagr_error": 0.024270821740895565,
+    "daily_bias": 7.330686150704386e-05,
+    "daily_rmse": 0.0003484979900537215,
+    "drawdown_error": 0.004801380450117465,
+    "n": 1508,
+    "proxy": {
+      "annual_volatility": 0.7698044688555475,
+      "cagr": 0.33672413442969984,
+      "max_drawdown": -0.8119400168896965,
+      "terminal": 5.6787149892425255
+    },
+    "terminal_relative_error": 0.11588962306159378
+  },
+  "old_gate_sha256": "fa62413c93af6fb5eccf9b9743c4ae3837b9c38a2e0c082b31ede64e1c73f512",
+  "old_report_sha256": "1a3c2f508263fbf5c406c05a4fe4f7d0f06533f37c3f4f0fb1f66c6cb0c2accd",
+  "original_minimum_observation_count": 504,
+  "provenance_certified": false,
+  "source_raw_hashes": {
+    "DFF": "3de4e1eb01dad4b0bb1aa5c0dd0fd50b19802d7f5d956967af12b4620dc250ff",
+    "NASDAQXNDX": "c0486b600cfbd6990f990d4e9e1a52594561f87af5596e00369b1b347c25e158",
+    "TQQQ_cash_2026": "90ce3d70a4fc14b4c2149d713235736f8e3901136c614aec7365d81c34d87e17",
+    "TQQQ_nav": "ae3103644bbed437f60040be9f5e68101ef91f1745bc7acda679d9918fa58cb1"
+  },
+  "source_snapshot_ids": {
+    "DFF": "134fa1c1a1421227303f0fc719e453128bc3a3631412685341309de71f053918",
+    "NASDAQXNDX": "091e5661b3ed307c646b7f68f4913d98c337e3f5586bf461333b53154c4fc44b",
+    "TQQQ_cash_2026": "030ce0e026c09c429da62215605024ee043de6a69baf48646a16c7671153d774",
+    "TQQQ_nav": "f3ccdda513a4811b44a8ee2be6056da3566624705e5301f79f72d9d85860cf0d"
+  },
+  "start": "2026-01-02",
+  "status": "NEWLY_EVALUATED_RETROSPECTIVE_FIXED_OLD_PARAMETERS"
+}

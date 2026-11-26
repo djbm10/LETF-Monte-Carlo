@@ -1,0 +1,219 @@
+{
+  "classification": "OBSERVED_MARKET",
+  "rankings_released": false,
+  "all_requested_cells_supported": true,
+  "common_inputs_verified": true,
+  "policy": "2025 common universe, $10000, no flows, FEDERAL_ONLY; original VIX/IRX observations; explicit1-session rebalance override, not original S6/HFEA execution frequency",
+  "cells": [
+    {
+      "strategy": {
+        "id": "S1",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "1d025c3711bf3f930b425ce07a9abdf008a477070d901811a0aef17856f0e70f"
+    },
+    {
+      "strategy": {
+        "id": "S2",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "c129011d978ddf3c3ab1913e5b946d90add776d122233a7726c95044aec198b4"
+    },
+    {
+      "strategy": {
+        "id": "S3",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "93809b4c96c254c08388373f7f7d1d9cdb02c1fec5048cdc67595d3e53ba9145"
+    },
+    {
+      "strategy": {
+        "id": "S4",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "ee305588e1eedaacb328b8939c8f399bdecbf300a024e1fe907a51efcd7348f5"
+    },
+    {
+      "strategy": {
+        "id": "S5",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "2964fdae8733af21888979082093f20d6eb537b157e03734a883cfa99056b0c7"
+    },
+    {
+      "strategy": {
+        "id": "S6",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "e8380cade216af8b0fb3f33467d5f508237eeee992f446dd71d4f72e2cb64fd6"
+    },
+    {
+      "strategy": {
+        "id": "S7",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "63f91c3c08d7a2373bad705f246a12660fb9c712dc3ac8ec1d72bad76491e895"
+    },
+    {
+      "strategy": {
+        "id": "S8",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "23bf10d506d2ecf976cdf18ed0351041a14ed5846a212f672c74693fed7f5ede"
+    },
+    {
+      "strategy": {
+        "id": "S9",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "aa8e76d320b98357f901ad4a2554869cd562fd25935bbe53b10fbda8db71dccc"
+    },
+    {
+      "strategy": {
+        "id": "S10",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "24166fb4348d7d184537dfc691ccbbf6c63454d0ba516438877d8b5711d27737"
+    },
+    {
+      "strategy": {
+        "id": "S11",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "26c39a8e78b947072ab7a62dfc2a3ceaf6fcc646ab372ea6a2cfd25a10dc75c5"
+    },
+    {
+      "strategy": {
+        "id": "S12",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "3cb173663c38012a57d4537f7d8afe8a338fb9a6892de5cd60bfe8332a85d668"
+    },
+    {
+      "strategy": {
+        "id": "S13",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "8d9a8043a05069acc5db76f07506b0b195bd774abab9254f3b62397416d16003"
+    },
+    {
+      "strategy": {
+        "id": "S14",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "436b1171bf60480f43c122ab35ea0afa96b58b249799c0e98c7fa33b8f9a1d1d"
+    },
+    {
+      "strategy": {
+        "id": "S15",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "4871a15b4d5d521497251bca9b8a36edb2a2f27e00d0427f28cd2eac300e4d71"
+    },
+    {
+      "strategy": {
+        "id": "S16",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "485302b59659b301d9a53391a81e842e9df78c3e9541307235c5d975971f58ad"
+    },
+    {
+      "strategy": {
+        "id": "S17",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "a00eee7019de11b10da4cf70c1590e3d857ddaabba5e4d6cba4f1bd5ba64c121"
+    },
+    {
+      "strategy": {
+        "id": "S18",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "325a48028558c1ff9add6b4e2506d09b214d23ee308b9509749c05d149f219dd"
+    },
+    {
+      "strategy": {
+        "id": "S19",
+        "version": "causal_cash_v2"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "5ae4c85b9a1a4c31c56a57bd12a146af692cbd47f59f4bcca751110f2e8973e9"
+    },
+    {
+      "strategy": {
+        "id": "HFEA",
+        "version": "cash_v1"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "d5f4833a05c30032cd65f4c18014265f2979e3f6a180b1b34eba4aeb7a32e340"
+    },
+    {
+      "strategy": {
+        "id": "35_0",
+        "version": "frozen_ETF_wrapper_v1"
+      },
+      "status": "SUPPORTED_RESEARCH_MECHANICS",
+      "classification": "OBSERVED_MARKET",
+      "comparison_fingerprint": "993240cc1ae3f6b2bbd908ea333a33929a69b668fd89f073327e8290a26313b3",
+      "report_sha256": "2aa273cffad057a108a8df665fcd844ddd5cf09571339a30015ece074cc97b0c"
+    }
+  ]
+}

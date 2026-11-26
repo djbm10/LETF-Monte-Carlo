@@ -1,0 +1,11 @@
+{
+  "browser_executed": false,
+  "classification": "BLOCKED",
+  "core_dependency_lock_changed": false,
+  "http_dashboard_tests": "4 passed",
+  "javascript_syntax_command": "node --check /tmp/letf-laboratory-dashboard-final.js",
+  "off_host_or_external_deployment": false,
+  "optional_driver": "scripts/smoke_lab_browser.py",
+  "playwright_pin": "1.56.0",
+  "reason": "No installed browser. Optional pip download timed out repeatedly; bounded retry stopped by agent at10.7/46.3MB. No browser tests or screenshots claimed."
+}

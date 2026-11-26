@@ -1,5 +1,14 @@
 # Current checkpoint
 
+Latest checkpoint: financial engine6641ac06b27c5202a3c5724fbbd88fa7a60a3fae,
+UI guard43dbaa3, affirmative evidence guards b3c4e1f;366 local tests/97 checks; engine16 hosted runs passed;
+21/21 supported2025 cash adapters,175 source snapshots, no approved model.
+Final evidence pack:master-lab-2026-11-25/evidence/final-v4. Recovery/delivery
+receipts and RESUME_THIS_MISSION.md contain final handoff state.
+
+The earlier chronological entries below are retained; later entries supersede
+resolved source/importer/holding/strategy limitations.
+
 Working branch: `develop/research-lab-end-to-end-2026-11-25`.
 Base: `9a6fb44f4fe95c4df6c4a8bc7598e515a3acc459` (live remote verified).
 Worktree: `/home/djmann/projects/letf-monte-carlo/.worktrees/master-lab`.
@@ -63,3 +72,68 @@ session on/before April15, explicitly modeled early payment. Five-year
 taxable/Roth daily identities independently reconcile. No old result was
 overwritten. Next: derivative source-boundary tests, new-source NAV diagnostic,
 source-dependent tournament, final report/CI/recovery checkpoint.
+
+
+Current engine code:31f16ddc73789d83142963b4c9125882cb8d05ca, published on
+review PR41 targeting the original development branch, never main. New full
+regression **353 passed**, four inherited warnings (57.68s);97 workflow checks,
+compileall on supported modules and diff checks pass. Hosted347-test precursor
+run45708100675 passed including portable demo; final353-test CI recorded in
+master-lab report when complete. Legacy T20 remains59.507<65; T27 remains an
+unsupported max_crisis_chain API error. No threshold changed or tail censored.
+
+2021–25 TQQQ/UPRO/SSO source/reinvestment cohort independently reconciles1255
+daily rows each account. Actual S6 reproduction on31f16dd matches old wealth
+exactly; all82 letf source-module hashes match that commit despite the dirty
+flag from untracked documentation/export work. New2026 TQQQ diagnostic keeps
+old fitted parameters:226sessions, +2.325pp CAGR error; original+2.427pp remains.
+
+New registered full-account precision tool checkpoints/resumes canonical
+replays, two roots, fixed doubling counts, exact simultaneous quantile/binomial
+intervals, stability and independent-root checks. Demonstration counts1/2
+completed all4jobs/36 account replays and correctly FAILED numeric gates.
+Registration pins source+code; changes require a new namespace. No acceleration
+or claim of account convergence. Existing60replay future demo remains exploratory.
+
+Public source refresh captured9 more French/FRED snapshots. French files still
+end2026September, so refreshed candidate cycle reports NO_NEW_VERIFIED_TRAINING_DATA,
+zero future outcome months, no promotion. Catalog parent preserved; refreshed
+hash8a57789fc71a67db3136f8ab5e58239991f36b92e292f248ef8170225a62f345.
+Cboe’s free demonstration ZIP was legally captured and inspected32672 records;
+provider disclaimer prevents historical certification. CME public bulletin was
+visible online but local PDF transfer stalled and was cancelled; no price tape
+was invented. Total private source lake172 snapshots verified.
+
+Counterfactual v2 aligns monthly CPI to the actual initial-close month. All108
+nominal/era outputs match v1 exactly; real CAGR changes+0.00579 to+0.00662pp.
+Both v1 and v2 retained; v1 purchasing-power endpoints superseded. Aggregate
+public evidence exporter excludes provider raw quotes and forecast ensembles.
+Next handoff commands and remaining gates: RESUME_THIS_MISSION.md and
+master-lab-2026-11-25/REPORT.md. No off-host destination is authorized.
+
+
+Latest financial engine6641ac06b27c5202a3c5724fbbd88fa7a60a3fae:365 tests/97 workflow
+checks. All16 hosted runs on that SHA passed; regression PR45731145563 and
+push45731140154. New RIC199A eligibility tracker46/91 (distinct from QDI61/121),
+NIIT/MA fixtures, strict proof flags and split-adjusted pending wash units close
+real accounting gaps. Original dollar losses/sale shares stay immutable; unknown
+alias/OCC conversions remain blocked. Original VIX/IRX closes captured legally,
+175-source lake. Final2025 same-input cohort **21/21**; intermediate17/18/20
+attempts retained. Default21-session S6/HFEA2024–25 with annual$3000 flows:
+S6 taxable21927.05952055513/Roth23338.326342158543;
+HFEA taxable20409.90308555626/Roth21457.434609841333.
+Actual three-fund2021–25 cohort and S6 repeat unchanged on final financial code.
+
+Final aggregate pack is evidence/final-v4. Earlier v1/v2 retained, superseded
+only where documented (CPI endpoints/newly supported cells). UI now clears old
+wealth on a new/failed request; local browser smoke tooling is optional and
+its actual environment result is recorded before handoff. Off-host remains
+unauthorized. Final archive/trusted checksum and delivery-head CI follow in
+operational receipts; no future background work or model approval is implied.
+
+
+Final affirmative-evidence guards b3c4e1f reject strings and integers as observed-quote,
+Section1256, historical-availability and reconstruction-provenance evidence. Independent
+fixture plus reconstruction/source suites:20 passed. Full regression366 passed,
+four inherited warnings,65.50s;97 workflow structure checks and supported compile pass.
+No reconstruction, tail, legacy or forecast-approval threshold was changed.

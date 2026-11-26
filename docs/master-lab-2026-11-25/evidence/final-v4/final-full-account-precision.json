@@ -1,0 +1,1135 @@
+{
+  "account_convergence_certified": false,
+  "account_sampling_gates_passed": false,
+  "blocked": [],
+  "classification": "CONDITIONAL_STRESS",
+  "family_alpha_probabilities": 0.025,
+  "family_alpha_quantiles": 0.025,
+  "future_policy_uncertainty": "Not included in sampling intervals; frozen-law scenario only",
+  "maximum_log_quantile_error": 0.02,
+  "maximum_probability_interval_half_width": 0.025,
+  "model_approved": false,
+  "new_runs_completed_or_attempted": 3,
+  "pending": [],
+  "registration_sha256": "8c983a0a20028846784a1aad030a6584e27e827ece6c70613a6f260841429198",
+  "results": [
+    {
+      "account": "roth",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 1,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.5,
+          "half_width": 0.49986978318845765,
+          "high": 0.9998697831884577,
+          "low": 0.00013021681154233748,
+          "paths": 2
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.141850373476581,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.5345340407701755,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.141850373476581,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.5345340407701755,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.676384414246757,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.5345340407701755,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US1X_CF"
+    },
+    {
+      "account": "taxable",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 1,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.5,
+          "half_width": 0.49986978318845765,
+          "high": 0.9998697831884577,
+          "low": 0.00013021681154233748,
+          "paths": 2
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.139088519194205,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.46754212779095994,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.139088519194205,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.46754212779095994,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.606630646985165,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.46754212779095994,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US1X_CF"
+    },
+    {
+      "account": "roth",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 1,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 1.0,
+          "half_width": 0.4919312846954012,
+          "high": 1.0,
+          "low": 0.01613743060919757,
+          "paths": 2
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.5,
+          "half_width": 0.49986978318845765,
+          "high": 0.9998697831884577,
+          "low": 0.00013021681154233748,
+          "paths": 2
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.774920876170476,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.0902029059937828,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.774920876170476,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.0902029059937828,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.86512378216426,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.0902029059937828,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US2X_CF"
+    },
+    {
+      "account": "taxable",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 1,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 1.0,
+          "half_width": 0.4919312846954012,
+          "high": 1.0,
+          "low": 0.01613743060919757,
+          "paths": 2
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.5,
+          "half_width": 0.49986978318845765,
+          "high": 0.9998697831884577,
+          "low": 0.00013021681154233748,
+          "paths": 2
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.80238084669237,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.976487034109832,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.80238084669237,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.976487034109832,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.778867880802203,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.976487034109832,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US2X_CF"
+    },
+    {
+      "account": "roth",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 1,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 1.0,
+          "half_width": 0.4919312846954012,
+          "high": 1.0,
+          "low": 0.01613743060919757,
+          "paths": 2
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.5,
+          "half_width": 0.49986978318845765,
+          "high": 0.9998697831884577,
+          "low": 0.00013021681154233748,
+          "paths": 2
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.5,
+          "half_width": 0.49986978318845765,
+          "high": 0.9998697831884577,
+          "low": 0.00013021681154233748,
+          "paths": 2
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.285762314979472,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.6015515952212258,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.285762314979472,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.6015515952212258,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.887313910200698,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.6015515952212258,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US3X_CF"
+    },
+    {
+      "account": "taxable",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 1,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 1.0,
+          "half_width": 0.4919312846954012,
+          "high": 1.0,
+          "low": 0.01613743060919757,
+          "paths": 2
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.5,
+          "half_width": 0.49986978318845765,
+          "high": 0.9998697831884577,
+          "low": 0.00013021681154233748,
+          "paths": 2
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4919312846954014,
+          "high": 0.9838625693908029,
+          "low": 0.0,
+          "paths": 2
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.5,
+          "half_width": 0.49986978318845765,
+          "high": 0.9998697831884577,
+          "low": 0.00013021681154233748,
+          "paths": 2
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.333854571983107,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.4653381354267818,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.333854571983107,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.4653381354267818,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.799192707409889,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 1.4653381354267818,
+          "latest_doubling_change": "POSITIVE_INFINITY_UNBOUNDED",
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 3
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US3X_CF"
+    },
+    {
+      "account": "roth",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 2,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.30643365413272,
+          "high": 10.903961583550707,
+          "independent_seed_difference": 0.005215151684188513,
+          "latest_doubling_change": 0.1645832806561387,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 4
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.311648805816908,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.005215151684188513,
+          "latest_doubling_change": 0.1697984323403272,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.903961583550707,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.19468428812716354,
+          "latest_doubling_change": 0.22757716930395055,
+          "low": 10.30643365413272,
+          "lower_rank": 1,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US1X_CF"
+    },
+    {
+      "account": "taxable",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 2,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.2779800676147,
+          "high": 10.814762194025564,
+          "independent_seed_difference": 0.005200589796368504,
+          "latest_doubling_change": 0.13889154842049578,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 4
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.28318065741107,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.005200589796368504,
+          "latest_doubling_change": 0.14409213821686429,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.814762194025564,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.17815440069613864,
+          "latest_doubling_change": 0.2081315470403986,
+          "low": 10.2779800676147,
+          "lower_rank": 1,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US1X_CF"
+    },
+    {
+      "account": "roth",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 2,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.25,
+          "half_width": 0.4796444354502411,
+          "high": 0.9593539814259436,
+          "low": 6.511052546143167e-05,
+          "paths": 4
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 0.5,
+          "half_width": 0.49338273751729267,
+          "high": 0.9933827375172928,
+          "low": 0.006617262482707462,
+          "paths": 4
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.105899431561038,
+          "high": 11.426347540169596,
+          "independent_seed_difference": 0.14423888597910306,
+          "latest_doubling_change": 0.330978555390562,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 4
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.250138317540141,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.14423888597910306,
+          "latest_doubling_change": 0.47521744136966504,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 11.426347540169596,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.44855241266841794,
+          "latest_doubling_change": 0.5612237580053367,
+          "low": 10.105899431561038,
+          "lower_rank": 1,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US2X_CF"
+    },
+    {
+      "account": "taxable",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 2,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 1,
+          "estimate": 0.25,
+          "half_width": 0.4796444354502411,
+          "high": 0.9593539814259436,
+          "low": 6.511052546143167e-05,
+          "paths": 4
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 0.5,
+          "half_width": 0.49338273751729267,
+          "high": 0.9933827375172928,
+          "low": 0.006617262482707462,
+          "paths": 4
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.109785590578529,
+          "high": 11.305376774312762,
+          "independent_seed_difference": 0.12025116007682257,
+          "latest_doubling_change": 0.307404743886158,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 4
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.230036750655351,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.12025116007682257,
+          "latest_doubling_change": 0.4276559039629806,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 11.305376774312762,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.42205068179399774,
+          "latest_doubling_change": 0.5265088935105595,
+          "low": 10.109785590578529,
+          "lower_rank": 1,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US2X_CF"
+    },
+    {
+      "account": "roth",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 2,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 0.5,
+          "half_width": 0.49338273751729267,
+          "high": 0.9933827375172928,
+          "low": 0.006617262482707462,
+          "paths": 4
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 0.5,
+          "half_width": 0.49338273751729267,
+          "high": 0.9933827375172928,
+          "low": 0.006617262482707462,
+          "paths": 4
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.870805458105275,
+          "high": 11.939598794615334,
+          "independent_seed_difference": 0.24821440199442435,
+          "latest_doubling_change": 0.5850431431258034,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 4
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.1190198600997,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.24821440199442435,
+          "latest_doubling_change": 0.8332575451202278,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 11.939598794615334,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.7310440045617401,
+          "latest_doubling_change": 1.052284884414636,
+          "low": 9.870805458105275,
+          "lower_rank": 1,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US3X_CF"
+    },
+    {
+      "account": "taxable",
+      "horizon": 5,
+      "passed": false,
+      "paths_per_seed": 2,
+      "probabilities": {
+        "drawdown_over50": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 0.5,
+          "half_width": 0.49338273751729267,
+          "high": 0.9933827375172928,
+          "low": 0.006617262482707462,
+          "paths": 4
+        },
+        "drawdown_over90": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "fund_liquidation": {
+          "alpha": 0.0005208333333333333,
+          "count": 0,
+          "estimate": 0.0,
+          "half_width": 0.4364834064806741,
+          "high": 0.8729668129613481,
+          "low": 0.0,
+          "paths": 4
+        },
+        "outperform_paired1x": {
+          "alpha": 0.0005208333333333333,
+          "count": 2,
+          "estimate": 0.5,
+          "half_width": 0.49338273751729267,
+          "high": 0.9933827375172928,
+          "low": 0.006617262482707462,
+          "paths": 4
+        }
+      },
+      "quantiles": [
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 9.897013722923138,
+          "high": 11.79214054130765,
+          "independent_seed_difference": 0.22469212409479766,
+          "latest_doubling_change": 0.5631591509400309,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.1,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 4
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 10.121705847017935,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.22469212409479766,
+          "latest_doubling_change": 0.7878512750348285,
+          "low": "NEGATIVE_INFINITY_ZERO_NAV",
+          "lower_rank": 0,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.5,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        },
+        {
+          "alpha": 0.0006944444444444445,
+          "estimate": 11.79214054130765,
+          "high": "POSITIVE_INFINITY_UNBOUNDED",
+          "independent_seed_difference": 0.692815731654294,
+          "latest_doubling_change": 0.9929478338977606,
+          "low": 9.897013722923138,
+          "lower_rank": 1,
+          "maximum_error": "POSITIVE_INFINITY_UNBOUNDED",
+          "passed": false,
+          "quantile": 0.9,
+          "status": "UNBOUNDED_OR_ZERO_BOUNDARY",
+          "upper_rank": 5
+        }
+      ],
+      "root_seeds": [
+        20261125,
+        20261126
+      ],
+      "strategy": "US3X_CF"
+    }
+  ],
+  "scope": "Numerical sampling of this exact account/model/flow/law scenario only; no structural confidence or prediction certification",
+  "study_complete": true
+}

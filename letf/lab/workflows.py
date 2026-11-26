@@ -11,7 +11,7 @@ import time
 import numpy as np
 
 from letf.accuracy import UnsupportedModelError
-from letf.account_cli import _serialize
+from letf.account_cli import _serialize,_report_safe
 from letf.lab.catalog import file_hash, private_json
 from letf.lab.evidence import evidence
 from letf.lab.portfolio import run_observed
@@ -105,12 +105,14 @@ def tournament(config, *, output):
             cells.append({'strategy':strategy,'status':'BLOCKED','classification':'BLOCKED','reason':str(error)})
     completed=[r for r in cells if r['status']!='BLOCKED']
     compatible=bool(completed) and len({r['comparison_fingerprint'] for r in completed})==1
-    report={'schema':1,'classification':'SOFTWARE_FIXTURE' if base.get('mode')=='fixture' else 'OBSERVED_MARKET','cells':cells,
+    labels={r['classification'] for r in completed}
+    report={'schema':1,'classification':next(iter(labels)) if len(labels)==1 else 'BLOCKED','cells':cells,
             'all_requested_cells_supported':len(completed)==len(cells),'common_inputs_verified':compatible,
             'rankings_released':False,'model_approved':False,
             'scope':'Unsorted retrospective comparison under identical reviewed sources/flows/costs; blocked cells never ranked',
             'rebalance_override_sessions':base['rebalance_sessions'],
             'strategy_version_scope':'Explicit common rebalance override; not a claim of unchanged original research execution intervals',
             'reason':'Model approval/execution/source limits remain separate from compatible numerical research results'}
-    private_json(output/'report.json',report)
-    return report
+    safe=json.loads(json.dumps(_report_safe(report),default=_serialize,allow_nan=False))
+    private_json(output/'report.json',safe)
+    return safe

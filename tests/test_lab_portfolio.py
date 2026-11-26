@@ -85,6 +85,17 @@ def test_string_false_cannot_grant_broker_permission_or_distribution_completenes
         with pytest.raises(UnsupportedModelError,match='incomplete'):load_bundle(folder)
 
 
+def test_multiyear_comparison_exports_actual_payment_dates_and_fixture_evidence(tmp_path):
+    from letf.lab.workflows import tournament
+    r=request(tmp_path);strategy=r.pop('strategy')
+    result=tournament({'schema':1,'base':r,'strategies':[strategy]},output=tmp_path/'comparison')
+    assert result['classification']=='SOFTWARE_FIXTURE' and result['all_requested_cells_supported']
+    saved=json.loads((tmp_path/'comparison/report.json').read_text())
+    taxes=saved['cells'][0]['accounts']['taxable']['tax_rows']
+    assert [row['paid_on'] for row in taxes if 'paid_on'in row]==['2025-04-15',None] # next tax year remains terminal payable
+    assert not saved['rankings_released']
+
+
 def test_original_versions_and_corrected_cash_signals_are_explicit():
     records=registry();assert {f'S{i}' for i in range(1,20)}<={r['id'] for r in records}
     with pytest.raises(UnsupportedModelError):make_allocator({'id':'S16','version':'legacy_rules_v1'})
